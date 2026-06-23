@@ -1,4 +1,11 @@
-backend/vendor/
-backend/.env
-frontend/node_modules/
-frontend/.env
+/backend/vendor/
+/backend/.env
+/frontend/node_modules/
+/frontend/.env
+/frontend/dist/
+/frontend/.next/
+/backend/bootstrap/cache/*.php
+/backend/storage/framework/cache/data/*
+/backend/storage/framework/sessions/*
+/backend/storage/framework/views/*.php
+/backend/storage/logs/*.log
