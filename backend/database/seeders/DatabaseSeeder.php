@@ -22,6 +22,13 @@ class DatabaseSeeder extends Seeder
             BannerSeeder::class,
             BlogCategorySeeder::class,
             BlogSeeder::class,
+            WishlistSeeder::class,
+            VoucherSeeder::class,
+            ShippingMethodSeeder::class,
+            PaymentMethodSeeder::class,
+            AddressSeeder::class,
+            OrderSeeder::class,
+            ReviewSeeder::class,
         ]);
     }
 }

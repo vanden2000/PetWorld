@@ -203,3 +203,130 @@ API homepage chưa được tạo và đang chờ duyệt cấu trúc JSON respo
   - `php artisan test`: 2 passed, 1 skipped do thieu `pdo_sqlite`.
   - Goi thu `/api/home`: status `200`, `latest_blogs` tra ve 3 bai.
 - Da bo sung field `content` vao item cua `latest_blogs`.
+
+## Cap nhat wishlists 25/06/2026
+
+- Cart duoc chot huong lam bang session/cookie, chua tao bang cart.
+- Chua tao `reviews` vi reviews phu thuoc `order_items`, ma `order_items` phu thuoc nhom bang order.
+- Da tao bang `wishlists`:
+  - `id`
+  - `product_id`
+  - `user_id`
+  - unique `user_id + product_id`
+- Da tao model: `backend/app/Models/Wishlist.php`
+- Da them quan he:
+  - `User::wishlists()`
+  - `Product::wishlists()`
+- Da tao seeder: `backend/database/seeders/WishlistSeeder.php`
+- Da dang ky `WishlistSeeder` vao `DatabaseSeeder`.
+- Da chay migration wishlist tren database that: batch 7.
+- Da chay `php artisan db:seed --class=WishlistSeeder`.
+- Du lieu mau: 3 user customer, 9 wishlist gan voi san pham that.
+- Kiem tra:
+  - `php -l` cac file moi/sua: dat.
+  - `php artisan migrate:status`: migration wishlist da `Ran`.
+  - Kiem tra DB: bang `wishlists` co 9 dong mau.
+  - `php artisan test`: 2 passed, 1 skipped do thieu `pdo_sqlite`.
+
+## Cap nhat orders va reviews 25/06/2026
+
+- Da doc lai ERD moi va tao tiep nhom bang de reviews co day du khoa ngoai.
+- Da tao bang:
+  - `vouchers`
+  - `shipping_methods`
+  - `payment_methods`
+  - `addresses`
+  - `orders`
+  - `order_items`
+  - `reviews`
+- Da tao model:
+  - `Voucher`
+  - `ShippingMethod`
+  - `PaymentMethod`
+  - `Address`
+  - `Order`
+  - `OrderItem`
+  - `Review`
+- Da them quan he:
+  - `User::addresses()`
+  - `User::orders()`
+  - `User::reviews()`
+  - `ProductVariant::orderItems()`
+- Enum da dung:
+  - `vouchers.status`: `active`, `inactive`, `expired`
+  - `shipping_methods.status`: `active`, `inactive`
+  - `payment_methods.status`: `active`, `inactive`
+  - `addresses.status`: `active`, `inactive`
+  - `orders.order_status`: `pending`, `confirmed`, `shipping`, `completed`, `cancelled`
+  - `orders.payment_status`: `unpaid`, `paid`, `failed`, `refunded`
+  - `reviews.status`: `pending`, `approved`, `hidden`
+- Da tao seeder:
+  - `VoucherSeeder`
+  - `ShippingMethodSeeder`
+  - `PaymentMethodSeeder`
+  - `AddressSeeder`
+  - `OrderSeeder`
+  - `ReviewSeeder`
+- Da dang ky cac seeder moi vao `DatabaseSeeder`.
+- Da chay migration tren database that: batch 8.
+- Da seed du lieu mau:
+  - 3 vouchers
+  - 3 shipping methods
+  - 3 payment methods
+  - 3 addresses
+  - 3 orders
+  - 6 order_items
+  - 4 reviews approved tu cac order completed
+- Luu y: lan seed dau `OrderSeeder` chay song song voi `AddressSeeder` nen thieu address; da rerun tuan tu `AddressSeeder`, `OrderSeeder`, `ReviewSeeder` thanh cong.
+- Kiem tra:
+  - `php -l` migrations, models, seeders moi/sua: dat.
+  - `php artisan migrate:status`: cac migration moi da `Ran`.
+  - Kiem tra DB count: dung so luong mau ben tren.
+  - `php artisan test`: 2 passed, 1 skipped do thieu `pdo_sqlite`.
+
+## Cap nhat API san pham 25/06/2026
+
+- Da tao endpoint: `GET /api/products`
+- Route: `backend/routes/api.php`
+- Controller: `backend/app/Http/Controllers/Api/ProductController.php`
+- API ho tro query params:
+  - `search`
+  - `category`
+  - `brand`
+  - `min_price`
+  - `max_price`
+  - `sort`
+  - `page`
+  - `per_page`
+  - `user_id`
+- `sort` ho tro:
+  - `newest`
+  - `price_asc`
+  - `price_desc`
+  - `popular`
+  - `sale`
+  - `rating`
+- Response gom:
+  - `breadcrumb`
+  - `title`
+  - `total`
+  - `filters`
+  - `sort_options`
+  - `products`
+  - `pagination`
+- Product card gom:
+  - anh chinh
+  - danh muc
+  - thuong hieu
+  - rating that tu `reviews` approved
+  - price range theo gia thuc te `COALESCE(sale_price, price)`
+  - tong ton kho
+  - `wishlist_count`
+  - `is_wishlisted` neu truyen `user_id`
+- Da them test: `backend/tests/Feature/ProductApiTest.php`
+- Kiem tra:
+  - `php -l` cho `ProductController.php`, `api.php`, `ProductApiTest.php`: dat.
+  - `php artisan route:list --path=api/products`: da hien route `GET|HEAD api/products`.
+  - Goi thu `/api/products?per_page=4&sort=rating`: status `200`, co product va rating that.
+  - Goi thu filter/search/price/wishlist: status `200`, tra ve dung product va `is_wishlisted = true`.
+  - `php artisan test`: 2 passed, 2 skipped do thieu `pdo_sqlite`.
