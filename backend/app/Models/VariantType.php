@@ -16,7 +16,4 @@ class VariantType extends Model
         'status',
     ];
 
-    protected $casts = [
-        'status' => 'boolean',
-    ];
 }

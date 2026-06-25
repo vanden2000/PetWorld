@@ -1,0 +1,205 @@
+# PetWorld - Tiến độ phát triển
+
+> Cập nhật lần cuối: 24/06/2026
+
+## Quy ước làm việc
+
+- Thực hiện lần lượt từng bảng.
+- Trước mỗi bảng phải trình bày cấu trúc cột, quan hệ và dữ liệu seed.
+- Chỉ tạo hoặc sửa code sau khi được xác nhận.
+- Chưa chạy migration, seeder, rollback hoặc xóa dữ liệu nếu chưa được cho phép.
+
+## Đã hoàn thành
+
+### Brands
+
+- Model: `backend/app/Models/Brand.php`
+- Migration: `backend/database/migrations/2026_06_24_111011_create_brands_table.php`
+- Seeder: `backend/database/seeders/BrandSeeder.php`
+- Dữ liệu: 9 thương hiệu, có tên ảnh mặc định.
+- Migration đã tồn tại trong database trước phiên làm việc và đang ở trạng thái `Ran`.
+
+### Categories
+
+- Model: `backend/app/Models/Category.php`
+- Đã sửa tên model từ `Categories.php` thành `Category.php` để đúng PSR-4.
+- Migration: `backend/database/migrations/2026_06_24_113304_create_categories_table.php`
+- Seeder: `backend/database/seeders/CategorySeeder.php`
+- Dữ liệu: Thức ăn hạt, Pate, Snack, Phụ kiện, Đồ chơi, Vệ sinh và chăm sóc.
+- Mỗi danh mục có tên ảnh `.jpg` mặc định.
+- Migration: `Pending`.
+
+### Products
+
+- Model: `backend/app/Models/Product.php`
+- Migration: `backend/database/migrations/2026_06_24_120000_create_products_table.php`
+- Seeder: `backend/database/seeders/ProductSeeder.php`
+- Dữ liệu riêng: `backend/database/seeders/data/products.php`
+- Dữ liệu: 12 sản phẩm thuộc 6 danh mục.
+- `description` dùng `LONGTEXT`.
+- Mỗi sản phẩm có mô tả HTML dài dạng bài viết.
+- Hỗ trợ soft delete và không dùng timestamps theo ERD.
+- Migration: `Pending`.
+
+### Variant types
+
+- Model: `backend/app/Models/VariantType.php`
+- Migration: `backend/database/migrations/2026_06_24_120100_create_variant_types_table.php`
+- Seeder: `backend/database/seeders/VariantTypeSeeder.php`
+- Dữ liệu: Trọng lượng, Kích thước, Màu sắc, Quy cách đóng gói.
+- Migration: `Pending`.
+
+### Product variants
+
+- Model: `backend/app/Models/ProductVariant.php`
+- Migration: `backend/database/migrations/2026_06_24_120200_create_product_variants_table.php`
+- Seeder: `backend/database/seeders/ProductVariantSeeder.php`
+- Dữ liệu: 24 biến thể, gồm giá gốc, giá sale và tồn kho.
+- Hỗ trợ soft delete và không dùng timestamps theo ERD.
+- Migration: `Pending`.
+
+### Product images
+
+- Model: `backend/app/Models/ProductImage.php`
+- Model ánh xạ tới bảng `images` theo ERD.
+- Migration: `backend/database/migrations/2026_06_24_120300_create_images_table.php`
+- Seeder: `backend/database/seeders/ProductImageSeeder.php`
+- Dữ liệu: 12 đường dẫn ảnh chính, mỗi sản phẩm một ảnh.
+- Đã thêm quan hệ `images()` và `primaryImage()` vào model `Product`.
+- Chưa tạo các file ảnh vật lý.
+- Migration: `Pending`.
+
+### Banners
+
+- Model: `backend/app/Models/Banner.php`
+- Migration: `backend/database/migrations/2026_06_24_120400_create_banners_table.php`
+- Seeder: `backend/database/seeders/BannerSeeder.php`
+- Dữ liệu: 3 banner cho homepage.
+- Chưa tạo các file ảnh vật lý.
+- Migration: `Pending`.
+
+### Database seeder
+
+`backend/database/seeders/DatabaseSeeder.php` đã đăng ký theo thứ tự:
+
+1. `BrandSeeder`
+2. `CategorySeeder`
+3. `VariantTypeSeeder`
+4. `ProductSeeder`
+5. `ProductVariantSeeder`
+6. `ProductImageSeeder`
+7. `BannerSeeder`
+
+## Kiểm tra đã thực hiện
+
+- Các model, migration và seeder mới đều không có lỗi cú pháp PHP.
+- Các model mới đều autoload thành công.
+- Chưa chạy migration hoặc seeder mới.
+
+## Bước tiếp theo đã đề xuất
+
+Tạo API homepage:
+
+- Endpoint dự kiến: `GET /api/home`
+- Banners
+- Categories
+- Brands
+- Featured products
+- Sale products
+- Sản phẩm kèm ảnh chính, danh mục, thương hiệu và khoảng giá
+
+API homepage chưa được tạo và đang chờ duyệt cấu trúc JSON response.
+
+## Các bảng ERD chưa thực hiện
+
+- Users (đang dùng migration mặc định của Laravel, chưa điều chỉnh theo ERD)
+- Vouchers
+- Shipping methods
+- Payment methods
+- Addresses
+- Orders
+- Order details
+- Wishlists
+- Blog categories
+- Blogs
+- Comments
+- Reviews
+
+## Cap nhat 25/06/2026
+
+### Homepage API
+
+- Da tao endpoint: `GET /api/home`
+- Route: `backend/routes/api.php`
+- Controller: `backend/app/Http/Controllers/Api/HomeController.php`
+- Response gom: `banners`, `categories`, `brands`, `featured_products`, `sale_products`.
+- Product trong response gom anh chinh, danh muc, thuong hieu, khoang gia va tong ton kho.
+- Da them quan he `variants()` vao model `Product`.
+- Da them test: `backend/tests/Feature/HomeApiTest.php`
+- Da cau hinh PHPUnit dung SQLite in-memory cho database tests.
+
+### Kiem tra da thuc hien
+
+- `php -l` cho cac file PHP moi/sua: dat.
+- `php artisan route:list --path=api/home`: da hien thi route `GET|HEAD api/home`.
+- `php artisan test --testsuite=Feature`: 1 passed, 1 skipped.
+- `HomeApiTest` bi skip tren may hien tai vi thieu PHP extension `pdo_sqlite`.
+- Chua chay migration hoac seeder tren database that.
+
+## Cap nhat status enum 25/06/2026
+
+- Da tao migration: `backend/database/migrations/2026_06_25_000000_update_users_and_status_enums.php`
+- Da chay migration tren database that: batch 5.
+- `users` da them:
+  - `phone`
+  - `avatar`
+  - `role enum('user', 'admin') default 'user'`
+  - `status enum('active', 'inactive', 'blocked') default 'active'`
+- Da doi `status` cac bang da tao sang enum:
+  - `products.status enum('active', 'inactive') default 'active'`
+  - `product_variants.status enum('active', 'inactive') default 'active'`
+  - `variant_types.status enum('active', 'inactive') default 'active'`
+- Da cap nhat model, seeder, controller va test de dung `active` thay cho boolean `true`.
+- Kiem tra:
+  - `php artisan migrate:status`: migration moi da `Ran`.
+  - Kiem tra schema bang `SHOW COLUMNS`: enum da dung.
+- `php artisan test`: 2 passed, 1 skipped do thieu `pdo_sqlite`.
+
+## Cap nhat homepage sections 25/06/2026
+
+- Da bo sung vao `GET /api/home`:
+  - `new_accessories`
+  - `recent_viewed_accessories`
+  - `products_by_categories`
+- `new_accessories`: lay san pham active thuoc category slug `phu-kien`, moi nhat truoc, gioi han 8 san pham.
+- `recent_viewed_accessories`: nhan query `recent_product_ids`, vi du `/api/home?recent_product_ids=1,2,3`; chi tra ve san pham active thuoc `phu-kien`.
+- `products_by_categories`: tra ve tat ca danh muc, moi danh muc gom toi da 5 san pham active.
+- Chua them `latest_blogs` vi chua co migration/model cho `blogs` va `blog_categories`.
+- Da cap nhat `backend/tests/Feature/HomeApiTest.php` theo response moi.
+- Kiem tra:
+  - `php -l` cho `HomeController.php` va `HomeApiTest.php`: dat.
+  - `php artisan test`: 2 passed, 1 skipped do thieu `pdo_sqlite`.
+  - Goi thu `/api/home` trong app voi database that: status `200`, response co 8 section.
+
+## Cap nhat blog homepage 25/06/2026
+
+- Da tao bang `blog_categories`.
+- Da tao bang `blogs`.
+- Da tao model:
+  - `backend/app/Models/BlogCategory.php`
+  - `backend/app/Models/Blog.php`
+- Da tao seeder:
+  - `backend/database/seeders/BlogCategorySeeder.php`
+  - `backend/database/seeders/BlogSeeder.php`
+- Da dang ky seeder blog vao `DatabaseSeeder`.
+- Du lieu seed gom 3 danh muc blog va 5 bai viet mau co title, slug, description, content HTML va image path.
+- Da bo sung `latest_blogs` vao `GET /api/home`.
+- `latest_blogs`: lay 3 bai moi nhat, `status = active`, kem category va author.
+- Da them comment ngan trong `HomeController` de biet section nao goi ham nao.
+- Da chay migration blog tren database that.
+- Da chay rieng `BlogCategorySeeder` va `BlogSeeder` tren database that.
+- Kiem tra:
+  - `php -l` cac file moi/sua: dat.
+  - `php artisan test`: 2 passed, 1 skipped do thieu `pdo_sqlite`.
+  - Goi thu `/api/home`: status `200`, `latest_blogs` tra ve 3 bai.
+- Da bo sung field `content` vao item cua `latest_blogs`.

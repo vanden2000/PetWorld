@@ -27,7 +27,6 @@ class ProductVariant extends Model
         'price' => 'decimal:2',
         'sale_price' => 'decimal:2',
         'quantity' => 'integer',
-        'status' => 'boolean',
         'deleted_at' => 'datetime',
     ];
 

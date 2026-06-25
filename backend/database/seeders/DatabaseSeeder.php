@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             ProductVariantSeeder::class,
             ProductImageSeeder::class,
             BannerSeeder::class,
+            BlogCategorySeeder::class,
+            BlogSeeder::class,
         ]);
     }
 }

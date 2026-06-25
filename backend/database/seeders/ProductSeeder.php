@@ -28,7 +28,7 @@ class ProductSeeder extends Seeder
                     'name' => $product['name'],
                     'description' => $product['description'],
                     'view_count' => 0,
-                    'status' => true,
+                    'status' => 'active',
                 ],
             );
         }

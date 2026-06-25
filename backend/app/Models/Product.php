@@ -27,7 +27,6 @@ class Product extends Model
 
     protected $casts = [
         'view_count' => 'integer',
-        'status' => 'boolean',
         'deleted_at' => 'datetime',
     ];
 
@@ -50,5 +49,10 @@ class Product extends Model
     {
         return $this->hasOne(ProductImage::class)
             ->where('is_primary', true);
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
     }
 }

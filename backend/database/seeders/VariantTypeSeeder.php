@@ -13,10 +13,10 @@ class VariantTypeSeeder extends Seeder
     public function run(): void
     {
         $variantTypes = [
-            ['name' => 'Trọng lượng', 'status' => true],
-            ['name' => 'Kích thước', 'status' => true],
-            ['name' => 'Màu sắc', 'status' => true],
-            ['name' => 'Quy cách đóng gói', 'status' => true],
+            ['name' => 'Trọng lượng', 'status' => 'active'],
+            ['name' => 'Kích thước', 'status' => 'active'],
+            ['name' => 'Màu sắc', 'status' => 'active'],
+            ['name' => 'Quy cách đóng gói', 'status' => 'active'],
         ];
 
         foreach ($variantTypes as $variantType) {

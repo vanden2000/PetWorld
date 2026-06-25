@@ -55,7 +55,7 @@ class ProductVariantSeeder extends Seeder
                     'price' => $variant['price'],
                     'sale_price' => $variant['sale_price'],
                     'quantity' => $variant['quantity'],
-                    'status' => true,
+                    'status' => 'active',
                 ],
             );
         }
