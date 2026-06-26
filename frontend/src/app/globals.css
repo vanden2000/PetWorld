@@ -1,15 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
-
 :root {
-  --primary-orange: #ff7a00;
-  --primary-orange-hover: #e66c00;
+  --primary-orange: #ff782d;
+  --primary-orange-hover: #e9661c;
   --light-orange-stripe: #ff8522;
   --dark-orange-stripe: #f57410;
   --text-dark: #333333;
   --text-muted: #666666;
   --text-light-orange: #fca858;
   --bg-body: #faf8f6; /* Beautiful warm cream matching mockup background */
-  --circle-size: 140px; /* Responsive category circle size */
+  --circle-size: 120px; /* Responsive category circle size */
   --bg-search: #f8f9fa;
   --shadow-navbar: 0 12px 30px rgba(0, 0, 0, 0.08);
   --shadow-hover: 0 15px 35px rgba(255, 122, 0, 0.15);
@@ -23,7 +21,7 @@
 }
 
 body {
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-body);
   color: var(--text-dark);
   min-height: 100vh;
@@ -568,6 +566,22 @@ body {
   transform: translateY(-2px);
 }
 
+/* Logo phương thức thanh toán dạng ảnh */
+.payment-logo {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+  background-color: #ffffff;
+  border-radius: 5px;
+  padding: 3px 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.payment-logo:hover {
+  transform: translateY(-2px);
+}
+
 .footer-logo {
   display: flex;
   justify-content: center;
@@ -675,19 +689,27 @@ body {
 }
 
 .view-all-link {
-  color: var(--text-muted);
+  color: var(--primary-orange);
   text-decoration: none;
   font-weight: 700;
-  font-size: 14.5px;
-  display: flex;
+  font-size: 14px;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 8px 18px;
+  border: 1.5px solid var(--primary-orange);
+  border-radius: 30px;
+  background-color: rgba(255, 120, 45, 0.06);
   transition: var(--transition-default);
 }
 
 .view-all-link:hover {
-  color: var(--primary-orange);
-  transform: translateX(3px);
+  color: #ffffff;
+  background-color: var(--primary-orange);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(255, 120, 45, 0.25);
 }
 
 
@@ -1146,34 +1168,44 @@ body {
 }
 
 .sidebar-title {
-  font-size: 21px;
+  position: relative;
+  z-index: 2;
+  font-size: 22px;
   font-weight: 800;
   color: #ffffff;
-  margin-bottom: 25px;
-  border-bottom: 1.5px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 22px;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.12);
   padding-bottom: 14px;
+  letter-spacing: 0.3px;
 }
 
 .sidebar-menu {
+  position: relative;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   z-index: 2;
 }
 
 .sidebar-link {
-  color: #cabcb2;
+  color: #f3ece7;
   text-decoration: none;
   font-weight: 700;
   font-size: 15px;
   transition: var(--transition-default);
   display: block;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-link:hover {
   color: var(--primary-orange);
-  transform: translateX(6px);
+  background-color: rgba(255, 120, 45, 0.14);
+  border-color: rgba(255, 120, 45, 0.4);
+  transform: translateX(4px);
 }
 
 .sidebar-illustration {
@@ -1196,7 +1228,7 @@ body {
 }
 
 .promo-card {
-  background-color: #ff7a00;
+  background-color: var(--primary-orange);
   border-radius: 20px;
   padding: 35px 30px;
   color: #ffffff;
@@ -1209,25 +1241,32 @@ body {
 }
 
 .promo-card-content {
+  position: relative;
   z-index: 2;
-  max-width: 220px;
+  max-width: none;
 }
 
 .promo-tag {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
-  opacity: 0.9;
-  margin-bottom: 8px;
-  display: block;
+  margin-bottom: 14px;
+  display: inline-block;
+  background-color: #ffffff;
+  color: var(--primary-orange);
+  padding: 5px 14px;
+  border-radius: 20px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
 .promo-title {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 900;
-  line-height: 1.25;
+  line-height: 1.2;
   margin-bottom: 18px;
+  white-space: nowrap;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 2px rgba(0, 0, 0, 0.3);
 }
 
 .promo-btn {
@@ -1492,5 +1531,288 @@ body {
     font-size: 15px;
     padding: 14px 10px;
     margin-top: 25px;
+  }
+}
+
+/* Nhãn danh mục trong product card */
+.product-category {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.product-category span {
+  color: var(--primary-orange);
+  font-weight: 700;
+}
+
+/* Logo thương hiệu dạng ảnh trong khối "Các Thương Hiệu Nổi Bật" */
+.brand-logo-img {
+  height: 42px;
+  width: auto;
+  max-width: 130px;
+  object-fit: contain;
+  filter: grayscale(35%);
+  opacity: 0.85;
+  transition: var(--transition-default);
+}
+
+.brand-logo-img:hover {
+  filter: grayscale(0);
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+/* ============================================================
+   Tinh chỉnh khối sản phẩm: cân đối, chống chữ rớt dòng
+   (giữ nguyên font Inter và màu chủ đạo)
+   ============================================================ */
+
+/* Tiêu đề section cân đối, ngắt dòng đẹp */
+.section-title {
+  text-wrap: balance;
+}
+
+/* Header section không để nút "xem tất cả" bị bóp */
+.section-header,
+.best-selling-header {
+  gap: 16px;
+}
+
+/* Tên sản phẩm: luôn gọn 2 dòng, không tràn */
+.product-title {
+  text-wrap: balance;
+  min-height: 42px;
+}
+
+/* Dòng danh mục: 1 dòng, dài thì cắt bằng dấu "..." */
+.product-category {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Giá tiền không bao giờ rớt dòng */
+.product-price {
+  min-width: 0;
+}
+
+.price-current,
+.price-old {
+  white-space: nowrap;
+}
+
+/* Badge, tab, nút giữ trên 1 dòng */
+.product-badge,
+.tab-btn,
+.promo-btn,
+.subscribe-btn {
+  white-space: nowrap;
+}
+
+/* Card đồng đều, nội dung căn đều hai đầu */
+.product-card {
+  min-height: 372px;
+}
+
+.product-footer {
+  gap: 10px;
+}
+
+/* Nút thêm giỏ to & rõ hơn một chút */
+.product-add-btn {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+/* Tabs Best Selling: xuống hàng gọn khi hẹp thay vì tràn */
+.best-selling-tabs {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ============================================================
+   Cột phải khối "Phụ Kiện": lưới sản phẩm + hàng "Đã xem gần đây"
+   ============================================================ */
+.promo-right {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+/* Hàng "Đã xem gần đây" (nằm dưới lưới sản phẩm, bên phải banner) */
+.recent-viewed-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background-color: #ffffff;
+  border: 1px solid #eef1f5;
+  border-radius: 16px;
+  padding: 16px 24px;
+  margin-top: auto;
+  overflow-x: auto;
+}
+
+.recent-viewed-label {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--text-dark);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.recent-viewed-list {
+  display: flex;
+  gap: 12px;
+}
+
+.recent-viewed-thumb-link {
+  flex-shrink: 0;
+  display: block;
+}
+
+.recent-viewed-thumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1.5px solid #ffe3cc;
+  padding: 4px;
+  object-fit: contain;
+  background-color: #ffffff;
+  transition: var(--transition-default);
+}
+
+.recent-viewed-thumb-link:hover .recent-viewed-thumb {
+  border-color: var(--primary-orange);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(255, 120, 45, 0.18);
+}
+
+/* ============================================================
+   Banner CTA ngang "Mua ngay, kẻo lỡ"
+   ============================================================ */
+.shop-cta-banner {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  width: 100%;
+  background: linear-gradient(90deg, #fff4e9 0%, #fffdfb 65%);
+  border: 1px solid #ffe3cc;
+  border-radius: 18px;
+  padding: 24px 44px;
+  margin-bottom: 60px;
+  overflow: hidden;
+}
+
+.shop-cta-logo {
+  height: 54px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.shop-cta-photo {
+  height: 96px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.shop-cta-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-cta-tag {
+  display: block;
+  color: var(--primary-orange);
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.85;
+  margin-bottom: 4px;
+}
+
+.shop-cta-title {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--primary-orange);
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.shop-cta-title span {
+  color: #ffa86b;
+}
+
+.shop-cta-btn {
+  background-color: #ffffff;
+  border: 1.5px solid #e2ded6;
+  color: #3e271a;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  padding: 13px 28px;
+  border-radius: 30px;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: var(--transition-default);
+}
+
+.shop-cta-btn:hover {
+  border-color: var(--primary-orange);
+  color: var(--primary-orange);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(255, 120, 45, 0.18);
+}
+
+@media (max-width: 800px) {
+  .shop-cta-banner {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    gap: 16px;
+    padding: 22px;
+  }
+  .shop-cta-photo {
+    display: none;
+  }
+  .shop-cta-title {
+    white-space: normal;
+    font-size: 22px;
+  }
+}
+
+/* Lưới sản phẩm co giãn mượt trên màn nhỏ */
+@media (max-width: 1100px) {
+  .products-grid-5 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .products-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .split-section,
+  .promo-split-section {
+    grid-template-columns: 1fr;
+  }
+  .category-sidebar {
+    min-height: auto;
+  }
+  .promo-card {
+    min-height: 240px;
+  }
+}
+
+@media (max-width: 640px) {
+  .products-grid-5,
+  .products-grid-4,
+  .products-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .section-title {
+    font-size: 20px;
   }
 }
