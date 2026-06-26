@@ -7,12 +7,12 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Review;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class ProductController extends Controller
 {
@@ -41,7 +41,7 @@ class ProductController extends Controller
                 // Sort dropdown data comes from sortOptions().
                 'sort_options' => $this->sortOptions(),
                 // Product cards come from formatProducts().
-                'products' => $this->formatProducts($products->getCollection(), $request->integer('user_id')),
+                'products' => $this->formatProducts(collect($products->items()), $request->integer('user_id')),
                 // Pagination buttons come from paginationMeta().
                 'pagination' => $this->paginationMeta($products),
             ],
