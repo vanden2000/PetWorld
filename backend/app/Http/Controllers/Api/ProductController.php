@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Review;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -43,6 +44,28 @@ class ProductController extends Controller
                 'products' => $this->formatProducts($products->getCollection(), $request->integer('user_id')),
                 // Pagination buttons come from paginationMeta().
                 'pagination' => $this->paginationMeta($products),
+            ],
+        ]);
+    }
+
+    public function show(Request $request, string $slug): JsonResponse
+    {
+        $product = $this->baseProductQuery()
+            ->with(['images', 'variants.variantType'])
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        return response()->json([
+            'data' => [
+                'breadcrumb' => [
+                    ['label' => 'Trang chu', 'url' => '/'],
+                    ['label' => 'Cua Hang', 'url' => '/products'],
+                    ['label' => $product->category?->name, 'url' => $product->category ? '/products?category=' . $product->category->slug : null],
+                    ['label' => $product->name, 'url' => '/products/' . $product->slug],
+                ],
+                'product' => $this->formatProductDetail($product, $request->integer('user_id')),
+                'reviews' => $this->formatReviews($product),
+                'related_products' => $this->formatProducts($this->relatedProducts($product), $request->integer('user_id')),
             ],
         ]);
     }
@@ -160,6 +183,80 @@ class ProductController extends Controller
                 ];
             })
             ->all();
+    }
+
+    private function formatProductDetail(Product $product, int $userId = 0): array
+    {
+        $card = $this->formatProducts(new Collection([$product]), $userId)[0];
+        $activeVariants = $product->variants->where('status', 'active');
+
+        return array_merge($card, [
+            'description' => $product->description,
+            'view_count' => $product->view_count,
+            'images' => $product->images
+                ->sortByDesc('is_primary')
+                ->values()
+                ->map(fn ($image): array => [
+                    'id' => $image->id,
+                    'image_url' => $image->image_url,
+                    'is_primary' => (bool) $image->is_primary,
+                ])
+                ->all(),
+            'variants' => $activeVariants
+                ->values()
+                ->map(fn ($variant): array => [
+                    'id' => $variant->id,
+                    'name' => $variant->variant_name,
+                    'type' => $variant->variantType ? [
+                        'id' => $variant->variantType->id,
+                        'name' => $variant->variantType->name,
+                    ] : null,
+                    'price' => (float) $variant->price,
+                    'sale_price' => $variant->sale_price !== null ? (float) $variant->sale_price : null,
+                    'effective_price' => (float) ($variant->sale_price ?? $variant->price),
+                    'quantity' => $variant->quantity,
+                    'status' => $variant->status,
+                ])
+                ->all(),
+        ]);
+    }
+
+    private function formatReviews(Product $product): array
+    {
+        return Review::query()
+            ->with(['user', 'orderItem.productVariant'])
+            ->where('status', 'approved')
+            ->whereHas('orderItem.productVariant', fn (Builder $query) => $query->where('product_id', $product->id))
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(fn (Review $review): array => [
+                'id' => $review->id,
+                'rating' => $review->rating,
+                'comment' => $review->comment,
+                'created_at' => $review->created_at?->toDateTimeString(),
+                'user' => $review->user ? [
+                    'id' => $review->user->id,
+                    'name' => $review->user->name,
+                    'avatar' => $review->user->avatar,
+                ] : null,
+                'variant' => $review->orderItem?->productVariant ? [
+                    'id' => $review->orderItem->productVariant->id,
+                    'name' => $review->orderItem->productVariant->variant_name,
+                ] : null,
+            ])
+            ->all();
+    }
+
+    private function relatedProducts(Product $product): Collection
+    {
+        return $this->baseProductQuery()
+            ->whereKeyNot($product->id)
+            ->where('category_id', $product->category_id)
+            ->orderByDesc('view_count')
+            ->orderByDesc('id')
+            ->limit(4)
+            ->get();
     }
 
     private function formatFilters(): array

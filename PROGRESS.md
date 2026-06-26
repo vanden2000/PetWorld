@@ -330,3 +330,27 @@ API homepage chưa được tạo và đang chờ duyệt cấu trúc JSON respo
   - Goi thu `/api/products?per_page=4&sort=rating`: status `200`, co product va rating that.
   - Goi thu filter/search/price/wishlist: status `200`, tra ve dung product va `is_wishlisted = true`.
   - `php artisan test`: 2 passed, 2 skipped do thieu `pdo_sqlite`.
+
+## Cap nhat API chi tiet san pham 26/06/2026
+
+- Da tao endpoint: `GET /api/products/{slug}`
+- Route: `backend/routes/api.php`
+- Controller: `backend/app/Http/Controllers/Api/ProductController.php`
+- Response gom:
+  - `breadcrumb`
+  - `product`
+  - `reviews`
+  - `related_products`
+- `product` gom du lieu card nhu API danh sach, them:
+  - `description`
+  - `view_count`
+  - `images`
+  - `variants`
+- `reviews`: lay toi da 10 review `approved`, kem user va bien the da mua.
+- `related_products`: lay toi da 4 san pham active cung danh muc, sap xep theo view_count va id.
+- Da them test: `backend/tests/Feature/ProductApiTest.php`
+- Kiem tra:
+  - `php -l` cho `ProductController.php`, `api.php`, `ProductApiTest.php`: dat.
+  - `php artisan route:list --path=api/products`: da hien route `GET|HEAD api/products/{slug}`.
+  - `php artisan test --testsuite=Feature`: 1 passed, 3 skipped do thieu `pdo_sqlite`.
+  - Goi thu `/api/products/royal-canin-mini-adult` bang Laravel kernel voi database that: status `200`, tra ve dung slug.
