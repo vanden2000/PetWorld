@@ -28,91 +28,91 @@ class BlogSeeder extends Seeder
         $blogs = [
             [
                 'category_slug' => 'cham-soc-thu-cung',
-                'title' => 'Cach cham soc cho con moi ve nha trong 7 ngay dau',
+                'title' => 'Cách chăm sóc chó con mới về nhà trong 7 ngày đầu',
                 'slug' => 'cach-cham-soc-cho-con-moi-ve-nha-trong-7-ngay-dau',
-                'description' => 'Huong dan cham soc cho con moi ve nha: khong gian nghi ngoi, lich an, ve sinh, theo doi suc khoe va cach giup be lam quen voi gia dinh.',
-                'image' => 'blogs/cham-soc-cho-con-moi-ve-nha.jpg',
+                'description' => 'Hướng dẫn chăm sóc chó con mới về nhà: không gian nghỉ ngơi, lịch ăn, vệ sinh, theo dõi sức khỏe và cách giúp bé làm quen với gia đình.',
+                'image' => 'cham-soc-cho-con-moi-ve-nha.jpg',
                 'content' => $this->article(
-                    'Cach cham soc cho con moi ve nha trong 7 ngay dau',
-                    'Bay ngay dau tien la giai doan quan trong de cho con lam quen voi mui, am thanh va lich sinh hoat moi. Chu nuoi nen chuan bi mot khu vuc yen tinh, co dem nam, bat nuoc rieng va do choi an toan.',
+                    'Cách chăm sóc chó con mới về nhà trong 7 ngày đầu',
+                    'Bảy ngày đầu tiên là giai đoạn quan trọng để chó con làm quen với mùi, âm thanh và lịch sinh hoạt mới. Chủ nuôi nên chuẩn bị một khu vực yên tĩnh, có đệm nằm, bát nước riêng và đồ chơi an toàn.',
                     [
-                        'Giu lich an on dinh, khong doi thuc an dot ngot trong nhung ngay dau.',
-                        'Dat cho ngu o noi thoang, am vua phai va tranh tieng on lon.',
-                        'Theo doi phan, muc nang luong, ho hap va bieu hien bo an.',
+                        'Giữ lịch ăn ổn định, không đổi thức ăn đột ngột trong những ngày đầu.',
+                        'Đặt chỗ ngủ ở nơi thoáng, ấm vừa phải và tránh tiếng ồn lớn.',
+                        'Theo dõi phân, mức năng lượng, hô hấp và biểu hiện bỏ ăn.',
                     ],
-                    'Neu be co dau hieu non lien tuc, tieu chay, met moi hoac bo an hon 24 gio, hay lien he bac si thu y. Viec tiem phong va tay giun can duoc sap xep theo lich tu van chuyen mon.',
+                    'Nếu bé có dấu hiệu nôn liên tục, tiêu chảy, mệt mỏi hoặc bỏ ăn hơn 24 giờ, hãy liên hệ bác sĩ thú y. Việc tiêm phòng và tẩy giun cần được sắp xếp theo lịch tư vấn chuyên môn.',
                 ),
                 'view_count' => 42,
             ],
             [
                 'category_slug' => 'dinh-duong',
-                'title' => 'Chon thuc an hat cho meo truong thanh theo nhu cau dinh duong',
+                'title' => 'Chọn thức ăn hạt cho mèo trưởng thành theo nhu cầu dinh dưỡng',
                 'slug' => 'chon-thuc-an-hat-cho-meo-truong-thanh-theo-nhu-cau-dinh-duong',
-                'description' => 'Kinh nghiem chon thuc an hat cho meo truong thanh dua tren do tuoi, can nang, muc van dong, tinh trang long da va kha nang tieu hoa.',
-                'image' => 'blogs/chon-thuc-an-hat-cho-meo-truong-thanh.jpg',
+                'description' => 'Kinh nghiệm chọn thức ăn hạt cho mèo trưởng thành dựa trên độ tuổi, cân nặng, mức vận động, tình trạng lông da và khả năng tiêu hóa.',
+                'image' => 'chon-thuc-an-hat-cho-meo-truong-thanh.jpg',
                 'content' => $this->article(
-                    'Chon thuc an hat cho meo truong thanh theo nhu cau dinh duong',
-                    'Meo truong thanh can khau phan can bang giua dam, chat beo, vitamin, khoang chat va nuoc. Khi chon thuc an hat, chu nuoi nen doc bang thanh phan, do dam, nang luong va khuyen nghi khau phan tren bao bi.',
+                    'Chọn thức ăn hạt cho mèo trưởng thành theo nhu cầu dinh dưỡng',
+                    'Mèo trưởng thành cần khẩu phần cân bằng giữa đạm, chất béo, vitamin, khoáng chất và nước. Khi chọn thức ăn hạt, chủ nuôi nên đọc bảng thành phần, độ đạm, năng lượng và khuyến nghị khẩu phần trên bao bì.',
                     [
-                        'Chon cong thuc phu hop voi meo trong nha, meo nang dong hoac meo can kiem soat can nang.',
-                        'Uu tien san pham co thong tin thanh phan ro rang va han su dung day du.',
-                        'Doi thuc an tu tu trong 7 den 10 ngay de he tieu hoa thich nghi.',
+                        'Chọn công thức phù hợp với mèo trong nhà, mèo năng động hoặc mèo cần kiểm soát cân nặng.',
+                        'Ưu tiên sản phẩm có thông tin thành phần rõ ràng và hạn sử dụng đầy đủ.',
+                        'Đổi thức ăn từ từ trong 7 đến 10 ngày để hệ tiêu hóa thích nghi.',
                     ],
-                    'Luon dat nuoc sach gan khu vuc an vi thuc an hat co do am thap. Neu meo co tien su soi tiet nieu, di ung hoac benh man tinh, can hoi y kien bac si thu y truoc khi doi khau phan.',
+                    'Luôn đặt nước sạch gần khu vực ăn vì thức ăn hạt có độ ẩm thấp. Nếu mèo có tiền sử sỏi tiết niệu, dị ứng hoặc bệnh mãn tính, cần hỏi ý kiến bác sĩ thú y trước khi đổi khẩu phần.',
                 ),
                 'view_count' => 38,
             ],
             [
                 'category_slug' => 'kinh-nghiem-mua-sam',
-                'title' => 'Kinh nghiem mua phu kien an toan cho cho meo',
+                'title' => 'Kinh nghiệm mua phụ kiện an toàn cho chó mèo',
                 'slug' => 'kinh-nghiem-mua-phu-kien-an-toan-cho-cho-meo',
-                'description' => 'Checklist mua phu kien cho cho meo: chat lieu, kich thuoc, do ben, cach ve sinh va cac dau hieu can thay moi de dam bao an toan.',
-                'image' => 'blogs/kinh-nghiem-mua-phu-kien-an-toan.jpg',
+                'description' => 'Checklist mua phụ kiện cho chó mèo: chất liệu, kích thước, độ bền, cách vệ sinh và các dấu hiệu cần thay mới để đảm bảo an toàn.',
+                'image' => 'kinh-nghiem-mua-phu-kien-an-toan.jpg',
                 'content' => $this->article(
-                    'Kinh nghiem mua phu kien an toan cho cho meo',
-                    'Phu kien nhu day dat, vong co, bat an, do choi va nha ve sinh can phu hop voi kich thuoc, thoi quen va muc do van dong cua thu cung. Mot mon do dung tot phai de ve sinh, khong co canh sac va khong gay kho chiu khi su dung lau.',
+                    'Kinh nghiệm mua phụ kiện an toàn cho chó mèo',
+                    'Phụ kiện như dây dắt, vòng cổ, bát ăn, đồ chơi và nhà vệ sinh cần phù hợp với kích thước, thói quen và mức độ vận động của thú cưng. Một món đồ dùng tốt phải dễ vệ sinh, không có cạnh sắc và không gây khó chịu khi sử dụng lâu.',
                     [
-                        'Do kich thuoc co, nguc hoac khu vuc su dung truoc khi mua.',
-                        'Kiem tra duong may, khoa cai, mui vat lieu va do chac cua san pham.',
-                        'Thay moi khi phu kien bi nut, soi, bien dang hoac kho lam sach.',
+                        'Đo kích thước cổ, ngực hoặc khu vực sử dụng trước khi mua.',
+                        'Kiểm tra đường may, khóa cài, mùi vật liệu và độ chắc của sản phẩm.',
+                        'Thay mới khi phụ kiện bị nứt, sờn, biến dạng hoặc khó làm sạch.',
                     ],
-                    'Khong nen mua phu kien chi dua tren mau sac. Hay uu tien an toan, do vua van va kha nang bao tri hang ngay. Voi do choi, nen quan sat thu cung trong nhung lan su dung dau.',
+                    'Không nên mua phụ kiện chỉ dựa trên màu sắc. Hãy ưu tiên an toàn, độ vừa vặn và khả năng bảo trì hằng ngày. Với đồ chơi, nên quan sát thú cưng trong những lần sử dụng đầu.',
                 ),
                 'view_count' => 34,
             ],
             [
                 'category_slug' => 'cham-soc-thu-cung',
-                'title' => 'Lich tam va ve sinh long cho thu cung tai nha',
+                'title' => 'Lịch tắm và vệ sinh lông cho thú cưng tại nhà',
                 'slug' => 'lich-tam-va-ve-sinh-long-cho-thu-cung-tai-nha',
-                'description' => 'Goi y lich tam, chai long, ve sinh tai mong va cham soc da long cho thu cung tai nha theo tung nhu cau sinh hoat.',
-                'image' => 'blogs/lich-tam-va-ve-sinh-long-thu-cung.jpg',
+                'description' => 'Gợi ý lịch tắm, chải lông, vệ sinh tai móng và chăm sóc da lông cho thú cưng tại nhà theo từng nhu cầu sinh hoạt.',
+                'image' => 'lich-tam-va-ve-sinh-long-thu-cung.jpg',
                 'content' => $this->article(
-                    'Lich tam va ve sinh long cho thu cung tai nha',
-                    'Lich tam cua thu cung khong nen co dinh giong nhau cho moi be. Giong loai, do dai long, moi truong song va tinh trang da se quyet dinh tan suat cham soc phu hop.',
+                    'Lịch tắm và vệ sinh lông cho thú cưng tại nhà',
+                    'Lịch tắm của thú cưng không nên cố định giống nhau cho mọi bé. Giống loài, độ dài lông, môi trường sống và tình trạng da sẽ quyết định tần suất chăm sóc phù hợp.',
                     [
-                        'Chai long dinh ky giup giam roi long va phat hien ve, vet thuong som.',
-                        'Dung sua tam danh rieng cho thu cung, khong dung dau goi cua nguoi.',
-                        'Lau kho tai va ke chan sau khi tam de han che am uot.',
+                        'Chải lông định kỳ giúp giảm rối lông và phát hiện ve, vết thương sớm.',
+                        'Dùng sữa tắm dành riêng cho thú cưng, không dùng dầu gội của người.',
+                        'Lau khô tai và kẽ chân sau khi tắm để hạn chế ẩm ướt.',
                     ],
-                    'Neu da bi do, co mui bat thuong hoac thu cung gap phan ung sau khi tam, nen ngung san pham dang dung va tham khao bac si thu y.',
+                    'Nếu da bị đỏ, có mùi bất thường hoặc thú cưng gặp phản ứng sau khi tắm, nên ngừng sản phẩm đang dùng và tham khảo bác sĩ thú y.',
                 ),
                 'view_count' => 26,
             ],
             [
                 'category_slug' => 'dinh-duong',
-                'title' => 'Cach ket hop pate va thuc an hat trong bua an hang ngay',
+                'title' => 'Cách kết hợp pate và thức ăn hạt trong bữa ăn hằng ngày',
                 'slug' => 'cach-ket-hop-pate-va-thuc-an-hat-trong-bua-an-hang-ngay',
-                'description' => 'Huong dan ket hop pate va thuc an hat de tang do ngon mieng, bo sung do am va van kiem soat tong nang luong moi ngay.',
-                'image' => 'blogs/ket-hop-pate-va-thuc-an-hat.jpg',
+                'description' => 'Hướng dẫn kết hợp pate và thức ăn hạt để tăng độ ngon miệng, bổ sung độ ẩm và vẫn kiểm soát tổng năng lượng mỗi ngày.',
+                'image' => 'ket-hop-pate-va-thuc-an-hat.jpg',
                 'content' => $this->article(
-                    'Cach ket hop pate va thuc an hat trong bua an hang ngay',
-                    'Ket hop pate voi thuc an hat co the giup bua an hap dan hon va tang do am cho khau phan. Tuy vay, chu nuoi can tinh tong nang luong de tranh cho an qua muc.',
+                    'Cách kết hợp pate và thức ăn hạt trong bữa ăn hằng ngày',
+                    'Kết hợp pate với thức ăn hạt có thể giúp bữa ăn hấp dẫn hơn và tăng độ ẩm cho khẩu phần. Tuy vậy, chủ nuôi cần tính tổng năng lượng để tránh cho ăn quá mức.',
                     [
-                        'Bat dau voi mot luong pate nho de theo doi kha nang tieu hoa.',
-                        'Giam bot luong hat neu da bo sung pate trong cung bua an.',
-                        'Khong de pate ngoai nhiet do phong qua lau sau khi mo.',
+                        'Bắt đầu với một lượng pate nhỏ để theo dõi khả năng tiêu hóa.',
+                        'Giảm bớt lượng hạt nếu đã bổ sung pate trong cùng bữa ăn.',
+                        'Không để pate ngoài nhiệt độ phòng quá lâu sau khi mở.',
                     ],
-                    'Nen chon pate va hat phu hop cung do tuoi, loai thu cung va tinh trang suc khoe. Voi be co da day nhay cam, hay doi thuc don cham va ghi lai phan ung sau moi bua.',
+                    'Nên chọn pate và hạt phù hợp cùng độ tuổi, loài thú cưng và tình trạng sức khỏe. Với bé có dạ dày nhạy cảm, hãy đổi thực đơn chậm và ghi lại phản ứng sau mỗi bữa.',
                 ),
                 'view_count' => 22,
             ],
@@ -148,9 +148,9 @@ class BlogSeeder extends Seeder
 <article>
     <h2>{$title}</h2>
     <p>{$intro}</p>
-    <h3>Diem chinh can nho</h3>
+    <h3>Điểm chính cần nhớ</h3>
     <ul>{$items}</ul>
-    <h3>Luu y tu PetWorld</h3>
+    <h3>Lưu ý từ PetWorld</h3>
     <p>{$note}</p>
 </article>
 HTML;

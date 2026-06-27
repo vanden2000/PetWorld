@@ -13,9 +13,9 @@ class BlogCategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'Cham soc thu cung', 'slug' => 'cham-soc-thu-cung'],
-            ['name' => 'Dinh duong', 'slug' => 'dinh-duong'],
-            ['name' => 'Kinh nghiem mua sam', 'slug' => 'kinh-nghiem-mua-sam'],
+            ['name' => 'Chăm sóc thú cưng', 'slug' => 'cham-soc-thu-cung'],
+            ['name' => 'Dinh dưỡng', 'slug' => 'dinh-duong'],
+            ['name' => 'Kinh nghiệm mua sắm', 'slug' => 'kinh-nghiem-mua-sam'],
         ];
 
         foreach ($categories as $category) {

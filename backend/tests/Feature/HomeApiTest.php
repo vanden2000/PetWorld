@@ -145,7 +145,7 @@ class HomeApiTest extends TestCase
             'product_id' => $accessory->id,
             'variant_name' => 'M',
             'price' => 120000,
-            'sale_price' => null,
+            'sale_price' => 150000,
             'quantity' => 4,
             'status' => 'active',
         ]);
@@ -162,17 +162,72 @@ class HomeApiTest extends TestCase
             ->assertJsonPath('data.featured_products.0.price_range.min', 100000)
             ->assertJsonPath('data.featured_products.0.price_range.max', 180000)
             ->assertJsonPath('data.featured_products.0.price_range.sale_min', 90000)
+            ->assertJsonPath('data.featured_products.0.price_range.display', 90000)
+            ->assertJsonPath('data.featured_products.0.price_range.compare_at', 100000)
             ->assertJsonPath('data.featured_products.0.price_range.has_sale', true)
+            ->assertJsonPath('data.featured_products.0.rating_average', 0.0)
+            ->assertJsonPath('data.featured_products.0.rating_count', 0)
             ->assertJsonPath('data.featured_products.0.stock_quantity', 8)
             ->assertJsonPath('data.sale_products.0.slug', 'sample-food')
+            ->assertJsonPath('data.new_products.0.slug', 'sample-leash')
             ->assertJsonPath('data.new_accessories.0.slug', 'sample-leash')
+            ->assertJsonPath('data.new_accessories.0.price_range.display', 120000)
+            ->assertJsonPath('data.new_accessories.0.price_range.has_sale', false)
             ->assertJsonPath('data.recent_viewed_accessories.0.slug', 'sample-leash')
             ->assertJsonPath('data.products_by_categories.0.category.slug', 'food')
             ->assertJsonPath('data.products_by_categories.0.products.0.slug', 'sample-food')
             ->assertJsonPath('data.products_by_categories.1.category.slug', 'phu-kien')
             ->assertJsonPath('data.products_by_categories.1.products.0.slug', 'sample-leash')
             ->assertJsonPath('data.latest_blogs.0.slug', 'blog-4')
-            ->assertJsonPath('data.latest_blogs.0.content', '<article><p>Content 4</p></article>')
+            ->assertJsonMissingPath('data.latest_blogs.0.content')
             ->assertJsonCount(3, 'data.latest_blogs');
+    }
+
+    public function test_recent_accessories_are_ordered_before_the_eight_item_limit(): void
+    {
+        $category = Category::create([
+            'name' => 'Accessories',
+            'slug' => 'phu-kien',
+        ]);
+        $brand = Brand::create([
+            'name' => 'PetWorld',
+            'slug' => 'petworld',
+        ]);
+        $variantType = VariantType::create([
+            'name' => 'Size',
+            'status' => 'active',
+        ]);
+
+        $productIds = [];
+
+        foreach (range(1, 9) as $index) {
+            $product = Product::create([
+                'category_id' => $category->id,
+                'brand_id' => $brand->id,
+                'name' => "Accessory {$index}",
+                'slug' => "accessory-{$index}",
+                'status' => 'active',
+            ]);
+
+            ProductVariant::create([
+                'variant_type_id' => $variantType->id,
+                'product_id' => $product->id,
+                'variant_name' => 'Default',
+                'price' => 100000 + $index,
+                'quantity' => 1,
+                'status' => 'active',
+            ]);
+
+            $productIds[] = $product->id;
+        }
+
+        // ID mới xem nhất được gửi trước; kết quả phải giữ thứ tự này rồi mới lấy tám sản phẩm.
+        $recentIds = implode(',', array_reverse($productIds));
+
+        $this->getJson("/api/home?recent_product_ids={$recentIds}")
+            ->assertOk()
+            ->assertJsonCount(8, 'data.recent_viewed_accessories')
+            ->assertJsonPath('data.recent_viewed_accessories.0.slug', 'accessory-9')
+            ->assertJsonPath('data.recent_viewed_accessories.7.slug', 'accessory-2');
     }
 }

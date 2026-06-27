@@ -18,7 +18,7 @@ class WishlistSeeder extends Seeder
         $users = [
             [
                 'email' => 'mai.nguyen@petworld.test',
-                'name' => 'Mai Nguyen',
+                'name' => 'Mai Nguyễn',
                 'phone' => '0901000001',
                 'products' => [
                     'royal-canin-mini-adult',
@@ -28,7 +28,7 @@ class WishlistSeeder extends Seeder
             ],
             [
                 'email' => 'minh.tran@petworld.test',
-                'name' => 'Minh Tran',
+                'name' => 'Minh Trần',
                 'phone' => '0901000002',
                 'products' => [
                     'whiskas-adult-vi-ca-bien',
@@ -38,7 +38,7 @@ class WishlistSeeder extends Seeder
             ],
             [
                 'email' => 'lan.le@petworld.test',
-                'name' => 'Lan Le',
+                'name' => 'Lan Lê',
                 'phone' => '0901000003',
                 'products' => [
                     'smartheart-creamy-treat',

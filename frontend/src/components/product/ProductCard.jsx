@@ -19,10 +19,10 @@ function Stars({ count = 5 }) {
 export default function ProductCard({ product, badge }) {
   const priceRange = product.price_range || {};
   const hasSale = priceRange.has_sale;
-  const currentPrice = hasSale ? priceRange.sale_min : priceRange.min;
-  const oldPrice = hasSale ? priceRange.min : null;
-  const ratingCount = product.rating_count ?? 0;
-  const ratingValue = Math.round(product.rating ?? 5);
+  const currentPrice = priceRange.display ?? (hasSale ? priceRange.sale_min : priceRange.min);
+  const oldPrice = priceRange.compare_at ?? null;
+  const ratingCount = product.rating_count ?? product.rating?.count ?? 0;
+  const ratingValue = Math.round(product.rating_average ?? product.rating?.average ?? 0);
   const href = `/shop/${product.slug}`;
   // Ưu tiên badge truyền vào, nếu không thì tự gắn "Sale" khi có giá khuyến mãi.
   const badgeLabel = badge ?? (hasSale ? "Sale" : null);

@@ -18,18 +18,15 @@ export default async function Homepage() {
     categories = [],
     featured_products = [],
     sale_products = [],
+    new_products = [],
     new_accessories = [],
-    recent_viewed_accessories = [],
     products_by_categories = [],
     latest_blogs = [],
   } = data;
 
   // Một số khối cần fallback khi danh sách tương ứng rỗng.
-  const newProducts = sale_products.length ? sale_products : featured_products;
+  const newProducts = new_products.length ? new_products : featured_products;
   const accessoryProducts = new_accessories.length ? new_accessories : featured_products;
-  const recentProducts = recent_viewed_accessories.length
-    ? recent_viewed_accessories
-    : featured_products;
 
   return (
     <main className="main-content">
@@ -39,7 +36,7 @@ export default async function Homepage() {
         <ProductSection title="Sản Phẩm Được Tuyển Chọn" products={featured_products} columns={5} />
         <TrustBadges />
         <NewProductsSplit products={newProducts} />
-        <AccessoriesPromo products={accessoryProducts} recentProducts={recentProducts} />
+        <AccessoriesPromo products={accessoryProducts} />
         <ShopCtaBanner />
         <BestSellingTabs groups={products_by_categories} />
         <BlogSection blogs={latest_blogs} />

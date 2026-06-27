@@ -14,27 +14,36 @@ class BannerSeeder extends Seeder
     {
         $banners = [
             [
-                'image' => 'banners/petworld-hero.jpg',
-                'link' => '/products',
+                'image' => 'petworld-hero.jpg',
+                'legacy_image' => 'banners/petworld-hero.jpg',
+                'link' => '/shop',
                 'description' => 'Khám phá sản phẩm tốt cho thú cưng.',
             ],
             [
-                'image' => 'banners/pet-food-sale.jpg',
-                'link' => '/products?category=thuc-an-hat',
+                'image' => 'pet-food-sale.jpg',
+                'legacy_image' => 'banners/pet-food-sale.jpg',
+                'link' => '/shop?category=thuc-an-hat',
                 'description' => 'Ưu đãi thức ăn hạt dành cho thú cưng.',
             ],
             [
-                'image' => 'banners/pet-care.jpg',
-                'link' => '/products?category=ve-sinh-va-cham-soc',
+                'image' => 'pet-care.jpg',
+                'legacy_image' => 'banners/pet-care.jpg',
+                'link' => '/shop?category=ve-sinh-va-cham-soc',
                 'description' => 'Chăm sóc thú cưng mỗi ngày.',
             ],
         ];
 
         foreach ($banners as $banner) {
-            Banner::updateOrCreate(
-                ['image' => $banner['image']],
-                $banner,
-            );
+            // Database chỉ lưu tên file; tìm cả đường dẫn cũ để seed lại không tạo banner trùng.
+            $model = Banner::query()
+                ->whereIn('image', [$banner['image'], $banner['legacy_image']])
+                ->first() ?? new Banner;
+
+            $model->fill([
+                'image' => $banner['image'],
+                'link' => $banner['link'],
+                'description' => $banner['description'],
+            ])->save();
         }
     }
 }

@@ -14,10 +14,10 @@ class ReviewSeeder extends Seeder
     public function run(): void
     {
         $comments = [
-            ['rating' => 5, 'comment' => 'San pham dong goi ky, dung mo ta va thu cung nha minh rat thich.'],
-            ['rating' => 5, 'comment' => 'Giao hang nhanh, chat luong tot, se tiep tuc ung ho PetWorld.'],
-            ['rating' => 4, 'comment' => 'Gia hop ly, san pham on. Neu co them anh huong dan thi se tot hon.'],
-            ['rating' => 5, 'comment' => 'Be nha minh dung hop, bao bi con moi va han su dung xa.'],
+            ['rating' => 5, 'comment' => 'Sản phẩm đóng gói kỹ, đúng mô tả và thú cưng nhà mình rất thích.'],
+            ['rating' => 5, 'comment' => 'Giao hàng nhanh, chất lượng tốt, sẽ tiếp tục ủng hộ PetWorld.'],
+            ['rating' => 4, 'comment' => 'Giá hợp lý, sản phẩm ổn. Nếu có thêm ảnh hướng dẫn thì sẽ tốt hơn.'],
+            ['rating' => 5, 'comment' => 'Bé nhà mình dùng hợp, bao bì còn mới và hạn sử dụng xa.'],
         ];
 
         $completedItems = OrderItem::query()

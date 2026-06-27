@@ -31,6 +31,33 @@ class ProductVariant extends Model
         'deleted_at' => 'datetime',
     ];
 
+    public function hasValidSalePrice(): bool
+    {
+        if ($this->sale_price === null) {
+            return false;
+        }
+
+        $salePrice = (float) $this->sale_price;
+
+        return $salePrice > 0 && $salePrice < (float) $this->price;
+    }
+
+    public function effectivePrice(): float
+    {
+        return $this->hasValidSalePrice()
+            ? (float) $this->sale_price
+            : (float) $this->price;
+    }
+
+    public static function effectivePriceExpression(string $table = 'product_variants'): string
+    {
+        $prefix = $table !== '' ? $table.'.' : '';
+
+        // SQL dùng cùng quy tắc với effectivePrice() để lọc và sắp xếp không lệch giá hiển thị.
+        return "CASE WHEN {$prefix}sale_price > 0 AND {$prefix}sale_price < {$prefix}price "
+            ."THEN {$prefix}sale_price ELSE {$prefix}price END";
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

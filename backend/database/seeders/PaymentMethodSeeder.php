@@ -12,11 +12,22 @@ class PaymentMethodSeeder extends Seeder
      */
     public function run(): void
     {
-        foreach (['Thanh toan khi nhan hang', 'Chuyen khoan ngan hang', 'Vi dien tu'] as $name) {
-            PaymentMethod::updateOrCreate(
-                ['name' => $name],
-                ['status' => 'active'],
-            );
+        $methods = [
+            ['name' => 'Thanh toán khi nhận hàng', 'legacy_name' => 'Thanh toan khi nhan hang'],
+            ['name' => 'Chuyển khoản ngân hàng', 'legacy_name' => 'Chuyen khoan ngan hang'],
+            ['name' => 'Ví điện tử', 'legacy_name' => 'Vi dien tu'],
+        ];
+
+        foreach ($methods as $method) {
+            // Tìm cả tên cũ không dấu để chạy lại seeder không tạo phương thức trùng.
+            $paymentMethod = PaymentMethod::query()
+                ->whereIn('name', [$method['name'], $method['legacy_name']])
+                ->first() ?? new PaymentMethod;
+
+            $paymentMethod->fill([
+                'name' => $method['name'],
+                'status' => 'active',
+            ])->save();
         }
     }
 }

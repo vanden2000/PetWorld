@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\VariantType;
 use App\Models\Wishlist;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ProductApiTest extends TestCase
@@ -77,6 +78,50 @@ class ProductApiTest extends TestCase
             'status' => 'active',
         ]);
 
+        $unavailableProduct = Product::create([
+            'category_id' => $category->id,
+            'brand_id' => $brand->id,
+            'name' => 'Unavailable Food',
+            'slug' => 'unavailable-food',
+            'status' => 'active',
+        ]);
+
+        ProductVariant::create([
+            'variant_type_id' => $variantType->id,
+            'product_id' => $unavailableProduct->id,
+            'variant_name' => 'Default',
+            'price' => 900000,
+            'quantity' => 1,
+            'status' => 'inactive',
+        ]);
+
+        $hiddenProduct = Product::create([
+            'category_id' => $category->id,
+            'brand_id' => $brand->id,
+            'name' => 'Hidden Food',
+            'slug' => 'hidden-food',
+            'status' => 'inactive',
+        ]);
+
+        ProductVariant::create([
+            'variant_type_id' => $variantType->id,
+            'product_id' => $hiddenProduct->id,
+            'variant_name' => 'Default',
+            'price' => 2000000,
+            'quantity' => 1,
+            'status' => 'active',
+        ]);
+
+        ProductVariant::create([
+            'variant_type_id' => $variantType->id,
+            'product_id' => $product->id,
+            'variant_name' => '2kg',
+            'price' => 250000,
+            'sale_price' => 300000,
+            'quantity' => 1,
+            'status' => 'active',
+        ]);
+
         $user = User::create([
             'name' => 'Mai Nguyen',
             'email' => 'mai@example.test',
@@ -90,19 +135,32 @@ class ProductApiTest extends TestCase
             'product_id' => $product->id,
         ]);
 
-        $response = $this->getJson('/api/products?search=royal&category=thuc-an-hat&brand=royal-canin&min_price=0&max_price=500000&sort=price_asc&user_id=' . $user->id);
+        $url = '/api/products?search=royal&category=thuc-an-hat&brand=royal-canin&min_price=0&max_price=500000&sort=price_asc';
+
+        // user_id trên URL không được phép giả mạo trạng thái wishlist của người khác.
+        $this->getJson($url.'&user_id='.$user->id)
+            ->assertOk()
+            ->assertJsonPath('data.products.0.is_wishlisted', false);
+
+        Sanctum::actingAs($user);
+        $response = $this->getJson($url);
 
         $response
             ->assertOk()
             ->assertJsonPath('data.total', 1)
             ->assertJsonPath('data.products.0.slug', 'royal-canin-mini-adult')
             ->assertJsonPath('data.products.0.price.min', 209000)
+            ->assertJsonPath('data.products.0.price.max', 250000)
+            ->assertJsonPath('data.products.0.price.sale_max', 209000)
             ->assertJsonPath('data.products.0.price.has_sale', true)
-            ->assertJsonPath('data.products.0.stock_quantity', 7)
+            ->assertJsonPath('data.products.0.stock_quantity', 8)
             ->assertJsonPath('data.products.0.wishlist_count', 1)
             ->assertJsonPath('data.products.0.is_wishlisted', true)
             ->assertJsonPath('data.filters.categories.0.slug', 'thuc-an-hat')
+            ->assertJsonPath('data.filters.categories.0.product_count', 1)
             ->assertJsonPath('data.filters.brands.0.slug', 'royal-canin')
+            ->assertJsonPath('data.filters.brands.0.product_count', 1)
+            ->assertJsonPath('data.filters.price.max', 250000)
             ->assertJsonPath('data.pagination.current_page', 1);
     }
 
@@ -250,11 +308,13 @@ class ProductApiTest extends TestCase
             'product_id' => $product->id,
         ]);
 
-        $response = $this->getJson('/api/products/petkit-harness?user_id=' . $user->id);
+        Sanctum::actingAs($user);
+        $response = $this->getJson('/api/products/petkit-harness');
 
         $response
             ->assertOk()
             ->assertJsonPath('data.product.slug', 'petkit-harness')
+            ->assertJsonPath('data.product.view_count', 16)
             ->assertJsonPath('data.product.description', '<p>Comfortable harness.</p>')
             ->assertJsonPath('data.product.images.0.is_primary', true)
             ->assertJsonPath('data.product.variants.0.name', 'M')
@@ -264,5 +324,21 @@ class ProductApiTest extends TestCase
             ->assertJsonPath('data.reviews.0.rating', 5)
             ->assertJsonPath('data.reviews.0.variant.name', 'M')
             ->assertJsonPath('data.related_products.0.slug', 'petkit-leash');
+
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'view_count' => 16,
+        ]);
+
+        $this->getJson('/api/products/recent?slugs=petkit-leash,petkit-harness')
+            ->assertOk()
+            ->assertJsonPath('data.0.slug', 'petkit-leash')
+            ->assertJsonPath('data.1.slug', 'petkit-harness');
+
+        // API recent chỉ đọc dữ liệu, không được tính thêm lượt xem chi tiết.
+        $this->assertDatabaseHas('products', [
+            'id' => $product->id,
+            'view_count' => 16,
+        ]);
     }
 }

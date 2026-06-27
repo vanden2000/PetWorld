@@ -1,4 +1,5 @@
 import ProductCard from "@/components/product/ProductCard";
+import Link from "next/link";
 
 const SIDEBAR_LINKS = [
   "Ưu đãi",
@@ -21,9 +22,9 @@ export default function NewProductsSplit({ products = [] }) {
         <ul className="sidebar-menu">
           {SIDEBAR_LINKS.map((label) => (
             <li key={label}>
-              <a href="/shop" className="sidebar-link">
+              <Link href="/shop" className="sidebar-link">
                 {label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

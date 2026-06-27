@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('variant_types', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->boolean('status')->default(true);
+            $table->enum('status', ['active', 'inactive'])->default('active');
         });
     }
 

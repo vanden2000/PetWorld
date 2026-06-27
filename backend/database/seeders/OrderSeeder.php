@@ -23,11 +23,11 @@ class OrderSeeder extends Seeder
             [
                 'email' => 'mai.nguyen@petworld.test',
                 'voucher_code' => 'PETWELCOME',
-                'shipping_method' => 'Giao hang nhanh',
-                'payment_method' => 'Vi dien tu',
+                'shipping_method' => 'Giao hàng nhanh',
+                'payment_method' => 'Ví điện tử',
                 'order_status' => 'completed',
                 'payment_status' => 'paid',
-                'note' => 'Giao gio hanh chinh.',
+                'note' => 'Giao giờ hành chính.',
                 'items' => [
                     ['variant' => 'royal-canin-mini-adult', 'quantity' => 1],
                     ['variant' => 'day-dat-trixie-premium', 'quantity' => 1],
@@ -36,8 +36,8 @@ class OrderSeeder extends Seeder
             [
                 'email' => 'minh.tran@petworld.test',
                 'voucher_code' => 'FREESHIP99',
-                'shipping_method' => 'Giao hang tieu chuan',
-                'payment_method' => 'Thanh toan khi nhan hang',
+                'shipping_method' => 'Giao hàng tiêu chuẩn',
+                'payment_method' => 'Thanh toán khi nhận hàng',
                 'order_status' => 'completed',
                 'payment_status' => 'paid',
                 'note' => null,
@@ -49,11 +49,11 @@ class OrderSeeder extends Seeder
             [
                 'email' => 'lan.le@petworld.test',
                 'voucher_code' => null,
-                'shipping_method' => 'Giao hang tieu chuan',
-                'payment_method' => 'Chuyen khoan ngan hang',
+                'shipping_method' => 'Giao hàng tiêu chuẩn',
+                'payment_method' => 'Chuyển khoản ngân hàng',
                 'order_status' => 'shipping',
                 'payment_status' => 'paid',
-                'note' => 'Goi truoc khi giao.',
+                'note' => 'Gọi trước khi giao.',
                 'items' => [
                     ['variant' => 'smartheart-creamy-treat', 'quantity' => 2],
                     ['variant' => 'sua-tam-bioline', 'quantity' => 1],
@@ -61,14 +61,12 @@ class OrderSeeder extends Seeder
             ],
         ];
 
-        foreach ($orders as $index => $orderData) {
+        foreach ($orders as $orderData) {
             $user = User::where('email', $orderData['email'])->firstOrFail();
             $address = Address::where('user_id', $user->id)->firstOrFail();
             $shippingMethod = ShippingMethod::where('name', $orderData['shipping_method'])->firstOrFail();
             $paymentMethod = PaymentMethod::where('name', $orderData['payment_method'])->firstOrFail();
-            $voucher = $orderData['voucher_code']
-                ? Voucher::where('code', $orderData['voucher_code'])->first()
-                : null;
+            $existingOrder = Order::where('user_id', $user->id)->first();
 
             $lineTotal = 0;
             $items = collect($orderData['items'])
@@ -79,26 +77,32 @@ class OrderSeeder extends Seeder
                         ->orderBy('id')
                         ->firstOrFail();
 
-                    $price = (float) ($variant->sale_price ?? $variant->price);
+                    $price = $variant->effectivePrice();
                     $lineTotal += $price * $item['quantity'];
 
                     return [
                         'product_variant_id' => $variant->id,
-                        'product_name' => $variant->product->name . ' - ' . $variant->variant_name,
+                        'product_name' => $variant->product->name.' - '.$variant->variant_name,
                         'quantity' => $item['quantity'],
                         'price' => $price,
                     ];
                 });
 
+            $voucher = $orderData['voucher_code']
+                ? Voucher::where('code', $orderData['voucher_code'])->first()
+                : null;
+
+            if (! $voucher?->canBeApplied($lineTotal, ignoreOrderId: $existingOrder?->id)) {
+                $voucher = null;
+            }
+
             $discountAmount = $voucher ? min((float) $voucher->discount_value, $lineTotal) : 0;
             $shippingFee = (float) $shippingMethod->shipping_fee;
             $totalAmount = max($lineTotal + $shippingFee - $discountAmount, 0);
 
+            // Mỗi tài khoản mẫu chỉ có một đơn seed, nên user_id là khóa ổn định khi đổi nội dung tiếng Việt.
             $order = Order::updateOrCreate(
-                [
-                    'user_id' => $user->id,
-                    'note' => $orderData['note'] ?? "Seed order {$index}",
-                ],
+                ['user_id' => $user->id],
                 [
                     'voucher_id' => $voucher?->id,
                     'shipping_method_id' => $shippingMethod->id,
@@ -113,8 +117,13 @@ class OrderSeeder extends Seeder
                     'order_status' => $orderData['order_status'],
                     'total_amount' => $totalAmount,
                     'payment_status' => $orderData['payment_status'],
+                    'note' => $orderData['note'],
                 ],
             );
+
+            // Đồng bộ đúng cấu hình seed, không giữ lại item đã bị xóa khỏi mảng $orders.
+            $variantIds = $items->pluck('product_variant_id');
+            $order->items()->whereNotIn('product_variant_id', $variantIds)->delete();
 
             foreach ($items as $item) {
                 OrderItem::updateOrCreate(

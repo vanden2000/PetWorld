@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TrackRecentlyViewed from "@/components/product/TrackRecentlyViewed";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -10,6 +11,7 @@ export default async function ProductDetailPage({ params }) {
 
   return (
     <main className="main-content">
+      <TrackRecentlyViewed slug={slug} />
       <div className="homepage-container">
         <nav style={{ marginBottom: 20, fontSize: 14, color: "#666" }}>
           <Link href="/" style={{ color: "#666", textDecoration: "none" }}>

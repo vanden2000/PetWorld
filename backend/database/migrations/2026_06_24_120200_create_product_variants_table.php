@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('price', 12, 2);
             $table->decimal('sale_price', 12, 2)->nullable();
             $table->unsignedInteger('quantity')->default(0);
-            $table->boolean('status')->default(true);
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->softDeletes();
 
             $table->unique(['product_id', 'variant_type_id', 'variant_name']);
