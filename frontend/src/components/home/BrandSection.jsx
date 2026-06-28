@@ -9,7 +9,6 @@ const FEATURED_BRANDS = [
   { name: "Whiskas", src: "/image/brands/whiskas.png" },
   { name: "Sheba", src: "/image/brands/sheba.png" },
 ];
-
 export default function BrandSection({ brands = FEATURED_BRANDS }) {
   const items = brands.length ? brands : FEATURED_BRANDS;
 

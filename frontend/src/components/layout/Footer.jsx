@@ -73,7 +73,7 @@ export default function Footer() {
           </form>
           <p className="footer-policy">
             Bằng cách đăng ký bạn chấp nhận điều khoản{" "}
-            <Link href="#" className="policy-link">
+            <Link href="/chinh-sach-bao-mat" className="policy-link">
               Chính sách bảo mật
             </Link>
           </p>

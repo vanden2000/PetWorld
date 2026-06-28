@@ -17,8 +17,12 @@ export default function ProductSection({
   columns = 5,
   viewAllHref = "/shop",
   badge,
+  // Mỗi khối ở trang chủ chỉ hiển thị 1 hàng (mặc định = số cột); xem đầy đủ ở trang Cửa Hàng.
+  limit = columns,
 }) {
   if (!products.length) return null;
+
+  const visibleProducts = products.slice(0, limit);
 
   return (
     <section className="homepage-section">
@@ -30,7 +34,7 @@ export default function ProductSection({
       </div>
 
       <div className={GRID_CLASS[columns] || GRID_CLASS[5]}>
-        {products.map((product) => (
+        {visibleProducts.map((product) => (
           <ProductCard key={product.id} product={product} badge={badge} />
         ))}
       </div>
