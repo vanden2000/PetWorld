@@ -21,5 +21,5 @@ export function resolveImage(path) {
   if (!path) return FALLBACK_IMAGE;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
   if (path.startsWith("/")) return path;
-  return `/image/${path}`;
+  return `/image/banners/${path}`;
 }
