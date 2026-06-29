@@ -16,7 +16,15 @@ export default function NewProductsSplit({ products = [] }) {
   if (products.length === 0) return null;
 
   return (
-    <section className="split-section">
+    <section className="homepage-section">
+      <div className="section-header">
+        <h2 className="section-title">Sản Phẩm Mới</h2>
+        <Link href="/shop" className="view-all-link">
+          xem tất cả ➔
+        </Link>
+      </div>
+
+      <div className="split-section split-section--in-section">
       <aside className="category-sidebar">
         <h3 className="sidebar-title">Sản Phẩm mới</h3>
         <ul className="sidebar-menu">
@@ -35,6 +43,7 @@ export default function NewProductsSplit({ products = [] }) {
         {products.slice(0, 4).map((product) => (
           <ProductCard key={product.id} product={product} badge="New" />
         ))}
+      </div>
       </div>
     </section>
   );
