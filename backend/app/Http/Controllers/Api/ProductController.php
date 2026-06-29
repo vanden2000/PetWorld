@@ -254,6 +254,7 @@ class ProductController extends Controller
                     'type' => $variant->variantType ? [
                         'id' => $variant->variantType->id,
                         'name' => $variant->variantType->name,
+                        'status' => $variant->variantType->status,
                     ] : null,
                     'price' => (float) $variant->price,
                     'sale_price' => $variant->hasValidSalePrice() ? (float) $variant->sale_price : null,

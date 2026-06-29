@@ -61,7 +61,7 @@ class HomeController extends Controller
                 'categories' => $this->formatCategories(),
                 // Brand strip data comes from formatBrands().
                 'brands' => $this->formatBrands(),
-                // Product sections below all reuse formatProducts().
+                // Các phần sản phẩm bên dưới đều sử dụng lại định dạng Product().
                 'featured_products' => $this->formatProducts($featuredProducts),
                 'sale_products' => $this->formatProducts($saleProducts),
                 'new_products' => $this->formatProducts($newProducts),
