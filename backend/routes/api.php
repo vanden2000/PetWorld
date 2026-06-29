@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wishlist', [WishlistController::class, 'index']);
     Route::post('/wishlist/{product}', [WishlistController::class, 'store']);
     Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy']);
+    Route::post('/blogs/{slug}/comments', [BlogController::class, 'storeComment']);
 });
 
 Route::get('/home', HomeController::class);

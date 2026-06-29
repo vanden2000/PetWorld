@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { login, register } from "@/lib/auth";
 
@@ -10,6 +10,7 @@ const EMPTY_REGISTER = { name: "", email: "", phone: "", password: "", password_
 
 export default function AuthForm({ mode = "login" }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const isLogin = mode === "login";
 
   const [form, setForm] = useState(isLogin ? EMPTY_LOGIN : EMPTY_REGISTER);
@@ -28,7 +29,8 @@ export default function AuthForm({ mode = "login" }) {
     const result = isLogin ? await login(form) : await register(form);
 
     if (result.ok) {
-      router.push("/account");
+      const redirect = searchParams.get("redirect") || "/account";
+      router.push(redirect);
       router.refresh();
       return;
     }

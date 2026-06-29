@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\BlogCategory;
+use App\Models\BlogComment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -82,6 +83,22 @@ class BlogController extends Controller
             ->map(fn (Blog $related): array => $this->formatBlogCard($related))
             ->all();
 
+        $comments = $blog->comments()
+            ->with('user')
+            ->latest()
+            ->get()
+            ->map(fn (BlogComment $comment): array => [
+                'id' => $comment->id,
+                'content' => $comment->content,
+                'created_at' => $comment->created_at?->toDateTimeString(),
+                'user' => [
+                    'id' => $comment->user->id,
+                    'name' => $comment->user->name,
+                    'avatar' => $comment->user->avatar,
+                ]
+            ])
+            ->all();
+
         return response()->json([
             'data' => [
                 'breadcrumb' => [
@@ -92,6 +109,7 @@ class BlogController extends Controller
                 ],
                 'blog' => array_merge($this->formatBlogCard($blog), [
                     'content' => $blog->content,
+                    'comments' => $comments,
                 ]),
                 'related_blogs' => $relatedBlogs,
             ],
@@ -192,5 +210,42 @@ class BlogController extends Controller
     private function escapeLikeKeyword(string $keyword): string
     {
         return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $keyword);
+    }
+
+    public function storeComment(Request $request, string $slug): JsonResponse
+    {
+        $blog = $this->visibleBlogQuery()
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        $request->validate([
+            'content' => ['required', 'string', 'min:3', 'max:1000'],
+        ], [
+            'content.required' => 'Nội dung bình luận không được để trống.',
+            'content.string' => 'Nội dung bình luận phải là dạng chuỗi.',
+            'content.min' => 'Nội dung bình luận phải từ 3 ký tự trở lên.',
+            'content.max' => 'Nội dung bình luận không được vượt quá 1000 ký tự.',
+        ]);
+
+        $comment = $blog->comments()->create([
+            'user_id' => $request->user()->id,
+            'content' => $request->input('content'),
+        ]);
+
+        $comment->load('user');
+
+        return response()->json([
+            'data' => [
+                'id' => $comment->id,
+                'content' => $comment->content,
+                'created_at' => $comment->created_at?->toDateTimeString(),
+                'user' => [
+                    'id' => $comment->user->id,
+                    'name' => $comment->user->name,
+                    'avatar' => $comment->user->avatar,
+                ]
+            ],
+            'message' => 'Gửi bình luận thành công!'
+        ], 201);
     }
 }

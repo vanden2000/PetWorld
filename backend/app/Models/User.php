@@ -67,13 +67,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(Review::class);
     }
+
+    public function blogComments(): HasMany
+    {
+        return $this->hasMany(BlogComment::class);
+    }
+
     public function wishlistProducts()
-{
-    return $this->belongsToMany(
-        Product::class,
-        'wishlists',
-        'user_id',
-        'product_id'
-    )->withTimestamps();
-}
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'wishlists',
+            'user_id',
+            'product_id'
+        )->withTimestamps();
+    }
 }
