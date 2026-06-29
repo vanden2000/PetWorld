@@ -56,7 +56,11 @@ export default async function ProductDetailPage({ params }) {
           <section className="pd-card">
             <h2 className="pd-card-title">Chi tiết sản phẩm</h2>
             {product.description ? (
-              <p className="pd-description">{product.description}</p>
+              // description là HTML do backend dựng sẵn (article/h2/ul...), render nguyên khối.
+              <div
+                className="pd-description"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
             ) : (
               <p className="pd-description">Đang cập nhật mô tả sản phẩm.</p>
             )}

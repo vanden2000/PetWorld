@@ -496,6 +496,20 @@ body {
   font-weight: 500;
 }
 
+/* Bản đồ cửa hàng ở góc dưới bên phải footer */
+.footer-map {
+  margin-top: 24px;
+  width: 100%;
+}
+
+.footer-map-frame {
+  width: 100%;
+  height: 160px;
+  border: 0;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
 /* Utility Links Columns */
 .footer-links-list {
   list-style: none;
@@ -1159,6 +1173,11 @@ body {
   grid-template-columns: 280px 1fr;
   gap: 30px;
   margin-bottom: 60px;
+}
+
+/* Khi nằm trong .homepage-section (đã có section-title) thì bỏ margin để tránh khoảng cách kép. */
+.split-section--in-section {
+  margin-bottom: 0;
 }
 
 .category-sidebar {
@@ -2454,7 +2473,35 @@ body {
   font-size: 15px;
   line-height: 1.75;
   margin-bottom: 22px;
-  white-space: pre-line;
+}
+
+/* description là HTML (h2/h3/p/ul) do backend dựng sẵn */
+.pd-description h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+}
+
+.pd-description h3 {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 18px 0 8px;
+}
+
+.pd-description p {
+  margin-bottom: 12px;
+}
+
+.pd-description ul {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  list-style: disc;
+}
+
+.pd-description li {
+  margin-bottom: 6px;
 }
 
 .pd-highlights {
