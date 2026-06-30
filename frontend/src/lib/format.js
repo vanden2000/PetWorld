@@ -23,3 +23,10 @@ export function resolveImage(path) {
   if (path.startsWith("/")) return path;
   return `/image/banners/${path}`;
 }
+// đường dẫn ảnh brands
+export function resolveBrandImage(path) {
+  if (!path) return FALLBACK_IMAGE;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/")) return path;
+  return `/image/brands/${path}`;
+}

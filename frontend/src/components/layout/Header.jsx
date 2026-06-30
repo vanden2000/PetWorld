@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   getCartSnapshot,
   getServerCartSnapshot,
@@ -13,6 +13,8 @@ import {
   getWishlistSnapshot,
   getServerWishlistSnapshot,
   parseWishlist,
+  refreshWishlist,
+  resetWishlist,
   onWishlistChange,
 } from "@/lib/wishlist";
 import {
@@ -42,6 +44,11 @@ export default function Header() {
   // Trạng thái đăng nhập: icon tài khoản trỏ /account khi đã đăng nhập, ngược lại /login.
   const userRaw = useSyncExternalStore(onAuthChange, getUserSnapshot, getServerUserSnapshot);
   const user = useMemo(() => parseUser(userRaw), [userRaw]);
+
+  useEffect(() => {
+    if (user) void refreshWishlist();
+    else resetWishlist();
+  }, [user]);
 
   const handleSearch = (event) => {
     event.preventDefault();

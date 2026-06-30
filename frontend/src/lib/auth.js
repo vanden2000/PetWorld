@@ -38,7 +38,7 @@ function saveAuth(user, token) {
   window.dispatchEvent(new CustomEvent(AUTH_EVENT));
 }
 
-function clearAuth() {
+export function clearAuth() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
   window.dispatchEvent(new CustomEvent(AUTH_EVENT));
