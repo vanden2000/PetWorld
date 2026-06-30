@@ -74,6 +74,7 @@ export default function ProductDetail({ product }) {
         variantId: selectedVariant.id,
         variantName: selectedVariant.name,
         price: selectedVariant.effective_price,
+        oldPrice: selectedVariant?.sale_price ? selectedVariant.price : null,
       },
       quantity,
     );
