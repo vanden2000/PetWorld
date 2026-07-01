@@ -31,4 +31,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // SePay: xác nhận chuyển khoản tự động qua webhook.
+    // (Ảnh VietQR được frontend dựng từ NEXT_PUBLIC_SEPAY_QR_BASE, không cần ở đây.)
+    'sepay' => [
+        // Khoá bí mật để xác thực webhook (header "Authorization: Apikey <key>").
+        'webhook_api_key' => env('SEPAY_WEBHOOK_API_KEY'),
+    ],
+
 ];
