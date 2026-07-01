@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { resolveImage, formatPrice } from "@/lib/format";
+import { resolveProductImage, formatPrice } from "@/lib/format";
 import { addToCart } from "@/lib/cart";
 import { toastSuccess, toastError } from "@/lib/toast";
 
@@ -97,7 +97,7 @@ export default function QuickVariantModal({ isOpen, onClose, product }) {
         </button>
 
         <div className="qvm-prod-info">
-          <img src={resolveImage(product.image)} alt={product.name} className="qvm-prod-img" />
+          <img src={resolveProductImage(product.image)} alt={product.name} className="qvm-prod-img" />
           <div className="qvm-prod-meta">
             <h4 className="qvm-prod-name">{product.name}</h4>
             <div className="qvm-price-row">
