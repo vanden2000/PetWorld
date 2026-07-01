@@ -38,6 +38,48 @@ function saveAuth(user, token) {
   window.dispatchEvent(new CustomEvent(AUTH_EVENT));
 }
 
+function updateStoredUser(user) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  window.dispatchEvent(new CustomEvent(AUTH_EVENT));
+}
+
+async function accountRequest(path, options = {}) {
+  const isFormData = options.body instanceof FormData;
+  const response = await fetch(`${API_BASE_URL}/api/${path}`, {
+    ...options,
+    headers: { Accept: "application/json", ...(isFormData ? {} : { "Content-Type": "application/json" }), ...authHeaders(), ...options.headers },
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) return { ok: false, message: json.message || "Không thể xử lý yêu cầu.", errors: json.errors || {} };
+  return { ok: true, data: json.data || {} };
+}
+
+export async function updateProfile(payload) {
+  const result = await accountRequest("user", { method: "PUT", body: JSON.stringify(payload) });
+  if (result.ok && result.data.user) updateStoredUser(result.data.user);
+  return result;
+}
+
+export async function updateAvatar(file) {
+  const form = new FormData();
+  form.append("avatar", file);
+  const result = await accountRequest("user/avatar", { method: "POST", body: form });
+  if (result.ok && result.data.user) updateStoredUser(result.data.user);
+  return result;
+}
+
+export const updatePassword = (payload) => accountRequest("user/password", { method: "PUT", body: JSON.stringify(payload) });
+export const getAddresses = () => accountRequest("addresses");
+export const saveAddress = (payload, id) => accountRequest(id ? `addresses/${id}` : "addresses", { method: id ? "PUT" : "POST", body: JSON.stringify(payload) });
+export const deleteAddress = (id) => accountRequest(`addresses/${id}`, { method: "DELETE" });
+export const getOrders = (params = {}) => {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => value && search.set(key, value));
+  const query = search.toString();
+  return accountRequest(`orders${query ? `?${query}` : ""}`);
+};
+export const getOrder = (id) => accountRequest(`orders/${id}`);
+
 export function clearAuth() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);

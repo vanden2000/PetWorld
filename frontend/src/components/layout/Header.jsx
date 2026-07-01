@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import {
   getCartSnapshot,
   getServerCartSnapshot,
@@ -10,18 +10,11 @@ import {
   onCartChange,
 } from "@/lib/cart";
 import {
-  getWishlistSnapshot,
-  getServerWishlistSnapshot,
-  parseWishlist,
-  refreshWishlist,
-  resetWishlist,
-  onWishlistChange,
-} from "@/lib/wishlist";
-import {
   getUserSnapshot,
   getServerUserSnapshot,
   parseUser,
   onAuthChange,
+  logout,
 } from "@/lib/auth";
 import { ROUTES, MAIN_NAV } from "@/lib/routes";
 
@@ -38,22 +31,21 @@ export default function Header() {
   );
 
   // Số sản phẩm yêu thích cho badge.
-  const wishlistRaw = useSyncExternalStore(onWishlistChange, getWishlistSnapshot, getServerWishlistSnapshot);
-  const wishlistCount = useMemo(() => parseWishlist(wishlistRaw).length, [wishlistRaw]);
 
   // Trạng thái đăng nhập: icon tài khoản trỏ /account khi đã đăng nhập, ngược lại /login.
   const userRaw = useSyncExternalStore(onAuthChange, getUserSnapshot, getServerUserSnapshot);
   const user = useMemo(() => parseUser(userRaw), [userRaw]);
 
-  useEffect(() => {
-    if (user) void refreshWishlist();
-    else resetWishlist();
-  }, [user]);
-
   const handleSearch = (event) => {
     event.preventDefault();
     const query = keyword.trim();
     router.push(query ? `${ROUTES.shop}?search=${encodeURIComponent(query)}` : ROUTES.shop);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.push(ROUTES.home);
+    router.refresh();
   };
 
   return (
@@ -136,26 +128,50 @@ export default function Header() {
           </form>
 
           <div className="nav-actions">
-            <Link href={ROUTES.wishlist} className="action-item" id="wishlist-btn" aria-label="Danh sách yêu thích">
+            <Link href={ROUTES.notifications} className="action-item" id="notifications-btn" aria-label="Thông báo">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                <path d="M10 21h4" />
               </svg>
-              <span className="action-badge">{wishlistCount}</span>
             </Link>
 
-            <Link
-              href={user ? ROUTES.account : ROUTES.login}
-              className="action-item"
-              id="profile-btn"
-              aria-label={user ? `Tài khoản: ${user.name}` : "Đăng nhập"}
-              title={user ? user.name : "Đăng nhập"}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              {user && <span className="action-badge dot" />}
-            </Link>
+            <div className="profile-menu">
+              <Link
+                href={user ? ROUTES.account : ROUTES.login}
+                className="action-item"
+                id="profile-btn"
+                aria-label={user ? `Tài khoản: ${user.name}` : "Đăng nhập"}
+                title={user ? user.name : "Đăng nhập"}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                {user && <span className="action-badge dot" />}
+              </Link>
+
+              {user && (
+                <div className="profile-dropdown">
+                  <div className="profile-dropdown-user">
+                    <strong>{user.name}</strong>
+                    <span>{user.email}</span>
+                  </div>
+                  <Link href={ROUTES.account} className="profile-dropdown-item">
+                    Thông tin cá nhân
+                  </Link> 
+                  <Link href={ROUTES.wishlist} className="profile-dropdown-item">
+                    Sản phẩm yêu thích
+                  </Link>
+                  <Link href={ROUTES.orders} className="profile-dropdown-item">
+                    Đơn hàng
+                  </Link>
+                 
+                  <button type="button" className="profile-dropdown-item logout" onClick={handleLogout}>
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
 
             <Link href={ROUTES.cart} className="action-item" id="cart-btn" aria-label="Giỏ hàng">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

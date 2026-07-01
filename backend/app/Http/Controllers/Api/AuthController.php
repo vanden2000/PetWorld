@@ -7,16 +7,18 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
-{
-    public function register(Request $request): JsonResponse
+{    public function register(Request $request): JsonResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'email' => ['required', 'email', 'email:rfc,dns', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^(0|\+84)(3|5|7|8|9)[0-9]{8}$/'],
+            'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ], [
             'name.required' => 'Vui lòng nhập họ tên.',
@@ -26,12 +28,16 @@ class AuthController extends Controller
             'password.required' => 'Vui lòng nhập mật khẩu.',
             'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
             'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
+            'date_of_birth.date' => 'Ngày sinh không hợp lệ.',
+            'date_of_birth.before_or_equal' => 'Ngày sinh phải là một ngày trong quá khứ.',
+            'phone.regex' => 'Số điện thoại không hợp lệ.',
         ]);
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
+            'date_of_birth' => $data['date_of_birth'] ?? null,
             'password' => $data['password'],
             'role' => 'user',
             'status' => 'active',
@@ -95,6 +101,69 @@ class AuthController extends Controller
         return response()->json(['data' => ['user' => $this->formatUser($request->user())]]);
     }
 
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^(0|\+84)(3|5|7|8|9)[0-9]{8}$/'],
+            'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
+        ]);
+
+        $user->update($data);
+
+        return response()->json(['data' => [
+            'user' => $this->formatUser($user->fresh()),
+            'message' => 'Thông tin cá nhân đã được cập nhật.',
+        ]]);
+    }
+
+    public function updatePassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ]);
+        $user = $request->user();
+
+        if (! $this->passwordMatches($data['current_password'], $user)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Mật khẩu hiện tại không đúng.'],
+            ]);
+        }
+
+        $user->password = $data['password'];
+        $user->save();
+
+        return response()->json(['data' => ['message' => 'Mật khẩu đã được cập nhật.']]);
+    }
+
+    public function updateAvatar(Request $request): JsonResponse
+    {
+        $request->validate([
+            'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ], [
+            'avatar.required' => 'Vui lòng chọn ảnh đại diện.',
+            'avatar.image' => 'Tệp đã chọn phải là hình ảnh.',
+            'avatar.mimes' => 'Ảnh đại diện chỉ hỗ trợ JPG, PNG hoặc WebP.',
+            'avatar.max' => 'Ảnh đại diện không được lớn hơn 2 MB.',
+        ]);
+
+        $user = $request->user();
+        if ($user->avatar && ! str_contains($user->avatar, '://')) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        $user->avatar = $request->file('avatar')->store('avatars', 'public');
+        $user->save();
+
+        return response()->json(['data' => [
+            'user' => $this->formatUser($user->fresh()),
+            'message' => 'Ảnh đại diện đã được cập nhật.',
+        ]]);
+    }
+
     /**
      * Xác thực mật khẩu, hỗ trợ cả dữ liệu cũ.
      *
@@ -129,7 +198,10 @@ class AuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
-            'avatar' => $user->avatar,
+            'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
+            'avatar' => $user->avatar
+                ? (str_contains($user->avatar, '://') ? $user->avatar : asset('storage/'.$user->avatar))
+                : null,
             'role' => $user->role,
         ];
     }

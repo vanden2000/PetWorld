@@ -5,12 +5,12 @@ import AutoRefresh from "@/components/system/AutoRefresh";
 
 export default function UserLayout({ children }) {
   return (
-    <>
+    <div className="user-layout">
       <AutoRefresh />
       <Header />
       {children}
       <Footer />
       <Toaster />
-    </>
+    </div>
   );
 }

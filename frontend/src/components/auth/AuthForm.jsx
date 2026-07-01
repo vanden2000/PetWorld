@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { login, register } from "@/lib/auth";
+import { toastSuccess } from "@/lib/toast";
 
 const EMPTY_LOGIN = { email: "", password: "" };
 const EMPTY_REGISTER = { name: "", email: "", phone: "", password: "", password_confirmation: "" };
@@ -43,9 +44,10 @@ export default function AuthForm({ mode = "login" }) {
     const result = isLogin ? await login(form) : await register(form);
 
     if (result.ok) {
-      const redirect = searchParams.get("redirect") || "/account";
+      const redirect = searchParams.get("redirect") || "/";
       router.push(redirect);
       router.refresh();
+      toastSuccess("Đăng nhập thành công!");
       return;
     }
 
@@ -247,9 +249,11 @@ export default function AuthForm({ mode = "login" }) {
                 id="auth-phone" 
                 type="tel" 
                 className="auth-input" 
-                placeholder="090x xxx xxx" 
+                placeholder="0912345678"
                 value={form.phone} 
-                onChange={update("phone")} 
+                onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value.replace(/\s/g, "") }))}
+                pattern="(0|\+84)(3|5|7|8|9)[0-9]{8}"
+                title="Số điện thoại Việt Nam hợp lệ, ví dụ 0912345678 hoặc +84912345678"
               />
             </div>
             {errors.phone && <span className="auth-error-msg">{errors.phone[0]}</span>}
