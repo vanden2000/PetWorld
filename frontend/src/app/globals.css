@@ -1050,17 +1050,17 @@ body {
 }
 
 .product-wishlist-btn:hover {
-  color: #ff4757;
-  border-color: #ffe0e3;
-  background-color: #fff2f3;
+  color: var(--primary-orange);
+  border-color: var(--primary-orange);
+  background-color: #fff;
   transform: scale(1.08);
 }
 
 /* Trạng thái đã yêu thích: tim đỏ đầy */
 .product-wishlist-btn.active {
-  color: #ff4757;
-  border-color: #ffd2d6;
-  background-color: #fff2f3;
+  color: var(--primary-orange);
+  border-color: var(--primary-orange);
+  background-color: #fff;
 }
 
 .product-wishlist-btn:disabled,
