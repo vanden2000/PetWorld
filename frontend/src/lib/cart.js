@@ -51,19 +51,21 @@ export function addToCart(item, quantity = 1) {
   const items = getCart();
   const key = lineKey(item.productId, item.variantId);
   const existing = items.find((line) => line.key === key);
+  const qtyNum = Number(quantity) || 1;
 
   if (existing) {
-    existing.quantity += quantity;
+    existing.quantity += qtyNum;
   } else {
-    items.push({ ...item, key, quantity });
+    items.push({ ...item, key, quantity: qtyNum });
   }
 
   saveCart(items);
 }
 
 export function updateQuantity(key, quantity) {
+  const qtyNum = Number(quantity);
   const items = getCart()
-    .map((line) => (line.key === key ? { ...line, quantity } : line))
+    .map((line) => (line.key === key ? { ...line, quantity: qtyNum } : line))
     .filter((line) => line.quantity > 0);
   saveCart(items);
 }
