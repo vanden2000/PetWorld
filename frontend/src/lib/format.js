@@ -30,6 +30,12 @@ export function resolveBrandImage(path) {
   if (path.startsWith("/")) return path;
   return `/image/brands/${path}`;
 }
+export function resolveProductImage(path) {
+  if (!path) return FALLBACK_IMAGE;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/")) return path;
+  return `/image/products/${path}`;
+}
 
 // đường dẫn ảnh blogs
 export function resolveBlogImage(path) {

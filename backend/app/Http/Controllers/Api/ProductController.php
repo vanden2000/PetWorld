@@ -52,7 +52,8 @@ class ProductController extends Controller
     }
 
     public function show(Request $request, string $slug): JsonResponse
-    {
+    {   
+        
         $userId = $this->authenticatedUserId($request);
         $product = $this->baseProductQuery($userId)
             ->with(['images', 'variants.variantType'])
