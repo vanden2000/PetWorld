@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getBlogs } from "@/lib/api";
-import { resolveImage } from "@/lib/format";
+import { resolveBlogImage } from "@/lib/format";
 import BlogSort from "@/components/blog/BlogSort";
 import BlogSearch from "@/components/blog/BlogSearch";
 
@@ -121,7 +121,7 @@ export default async function NewsPage({ searchParams }) {
               {blogs.map((blog) => (
                 <article className="blog-card" key={blog.id}>
                   <Link href={`/news/${blog.slug}`} className="blog-img-wrapper" style={{ borderRadius: "20px 20px 0 0" }}>
-                    <img src={resolveImage(blog.image)} alt={blog.title} className="blog-img" />
+                    <img src={resolveBlogImage(blog.image)} alt={blog.title} className="blog-img" />
                   </Link>
                   <div className="blog-content">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
