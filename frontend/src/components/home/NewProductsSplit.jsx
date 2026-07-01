@@ -19,6 +19,8 @@ export default function NewProductsSplit({ products = [] }) {
   const sliderRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, scrollLeft: 0 });
+  const activePointerId = useRef(null);
+  const didDrag = useRef(false);
 
   if (products.length === 0) return null;
 
@@ -26,7 +28,8 @@ export default function NewProductsSplit({ products = [] }) {
     const slider = sliderRef.current;
     if (!slider) return;
 
-    slider.setPointerCapture(event.pointerId);
+    activePointerId.current = event.pointerId;
+    didDrag.current = false;
     dragStart.current = {
       x: event.clientX,
       scrollLeft: slider.scrollLeft,
@@ -36,10 +39,16 @@ export default function NewProductsSplit({ products = [] }) {
 
   const handlePointerMove = (event) => {
     const slider = sliderRef.current;
-    if (!slider || !slider.hasPointerCapture(event.pointerId)) return;
+    if (!slider || activePointerId.current !== event.pointerId) return;
 
     const distance = event.clientX - dragStart.current.x;
-    if (Math.abs(distance) > 5) setIsDragging(true);
+    if (Math.abs(distance) <= 5) return;
+
+    if (!slider.hasPointerCapture(event.pointerId)) {
+      slider.setPointerCapture(event.pointerId);
+    }
+    didDrag.current = true;
+    setIsDragging(true);
     slider.scrollLeft = dragStart.current.scrollLeft - distance;
   };
 
@@ -48,11 +57,15 @@ export default function NewProductsSplit({ products = [] }) {
     if (slider?.hasPointerCapture(event.pointerId)) {
       slider.releasePointerCapture(event.pointerId);
     }
-    window.setTimeout(() => setIsDragging(false), 0);
+    activePointerId.current = null;
+    window.setTimeout(() => {
+      didDrag.current = false;
+      setIsDragging(false);
+    }, 0);
   };
 
   const preventClickWhileDragging = (event) => {
-    if (!isDragging) return;
+    if (!didDrag.current) return;
     event.preventDefault();
     event.stopPropagation();
   };
