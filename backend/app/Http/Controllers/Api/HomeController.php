@@ -13,13 +13,35 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
         $this->validateRecentProductIds($request);
+        // Tính tổng số lượng đã bán của từng sản phẩm
+        $soldSubQuery = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('product_variants', 'product_variants.id', '=', 'order_items.product_variant_id')
+            ->whereIn('order.status', ['delivered', 'completed'])
+            ->select(
+                'product_variants.product_id',
+                DB::raw('SUM(order_items.quantity) as total_sold')
+            )
+            ->groupBy('product_variants.product_id');
 
+        // Lấy sản phẩm bán chạy theo total_sold
+        $featuredProducts = $this->productCardQuery()
+            ->leftJoinSub($soldSubQuery, 'sold_products', function ($join): void {
+                $join->on('sold_products.product_id', '=', 'products.id');
+            })
+            ->select('products.*')
+            ->addSelect(DB::raw('COALESCE(sold_products.total_sold, 0) as total_sold'))
+            ->orderByDesc('total_sold')
+            ->orderByDesc('products.id')
+            ->limit(8)
+            ->get();
         $featuredProducts = $this->productCardQuery()
             ->orderByDesc('view_count')
             ->orderByDesc('id')
@@ -80,7 +102,7 @@ class HomeController extends Controller
         return Banner::query()
             ->latest('created_at')
             ->get(['id', 'image', 'link', 'description'])
-            ->map(fn (Banner $banner): array => [
+            ->map(fn(Banner $banner): array => [
                 'id' => $banner->id,
                 'image' => $banner->image,
                 'link' => $banner->link,
@@ -94,7 +116,7 @@ class HomeController extends Controller
         return Category::query()
             ->orderBy('id')
             ->get(['id', 'name', 'slug', 'image'])
-            ->map(fn (Category $category): array => [
+            ->map(fn(Category $category): array => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'slug' => $category->slug,
@@ -108,7 +130,7 @@ class HomeController extends Controller
         return Brand::query()
             ->orderBy('id')
             ->get(['id', 'name', 'slug', 'image'])
-            ->map(fn (Brand $brand): array => [
+            ->map(fn(Brand $brand): array => [
                 'id' => $brand->id,
                 'name' => $brand->name,
                 'slug' => $brand->slug,
@@ -125,23 +147,23 @@ class HomeController extends Controller
                     ->where('status', 'active');
 
                 $salePrices = $activeVariants
-                    ->filter(fn (ProductVariant $variant): bool => $variant->hasValidSalePrice())
+                    ->filter(fn(ProductVariant $variant): bool => $variant->hasValidSalePrice())
                     ->pluck('sale_price')
-                    ->map(fn (string $price): float => (float) $price);
+                    ->map(fn(string $price): float => (float) $price);
 
                 $prices = $activeVariants
                     ->pluck('price')
-                    ->map(fn (string $price): float => (float) $price);
+                    ->map(fn(string $price): float => (float) $price);
 
                 $displayVariant = $activeVariants
-                    ->sortBy(fn (ProductVariant $variant): float => $variant->effectivePrice())
+                    ->sortBy(fn(ProductVariant $variant): float => $variant->effectivePrice())
                     ->first();
                 $displayPrice = $displayVariant
                     ? $displayVariant->effectivePrice()
                     : null;
                 $compareAtPrice = $displayVariant?->hasValidSalePrice()
-                        ? (float) $displayVariant->price
-                        : null;
+                    ? (float) $displayVariant->price
+                    : null;
 
                 return [
                     'id' => $product->id,
@@ -220,7 +242,7 @@ class HomeController extends Controller
 
         // Sắp đúng thứ tự người dùng vừa xem trước khi giới hạn; limit trong SQL có thể loại nhầm ID mới nhất.
         return $products
-            ->sortBy(fn (Product $product): int => $positions[$product->id] ?? PHP_INT_MAX)
+            ->sortBy(fn(Product $product): int => $positions[$product->id] ?? PHP_INT_MAX)
             ->take(8)
             ->values();
     }
@@ -236,15 +258,15 @@ class HomeController extends Controller
                 'brand',
                 'category',
                 'primaryImage',
-                'variants' => fn ($query) => $query->where('status', 'active'),
+                'variants' => fn($query) => $query->where('status', 'active'),
             ])
             ->where('products.status', 'active')
-            ->whereHas('variants', fn (Builder $query) => $query->where('status', 'active'));
+            ->whereHas('variants', fn(Builder $query) => $query->where('status', 'active'));
     }
 
     private function ratingAverageSubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('reviews')
             ->join('order_items', 'reviews.order_item_id', '=', 'order_items.id')
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
@@ -255,7 +277,7 @@ class HomeController extends Controller
 
     private function ratingCountSubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('reviews')
             ->join('order_items', 'reviews.order_item_id', '=', 'order_items.id')
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
@@ -266,7 +288,7 @@ class HomeController extends Controller
 
     private function soldQuantitySubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
@@ -281,8 +303,8 @@ class HomeController extends Controller
         $ids = is_array($rawIds) ? $rawIds : explode(',', (string) $rawIds);
 
         return collect($ids)
-            ->map(fn (mixed $id): int => (int) $id)
-            ->filter(fn (int $id): bool => $id > 0)
+            ->map(fn(mixed $id): int => (int) $id)
+            ->filter(fn(int $id): bool => $id > 0)
             ->unique()
             ->values()
             ->all();
@@ -325,11 +347,11 @@ class HomeController extends Controller
         return Blog::query()
             ->with(['category', 'author'])
             ->where('status', 'active')
-            ->whereHas('category', fn (Builder $category) => $category->where('status', 'active'))
+            ->whereHas('category', fn(Builder $category) => $category->where('status', 'active'))
             ->latest('created_at')
             ->limit(3)
             ->get()
-            ->map(fn (Blog $blog): array => [
+            ->map(fn(Blog $blog): array => [
                 'id' => $blog->id,
                 'title' => $blog->title,
                 'slug' => $blog->slug,
