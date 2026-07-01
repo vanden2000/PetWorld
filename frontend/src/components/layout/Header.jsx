@@ -2,25 +2,50 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
-
-const NAV_ITEMS = [
-  { href: "/", label: "Trang Chủ" },
-  { href: "/shop", label: "Cửa Hàng" },
-  { href: "/services", label: "Dịch Vụ" },
-  { href: "/news", label: "Tin Tức" },
-  { href: "/contact", label: "Liên hệ" },
-];
+import { useMemo, useState, useSyncExternalStore } from "react";
+import {
+  getCartSnapshot,
+  getServerCartSnapshot,
+  parseCart,
+  onCartChange,
+} from "@/lib/cart";
+import {
+  getUserSnapshot,
+  getServerUserSnapshot,
+  parseUser,
+  onAuthChange,
+  logout,
+} from "@/lib/auth";
+import { ROUTES, MAIN_NAV } from "@/lib/routes";
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
 
+  // Số lượng trong giỏ (localStorage) cho badge, cập nhật realtime khi giỏ đổi.
+  const cartRaw = useSyncExternalStore(onCartChange, getCartSnapshot, getServerCartSnapshot);
+  const cartCount = useMemo(
+    () => parseCart(cartRaw).reduce((sum, line) => sum + line.quantity, 0),
+    [cartRaw],
+  );
+
+  // Số sản phẩm yêu thích cho badge.
+
+  // Trạng thái đăng nhập: icon tài khoản trỏ /account khi đã đăng nhập, ngược lại /login.
+  const userRaw = useSyncExternalStore(onAuthChange, getUserSnapshot, getServerUserSnapshot);
+  const user = useMemo(() => parseUser(userRaw), [userRaw]);
+
   const handleSearch = (event) => {
     event.preventDefault();
     const query = keyword.trim();
-    router.push(query ? `/shop?search=${encodeURIComponent(query)}` : "/shop");
+    router.push(query ? `${ROUTES.shop}?search=${encodeURIComponent(query)}` : ROUTES.shop);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    router.push(ROUTES.home);
+    router.refresh();
   };
 
   return (
@@ -62,12 +87,12 @@ export default function Header() {
       {/* Floating Navigation Bar */}
       <div className="navbar-container">
         <nav className="navbar">
-          <Link href="/" className="logo-link" id="logo">
+          <Link href={ROUTES.home} className="logo-link" id="logo">
             <img src="/image/Special_Offer_1-removebg-preview.png" alt="PetWorld Logo" className="logo-img" />
           </Link>
 
           <ul className="nav-menu">
-            {NAV_ITEMS.map((item) => {
+            {MAIN_NAV.map((item) => {
               const isActive =
                 item.href === "/"
                   ? pathname === "/"
@@ -103,27 +128,58 @@ export default function Header() {
           </form>
 
           <div className="nav-actions">
-            <Link href="/wishlist" className="action-item" id="wishlist-btn" aria-label="Danh sách yêu thích">
+            <Link href={ROUTES.notifications} className="action-item" id="notifications-btn" aria-label="Thông báo">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-              <span className="action-badge">0</span>
-            </Link>
-
-            <Link href="/account" className="action-item" id="profile-btn" aria-label="Tài khoản cá nhân">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                <path d="M10 21h4" />
               </svg>
             </Link>
 
-            <Link href="/cart" className="action-item" id="cart-btn" aria-label="Giỏ hàng">
+            <div className="profile-menu">
+              <Link
+                href={user ? ROUTES.account : ROUTES.login}
+                className="action-item"
+                id="profile-btn"
+                aria-label={user ? `Tài khoản: ${user.name}` : "Đăng nhập"}
+                title={user ? user.name : "Đăng nhập"}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                {user && <span className="action-badge dot" />}
+              </Link>
+
+              {user && (
+                <div className="profile-dropdown">
+                  <div className="profile-dropdown-user">
+                    <strong>{user.name}</strong>
+                    <span>{user.email}</span>
+                  </div>
+                  <Link href={ROUTES.account} className="profile-dropdown-item">
+                    Thông tin cá nhân
+                  </Link> 
+                  <Link href={ROUTES.wishlist} className="profile-dropdown-item">
+                    Sản phẩm yêu thích
+                  </Link>
+                  <Link href={ROUTES.orders} className="profile-dropdown-item">
+                    Đơn hàng
+                  </Link>
+                 
+                  <button type="button" className="profile-dropdown-item logout" onClick={handleLogout}>
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <Link href={ROUTES.cart} className="action-item" id="cart-btn" aria-label="Giỏ hàng">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="9" cy="21" r="1" />
                 <circle cx="20" cy="21" r="1" />
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
               </svg>
-              <span className="action-badge">0</span>
+              <span className="action-badge">{cartCount}</span>
             </Link>
           </div>
         </nav>

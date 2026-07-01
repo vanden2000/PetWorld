@@ -21,5 +21,26 @@ export function resolveImage(path) {
   if (!path) return FALLBACK_IMAGE;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
   if (path.startsWith("/")) return path;
-  return `/image/${path}`;
+  return `/image/banners/${path}`;
+}
+// đường dẫn ảnh brands
+export function resolveBrandImage(path) {
+  if (!path) return FALLBACK_IMAGE;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/")) return path;
+  return `/image/brands/${path}`;
+}
+export function resolveProductImage(path) {
+  if (!path) return FALLBACK_IMAGE;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/")) return path;
+  return `/image/products/${path}`;
+}
+
+// đường dẫn ảnh blogs
+export function resolveBlogImage(path) {
+  if (!path) return FALLBACK_IMAGE;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/")) return path;
+  return `/image/blogs/${path}`;
 }
