@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\User;
 
 class Product extends Model
 {
@@ -56,8 +57,13 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
-    public function wishlists(): HasMany
+    public function wishlists()
     {
-        return $this->hasMany(Wishlist::class);
+        return $this->belongsToMany(
+         User::class,
+         'wishlists',
+        'product_id',
+        'user_id'
+    )->withTimestamps();
     }
 }

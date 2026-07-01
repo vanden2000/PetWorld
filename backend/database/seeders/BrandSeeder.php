@@ -7,24 +7,22 @@ use Illuminate\Database\Seeder;
 
 class BrandSeeder extends Seeder
 {
+    public const BRANDS = [
+        ['name' => 'Sheba', 'slug' => 'sheba', 'image' => 'sheba.png'],
+        ['name' => 'Whiskas', 'slug' => 'whiskas', 'image' => 'whiskas.jpg'],
+        ['name' => 'Bakers', 'slug' => 'bakers', 'image' => 'bakers.png'],
+        ['name' => 'Felix', 'slug' => 'felix', 'image' => 'felix.png'],
+        ['name' => 'Good Boy', 'slug' => 'good-boy', 'image' => 'good-boy.png'],
+        ['name' => "Butcher's", 'slug' => 'butchers', 'image' => 'butchers.png'],
+        ['name' => 'Pedigree', 'slug' => 'pedigree', 'image' => 'pedigree.jpg'],
+    ];
+
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $brands = [
-            ['name' => 'Royal Canin', 'slug' => 'royal-canin', 'image' => 'royal-canin.jpg'],
-            ['name' => 'Pedigree', 'slug' => 'pedigree', 'image' => 'pedigree.jpg'],
-            ['name' => 'Whiskas', 'slug' => 'whiskas', 'image' => 'whiskas.jpg'],
-            ['name' => 'SmartHeart', 'slug' => 'smartheart', 'image' => 'smartheart.jpg'],
-            ['name' => 'Me-O', 'slug' => 'me-o', 'image' => 'me-o.jpg'],
-            ['name' => 'Ganador', 'slug' => 'ganador', 'image' => 'ganador.jpg'],
-            ['name' => 'KONG', 'slug' => 'kong', 'image' => 'kong.jpg'],
-            ['name' => 'Trixie', 'slug' => 'trixie', 'image' => 'trixie.jpg'],
-            ['name' => 'Bioline', 'slug' => 'bioline', 'image' => 'bioline.jpg'],
-        ];
-
-        foreach ($brands as $brand) {
+        foreach (self::BRANDS as $brand) {
             Brand::updateOrCreate(
                 ['slug' => $brand['slug']],
                 $brand,

@@ -39,7 +39,7 @@ return [
         'name' => 'Royal Canin Mini Adult',
         'slug' => 'royal-canin-mini-adult',
         'category_slug' => 'thuc-an-hat',
-        'brand_slug' => 'royal-canin',
+        'brand_slug' => 'bakers',
         'description' => $article(
             'Dinh dưỡng hằng ngày cho chó trưởng thành giống nhỏ',
             'Royal Canin Mini Adult là thức ăn hạt được thiết kế cho nhịp sống và nhu cầu dinh dưỡng của chó trưởng thành có vóc dáng nhỏ. Kích thước hạt vừa miệng giúp bữa ăn thuận tiện hơn, đồng thời hương vị hấp dẫn hỗ trợ duy trì thói quen ăn uống đều đặn.',
@@ -67,7 +67,7 @@ return [
         'name' => 'Pate Royal Canin Mini Puppy',
         'slug' => 'pate-royal-canin-mini-puppy',
         'category_slug' => 'pate',
-        'brand_slug' => 'royal-canin',
+        'brand_slug' => 'butchers',
         'description' => $article(
             'Kết cấu mềm dành cho chó con giống nhỏ',
             'Pate Royal Canin Mini Puppy có kết cấu mềm và độ ẩm cao, thuận tiện cho chó con trong giai đoạn làm quen với thức ăn hoàn chỉnh. Sản phẩm có thể dùng làm bữa chính theo hướng dẫn hoặc kết hợp cùng hạt phù hợp.',
@@ -81,7 +81,7 @@ return [
         'name' => 'Pate Me-O cá ngừ',
         'slug' => 'pate-me-o-ca-ngu',
         'category_slug' => 'pate',
-        'brand_slug' => 'me-o',
+        'brand_slug' => 'sheba',
         'description' => $article(
             'Pate cá ngừ mềm thơm cho bữa ăn của mèo',
             'Pate Me-O cá ngừ là lựa chọn thức ăn ướt tiện dụng, có hương vị cá và kết cấu mềm dễ ăn. Sản phẩm giúp thực đơn của mèo phong phú hơn, nhất là khi được kết hợp đúng cách cùng khẩu phần hạt hằng ngày.',
@@ -109,7 +109,7 @@ return [
         'name' => 'SmartHeart Creamy Treat',
         'slug' => 'smartheart-creamy-treat',
         'category_slug' => 'snack',
-        'brand_slug' => 'smartheart',
+        'brand_slug' => 'felix',
         'description' => $article(
             'Snack dạng kem cho phút thưởng vui vẻ',
             'SmartHeart Creamy Treat có dạng kem mềm, thuận tiện dùng trực tiếp, cho vào bát hoặc trộn một lượng vừa phải với thức ăn. Kết cấu này đặc biệt hữu ích khi chủ nuôi muốn tạo trải nghiệm thưởng nhẹ nhàng và gần gũi.',
@@ -123,7 +123,7 @@ return [
         'name' => 'Dây dắt Trixie Premium',
         'slug' => 'day-dat-trixie-premium',
         'category_slug' => 'phu-kien',
-        'brand_slug' => 'trixie',
+        'brand_slug' => 'good-boy',
         'description' => $article(
             'Kiểm soát an toàn hơn trong mỗi chuyến đi dạo',
             'Dây dắt Trixie Premium là phụ kiện hỗ trợ chủ nuôi kiểm soát thú cưng khi đi bộ, di chuyển ở khu vực công cộng hoặc tập các thói quen cơ bản. Thiết kế hướng đến sự gọn nhẹ, dễ thao tác và phù hợp với nhu cầu sử dụng thường ngày.',
@@ -137,7 +137,7 @@ return [
         'name' => 'Bát ăn inox Trixie',
         'slug' => 'bat-an-inox-trixie',
         'category_slug' => 'phu-kien',
-        'brand_slug' => 'trixie',
+        'brand_slug' => 'good-boy',
         'description' => $article(
             'Bát inox gọn gàng cho khu vực ăn uống',
             'Bát ăn inox Trixie phù hợp để đựng thức ăn hoặc nước uống cho thú cưng. Bề mặt nhẵn giúp việc vệ sinh hằng ngày thuận tiện hơn và kiểu dáng đơn giản dễ bố trí trong nhiều không gian sống.',
@@ -151,7 +151,7 @@ return [
         'name' => 'KONG Classic',
         'slug' => 'kong-classic',
         'category_slug' => 'do-choi',
-        'brand_slug' => 'kong',
+        'brand_slug' => 'good-boy',
         'description' => $article(
             'Đồ chơi tương tác cho những giờ vận động',
             'KONG Classic có hình dáng đặc trưng, tạo chuyển động khó đoán khi nảy và giúp trò chơi trở nên thú vị hơn. Khoang rỗng có thể được sử dụng theo hướng dẫn của nhà sản xuất để tăng tính tương tác trong thời gian chơi.',
@@ -165,7 +165,7 @@ return [
         'name' => 'Bóng Trixie Denta Fun',
         'slug' => 'bong-trixie-denta-fun',
         'category_slug' => 'do-choi',
-        'brand_slug' => 'trixie',
+        'brand_slug' => 'good-boy',
         'description' => $article(
             'Quả bóng nhai cho trò chơi chủ động',
             'Bóng Trixie Denta Fun kết hợp hình thức quả bóng quen thuộc với bề mặt tạo cảm giác nhai thú vị. Sản phẩm phù hợp cho trò ném bắt, chơi tương tác hoặc giúp chó tự giải trí trong khoảng thời gian ngắn.',
@@ -179,7 +179,7 @@ return [
         'name' => 'Xịt khử mùi Bioline',
         'slug' => 'xit-khu-mui-bioline',
         'category_slug' => 've-sinh-va-cham-soc',
-        'brand_slug' => 'bioline',
+        'brand_slug' => 'good-boy',
         'description' => $article(
             'Giữ không gian sinh hoạt của thú cưng dễ chịu hơn',
             'Xịt khử mùi Bioline được dùng để hỗ trợ vệ sinh và kiểm soát mùi tại khu vực sinh hoạt của thú cưng theo hướng dẫn trên nhãn. Sản phẩm phù hợp cho quy trình dọn dẹp định kỳ, bên cạnh việc loại bỏ chất bẩn và làm sạch bề mặt đúng cách.',
@@ -193,7 +193,7 @@ return [
         'name' => 'Sữa tắm Bioline',
         'slug' => 'sua-tam-bioline',
         'category_slug' => 've-sinh-va-cham-soc',
-        'brand_slug' => 'bioline',
+        'brand_slug' => 'good-boy',
         'description' => $article(
             'Chăm sóc da và lông trong mỗi lần tắm',
             'Sữa tắm Bioline hỗ trợ làm sạch bụi bẩn trên da và lông thú cưng khi được sử dụng đúng hướng dẫn. Một quy trình tắm nhẹ nhàng, nhiệt độ nước phù hợp và thao tác sấy khô cẩn thận sẽ giúp thú cưng thoải mái hơn.',

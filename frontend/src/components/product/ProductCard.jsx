@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { formatPrice, resolveImage } from "@/lib/format";
+import WishlistButton from "@/components/product/WishlistButton";
+import AddToCartButton from "@/components/product/AddToCartButton";
+import { resolveProductImage } from "@/lib/format";
 
 // 5 ngôi sao đánh giá (mặc định hiển thị đầy theo mockup).
 function Stars({ count = 5 }) {
@@ -16,29 +19,36 @@ function Stars({ count = 5 }) {
   );
 }
 
-export default function ProductCard({ product, badge }) {
-  const priceRange = product.price_range || {};
+export default function ProductCard({
+  product,
+  badge,
+  showSoldCount = false,
+  showSale = true,
+}) {
+  // Trang chủ trả về `price_range`, còn /api/products trả về `price`; nhận cả hai.
+  const priceRange = product.price_range || product.price || {};
   const hasSale = priceRange.has_sale;
-  const currentPrice = priceRange.display ?? (hasSale ? priceRange.sale_min : priceRange.min);
-  const oldPrice = priceRange.compare_at ?? null;
+  const currentPrice = showSale
+    ? priceRange.display ?? (hasSale ? priceRange.sale_min : priceRange.min)
+    : priceRange.min;
+  const oldPrice = showSale
+    ? priceRange.compare_at ?? (hasSale ? priceRange.regular_min : null) ?? null
+    : null;
   const ratingCount = product.rating_count ?? product.rating?.count ?? 0;
   const ratingValue = Math.round(product.rating_average ?? product.rating?.average ?? 0);
   const href = `/shop/${product.slug}`;
   // Ưu tiên badge truyền vào, nếu không thì tự gắn "Sale" khi có giá khuyến mãi.
-  const badgeLabel = badge ?? (hasSale ? "Sale" : null);
+  const badgeLabel = badge ?? (showSale && hasSale ? "Sale" : null);
+  const soldQuantity = product.sold_quantity ?? product.soldQuantity ?? 0;
 
   return (
     <div className="product-card">
       {badgeLabel && <span className="product-badge">{badgeLabel}</span>}
 
-      <button className="product-wishlist-btn" type="button" aria-label="Thêm vào yêu thích">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-      </button>
+      <WishlistButton product={product} />
 
       <Link href={href} className="product-img-wrapper">
-        <img src={resolveImage(product.image)} alt={product.name} className="product-img" />
+        <img src={resolveProductImage(product.image)} alt={product.name} className="product-img" />
       </Link>
 
       <div className="product-rating">
@@ -58,14 +68,11 @@ export default function ProductCard({ product, badge }) {
         <div className="product-price">
           {oldPrice ? <span className="price-old">{formatPrice(oldPrice)}</span> : null}
           <span className="price-current">{formatPrice(currentPrice)}</span>
+          {showSoldCount ? (
+            <span className="product-sold-count">Đã bán {soldQuantity}</span>
+          ) : null}
         </div>
-        <button className="product-add-btn" type="button" aria-label="Thêm vào giỏ hàng">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-          </svg>
-        </button>
+        <AddToCartButton product={product} />
       </div>
     </div>
   );

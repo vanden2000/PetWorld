@@ -19,10 +19,10 @@ class HomeController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $this->validateRecentProductIds($request);
-
+        // sold_quantity đã được tính trong productCardQuery().
         $featuredProducts = $this->productCardQuery()
-            ->orderByDesc('view_count')
-            ->orderByDesc('id')
+            ->orderByDesc('sold_quantity')
+            ->orderByDesc('products.id')
             ->limit(8)
             ->get();
 
@@ -61,7 +61,7 @@ class HomeController extends Controller
                 'categories' => $this->formatCategories(),
                 // Brand strip data comes from formatBrands().
                 'brands' => $this->formatBrands(),
-                // Product sections below all reuse formatProducts().
+                // Các phần sản phẩm bên dưới đều sử dụng lại định dạng Product().
                 'featured_products' => $this->formatProducts($featuredProducts),
                 'sale_products' => $this->formatProducts($saleProducts),
                 'new_products' => $this->formatProducts($newProducts),
@@ -80,7 +80,7 @@ class HomeController extends Controller
         return Banner::query()
             ->latest('created_at')
             ->get(['id', 'image', 'link', 'description'])
-            ->map(fn (Banner $banner): array => [
+            ->map(fn(Banner $banner): array => [
                 'id' => $banner->id,
                 'image' => $banner->image,
                 'link' => $banner->link,
@@ -94,7 +94,7 @@ class HomeController extends Controller
         return Category::query()
             ->orderBy('id')
             ->get(['id', 'name', 'slug', 'image'])
-            ->map(fn (Category $category): array => [
+            ->map(fn(Category $category): array => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'slug' => $category->slug,
@@ -108,7 +108,7 @@ class HomeController extends Controller
         return Brand::query()
             ->orderBy('id')
             ->get(['id', 'name', 'slug', 'image'])
-            ->map(fn (Brand $brand): array => [
+            ->map(fn(Brand $brand): array => [
                 'id' => $brand->id,
                 'name' => $brand->name,
                 'slug' => $brand->slug,
@@ -125,23 +125,23 @@ class HomeController extends Controller
                     ->where('status', 'active');
 
                 $salePrices = $activeVariants
-                    ->filter(fn (ProductVariant $variant): bool => $variant->hasValidSalePrice())
+                    ->filter(fn(ProductVariant $variant): bool => $variant->hasValidSalePrice())
                     ->pluck('sale_price')
-                    ->map(fn (string $price): float => (float) $price);
+                    ->map(fn(string $price): float => (float) $price);
 
                 $prices = $activeVariants
                     ->pluck('price')
-                    ->map(fn (string $price): float => (float) $price);
+                    ->map(fn(string $price): float => (float) $price);
 
                 $displayVariant = $activeVariants
-                    ->sortBy(fn (ProductVariant $variant): float => $variant->effectivePrice())
+                    ->sortBy(fn(ProductVariant $variant): float => $variant->effectivePrice())
                     ->first();
                 $displayPrice = $displayVariant
                     ? $displayVariant->effectivePrice()
                     : null;
                 $compareAtPrice = $displayVariant?->hasValidSalePrice()
-                        ? (float) $displayVariant->price
-                        : null;
+                    ? (float) $displayVariant->price
+                    : null;
 
                 return [
                     'id' => $product->id,
@@ -220,7 +220,7 @@ class HomeController extends Controller
 
         // Sắp đúng thứ tự người dùng vừa xem trước khi giới hạn; limit trong SQL có thể loại nhầm ID mới nhất.
         return $products
-            ->sortBy(fn (Product $product): int => $positions[$product->id] ?? PHP_INT_MAX)
+            ->sortBy(fn(Product $product): int => $positions[$product->id] ?? PHP_INT_MAX)
             ->take(8)
             ->values();
     }
@@ -236,15 +236,15 @@ class HomeController extends Controller
                 'brand',
                 'category',
                 'primaryImage',
-                'variants' => fn ($query) => $query->where('status', 'active'),
+                'variants' => fn($query) => $query->where('status', 'active'),
             ])
             ->where('products.status', 'active')
-            ->whereHas('variants', fn (Builder $query) => $query->where('status', 'active'));
+            ->whereHas('variants', fn(Builder $query) => $query->where('status', 'active'));
     }
 
     private function ratingAverageSubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('reviews')
             ->join('order_items', 'reviews.order_item_id', '=', 'order_items.id')
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
@@ -255,7 +255,7 @@ class HomeController extends Controller
 
     private function ratingCountSubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('reviews')
             ->join('order_items', 'reviews.order_item_id', '=', 'order_items.id')
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
@@ -266,7 +266,7 @@ class HomeController extends Controller
 
     private function soldQuantitySubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
@@ -281,8 +281,8 @@ class HomeController extends Controller
         $ids = is_array($rawIds) ? $rawIds : explode(',', (string) $rawIds);
 
         return collect($ids)
-            ->map(fn (mixed $id): int => (int) $id)
-            ->filter(fn (int $id): bool => $id > 0)
+            ->map(fn(mixed $id): int => (int) $id)
+            ->filter(fn(int $id): bool => $id > 0)
             ->unique()
             ->values()
             ->all();
@@ -325,11 +325,11 @@ class HomeController extends Controller
         return Blog::query()
             ->with(['category', 'author'])
             ->where('status', 'active')
-            ->whereHas('category', fn (Builder $category) => $category->where('status', 'active'))
+            ->whereHas('category', fn(Builder $category) => $category->where('status', 'active'))
             ->latest('created_at')
             ->limit(3)
             ->get()
-            ->map(fn (Blog $blog): array => [
+            ->map(fn(Blog $blog): array => [
                 'id' => $blog->id,
                 'title' => $blog->title,
                 'slug' => $blog->slug,

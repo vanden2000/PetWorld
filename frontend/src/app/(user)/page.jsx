@@ -22,6 +22,7 @@ export default async function Homepage() {
     new_accessories = [],
     products_by_categories = [],
     latest_blogs = [],
+    brands = [],
   } = data;
 
   // Một số khối cần fallback khi danh sách tương ứng rỗng.
@@ -33,14 +34,22 @@ export default async function Homepage() {
       <div className="homepage-container">
         <HeroSlider banners={banners} />
         <CategorySection categories={categories} />
-        <ProductSection title="Sản Phẩm Được Tuyển Chọn" products={featured_products} columns={5} />
+        <ProductSection
+          title="Sản Phẩm Bán Chạy"
+          products={featured_products}
+          columns={5}
+          limit={8}
+          isSlider
+          showSoldCount
+          showSale={false}
+        />
         <TrustBadges />
         <NewProductsSplit products={newProducts} />
         <AccessoriesPromo products={accessoryProducts} />
         <ShopCtaBanner />
-        <BestSellingTabs groups={products_by_categories} />
+        <BestSellingTabs groups={products_by_categories} title="Sản Phẩm Khuyến Mãi" />
         <BlogSection blogs={latest_blogs} />
-        <BrandSection />
+        <BrandSection brands={brands}/>
       </div>
     </main>
   );

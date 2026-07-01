@@ -73,7 +73,7 @@ export default function Footer() {
           </form>
           <p className="footer-policy">
             Bằng cách đăng ký bạn chấp nhận điều khoản{" "}
-            <Link href="#" className="policy-link">
+            <Link href="/chinh-sach-bao-mat" className="policy-link">
               Chính sách bảo mật
             </Link>
           </p>
@@ -107,7 +107,7 @@ export default function Footer() {
         <div className="footer-col">
           <h3 className="footer-title">Liên hệ với chúng tôi</h3>
           <ul className="footer-contact-list">
-            <li>175 Elizabeth Ave Str, San Jose, CA 95035</li>
+            <li>137 Bình Long, Bình Trị Đông, Hồ Chí Minh 70000, Việt Nam</li>
             <li>+0982 561 41 24</li>
             <li>contact@Swoopers.com</li>
           </ul>
@@ -139,6 +139,18 @@ export default function Footer() {
               </li>
             ))}
           </ul>
+
+          {/* Bản đồ cửa hàng đặt ở góc dưới bên phải footer */}
+          <div className="footer-map">
+            <iframe
+              title="Bản đồ cửa hàng PetWorld"
+              className="footer-map-frame"
+              src="https://maps.google.com/maps?q=137%20B%C3%ACnh%20Long%2C%20B%C3%ACnh%20Tr%E1%BB%8B%20%C4%90%C3%B4ng%2C%20H%E1%BB%93%20Ch%C3%AD%20Minh%2070000%2C%20Vi%E1%BB%87t%20Nam&z=15&output=embed"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            />
+          </div>
         </div>
       </div>
 
