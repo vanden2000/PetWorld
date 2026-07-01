@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBlogDetail, getBlogs } from "@/lib/api";
-import { resolveImage } from "@/lib/format";
+import { resolveBlogImage } from "@/lib/format";
 import BlogComments from "@/components/blog/BlogComments";
 
 export async function generateMetadata({ params }) {
@@ -78,7 +78,7 @@ export default async function BlogDetailPage({ params }) {
             {/* Ảnh bìa thu gọn - max-height 360px */}
             {blog.image && (
               <img
-                src={resolveImage(blog.image)}
+                src={resolveBlogImage(blog.image)}
                 alt={blog.title}
                 className="news-article-cover"
               />
@@ -156,7 +156,7 @@ export default async function BlogDetailPage({ params }) {
               {related_blogs.map((item) => (
                 <article className="blog-card" key={item.id}>
                   <Link href={`/news/${item.slug}`} className="blog-img-wrapper">
-                    <img src={resolveImage(item.image)} alt={item.title} className="blog-img" />
+                    <img src={resolveBlogImage(item.image)} alt={item.title} className="blog-img" />
                   </Link>
                   <div className="blog-content">
                     <span className="blog-tag">{item.category?.name ?? "Tin tức"}</span>
