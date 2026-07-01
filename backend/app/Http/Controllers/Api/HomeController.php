@@ -13,19 +13,40 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
         $this->validateRecentProductIds($request);
-        // sold_quantity đã được tính trong productCardQuery().
+        // Tính tổng số lượng đã bán của từng sản phẩm
+        $soldSubQuery = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('product_variants', 'product_variants.id', '=', 'order_items.product_variant_id')
+            ->whereIn('order.status', ['delivered', 'completed'])
+            ->select(
+                'product_variants.product_id',
+                DB::raw('SUM(order_items.quantity) as total_sold')
+            )
+            ->groupBy('product_variants.product_id');
+
+        // Lấy sản phẩm bán chạy theo total_sold
         $featuredProducts = $this->productCardQuery()
-            ->orderByDesc('sold_quantity')
+            ->leftJoinSub($soldSubQuery, 'sold_products', function ($join): void {
+                $join->on('sold_products.product_id', '=', 'products.id');
+            })
+            ->select('products.*')
+            ->addSelect(DB::raw('COALESCE(sold_products.total_sold, 0) as total_sold'))
+            ->orderByDesc('total_sold')
             ->orderByDesc('products.id')
             ->limit(8)
             ->get();
-
+        $featuredProducts = $this->productCardQuery()
+            ->orderByDesc('view_count')
+            ->orderByDesc('id')
+            ->limit(8)
+            ->get();
 
         $saleProducts = $this->productCardQuery()
             ->whereHas('variants', function ($query): void {
