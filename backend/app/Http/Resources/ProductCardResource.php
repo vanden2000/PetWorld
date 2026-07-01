@@ -24,11 +24,17 @@ class ProductCardResource extends JsonResource
         $effectivePrices = $activeVariants
             ->map(fn (ProductVariant $variant): float => $variant->effectivePrice());
 
+        // Biến thể hiển thị (giá hiệu lực thấp nhất) — dùng làm mặc định khi thêm nhanh vào giỏ.
+        $displayVariant = $activeVariants
+            ->sortBy(fn (ProductVariant $variant): float => $variant->effectivePrice())
+            ->first();
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
             'image' => $this->primaryImage?->image_url,
+            'default_variant_id' => $displayVariant?->id,
             'category' => $this->category ? [
                 'id' => $this->category->id,
                 'name' => $this->category->name,

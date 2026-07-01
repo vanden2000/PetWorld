@@ -17,7 +17,8 @@ export default function AddToCartButton({ product }) {
       slug: product.slug,
       name: product.name,
       image: product.image,
-      variantId: null,
+      // Thêm nhanh dùng biến thể mặc định (giá hiển thị) để giỏ hàng có variant id đặt được đơn.
+      variantId: product.default_variant_id ?? null,
       variantName: null,
       price,
     });

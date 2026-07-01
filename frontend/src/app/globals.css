@@ -2180,7 +2180,7 @@ body {
   position: absolute;
   top: 52px;
   left: 16px;
-  background-color: #271a11;
+  background-color: #1fb8ac;
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
@@ -2284,6 +2284,34 @@ body {
   text-decoration: line-through;
 }
 
+/* Điểm nổi bật (gạch đầu dòng dưới giá) */
+.pd-highlights-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.pd-highlights-list li {
+  position: relative;
+  padding-left: 22px;
+  font-size: 14.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.pd-highlights-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary-orange);
+}
+
 .pd-variant-group {
   margin-bottom: 18px;
 }
@@ -2384,6 +2412,8 @@ body {
   font-family: inherit;
   font-size: 15.5px;
   font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
   cursor: pointer;
   padding: 14px 20px;
   transition: var(--transition-default);
@@ -2403,6 +2433,8 @@ body {
   font-family: inherit;
   font-size: 15.5px;
   font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
   cursor: pointer;
   padding: 14px 20px;
   transition: var(--transition-default);
@@ -2431,6 +2463,31 @@ body {
 .pd-attrs span {
   color: var(--text-muted);
   font-weight: 600;
+}
+
+/* Hàng icon mạng xã hội */
+.pd-socials {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.pd-social-link {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #ffe0cf;
+  color: var(--primary-orange);
+  transition: var(--transition-default);
+}
+
+.pd-social-link:hover {
+  background-color: var(--primary-orange);
+  border-color: var(--primary-orange);
+  color: #ffffff;
 }
 
 /* Khối chi tiết + tại sao chọn */
@@ -4027,6 +4084,213 @@ body {
 .co-field textarea:focus {
   border-color: var(--primary-orange);
   background-color: #ffffff;
+}
+
+/* Form thêm địa chỉ mới trong checkout */
+.co-address-form {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed #e6e8ec;
+}
+
+.co-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 16px;
+  font-size: 14px;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+.co-checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-orange);
+}
+
+/* Màn hướng dẫn thanh toán sau khi đặt đơn chuyển khoản */
+.co-result {
+  padding: 10px 0 40px;
+}
+
+.co-result-head {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.co-result-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: #16a34a;
+  color: #ffffff;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.co-result-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.co-result-code {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.co-result-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 30px;
+  align-items: start;
+}
+
+.co-pay-banner {
+  text-align: center;
+  background-color: #faf8f6;
+  border: 1px solid #eef1f5;
+  border-radius: 10px;
+  padding: 12px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 20px;
+}
+
+.co-pay-methods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.co-pay-method {
+  border: 1px solid #eef1f5;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+}
+
+.co-pay-method-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 16px;
+}
+
+.co-qr-img {
+  width: 240px;
+  max-width: 80%;
+  height: auto;
+  border: 1px solid #e6e8ec;
+  border-radius: 12px;
+  padding: 10px;
+  background-color: #ffffff;
+}
+
+.co-qr-ttl {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
+.co-qr-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text-dark);
+}
+
+.co-qr-expired {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 30px 0;
+  color: var(--text-muted);
+}
+
+.co-pay-paid {
+  padding: 40px 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #16a34a;
+}
+
+.co-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e6e8ec;
+  border-top-color: var(--primary-orange);
+  border-radius: 50%;
+  animation: co-spin 0.8s linear infinite;
+}
+
+@keyframes co-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.co-bank-info {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.co-bank-name {
+  display: block;
+  text-align: center;
+  font-size: 16px;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+
+.co-bank-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  border-bottom: 1px dashed #eef1f5;
+  padding-bottom: 8px;
+}
+
+.co-bank-row span {
+  color: var(--text-muted);
+}
+
+.co-bank-row strong {
+  color: var(--text-dark);
+  text-align: right;
+}
+
+.co-pay-warning {
+  text-align: left;
+  margin-top: 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  background-color: #fff7f1;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+@media (max-width: 860px) {
+  .co-result-layout {
+    grid-template-columns: 1fr;
+  }
+  .co-pay-methods {
+    grid-template-columns: 1fr;
+  }
 }
 
 .co-ship-option {

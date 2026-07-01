@@ -148,6 +148,7 @@ class HomeController extends Controller
                     'name' => $product->name,
                     'slug' => $product->slug,
                     'image' => $product->primaryImage?->image_url,
+                    'default_variant_id' => $displayVariant?->id,
                     'category' => $product->category ? [
                         'id' => $product->category->id,
                         'name' => $product->category->name,
