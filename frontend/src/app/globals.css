@@ -1428,7 +1428,7 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  align-items: start;
+  align-items: center;
 }
 
 .products-grid-3 {
@@ -1605,6 +1605,13 @@ body {
   margin-bottom: 2px;
 }
 
+.product-sold-count {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
 .price-current {
   font-size: 17px;
   font-weight: 800;
@@ -1669,6 +1676,38 @@ body {
 /* Khi nằm trong .homepage-section (đã có section-title) thì bỏ margin để tránh khoảng cách kép. */
 .split-section--in-section {
   margin-bottom: 0;
+}
+
+.new-products-slider {
+  width: 100%;
+  min-width: 0;
+  align-self: center;
+  overflow-x: auto;
+  padding: 10px 0;
+  margin: -10px 0;
+  cursor: grab;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.new-products-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.new-products-slider.is-dragging {
+  cursor: grabbing;
+}
+
+.new-products-slider-track {
+  display: flex;
+  gap: 20px;
+}
+
+.new-products-slider-item {
+  flex: 0 0 calc((100% - 60px) / 4);
+  max-width: calc((100% - 60px) / 4);
 }
 
 .category-sidebar {
@@ -2317,6 +2356,10 @@ body {
   .category-sidebar {
     min-height: auto;
   }
+  .new-products-slider-item {
+    flex-basis: calc((100% - 20px) / 2);
+    max-width: calc((100% - 20px) / 2);
+  }
   .promo-card {
     min-height: 240px;
   }
@@ -2331,6 +2374,13 @@ body {
   }
   .section-title {
     font-size: 20px;
+  }
+  .new-products-slider-track {
+    gap: 14px;
+  }
+  .new-products-slider-item {
+    flex-basis: calc((100% - 14px) / 2);
+    max-width: calc((100% - 14px) / 2);
   }
 }
 

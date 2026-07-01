@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef, useState } from "react";
 import ProductCard from "@/components/product/ProductCard";
 import RecentlyViewed from "@/components/home/RecentlyViewed";
 import Link from "next/link";
@@ -7,7 +10,46 @@ import Link from "next/link";
  * 4 sản phẩm phụ kiện và hàng "Đã xem gần đây" ngay bên dưới (theo mockup).
  */
 export default function AccessoriesPromo({ products = [] }) {
+  const sliderRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, scrollLeft: 0 });
+
   if (products.length === 0) return null;
+
+  const handlePointerDown = (event) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    slider.setPointerCapture(event.pointerId);
+    dragStart.current = {
+      x: event.clientX,
+      scrollLeft: slider.scrollLeft,
+    };
+    setIsDragging(false);
+  };
+
+  const handlePointerMove = (event) => {
+    const slider = sliderRef.current;
+    if (!slider || !slider.hasPointerCapture(event.pointerId)) return;
+
+    const distance = event.clientX - dragStart.current.x;
+    if (Math.abs(distance) > 5) setIsDragging(true);
+    slider.scrollLeft = dragStart.current.scrollLeft - distance;
+  };
+
+  const handlePointerUp = (event) => {
+    const slider = sliderRef.current;
+    if (slider?.hasPointerCapture(event.pointerId)) {
+      slider.releasePointerCapture(event.pointerId);
+    }
+    window.setTimeout(() => setIsDragging(false), 0);
+  };
+
+  const preventClickWhileDragging = (event) => {
+    if (!isDragging) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
 
   return (
     <section className="promo-split-section">
@@ -23,10 +65,22 @@ export default function AccessoriesPromo({ products = [] }) {
       </div>
 
       <div className="promo-right">
-        <div className="products-grid-4">
-          {products.slice(0, 4).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        <div
+          ref={sliderRef}
+          className={`new-products-slider${isDragging ? " is-dragging" : ""}`}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onClickCapture={preventClickWhileDragging}
+        >
+          <div className="new-products-slider-track">
+            {products.map((product) => (
+              <div className="new-products-slider-item" key={product.id}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
         </div>
         <RecentlyViewed />
       </div>

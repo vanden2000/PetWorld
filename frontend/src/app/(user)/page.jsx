@@ -34,7 +34,15 @@ export default async function Homepage() {
       <div className="homepage-container">
         <HeroSlider banners={banners} />
         <CategorySection categories={categories} />
-        <ProductSection title="Sản Phẩm Bán Chạy" products={featured_products} columns={5} limit={8} isSlider={true} />
+        <ProductSection
+          title="Sản Phẩm Bán Chạy"
+          products={featured_products}
+          columns={5}
+          limit={8}
+          isSlider
+          showSoldCount
+          showSale={false}
+        />
         <TrustBadges />
         <NewProductsSplit products={newProducts} />
         <AccessoriesPromo products={accessoryProducts} />
