@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "@/lib/api";
-import { resolveImage } from "@/lib/format";
+import { resolveProductImage } from "@/lib/format";
 
 /**
  * Hàng "Đã xem gần đây": nhãn + dải thumbnail tròn của sản phẩm.
@@ -54,7 +54,7 @@ export default function RecentlyViewed() {
             className="recent-viewed-thumb-link"
           >
             <img
-              src={resolveImage(product.image)}
+              src={resolveProductImage(product.image)}
               alt={product.name}
               className="recent-viewed-thumb"
             />

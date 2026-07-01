@@ -8,13 +8,14 @@ use Illuminate\Database\Seeder;
 
 class ProductImageSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $images = [
-            'royal-canin-mini-adult' => 'royal-canin-mini-adult.jpg',
+            'royal-canin-mini-adult' => [
+                'royal-canin-mini-adult.jpg',
+                // 'royal-canin-mini-adult-2.jpg',
+                // 'royal-canin-mini-adult-3.jpg',
+            ],
             'whiskas-adult-vi-ca-bien' => 'whiskas-adult-vi-ca-bien.jpg',
             'pate-royal-canin-mini-puppy' => 'pate-royal-canin-mini-puppy.jpg',
             'pate-me-o-ca-ngu' => 'pate-me-o-ca-ngu.jpg',
@@ -28,19 +29,24 @@ class ProductImageSeeder extends Seeder
             'sua-tam-bioline' => 'sua-tam-bioline.jpg',
         ];
 
-        foreach ($images as $productSlug => $imageUrl) {
+        foreach ($images as $productSlug => $imageUrls) {
             $product = Product::where('slug', $productSlug)->firstOrFail();
+            $imageUrls = is_array($imageUrls) ? $imageUrls : [$imageUrls];
 
-            // Database chỉ lưu tên file; tìm cả đường dẫn cũ để seed lại không tạo ảnh trùng.
-            $image = ProductImage::query()
-                ->where('product_id', $product->id)
-                ->whereIn('image_url', [$imageUrl, 'products/'.$imageUrl])
-                ->first() ?? new ProductImage(['product_id' => $product->id]);
+            ProductImage::where('product_id', $product->id)
+                ->update(['is_primary' => false]);
 
-            $image->fill([
-                'image_url' => $imageUrl,
-                'is_primary' => true,
-            ])->save();
+            foreach ($imageUrls as $index => $imageUrl) {
+                $image = ProductImage::query()
+                    ->where('product_id', $product->id)
+                    ->whereIn('image_url', [$imageUrl, 'products/'.$imageUrl])
+                    ->first() ?? new ProductImage(['product_id' => $product->id]);
+
+                $image->fill([
+                    'image_url' => $imageUrl,
+                    'is_primary' => $index === 0,
+                ])->save();
+            }
         }
     }
 }
