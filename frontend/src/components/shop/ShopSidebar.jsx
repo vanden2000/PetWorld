@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatPrice } from "@/lib/format";
 
+// Bước nhảy của thanh trượt giá (đồng bộ với UI cũ).
+const PRICE_STEP = 50000;
+
 // Icon đơn giản đứng trước mỗi danh mục cho giống mockup.
 function CatIcon() {
   return (
@@ -31,8 +34,9 @@ export default function ShopSidebar({
 }) {
   const router = useRouter();
   const [brandSet, setBrandSet] = useState(new Set(selectedBrands));
-  const [min, setMin] = useState(minPrice);
-  const [max, setMax] = useState(maxPrice);
+  // Giá là số để hai tay kéo min/max hoạt động: mặc định min = 0, max = trần giá.
+  const [min, setMin] = useState(minPrice ? Number(minPrice) : 0);
+  const [max, setMax] = useState(maxPrice ? Number(maxPrice) : priceMax);
 
   // Dựng URL mới từ các lựa chọn rồi điều hướng (luôn về trang 1).
   const navigate = ({ category, brandsValue, minValue, maxValue }) => {
@@ -45,8 +49,9 @@ export default function ShopSidebar({
 
     const minV = minValue !== undefined ? minValue : min;
     const maxV = maxValue !== undefined ? maxValue : max;
-    if (minV) query.set("min_price", String(minV));
-    if (maxV) query.set("max_price", String(maxV));
+    // Chỉ đẩy lên URL khi thực sự thu hẹp khoảng (min > 0, max < trần giá).
+    if (minV > 0) query.set("min_price", String(minV));
+    if (maxV < priceMax) query.set("max_price", String(maxV));
 
     const qs = query.toString();
     router.push(qs ? `/shop?${qs}` : "/shop");
@@ -116,18 +121,41 @@ export default function ShopSidebar({
       <div className="shop-filter-group">
         <h3 className="shop-filter-label">Khoảng giá (VNĐ)</h3>
         <div className="shop-price-row">
-          <span>{formatPrice(min || 0)}</span>
-          <span>{formatPrice(max || priceMax)}</span>
+          <span>{formatPrice(min)}</span>
+          <span>{formatPrice(max)}</span>
         </div>
-        <input
-          type="range"
-          className="shop-price-range"
-          min={0}
-          max={priceMax}
-          step={50000}
-          value={max || priceMax}
-          onChange={(event) => setMax(event.target.value)}
-        />
+        <div className="shop-price-slider">
+          <div className="shop-price-track" />
+          <div
+            className="shop-price-track-fill"
+            style={{
+              left: `${(min / priceMax) * 100}%`,
+              right: `${100 - (max / priceMax) * 100}%`,
+            }}
+          />
+          {/* Tay kéo giá tối thiểu: không vượt quá (max - 1 bước) */}
+          <input
+            type="range"
+            className="shop-price-thumb"
+            min={0}
+            max={priceMax}
+            step={PRICE_STEP}
+            value={min}
+            aria-label="Giá tối thiểu"
+            onChange={(event) => setMin(Math.min(Number(event.target.value), max - PRICE_STEP))}
+          />
+          {/* Tay kéo giá tối đa: không nhỏ hơn (min + 1 bước) */}
+          <input
+            type="range"
+            className="shop-price-thumb"
+            min={0}
+            max={priceMax}
+            step={PRICE_STEP}
+            value={max}
+            aria-label="Giá tối đa"
+            onChange={(event) => setMax(Math.max(Number(event.target.value), min + PRICE_STEP))}
+          />
+        </div>
       </div>
 
       <button type="button" className="shop-apply-btn" onClick={() => navigate({})}>

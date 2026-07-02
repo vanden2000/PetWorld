@@ -195,6 +195,16 @@ class ProductController extends Controller
                     ->map(fn (string $price): float => (float) $price);
                 $effectivePrices = $activeVariants->map(fn (ProductVariant $variant): float => $variant->effectivePrice());
 
+                // Biến thể rẻ nhất theo giá hiệu lực = giá hiển thị; giá gạch chỉ có
+                // khi chính biến thể đó đang giảm (ghép đúng cặp, tránh lệch giá gốc/giá sale).
+                $displayVariant = $activeVariants
+                    ->sortBy(fn (ProductVariant $variant): float => $variant->effectivePrice())
+                    ->first();
+                $displayPrice = $displayVariant?->effectivePrice();
+                $compareAtPrice = $displayVariant?->hasValidSalePrice()
+                    ? (float) $displayVariant->price
+                    : null;
+
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
@@ -222,6 +232,9 @@ class ProductController extends Controller
                         'sale_min' => $salePrices->min(),
                         'sale_max' => $salePrices->max(),
                         'has_sale' => $salePrices->isNotEmpty(),
+                        // Cặp giá hiển thị đã ghép đúng biến thể (giống HomeController).
+                        'display' => $displayPrice,
+                        'compare_at' => $compareAtPrice,
                     ],
                     'stock_quantity' => $activeVariants->sum('quantity'),
                     'wishlist_count' => (int) $product->wishlists_count,
