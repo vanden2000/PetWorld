@@ -2474,9 +2474,67 @@ body {
   margin-bottom: 12px;
 }
 
-.shop-price-range {
+/* Thanh trượt khoảng giá 2 tay kéo (min + max chồng lên nhau) */
+.shop-price-slider {
+  position: relative;
+  height: 34px;
+}
+
+.shop-price-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 5px;
+  border-radius: 999px;
+  background: #e6e8ec;
+}
+
+.shop-price-track-fill {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 5px;
+  border-radius: 999px;
+  background: var(--primary-orange);
+}
+
+/* Hai input phủ toàn bộ track nhưng chỉ tay kéo bắt sự kiện (tránh chặn nhau) */
+.shop-price-thumb {
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
-  accent-color: var(--primary-orange);
+  height: 34px;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+}
+
+.shop-price-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary-orange);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.shop-price-thumb::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary-orange);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
   cursor: pointer;
 }
 
@@ -4573,8 +4631,6 @@ body {
   font-size: 26px;
   font-weight: 800;
   color: var(--text-dark);
-  padding-top: 30px;
-  border-top: 1px solid #eef1f5;
   margin-bottom: 24px;
 }
 
@@ -4726,11 +4782,36 @@ body {
   margin-bottom: 20px;
 }
 
+/* Card hướng dẫn thanh toán (thanh header + thân) */
+.co-pay-wrap {
+  border: 1px solid #eef1f5;
+  border-radius: 16px;
+  overflow: hidden;
+  background-color: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.co-pay-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #eef1f5;
+  background-color: #f3f4f5;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.co-pay-body {
+  padding: 24px;
+}
+
 .co-pay-methods {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 24px;
+  gap: 24px;
+}
+
+.co-pay-method-manual {
+  text-align: left;
 }
 
 .co-pay-method {
@@ -4808,24 +4889,24 @@ body {
   text-align: left;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.co-bank-name {
-  display: block;
-  text-align: center;
-  font-size: 16px;
-  color: var(--text-dark);
-  margin-bottom: 6px;
+  border: 1px solid #eef1f5;
+  border-radius: 12px;
+  padding: 6px 16px;
+  background-color: #f8f9fa;
 }
 
 .co-bank-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   font-size: 14px;
-  border-bottom: 1px dashed #eef1f5;
-  padding-bottom: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eef1f5;
+}
+
+.co-bank-row-last {
+  border-bottom: none;
 }
 
 .co-bank-row span {
@@ -4837,8 +4918,13 @@ body {
   text-align: right;
 }
 
+.co-bank-accent {
+  color: var(--primary-orange);
+  font-weight: 800;
+}
+
 .co-pay-warning {
-  text-align: left;
+  text-align: center;
   margin-top: 14px;
   font-size: 12.5px;
   line-height: 1.5;
@@ -4846,6 +4932,45 @@ body {
   background-color: #fff7f1;
   border-radius: 8px;
   padding: 10px 12px;
+}
+
+/* Nút "Tiếp tục mua sắm" (pill cam) dưới card thanh toán */
+.co-continue-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 13px 26px;
+  border-radius: 999px;
+  background-color: var(--primary-orange);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transition: var(--transition-default);
+}
+
+.co-continue-btn:hover {
+  background-color: var(--primary-orange-hover);
+  filter: brightness(1.03);
+}
+
+/* Nút "Xem chi tiết đơn hàng" (viền cam) trong tóm tắt */
+.co-detail-btn {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: 1px solid var(--primary-orange);
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: var(--primary-orange);
+  font-weight: 700;
+  text-align: center;
+  transition: var(--transition-default);
+}
+
+.co-detail-btn:hover {
+  background-color: #fff1ea;
 }
 
 @media (max-width: 860px) {
@@ -5038,6 +5163,277 @@ body {
 .co-place-btn:hover {
   background-color: var(--primary-orange-hover);
   box-shadow: 0 8px 18px rgba(255, 120, 45, 0.25);
+}
+
+/* Header có icon cho mỗi section */
+.co-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.co-card-head .co-card-title {
+  margin-bottom: 0;
+}
+
+.co-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background-color: #ffe9dd;
+  color: var(--primary-orange);
+}
+
+.co-icon-badge svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Sổ địa chỉ dạng thẻ chọn */
+.co-addr-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.co-addr-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1.5px solid #e6e8ec;
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: var(--transition-default);
+}
+
+.co-addr-card.active {
+  border-color: var(--primary-orange);
+  background-color: #fff7f1;
+  box-shadow: 0 0 0 1px var(--primary-orange);
+}
+
+.co-addr-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.co-addr-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 20px;
+}
+
+.co-addr-badge {
+  background-color: var(--primary-orange);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.co-addr-check {
+  color: var(--primary-orange);
+}
+
+.co-addr-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.co-addr-detail {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.co-addr-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px dashed #e0d3c9;
+  border-radius: 14px;
+  padding: 16px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-default);
+}
+
+.co-addr-add:hover {
+  border-color: var(--primary-orange);
+  background-color: #fff7f1;
+  color: var(--primary-orange);
+}
+
+.co-addr-add-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f1f2f4;
+}
+
+/* Khoảng cách cho khối chọn tỉnh/quận/phường trong form checkout */
+.co-address-location {
+  margin-bottom: 18px;
+}
+
+/* Lưới chọn phương thức thanh toán */
+.co-pay-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.co-pay-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1.5px solid #e6e8ec;
+  border-radius: 12px;
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: var(--transition-default);
+}
+
+.co-pay-card.active {
+  border-color: var(--primary-orange);
+  background-color: #fff7f1;
+}
+
+/* Radio tuỳ biến cho chọn vận chuyển/thanh toán: viền sáng + chấm cam có vòng
+   trắng khi chọn (bỏ viền đen mặc định của trình duyệt) */
+.co-ship-option input[type="radio"],
+.co-pay-card input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 2px solid #d3d7dd;
+  border-radius: 50%;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.co-ship-option input[type="radio"]:checked,
+.co-pay-card input[type="radio"]:checked {
+  border-color: var(--primary-orange);
+  box-shadow: inset 0 0 0 3px #ffffff, inset 0 0 0 10px var(--primary-orange);
+}
+
+.co-pay-card-label {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+/* Chỉ báo tin cậy */
+.co-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #eef1f5;
+}
+
+.co-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.co-trust-item svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Ảnh sản phẩm trong tóm tắt đơn */
+.co-summary-item-media {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.co-summary-thumb {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  background-color: #f1f2f4;
+}
+
+.co-freeship-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background-color: #fff1ea;
+  color: var(--primary-orange);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.co-vat-note {
+  margin: 4px 0 18px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.co-terms {
+  margin-top: 14px;
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.co-terms a {
+  color: var(--primary-orange);
+}
+
+.co-terms a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .co-addr-grid,
+  .co-pay-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {

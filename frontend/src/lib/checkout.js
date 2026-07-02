@@ -31,7 +31,7 @@ export async function getAddresses() {
     });
     if (!res.ok) throw new Error(`Addresses API trả về ${res.status}`);
     const json = await res.json();
-    return json?.data ?? [];
+    return json?.data?.addresses ?? [];
   } catch (error) {
     console.error("[getAddresses] Không lấy được địa chỉ:", error);
     return [];
@@ -63,7 +63,7 @@ export async function getOrder(id) {
     });
     if (!res.ok) return null;
     const json = await res.json();
-    return json?.data ?? null;
+    return json?.data?.order ?? null;
   } catch {
     return null;
   }
