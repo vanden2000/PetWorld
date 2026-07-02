@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { formatPrice, resolveImage } from "@/lib/format";
-import { toastInfo } from "@/lib/toast";
 import {
   getUserSnapshot,
   getServerUserSnapshot,
@@ -14,8 +13,6 @@ import {
   getCartSnapshot,
   getServerCartSnapshot,
   parseCart,
-  updateQuantity,
-  removeFromCart,
   clearCart,
   onCartChange,
 } from "@/lib/cart";
@@ -27,8 +24,7 @@ import {
   getOrder,
   buildSepayQrUrl,
 } from "@/lib/checkout";
-
-const PROVINCES = ["TP. Hồ Chí Minh", "Hà Nội", "Đà Nẵng", "Cần Thơ", "Hải Phòng"];
+import AddressLocationFields from "@/components/auth/AddressLocationFields";
 
 // Mã QR hết hạn sau 15 phút, sau đó khách bấm tạo lại.
 const QR_TTL_SECONDS = 15 * 60;
@@ -137,8 +133,8 @@ export default function CheckoutView() {
   };
 
   const handleSaveAddress = async () => {
-    const { recipient_name, recipient_phone, address_line, ward, district, province } = addressForm;
-    if (!recipient_name || !recipient_phone || !address_line || !ward || !district || !province) {
+    const { recipient_name, recipient_phone, address_line, ward, province } = addressForm;
+    if (!recipient_name || !recipient_phone || !address_line || !ward || !province) {
       alert("Vui lòng nhập đầy đủ thông tin địa chỉ.");
       return;
     }
@@ -222,58 +218,62 @@ export default function CheckoutView() {
 
         <div className="co-result-layout">
           <div className="co-result-main">
-            <div className="co-pay-banner">Hướng dẫn thanh toán qua chuyển khoản ngân hàng</div>
+            <div className="co-pay-wrap">
+              <div className="co-pay-header">Hướng dẫn thanh toán qua chuyển khoản ngân hàng</div>
 
-            <div className="co-pay-methods">
-              {/* Cách 1: QR */}
-              <div className="co-pay-method">
-                <h3 className="co-pay-method-title">Cách 1: Mở app ngân hàng và quét mã QR</h3>
+              <div className="co-pay-body">
+                <div className="co-pay-methods">
+                  {/* Cách 1: QR */}
+                  <div className="co-pay-method">
+                    <h3 className="co-pay-method-title">Cách 1: Quét mã QR</h3>
 
-                {orderPaid ? (
-                  <div className="co-pay-paid">✅ Đã thanh toán</div>
-                ) : qrExpired ? (
-                  <div className="co-qr-expired">
-                    <p>Mã QR đã hết hạn (15 phút).</p>
-                    <button type="button" className="co-btn-solid" onClick={handleRegenerateQr}>
-                      Tạo lại mã QR
-                    </button>
+                    {orderPaid ? (
+                      <div className="co-pay-paid">✅ Đã thanh toán</div>
+                    ) : qrExpired ? (
+                      <div className="co-qr-expired">
+                        <p>Mã QR đã hết hạn (15 phút).</p>
+                        <button type="button" className="co-btn-solid" onClick={handleRegenerateQr}>
+                          Tạo lại mã QR
+                        </button>
+                      </div>
+                    ) : qrUrl ? (
+                      <>
+                        <img src={qrUrl} alt="Mã QR thanh toán" className="co-qr-img" />
+                        <p className="co-qr-ttl">Mã QR còn hiệu lực: <strong>{mm}:{ss}</strong></p>
+                      </>
+                    ) : (
+                      <p className="co-pay-note">Chưa cấu hình mã QR (NEXT_PUBLIC_SEPAY_QR_BASE).</p>
+                    )}
+
+                    <p className="co-qr-status">
+                      {orderPaid ? (
+                        <>Trạng thái: <strong>Đã thanh toán ✓</strong></>
+                      ) : (
+                        <>Trạng thái: Chờ thanh toán... <span className="co-spinner" aria-hidden="true" /></>
+                      )}
+                    </p>
                   </div>
-                ) : qrUrl ? (
-                  <>
-                    <img src={qrUrl} alt="Mã QR thanh toán" className="co-qr-img" />
-                    <p className="co-qr-ttl">Mã QR còn hiệu lực: <strong>{mm}:{ss}</strong></p>
-                  </>
-                ) : (
-                  <p className="co-pay-note">Chưa cấu hình mã QR (NEXT_PUBLIC_SEPAY_QR_BASE).</p>
-                )}
 
-                <p className="co-qr-status">
-                  {orderPaid ? (
-                    <>Trạng thái: <strong>Đã thanh toán ✓</strong></>
-                  ) : (
-                    <>Trạng thái: Chờ thanh toán... <span className="co-spinner" aria-hidden="true" /></>
-                  )}
-                </p>
-              </div>
-
-              {/* Cách 2: Chuyển khoản thủ công */}
-              <div className="co-pay-method">
-                <h3 className="co-pay-method-title">Cách 2: Chuyển khoản thủ công theo thông tin</h3>
-                <div className="co-bank-info">
-                  <strong className="co-bank-name">{BANK_INFO.name ?? "Ngân hàng"}</strong>
-                  <div className="co-bank-row"><span>Chủ tài khoản:</span><strong>{BANK_INFO.holder ?? "—"}</strong></div>
-                  <div className="co-bank-row"><span>Số TK:</span><strong>{BANK_INFO.account ?? "—"}</strong></div>
-                  <div className="co-bank-row"><span>Số tiền:</span><strong>{formatPrice(placedOrder.total_amount)}</strong></div>
-                  <div className="co-bank-row"><span>Nội dung CK:</span><strong>{placedOrder.payment_code}</strong></div>
+                  {/* Cách 2: Chuyển khoản thủ công */}
+                  <div className="co-pay-method co-pay-method-manual">
+                    <h3 className="co-pay-method-title">Cách 2: Chuyển khoản thủ công</h3>
+                    <div className="co-bank-info">
+                      <div className="co-bank-row"><span>Ngân hàng</span><strong className="co-bank-accent">{BANK_INFO.name ?? "—"}</strong></div>
+                      <div className="co-bank-row"><span>Chủ tài khoản</span><strong>{BANK_INFO.holder ?? "—"}</strong></div>
+                      <div className="co-bank-row"><span>Số tài khoản</span><strong>{BANK_INFO.account ?? "—"}</strong></div>
+                      <div className="co-bank-row"><span>Số tiền</span><strong>{formatPrice(placedOrder.total_amount)}</strong></div>
+                      <div className="co-bank-row co-bank-row-last"><span>Nội dung CK</span><strong className="co-bank-accent">{placedOrder.payment_code}</strong></div>
+                    </div>
+                    <p className="co-pay-warning">
+                      Lưu ý: Vui lòng giữ nguyên nội dung chuyển khoản <strong>{placedOrder.payment_code}</strong> để
+                      hệ thống tự động xác nhận thanh toán.
+                    </p>
+                  </div>
                 </div>
-                <p className="co-pay-warning">
-                  Lưu ý: Vui lòng giữ nguyên nội dung chuyển khoản <strong>{placedOrder.payment_code}</strong> để
-                  hệ thống tự động xác nhận thanh toán.
-                </p>
               </div>
             </div>
 
-            <Link href="/shop" className="cart-empty-btn">Để sau, tiếp tục mua sắm</Link>
+            <Link href="/shop" className="co-continue-btn">🛍 Tiếp tục mua sắm</Link>
           </div>
 
           {/* Tóm tắt đơn hàng */}
@@ -289,10 +289,17 @@ export default function CheckoutView() {
                 </div>
               ))}
             </div>
+            <div className="co-summary-row">
+              <span>Phí vận chuyển</span>
+              <span>{formatPrice(placedOrder.shipping_fee)}</span>
+            </div>
             <div className="co-summary-total">
-              <span>Tổng</span>
+              <span>Tổng cộng</span>
               <span>{formatPrice(placedOrder.total_amount)}</span>
             </div>
+            <Link href={`/account/orders/${placedOrder.id}`} className="co-detail-btn">
+              Xem chi tiết đơn hàng
+            </Link>
           </aside>
         </div>
       </div>
@@ -319,109 +326,59 @@ export default function CheckoutView() {
 
   return (
     <>
-      {/* Bảng giỏ hàng */}
-      <div className="co-cart-table">
-        <div className="co-cart-head">
-          <span>Sản phẩm</span>
-          <span>Giá</span>
-          <span>Số lượng</span>
-          <span>Tổng</span>
-        </div>
-        {items.map((line) => (
-          <div className="co-cart-row" key={line.key}>
-            <div className="co-cart-product">
-              <button type="button" className="co-cart-remove" onClick={() => removeFromCart(line.key)} aria-label="Xoá">
-                ×
-              </button>
-              <img src={resolveImage(line.image)} alt={line.name} />
-              <div>
-                <Link href={`/shop/${line.slug}`} className="co-cart-name">{line.name}</Link>
-                {line.variantName && <span className="co-cart-variant">Phân loại: {line.variantName}</span>}
-              </div>
-            </div>
-            <span className="co-cart-price">{formatPrice(line.price)}</span>
-            <div className="cart-qty">
-              <button type="button" onClick={() => updateQuantity(line.key, line.quantity - 1)} aria-label="Giảm">−</button>
-              <span>{line.quantity}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  if (Number.isFinite(Number(line.stockQuantity)) && line.quantity >= line.stockQuantity) {
-                    toastInfo(`Sản phẩm này chỉ còn ${line.stockQuantity} trong kho.`);
-                    return;
-                  }
-                  updateQuantity(line.key, line.quantity + 1);
-                }}
-                aria-label="Tăng"
-              >+</button>
-            </div>
-            <span className="co-cart-total">{formatPrice(line.price * line.quantity)}</span>
-          </div>
-        ))}
-        <div className="co-cart-actions">
-          <Link href="/shop" className="co-btn-outline">Tiếp tục xem sản phẩm</Link>
-          <Link href="/cart" className="co-btn-solid">Cập nhật giỏ hàng</Link>
-        </div>
-      </div>
-
       <h2 className="co-heading">Thanh toán đơn hàng</h2>
 
       <div className="co-layout">
-        {/* Địa chỉ giao hàng + vận chuyển */}
+        {/* Cột trái: địa chỉ · vận chuyển · thanh toán */}
         <div className="co-main">
           <section className="co-card">
-            <h3 className="co-card-title">📍 Địa chỉ giao hàng</h3>
+            <div className="co-card-head">
+              <span className="co-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+              </span>
+              <h3 className="co-card-title">Địa chỉ giao hàng</h3>
+            </div>
 
-            {addresses.map((address) => (
-              <label key={address.id} className={`co-ship-option ${selectedAddressId === address.id ? "active" : ""}`}>
-                <input
-                  type="radio"
-                  name="address"
-                  checked={selectedAddressId === address.id}
-                  onChange={() => setSelectedAddressId(address.id)}
-                />
-                <div>
-                  <strong>{address.recipient_name} · {address.recipient_phone}</strong>
-                  <span>{[address.address_line, address.ward, address.district, address.province].filter(Boolean).join(", ")}</span>
-                </div>
-                {address.is_default && <span className="co-ship-fee">Mặc định</span>}
-              </label>
-            ))}
+            {addresses.length > 0 && (
+              <div className="co-addr-grid">
+                {addresses.map((address) => (
+                  <label key={address.id} className={`co-addr-card ${selectedAddressId === address.id ? "active" : ""}`}>
+                    <input type="radio" name="address" checked={selectedAddressId === address.id} onChange={() => setSelectedAddressId(address.id)} />
+                    <div className="co-addr-top">
+                      {address.is_default ? <span className="co-addr-badge">Mặc định</span> : <span />}
+                      {selectedAddressId === address.id && (
+                        <svg className="co-addr-check" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.2 14.2-3.5-3.5 1.4-1.4 2.1 2.1 4.9-4.9 1.4 1.4-6.3 6.3Z" /></svg>
+                      )}
+                    </div>
+                    <p className="co-addr-name">{address.recipient_name} · {address.recipient_phone}</p>
+                    <p className="co-addr-detail">{[address.address_line, address.ward, address.district, address.province].filter(Boolean).join(", ")}</p>
+                  </label>
+                ))}
 
-            {!showAddressForm ? (
-              <button type="button" className="co-btn-outline" onClick={() => setShowAddressForm(true)}>
-                ➕ Thêm địa chỉ mới
-              </button>
-            ) : (
+                {!showAddressForm && (
+                  <button type="button" className="co-addr-add" onClick={() => setShowAddressForm(true)}>
+                    <span className="co-addr-add-icon">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                    </span>
+                    <span>Thêm địa chỉ mới</span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {showAddressForm && (
               <div className="co-address-form">
                 <div className="co-field">
                   <label>Họ và tên người nhận</label>
                   <input type="text" placeholder="Nhập đầy đủ họ tên" value={addressForm.recipient_name} onChange={updateAddressField("recipient_name")} />
                 </div>
-                <div className="co-field-row">
-                  <div className="co-field">
-                    <label>Số điện thoại</label>
-                    <input type="tel" placeholder="Ví dụ: 0912345678" value={addressForm.recipient_phone} onChange={updateAddressField("recipient_phone")} />
-                  </div>
-                  <div className="co-field">
-                    <label>Tỉnh / Thành phố</label>
-                    <select value={addressForm.province} onChange={updateAddressField("province")}>
-                      <option value="">Chọn tỉnh / thành phố</option>
-                      {PROVINCES.map((province) => (
-                        <option key={province} value={province}>{province}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="co-field">
+                  <label>Số điện thoại</label>
+                  <input type="tel" placeholder="Ví dụ: 0912345678" value={addressForm.recipient_phone} onChange={updateAddressField("recipient_phone")} />
                 </div>
-                <div className="co-field-row">
-                  <div className="co-field">
-                    <label>Quận / Huyện</label>
-                    <input type="text" placeholder="Quận / huyện" value={addressForm.district} onChange={updateAddressField("district")} />
-                  </div>
-                  <div className="co-field">
-                    <label>Phường / Xã</label>
-                    <input type="text" placeholder="Phường / xã" value={addressForm.ward} onChange={updateAddressField("ward")} />
-                  </div>
+                {/* Tỉnh/Thành phố · Quận/Huyện · Phường/Xã: chọn từ dữ liệu có sẵn */}
+                <div className="profile-address-form co-address-location">
+                  <AddressLocationFields value={addressForm} onChange={setAddressForm} />
                 </div>
                 <div className="co-field">
                   <label>Địa chỉ chi tiết</label>
@@ -446,15 +403,15 @@ export default function CheckoutView() {
           </section>
 
           <section className="co-card">
-            <h3 className="co-card-title">🚀 Phương thức vận chuyển</h3>
+            <div className="co-card-head">
+              <span className="co-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z" /><circle cx="7" cy="18" r="2" /><circle cx="17" cy="18" r="2" /></svg>
+              </span>
+              <h3 className="co-card-title">Phương thức vận chuyển</h3>
+            </div>
             {options.shipping_methods.map((method) => (
               <label key={method.id} className={`co-ship-option ${shippingMethodId === method.id ? "active" : ""}`}>
-                <input
-                  type="radio"
-                  name="shipping"
-                  checked={shippingMethodId === method.id}
-                  onChange={() => setShippingMethodId(method.id)}
-                />
+                <input type="radio" name="shipping" checked={shippingMethodId === method.id} onChange={() => setShippingMethodId(method.id)} />
                 <div>
                   <strong>{method.name}</strong>
                 </div>
@@ -462,21 +419,52 @@ export default function CheckoutView() {
               </label>
             ))}
           </section>
+
+          <section className="co-card">
+            <div className="co-card-head">
+              <span className="co-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20" /></svg>
+              </span>
+              <h3 className="co-card-title">Phương thức thanh toán</h3>
+            </div>
+            <div className="co-pay-grid">
+              {options.payment_methods.map((method) => (
+                <label key={method.id} className={`co-pay-card ${paymentMethodId === method.id ? "active" : ""}`}>
+                  <span className="co-pay-card-label">{method.name}</span>
+                  <input type="radio" name="payment" checked={paymentMethodId === method.id} onChange={() => setPaymentMethodId(method.id)} />
+                </label>
+              ))}
+            </div>
+
+            {isBankTransfer && (
+              <p className="co-pay-note">
+                Thực hiện thanh toán vào ngay tài khoản ngân hàng của chúng tôi. Vui lòng sử dụng Mã đơn hàng của bạn
+                trong phần Nội dung thanh toán. Đơn hàng sẽ được giao sau khi tiền đã chuyển.
+              </p>
+            )}
+
+            <div className="co-trust">
+              <span className="co-trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 4 6v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V6l-8-3Z" /></svg>Thanh toán an toàn</span>
+              <span className="co-trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7" /><path d="M21 4v5h-5" /></svg>Đổi trả trong 7 ngày</span>
+              <span className="co-trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 18v-6a8 8 0 0 1 16 0v6" /><path d="M5 13h2v5H6a2 2 0 0 1-2-2v-1a2 2 0 0 1 1-2Zm14 0a2 2 0 0 1 1 2v1a2 2 0 0 1-2 2h-1v-5Z" /></svg>Hỗ trợ 24/7</span>
+            </div>
+          </section>
         </div>
 
-        {/* Đơn hàng của bạn */}
+        {/* Cột phải: chi tiết đơn hàng */}
         <aside className="co-summary">
           <h3 className="co-summary-title">Đơn hàng của bạn</h3>
-          <div className="co-summary-head">
-            <span>Sản phẩm</span>
-            <span>Tổng</span>
-          </div>
           <div className="co-summary-items">
             {items.map((line) => (
               <div className="co-summary-item" key={line.key}>
-                <span className="co-summary-item-name">
-                  {line.name} <em>× {line.quantity}</em>
-                </span>
+                <div className="co-summary-item-media">
+                  <img className="co-summary-thumb" src={resolveImage(line.image)} alt={line.name} />
+                  <span className="co-summary-item-name">
+                    {line.name}
+                    {line.variantName && <em> · {line.variantName}</em>}
+                    <em> × {line.quantity}</em>
+                  </span>
+                </div>
                 <span>{formatPrice(line.price * line.quantity)}</span>
               </div>
             ))}
@@ -489,35 +477,27 @@ export default function CheckoutView() {
             <span>Phí vận chuyển</span>
             <span>{formatPrice(shipping)}</span>
           </div>
+          {items.length > 0 && shipping === 0 && (
+            <div className="co-freeship-badge">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.2 14.2-3.5-3.5 1.4-1.4 2.1 2.1 4.9-4.9 1.4 1.4-6.3 6.3Z" /></svg>
+              Đã áp dụng miễn phí vận chuyển
+            </div>
+          )}
           <div className="co-summary-total">
-            <span>Tổng</span>
+            <span>Tổng thanh toán</span>
             <span>{formatPrice(total)}</span>
           </div>
-
-          <div className="co-payment">
-            {options.payment_methods.map((method) => (
-              <label key={method.id} className={`co-pay-option ${paymentMethodId === method.id ? "active" : ""}`}>
-                <input
-                  type="radio"
-                  name="payment"
-                  checked={paymentMethodId === method.id}
-                  onChange={() => setPaymentMethodId(method.id)}
-                />
-                <span>{method.name}</span>
-              </label>
-            ))}
-          </div>
-
-          {isBankTransfer && (
-            <p className="co-pay-note">
-              Thực hiện thanh toán vào ngay tài khoản ngân hàng của chúng tôi. Vui lòng sử dụng Mã đơn hàng của bạn
-              trong phần Nội dung thanh toán. Đơn hàng sẽ được giao sau khi tiền đã chuyển.
-            </p>
-          )}
+          <p className="co-vat-note">(Đã bao gồm thuế VAT)</p>
 
           <button type="button" className="co-place-btn" onClick={handlePlaceOrder} disabled={submitting}>
-            {submitting ? "Đang đặt hàng..." : "Đặt hàng"}
+            {submitting ? "Đang đặt hàng..." : "Đặt hàng ngay"}
           </button>
+
+          <p className="co-terms">
+            Bằng cách đặt hàng, bạn xác nhận đã đọc và đồng ý với
+            <br />
+            <a href="#">Điều khoản sử dụng</a> và <a href="#">Chính sách bảo mật</a> của PetWorld.
+          </p>
         </aside>
       </div>
     </>
