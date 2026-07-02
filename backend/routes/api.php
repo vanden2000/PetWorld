@@ -8,8 +8,8 @@ use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SepayWebhookController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\WishlistController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,20 +29,22 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
-    Route::get('/wishlist', [WishlistController::class, 'index']);
-    Route::post('/wishlist/{product}', [WishlistController::class, 'store']);
-    Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy']);
+    Route::put('/user', [AuthController::class, 'updateProfile']);
+    Route::post('/user/avatar', [AuthController::class, 'updateAvatar']);
+    Route::put('/user/password', [AuthController::class, 'updatePassword']);
 
     // Sổ địa chỉ giao hàng
-    Route::get('/addresses', [AddressController::class, 'index']);
-    Route::post('/addresses', [AddressController::class, 'store']);
-    Route::put('/addresses/{address}', [AddressController::class, 'update']);
-    Route::delete('/addresses/{address}', [AddressController::class, 'destroy']);
+    Route::apiResource('addresses', AddressController::class)->except(['show']);
 
     // Đơn hàng
     Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
+
+    Route::get('/wishlist', [WishlistController::class, 'index']);
+    Route::post('/wishlist/{product}', [WishlistController::class, 'store']);
+    Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy']);
+    Route::post('/blogs/{slug}/comments', [BlogController::class, 'storeComment']);
 });
 
 Route::get('/home', HomeController::class);

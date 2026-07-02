@@ -7,7 +7,7 @@ import ProductCard from "@/components/product/ProductCard";
  * Khối sản phẩm bán chạy với tab lọc theo danh mục.
  * `groups` = mảng products_by_categories từ API ({ category, products }).
  */
-export default function BestSellingTabs({ groups = [] }) {
+export default function BestSellingTabs({ groups = [], title = "Sản Phẩm Khuyến Mãi" }) {
   const tabs = groups.filter((group) => group.products?.length > 0);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -18,7 +18,7 @@ export default function BestSellingTabs({ groups = [] }) {
   return (
     <section className="homepage-section">
       <div className="best-selling-header">
-        <h2 className="section-title">Sản Phẩm Bán Chạy</h2>
+        <h2 className="section-title">{title}</h2>
         <div className="best-selling-tabs">
           {tabs.map((group, index) => (
             <button

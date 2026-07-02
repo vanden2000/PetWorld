@@ -35,4 +35,9 @@ class Blog extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(BlogComment::class);
+    }
 }

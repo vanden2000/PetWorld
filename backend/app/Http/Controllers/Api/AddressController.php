@@ -11,88 +11,62 @@ class AddressController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $addresses = $request->user()
-            ->addresses()
+        $addresses = $request->user()->addresses()
             ->where('status', 'active')
             ->orderByDesc('is_default')
-            ->orderByDesc('id')
+            ->latest()
             ->get();
 
-        return response()->json([
-            'data' => $addresses->map(fn (Address $address): array => $this->format($address))->all(),
-        ]);
+        return response()->json(['data' => ['addresses' => $addresses]]);
     }
 
     public function store(Request $request): JsonResponse
     {
-        $data = $this->validateData($request);
-
+        $data = $this->validated($request);
+        if (! $request->user()->addresses()->where('status', 'active')->exists()) {
+            $data['is_default'] = true;
+        }
         $address = $request->user()->addresses()->create($data + ['status' => 'active']);
 
-        return response()->json([
-            'message' => 'Đã thêm địa chỉ giao hàng.',
-            'data' => $this->format($address),
-        ], 201);
+        return response()->json(['data' => ['address' => $address, 'message' => 'Đã thêm địa chỉ mới.']], 201);
     }
 
-    public function update(Request $request, int $address): JsonResponse
+    public function update(Request $request, Address $address): JsonResponse
     {
-        // Chỉ cho sửa địa chỉ thuộc về chính user đang đăng nhập.
-        $model = $request->user()->addresses()->findOrFail($address);
+        $this->authorizeOwner($request, $address);
+        $address->update($this->validated($request));
 
-        $model->update($this->validateData($request));
-
-        return response()->json([
-            'message' => 'Đã cập nhật địa chỉ.',
-            'data' => $this->format($model->fresh()),
-        ]);
+        return response()->json(['data' => ['address' => $address->fresh(), 'message' => 'Đã cập nhật địa chỉ.']]);
     }
 
-    public function destroy(Request $request, int $address): JsonResponse
+    public function destroy(Request $request, Address $address): JsonResponse
     {
-        $model = $request->user()->addresses()->findOrFail($address);
+        $this->authorizeOwner($request, $address);
+        $wasDefault = $address->is_default;
+        $address->update(['status' => 'inactive', 'is_default' => false]);
 
-        // Đơn hàng tham chiếu address_id (restrictOnDelete) nên không xoá cứng;
-        // chuyển sang inactive để ẩn khỏi sổ địa chỉ mà vẫn giữ lịch sử đơn.
-        $model->update(['status' => 'inactive', 'is_default' => false]);
+        if ($wasDefault) {
+            $request->user()->addresses()->where('status', 'active')->latest()->first()?->update(['is_default' => true]);
+        }
 
-        return response()->json([
-            'message' => 'Đã xoá địa chỉ.',
-            'data' => ['id' => $model->id],
-        ]);
+        return response()->json(['data' => ['message' => 'Đã xóa địa chỉ.']]);
     }
 
-    private function validateData(Request $request): array
+    private function validated(Request $request): array
     {
         return $request->validate([
             'recipient_name' => ['required', 'string', 'max:255'],
-            'recipient_phone' => ['required', 'string', 'max:20'],
+            'recipient_phone' => ['required', 'string', 'max:20', 'regex:/^(0|\+84)(3|5|7|8|9)[0-9]{8}$/'],
             'address_line' => ['required', 'string', 'max:255'],
-            'ward' => ['required', 'string', 'max:255'],
-            'district' => ['required', 'string', 'max:255'],
-            'province' => ['required', 'string', 'max:255'],
-            'is_default' => ['boolean'],
-        ], [
-            'recipient_name.required' => 'Vui lòng nhập họ tên người nhận.',
-            'recipient_phone.required' => 'Vui lòng nhập số điện thoại.',
-            'address_line.required' => 'Vui lòng nhập địa chỉ chi tiết.',
-            'ward.required' => 'Vui lòng nhập phường/xã.',
-            'district.required' => 'Vui lòng nhập quận/huyện.',
-            'province.required' => 'Vui lòng nhập tỉnh/thành phố.',
+            'ward' => ['required', 'string', 'max:100'],
+            'district' => ['required', 'string', 'max:100'],
+            'province' => ['required', 'string', 'max:100'],
+            'is_default' => ['sometimes', 'boolean'],
         ]);
     }
 
-    private function format(Address $address): array
+    private function authorizeOwner(Request $request, Address $address): void
     {
-        return [
-            'id' => $address->id,
-            'recipient_name' => $address->recipient_name,
-            'recipient_phone' => $address->recipient_phone,
-            'address_line' => $address->address_line,
-            'ward' => $address->ward,
-            'district' => $address->district,
-            'province' => $address->province,
-            'is_default' => (bool) $address->is_default,
-        ];
+        abort_unless((int) $address->user_id === (int) $request->user()->id, 404);
     }
 }

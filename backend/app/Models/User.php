@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'date_of_birth',
         'password',
         'avatar',
         'role',
@@ -46,6 +47,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'date_of_birth' => 'date',
     ];
 
     public function wishlists(): HasMany
@@ -67,13 +69,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(Review::class);
     }
+
+    public function blogComments(): HasMany
+    {
+        return $this->hasMany(BlogComment::class);
+    }
+
     public function wishlistProducts()
-{
-    return $this->belongsToMany(
-        Product::class,
-        'wishlists',
-        'user_id',
-        'product_id'
-    )->withTimestamps();
-}
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'wishlists',
+            'user_id',
+            'product_id'
+        )->withTimestamps();
+    }
 }

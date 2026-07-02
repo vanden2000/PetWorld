@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatPrice, resolveImage } from "@/lib/format";
+import { formatPrice, resolveProductImage } from "@/lib/format";
 import { addToCart } from "@/lib/cart";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { ROUTES } from "@/lib/routes";
@@ -83,6 +83,7 @@ export default function ProductDetail({ product }) {
         variantId: selectedVariant.id,
         variantName: selectedVariant.name,
         price: selectedVariant.effective_price,
+        oldPrice: selectedVariant?.sale_price ? selectedVariant.price : null,
       },
       quantity,
     );
@@ -103,7 +104,7 @@ export default function ProductDetail({ product }) {
         <div className="pd-main-image">
           {discount > 0 && <span className="pd-badge-discount">-{discount}%</span>}
           {product.category?.name && <span className="pd-badge-cat">{product.category.name}</span>}
-          <img src={resolveImage(activeImage)} alt={product.name} />
+          <img src={resolveProductImage(activeImage)} alt={product.name} />
         </div>
         {gallery.length > 1 && (
           <div className="pd-thumbs">
@@ -114,7 +115,7 @@ export default function ProductDetail({ product }) {
                 className={`pd-thumb ${activeImage === image ? "active" : ""}`}
                 onClick={() => setActiveImage(image)}
               >
-                <img src={resolveImage(image)} alt={`${product.name} ${index + 1}`} />
+                <img src={resolveProductImage(image)} alt={`${product.name} ${index + 1}`} />
               </button>
             ))}
           </div>

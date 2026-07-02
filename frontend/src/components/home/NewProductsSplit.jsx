@@ -26,7 +26,6 @@ export default function NewProductsSplit({ products = [] }) {
 
       <div className="split-section split-section--in-section">
       <aside className="category-sidebar">
-        <h3 className="sidebar-title">Sản Phẩm mới</h3>
         <ul className="sidebar-menu">
           {SIDEBAR_LINKS.map((label) => (
             <li key={label}>

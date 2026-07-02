@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatPrice, resolveImage } from "@/lib/format";
 import WishlistButton from "@/components/product/WishlistButton";
 import AddToCartButton from "@/components/product/AddToCartButton";
+import { resolveProductImage } from "@/lib/format"; 
 
 // 5 ngôi sao đánh giá (mặc định hiển thị đầy theo mockup).
 function Stars({ count = 5 }) {
@@ -37,7 +38,7 @@ export default function ProductCard({ product, badge }) {
       <WishlistButton product={product} />
 
       <Link href={href} className="product-img-wrapper">
-        <img src={resolveImage(product.image)} alt={product.name} className="product-img" />
+        <img src={resolveProductImage(product.image)} alt={product.name} className="product-img" />
       </Link>
 
       <div className="product-rating">

@@ -1,3 +1,10 @@
+// Thay vì import auth.js (gây vòng lặp phụ thuộc vì auth.js cũng import api.js), ta định nghĩa hàm lấy token trực tiếp.
+function getAuthHeaders() {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("petworld_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 // URL gốc của backend Laravel. Lấy từ biến môi trường, có giá trị mặc định cho local.
 export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
@@ -127,5 +134,33 @@ export async function getBlogDetail(slug) {
   } catch (error) {
     console.error(`[getBlogDetail] Không lấy được bài viết "${slug}":`, error);
     return null;
+  }
+}
+
+/**
+ * Gửi bình luận mới cho bài viết từ `POST /api/blogs/{slug}/comments`.
+ */
+export async function postBlogComment(slug, content) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/blogs/${encodeURIComponent(slug)}/comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ content }),
+    });
+
+    if (!res.ok) {
+      const errorJson = await res.json().catch(() => ({}));
+      throw new Error(errorJson?.message || `Comment API trả về ${res.status}`);
+    }
+
+    const json = await res.json();
+    return json?.data ?? null;
+  } catch (error) {
+    console.error(`[postBlogComment] Lỗi gửi bình luận cho "${slug}":`, error);
+    throw error;
   }
 }

@@ -32,5 +32,12 @@ class ProductSeeder extends Seeder
                 ],
             );
         }
+
+        // Sau khi toàn bộ sản phẩm seed đã được gán sang brand mới,
+        // xóa các brand seed cũ không còn sản phẩm tham chiếu.
+        Brand::query()
+            ->whereNotIn('slug', array_column(BrandSeeder::BRANDS, 'slug'))
+            ->whereDoesntHave('products')
+            ->delete();
     }
 }
