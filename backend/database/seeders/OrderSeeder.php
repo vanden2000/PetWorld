@@ -71,7 +71,7 @@ class OrderSeeder extends Seeder
             $lineTotal = 0;
             $items = collect($orderData['items'])
                 ->map(function (array $item) use (&$lineTotal): array {
-                    $variant = ProductVariant::with('product')
+                    $variant = ProductVariant::with(['product', 'variantTypes'])
                         ->whereHas('product', fn ($query) => $query->where('slug', $item['variant']))
                         ->where('status', 'active')
                         ->orderBy('id')
@@ -82,7 +82,7 @@ class OrderSeeder extends Seeder
 
                     return [
                         'product_variant_id' => $variant->id,
-                        'product_name' => $variant->product->name.' - '.$variant->variant_name,
+                        'product_name' => $variant->product->name.' - '.$variant->display_name,
                         'quantity' => $item['quantity'],
                         'price' => $price,
                     ];

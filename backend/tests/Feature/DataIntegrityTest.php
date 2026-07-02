@@ -116,14 +116,12 @@ class DataIntegrityTest extends TestCase
             'slug' => 'pate-mau',
             'status' => 'active',
         ]);
-        $variant = ProductVariant::create([
-            'variant_type_id' => $type->id,
+        $variant = $this->createProductVariant([
             'product_id' => $product->id,
-            'variant_name' => 'Mặc định',
             'price' => 100000,
             'quantity' => 1,
             'status' => 'active',
-        ]);
+        ], [$type->id => 'Mặc định']);
         $address = $this->createAddress($owner, 'Địa chỉ nhận hàng');
         $shipping = ShippingMethod::create(['name' => 'Tiêu chuẩn', 'shipping_fee' => 30000, 'status' => 'active']);
         $payment = PaymentMethod::create(['name' => 'COD', 'status' => 'active']);

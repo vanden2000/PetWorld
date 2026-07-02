@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState, useSyncExternalStore } from "react";
-import { formatPrice, resolveImage } from "@/lib/format";
+import { formatPrice, resolveProductImage } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { toastSuccess, toastError, toastInfo } from "@/lib/toast";
 import {
@@ -14,7 +14,7 @@ import {
   onCartChange,
 } from "@/lib/cart";
 
-const SHIPPING_FEE = 30000;
+const SHIPPING_FEE = 7000000;
 
 export default function CartView() {
   // Đăng ký giỏ hàng (localStorage) qua external store để tránh hydration mismatch.
@@ -59,7 +59,7 @@ export default function CartView() {
         {items.map((line) => (
           <div className="cart-item" key={line.key}>
             <Link href={`/shop/${line.slug}`} className="cart-item-img">
-              <img src={resolveImage(line.image)} alt={line.name} />
+              <img src={resolveProductImage(line.image)} alt={line.name} />
             </Link>
             <div className="cart-item-info">
               <Link href={`/shop/${line.slug}`} className="cart-item-name">
@@ -71,7 +71,17 @@ export default function CartView() {
                   −
                 </button>
                 <span>{line.quantity}</span>
-                <button type="button" onClick={() => updateQuantity(line.key, line.quantity + 1)} aria-label="Tăng">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (Number.isFinite(Number(line.stockQuantity)) && line.quantity >= line.stockQuantity) {
+                      toastInfo(`Sản phẩm đã vượt quá số lượng trong kho.`);
+                      return;
+                    }
+                    updateQuantity(line.key, line.quantity + 1);
+                  }}
+                  aria-label="Tăng"
+                >
                   +
                 </button>
               </div>

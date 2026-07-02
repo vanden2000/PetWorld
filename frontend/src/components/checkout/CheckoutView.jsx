@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { formatPrice, resolveImage } from "@/lib/format";
+import { toastInfo } from "@/lib/toast";
 import {
   getCartSnapshot,
   getServerCartSnapshot,
@@ -89,7 +90,17 @@ export default function CheckoutView() {
             <div className="cart-qty">
               <button type="button" onClick={() => updateQuantity(line.key, line.quantity - 1)} aria-label="Giảm">−</button>
               <span>{line.quantity}</span>
-              <button type="button" onClick={() => updateQuantity(line.key, line.quantity + 1)} aria-label="Tăng">+</button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (Number.isFinite(Number(line.stockQuantity)) && line.quantity >= line.stockQuantity) {
+                    toastInfo(`Sản phẩm này chỉ còn ${line.stockQuantity} trong kho.`);
+                    return;
+                  }
+                  updateQuantity(line.key, line.quantity + 1);
+                }}
+                aria-label="Tăng"
+              >+</button>
             </div>
             <span className="co-cart-total">{formatPrice(line.price * line.quantity)}</span>
           </div>

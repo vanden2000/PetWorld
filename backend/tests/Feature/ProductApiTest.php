@@ -68,15 +68,13 @@ class ProductApiTest extends TestCase
             'is_primary' => true,
         ]);
 
-        ProductVariant::create([
-            'variant_type_id' => $variantType->id,
+        $this->createProductVariant([
             'product_id' => $product->id,
-            'variant_name' => '1kg',
             'price' => 230000,
             'sale_price' => 209000,
             'quantity' => 7,
             'status' => 'active',
-        ]);
+        ], [$variantType->id => '1kg']);
 
         $unavailableProduct = Product::create([
             'category_id' => $category->id,
@@ -86,14 +84,12 @@ class ProductApiTest extends TestCase
             'status' => 'active',
         ]);
 
-        ProductVariant::create([
-            'variant_type_id' => $variantType->id,
+        $this->createProductVariant([
             'product_id' => $unavailableProduct->id,
-            'variant_name' => 'Default',
             'price' => 900000,
             'quantity' => 1,
             'status' => 'inactive',
-        ]);
+        ], [$variantType->id => 'Default']);
 
         $hiddenProduct = Product::create([
             'category_id' => $category->id,
@@ -103,24 +99,20 @@ class ProductApiTest extends TestCase
             'status' => 'inactive',
         ]);
 
-        ProductVariant::create([
-            'variant_type_id' => $variantType->id,
+        $this->createProductVariant([
             'product_id' => $hiddenProduct->id,
-            'variant_name' => 'Default',
             'price' => 2000000,
             'quantity' => 1,
             'status' => 'active',
-        ]);
+        ], [$variantType->id => 'Default']);
 
-        ProductVariant::create([
-            'variant_type_id' => $variantType->id,
+        $this->createProductVariant([
             'product_id' => $product->id,
-            'variant_name' => '2kg',
             'price' => 250000,
             'sale_price' => 300000,
             'quantity' => 1,
             'status' => 'active',
-        ]);
+        ], [$variantType->id => '2kg']);
 
         $user = User::create([
             'name' => 'Mai Nguyen',
@@ -182,6 +174,10 @@ class ProductApiTest extends TestCase
             'name' => 'Size',
             'status' => 'active',
         ]);
+        $packagingType = VariantType::create([
+            'name' => 'Packaging',
+            'status' => 'active',
+        ]);
 
         $product = Product::create([
             'category_id' => $category->id,
@@ -189,6 +185,7 @@ class ProductApiTest extends TestCase
             'name' => 'Petkit Harness',
             'slug' => 'petkit-harness',
             'description' => '<p>Comfortable harness.</p>',
+            'short_description' => 'Dây đeo nhẹ, chắc chắn và phù hợp cho những buổi đi dạo hằng ngày.',
             'view_count' => 15,
             'status' => 'active',
         ]);
@@ -205,14 +202,15 @@ class ProductApiTest extends TestCase
             'is_primary' => false,
         ]);
 
-        $variant = ProductVariant::create([
-            'variant_type_id' => $variantType->id,
+        $variant = $this->createProductVariant([
             'product_id' => $product->id,
-            'variant_name' => 'M',
             'price' => 180000,
             'sale_price' => 150000,
             'quantity' => 5,
             'status' => 'active',
+        ], [
+            $variantType->id => 'M',
+            $packagingType->id => 'Hộp',
         ]);
 
         $relatedProduct = Product::create([
@@ -231,14 +229,12 @@ class ProductApiTest extends TestCase
             'is_primary' => true,
         ]);
 
-        ProductVariant::create([
-            'variant_type_id' => $variantType->id,
+        $this->createProductVariant([
             'product_id' => $relatedProduct->id,
-            'variant_name' => 'Default',
             'price' => 99000,
             'quantity' => 3,
             'status' => 'active',
-        ]);
+        ], [$variantType->id => 'Default']);
 
         $user = User::create([
             'name' => 'Lan Tran',
@@ -316,13 +312,16 @@ class ProductApiTest extends TestCase
             ->assertJsonPath('data.product.slug', 'petkit-harness')
             ->assertJsonPath('data.product.view_count', 16)
             ->assertJsonPath('data.product.description', '<p>Comfortable harness.</p>')
+            ->assertJsonPath('data.product.short_description', 'Dây đeo nhẹ, chắc chắn và phù hợp cho những buổi đi dạo hằng ngày.')
             ->assertJsonPath('data.product.images.0.is_primary', true)
-            ->assertJsonPath('data.product.variants.0.name', 'M')
+            ->assertJsonPath('data.product.variants.0.name', 'M - Hộp')
+            ->assertJsonPath('data.product.variants.0.options.0.type_name', 'Size')
+            ->assertJsonPath('data.product.variants.0.options.1.value', 'Hộp')
             ->assertJsonPath('data.product.variants.0.effective_price', 150000)
             ->assertJsonPath('data.product.rating.average', 5.0)
             ->assertJsonPath('data.product.is_wishlisted', true)
             ->assertJsonPath('data.reviews.0.rating', 5)
-            ->assertJsonPath('data.reviews.0.variant.name', 'M')
+            ->assertJsonPath('data.reviews.0.variant.name', 'M - Hộp')
             ->assertJsonPath('data.related_products.0.slug', 'petkit-leash');
 
         $this->assertDatabaseHas('products', [

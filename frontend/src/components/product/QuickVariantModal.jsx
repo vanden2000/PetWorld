@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { resolveProductImage, formatPrice } from "@/lib/format";
-import { addToCart } from "@/lib/cart";
-import { toastSuccess, toastError } from "@/lib/toast";
+import { addToCart, checkQuantity } from "@/lib/cart";
+import { toastSuccess, toastError, toastInfo } from "@/lib/toast";
 
 export default function QuickVariantModal({ isOpen, onClose, product }) {
   const [mounted, setMounted] = useState(false);
@@ -29,8 +29,32 @@ export default function QuickVariantModal({ isOpen, onClose, product }) {
   }, [variants]);
 
   // Trạng thái được khởi tạo ngay lúc mount nhờ key reset ngoài AddToCartButton
-  const [selectedVariantId, setSelectedVariantId] = useState(defaultVariant?.id ?? null);
+  const [selectedOptions, setSelectedOptions] = useState(() =>
+    Object.fromEntries(
+      (defaultVariant?.options ?? []).map((option) => [option.type_id, option.value]),
+    ),
+  );
   const [quantity, setQuantity] = useState(1);
+
+  const variantGroups = useMemo(() => {
+    const groups = new Map();
+    for (const variant of variants) {
+      for (const option of variant.options ?? []) {
+        if (!groups.has(option.type_id)) {
+          groups.set(option.type_id, {
+            id: option.type_id,
+            name: option.type_name,
+            values: new Set(),
+          });
+        }
+        groups.get(option.type_id).values.add(option.value);
+      }
+    }
+    return [...groups.values()].map((group) => ({
+      ...group,
+      values: [...group.values],
+    }));
+  }, [variants]);
 
   // Đóng modal khi nhấn phím Escape
   useEffect(() => {
@@ -44,31 +68,41 @@ export default function QuickVariantModal({ isOpen, onClose, product }) {
   // Bỏ toàn bộ early return xuống dưới cùng sau khi đã khai báo các Hook
   if (!isOpen || !product || !mounted) return null;
 
-  const selectedVariant = variants.find((v) => v.id === selectedVariantId) ?? defaultVariant;
+  const selectedVariant = variants.find((variant) =>
+    variant.options?.length === Object.keys(selectedOptions).length
+      && variant.options.every(
+        (option) => selectedOptions[option.type_id] === option.value,
+      ),
+  ) ?? null;
   const currentPrice = selectedVariant ? selectedVariant.effective_price : (product.price?.min ?? 0);
   const oldPrice = selectedVariant?.sale_price ? selectedVariant.price : null;
-  const inStock = (selectedVariant?.quantity ?? product.stock_quantity ?? 0) > 0;
+  const inStock = (selectedVariant?.quantity ?? 0) > 0;
 
-  // Gom các biến thể theo loại
-  const variantGroups = (() => {
-    const groups = new Map();
-    for (const v of variants) {
-      const typeName = v.type?.name ?? "Phân loại";
-      if (!groups.has(typeName)) {
-        groups.set(typeName, []);
-      }
-      groups.get(typeName).push(v);
-    }
-    return [...groups.entries()];
-  })();
+  const optionIsAvailable = (typeId, value) => variants.some((variant) => {
+    if (variant.quantity <= 0) return false;
+    const options = Object.fromEntries(
+      (variant.options ?? []).map((option) => [option.type_id, option.value]),
+    );
+    if (options[typeId] !== value) return false;
+
+    return Object.entries(selectedOptions).every(([selectedTypeId, selectedValue]) =>
+      Number(selectedTypeId) === Number(typeId)
+        || options[selectedTypeId] === selectedValue,
+    );
+  });
 
   const handleAddToCart = () => {
-    if (variants.length > 0 && (!selectedVariant || !inStock)) {
+    if (!selectedVariant || !inStock) {
       toastError("Vui lòng chọn phân loại còn hàng.");
       return;
     }
 
-    addToCart(
+    if (!checkQuantity(product.id, selectedVariant.id, quantity, selectedVariant.quantity)) {
+      toastError(`Trong giỏ đã có sản phẩm này. Bạn chỉ có thể mua tối đa ${selectedVariant.quantity}.`);
+      return;
+    }
+
+    const added = addToCart(
       {
         productId: product.id,
         slug: product.slug,
@@ -78,9 +112,12 @@ export default function QuickVariantModal({ isOpen, onClose, product }) {
         variantName: selectedVariant ? selectedVariant.name : null,
         price: currentPrice,
         oldPrice,
+        stockQuantity: selectedVariant.quantity,
       },
       quantity
     );
+
+    if (!added) return;
 
     toastSuccess(`Đã thêm ${quantity} x "${product.name}${selectedVariant ? ` (${selectedVariant.name})` : ""}" vào giỏ hàng`);
     onClose();
@@ -107,26 +144,32 @@ export default function QuickVariantModal({ isOpen, onClose, product }) {
             <span className={`qvm-stock-status ${!inStock ? "out-of-stock" : ""}`}>
               {inStock ? "Còn hàng" : "Hết hàng"}
             </span>
+            {product.short_description && (
+              <p className="qvm-short-description">{product.short_description}</p>
+            )}
           </div>
         </div>
 
         <div className="qvm-body">
-          {variantGroups.map(([typeName, groupVariants]) => (
-            <div className="qvm-variant-group" key={typeName}>
-              <span className="qvm-group-title">{typeName}:</span>
+          {variantGroups.map((group) => (
+            <div className="qvm-variant-group" key={group.id}>
+              <span className="qvm-group-title">{group.name}:</span>
               <div className="qvm-options-list">
-                {groupVariants.map((v) => {
-                  const isOptStock = v.quantity > 0;
+                {group.values.map((value) => {
+                  const isOptStock = optionIsAvailable(group.id, value);
                   return (
                     <button
-                      key={v.id}
+                      key={value}
                       type="button"
-                      className={`qvm-option-chip ${selectedVariantId === v.id ? "active" : ""}`}
-                      onClick={() => setSelectedVariantId(v.id)}
+                      className={`qvm-option-chip ${selectedOptions[group.id] === value ? "active" : ""}`}
+                      onClick={() => {
+                        setSelectedOptions((current) => ({ ...current, [group.id]: value }));
+                        setQuantity(1);
+                      }}
                       disabled={!isOptStock}
                       title={!isOptStock ? "Hết hàng" : ""}
                     >
-                      {v.name}
+                      {value}
                     </button>
                   );
                 })}
@@ -151,9 +194,13 @@ export default function QuickVariantModal({ isOpen, onClose, product }) {
               className="qvm-qty-btn"
               onClick={() => {
                 const maxStock = selectedVariant?.quantity ?? product.stock_quantity ?? 99;
-                setQuantity((prev) => (prev < maxStock ? prev + 1 : prev));
+                if (quantity >= maxStock) {
+                  toastInfo(`Biến thể này chỉ còn ${maxStock} sản phẩm trong kho.`);
+                  return;
+                }
+                setQuantity((prev) => prev + 1);
               }}
-              disabled={quantity >= (selectedVariant?.quantity ?? product.stock_quantity ?? 99)}
+              disabled={!selectedVariant}
             >
               +
             </button>

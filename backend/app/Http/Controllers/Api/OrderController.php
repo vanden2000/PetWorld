@@ -64,6 +64,7 @@ class OrderController extends Controller
             'shippingMethod:id,name',
             'paymentMethod:id,name',
             'items.productVariant.product.primaryImage',
+            'items.productVariant.variantTypes',
         ]);
 
         $subtotal = $order->items->sum(fn ($item) => (float) $item->price * $item->quantity);
@@ -95,7 +96,7 @@ class OrderController extends Controller
             'items' => $order->items->map(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->product_name,
-                'variant' => $item->productVariant?->variant_name,
+                'variant' => $item->productVariant?->display_name,
                 'quantity' => $item->quantity,
                 'price' => (float) $item->price,
                 'slug' => $item->productVariant?->product?->slug,

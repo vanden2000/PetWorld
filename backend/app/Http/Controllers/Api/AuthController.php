@@ -47,6 +47,7 @@ class AuthController extends Controller
 
         return response()->json([
             'data' => [
+                'message' => 'Đăng ký thành công.',
                 'user' => $this->formatUser($user),
                 'token' => $token,
             ],
@@ -82,6 +83,7 @@ class AuthController extends Controller
 
         return response()->json([
             'data' => [
+                'message' => 'Đăng nhập thành công.',
                 'user' => $this->formatUser($user),
                 'token' => $token,
             ],
