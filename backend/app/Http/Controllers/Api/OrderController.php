@@ -14,6 +14,8 @@ use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
+    private const HISTORY_PER_PAGE = 3;
+
     public function index(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -38,7 +40,7 @@ class OrderController extends Controller
                 });
             })
             ->latest()
-            ->paginate(6);
+            ->paginate(self::HISTORY_PER_PAGE);
 
         return response()->json(['data' => [
             'orders' => collect($orders->items())->map(fn ($order) => [
@@ -69,7 +71,8 @@ class OrderController extends Controller
             'shippingMethod:id,name',
             'paymentMethod:id,name',
             'items.productVariant.product.primaryImage',
-            'items.productVariant.variantTypes',
+            'items.productVariant.variantValues.variantType',
+            'items.review:id,order_item_id,rating,comment',
         ]);
 
         $subtotal = $order->items->sum(fn ($item) => (float) $item->price * $item->quantity);
@@ -107,8 +110,61 @@ class OrderController extends Controller
                 'price' => (float) $item->price,
                 'slug' => $item->productVariant?->product?->slug,
                 'image' => $item->productVariant?->product?->primaryImage?->image_url,
+                'review' => $item->review ? [
+                    'id' => $item->review->id,
+                    'rating' => $item->review->rating,
+                    'comment' => $item->review->comment,
+                ] : null,
             ])->values(),
         ]]]);
+    }
+
+    public function cancel(Request $request, Order $order): JsonResponse
+    {
+        abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
+
+        $cancelledOrder = DB::transaction(function () use ($order): Order {
+            $lockedOrder = Order::query()
+                ->whereKey($order->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedOrder->order_status !== 'pending') {
+                abort(409, 'Chỉ có thể hủy đơn hàng đang chờ xác nhận.');
+            }
+
+            if ($lockedOrder->payment_status === 'paid') {
+                abort(409, 'Đơn hàng đã thanh toán không thể tự hủy. Vui lòng liên hệ PetWorld.');
+            }
+
+            $items = $lockedOrder->items()->get();
+            $variantIds = $items->pluck('product_variant_id')->filter()->unique()->values();
+
+            $variants = ProductVariant::query()
+                ->whereIn('id', $variantIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach ($items as $item) {
+                $variants->get($item->product_variant_id)?->increment('quantity', $item->quantity);
+            }
+
+            $lockedOrder->update(['order_status' => 'cancelled']);
+
+            return $lockedOrder->refresh();
+        });
+
+        return response()->json([
+            'message' => 'Đã hủy đơn hàng thành công.',
+            'data' => [
+                'order' => [
+                    'id' => $cancelledOrder->id,
+                    'status' => $cancelledOrder->order_status,
+                    'updated_at' => $cancelledOrder->updated_at?->toIso8601String(),
+                ],
+            ],
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -177,8 +233,8 @@ class OrderController extends Controller
 
                 $variant->decrement('quantity', $quantity);
 
-                $name = $variant->variant_name
-                    ? "{$variant->product->name} - {$variant->variant_name}"
+                $name = $variant->display_name
+                    ? "{$variant->product->name} - {$variant->display_name}"
                     : $variant->product->name;
 
                 $orderItems[] = [

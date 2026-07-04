@@ -17,6 +17,7 @@ import {
   logout,
 } from "@/lib/auth";
 import { ROUTES, MAIN_NAV } from "@/lib/routes";
+import { resolveBackendImage } from "@/lib/format";
 
 export default function Header() {
   const pathname = usePathname();
@@ -88,7 +89,7 @@ export default function Header() {
       <div className="navbar-container">
         <nav className="navbar">
           <Link href={ROUTES.home} className="logo-link" id="logo">
-            <img src="/image/Special_Offer_1-removebg-preview.png" alt="PetWorld Logo" className="logo-img" />
+            <img src={resolveBackendImage("image/Special_Offer_1-removebg-preview.png")} alt="PetWorld Logo" className="logo-img" />
           </Link>
 
           <ul className="nav-menu">

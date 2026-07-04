@@ -5,8 +5,8 @@ export default function CategorySection({ categories = [] }) {
   return (
     <section className="homepage-section">
       <div className="section-header">
-        <h2 className="section-title category-section-title">Danh mục Sản Phẩm</h2>
-        <Link href="/shop" className="view-all-link category-view-all">
+        <h2 className="section-title">Danh mục Sản Phẩm</h2>
+        <Link href="/shop" className="view-all-link">
           xem tất cả ➔
         </Link>
       </div>

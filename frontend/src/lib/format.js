@@ -1,5 +1,20 @@
 // Ảnh dùng tạm khi sản phẩm/danh mục chưa có ảnh thật.
-const FALLBACK_IMAGE = "/image/Special_Offer_1-removebg-preview.png";
+const ASSET_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
+).replace(/\/$/, "");
+const FALLBACK_PATH = "image/Special_Offer_1-removebg-preview.png";
+
+export function resolveBackendImage(path, directory = "") {
+  if (path?.startsWith("http://") || path?.startsWith("https://")) return path;
+
+  const source = path || FALLBACK_PATH;
+  const normalized = source.replace(/^\/+/, "");
+  const relativePath = normalized.includes("/")
+    ? normalized
+    : ["image", directory, normalized].filter(Boolean).join("/");
+
+  return `${ASSET_BASE_URL}/${relativePath}`;
+}
 
 /**
  * Định dạng giá theo tiền Việt: 200000 -> "200.000đ".
@@ -18,29 +33,17 @@ export function formatPrice(value) {
  * - Còn lại được đặt trong thư mục /image của public.
  */
 export function resolveImage(path) {
-  if (!path) return FALLBACK_IMAGE;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  if (path.startsWith("/")) return path;
-  return `/image/banners/${path}`;
+  return resolveBackendImage(path, "banners");
 }
 // đường dẫn ảnh brands
 export function resolveBrandImage(path) {
-  if (!path) return FALLBACK_IMAGE;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  if (path.startsWith("/")) return path;
-  return `/image/brands/${path}`;
+  return resolveBackendImage(path, "brands");
 }
 export function resolveProductImage(path) {
-  if (!path) return FALLBACK_IMAGE;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  if (path.startsWith("/")) return path;
-  return `/image/products/${path}`;
+  return resolveBackendImage(path, "products");
 }
 
 // đường dẫn ảnh blogs
 export function resolveBlogImage(path) {
-  if (!path) return FALLBACK_IMAGE;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  if (path.startsWith("/")) return path;
-  return `/image/blogs/${path}`;
+  return resolveBackendImage(path, "blogs");
 }

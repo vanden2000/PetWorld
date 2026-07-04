@@ -1,10 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { formatPrice, resolveProductImage } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { toastSuccess, toastError, toastInfo } from "@/lib/toast";
+import LoginRequiredDialog from "@/components/ui/LoginRequiredDialog";
+import {
+  getUserSnapshot,
+  getServerUserSnapshot,
+  parseUser,
+  onAuthChange,
+} from "@/lib/auth";
 import {
   getCartSnapshot,
   getServerCartSnapshot,
@@ -17,12 +25,17 @@ import {
 const SHIPPING_FEE = 7000000;
 
 export default function CartView() {
+  const router = useRouter();
+  const userRaw = useSyncExternalStore(onAuthChange, getUserSnapshot, getServerUserSnapshot);
+  const user = useMemo(() => parseUser(userRaw), [userRaw]);
+
   // Đăng ký giỏ hàng (localStorage) qua external store để tránh hydration mismatch.
   const raw = useSyncExternalStore(onCartChange, getCartSnapshot, getServerCartSnapshot);
   const items = useMemo(() => parseCart(raw), [raw]);
 
   const [coupon, setCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   const handleRemove = (line) => {
     removeFromCart(line.key);
@@ -40,6 +53,18 @@ export default function CartView() {
     toastSuccess("Đã áp dụng mã giảm giá thành công! Giảm 50.000đ.");
   };
 
+  const handleCheckout = (event) => {
+    if (user) return;
+
+    event.preventDefault();
+    setShowLoginDialog(true);
+  };
+
+  const handleLogin = () => {
+    setShowLoginDialog(false);
+    router.push(`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.checkout)}`);
+  };
+
   const subtotal = items.reduce((sum, line) => sum + line.price * line.quantity, 0);
   const shipping = items.length ? SHIPPING_FEE : 0;
   const total = Math.max(0, subtotal + shipping - discount);
@@ -55,6 +80,11 @@ export default function CartView() {
 
   return (
     <div className="cart-layout">
+      <LoginRequiredDialog
+        open={showLoginDialog}
+        onClose={() => setShowLoginDialog(false)}
+        onConfirm={handleLogin}
+      />
       <div className="cart-items">
         {items.map((line) => (
           <div className="cart-item" key={line.key}>
@@ -148,8 +178,8 @@ export default function CartView() {
             <button type="button" onClick={handleApplyCoupon}>Áp dụng</button>
           </div>
         </div>
-
-        <Link href={ROUTES.checkout} className="cart-checkout-btn">
+        {/* kiểm tra đăng nhập */}
+        <Link href={ROUTES.checkout} className="cart-checkout-btn" onClick={handleCheckout}>
           Tiến hành thanh toán
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: "8px", display: "inline-block", verticalAlign: "middle" }}>
             <rect x="2" y="5" width="20" height="14" rx="2" />

@@ -56,7 +56,8 @@ export default function ProductDetail({ product }) {
   const currentPrice = selectedVariant ? selectedVariant.effective_price : product.price?.min;
   const oldPrice = selectedVariant?.sale_price ? selectedVariant.price : null;
   const discount = oldPrice ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100) : 0;
-  const inStock = (selectedVariant?.quantity ?? product.stock_quantity ?? 0) > 0;
+  const availableQuantity = selectedVariant?.quantity ?? product.stock_quantity ?? 0;
+  const inStock = availableQuantity > 0;
 
   // Gom các giá trị của mọi SKU theo loại để khách chọn từng phần của tổ hợp.
   const variantGroups = useMemo(() => {
@@ -169,16 +170,15 @@ export default function ProductDetail({ product }) {
             <strong>{product.rating?.average ?? 0}</strong>
             <span>({product.rating?.count ?? 0} đánh giá)</span>
           </span>
-          <span className={`pd-stock ${inStock ? "in" : "out"}`}>
-            {inStock ? "Còn hàng" : "Hết hàng"}
+          <span className={`pd-stock ${inStock ? "in" : "out"}`} aria-live="polite">
+            {inStock ? `Còn ${availableQuantity} sản phẩm` : "Hết hàng"}
           </span>
         </div>
-
         <div className="pd-price">
           <span className="pd-price-current">{formatPrice(currentPrice)}</span>
           {oldPrice && <span className="pd-price-old">{formatPrice(oldPrice)}</span>}
         </div>
-
+        <div className="pd-desc">
           {product.short_description && (
             <p className="pd-short-description">{product.short_description}</p>
           )}

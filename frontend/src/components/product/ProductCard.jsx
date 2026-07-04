@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { formatPrice, resolveImage } from "@/lib/format";
+import { formatPrice, resolveProductImage } from "@/lib/format";
 import WishlistButton from "@/components/product/WishlistButton";
 import AddToCartButton from "@/components/product/AddToCartButton";
-import { resolveProductImage } from "@/lib/format";
 
 // 5 ngôi sao đánh giá (mặc định hiển thị đầy theo mockup).
 function Stars({ count = 5 }) {

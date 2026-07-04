@@ -44,15 +44,13 @@ class OrderApiTest extends TestCase
             'status' => 'active',
         ]);
 
-        return ProductVariant::create([
-            'variant_type_id' => $variantType->id,
+        return $this->createProductVariant([
             'product_id' => $product->id,
-            'variant_name' => '1kg',
             'price' => $price,
             'sale_price' => $salePrice,
             'quantity' => $quantity,
             'status' => 'active',
-        ]);
+        ], [$variantType->id => '1kg']);
     }
 
     private function makeAddress(User $user): Address

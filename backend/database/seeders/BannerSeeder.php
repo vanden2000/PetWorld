@@ -14,19 +14,19 @@ class BannerSeeder extends Seeder
     {
         $banners = [
             [
-                'image' => 'petworld-hero.jpg',
+                'image' => 'image/banners/petworld-hero.jpg',
                 'legacy_image' => 'banners/petworld-hero.jpg',
                 'link' => '/shop',
                 'description' => 'Khám phá sản phẩm tốt cho thú cưng.',
             ],
             [
-                'image' => 'pet-food-sale.jpg',
+                'image' => 'image/banners/pet-food-sale.jpg',
                 'legacy_image' => 'banners/pet-food-sale.jpg',
                 'link' => '/shop?category=thuc-an-hat',
                 'description' => 'Ưu đãi thức ăn hạt dành cho thú cưng.',
             ],
             [
-                'image' => 'pet-care.jpg',
+                'image' => 'image/banners/pet-care.jpg',
                 'legacy_image' => 'banners/pet-care.jpg',
                 'link' => '/shop?category=ve-sinh-va-cham-soc',
                 'description' => 'Chăm sóc thú cưng mỗi ngày.',

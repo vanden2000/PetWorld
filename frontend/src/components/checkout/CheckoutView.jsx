@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { formatPrice, resolveImage } from "@/lib/format";
+import { formatPrice, resolveProductImage } from "@/lib/format";
 import {
   getUserSnapshot,
   getServerUserSnapshot,
@@ -25,6 +25,7 @@ import {
   buildSepayQrUrl,
 } from "@/lib/checkout";
 import AddressLocationFields from "@/components/auth/AddressLocationFields";
+import { toastError } from "@/lib/toast";
 
 // Mã QR hết hạn sau 15 phút, sau đó khách bấm tạo lại.
 const QR_TTL_SECONDS = 15 * 60;
@@ -143,7 +144,7 @@ export default function CheckoutView() {
     setSavingAddress(false);
 
     if (!result.ok) {
-      alert(result.message ?? "Không lưu được địa chỉ.");
+      toastError(result.message ?? "Không lưu được địa chỉ.");
       return;
     }
 
@@ -155,12 +156,12 @@ export default function CheckoutView() {
 
   const handlePlaceOrder = async () => {
     if (!selectedAddressId) {
-      alert("Vui lòng chọn hoặc thêm địa chỉ giao hàng.");
+      toastError("Vui lòng chọn hoặc thêm địa chỉ giao hàng.");
       return;
     }
     // Mọi dòng giỏ phải có variant id (giỏ cũ có thể thiếu) để khớp sản phẩm khi đặt.
     if (items.some((line) => !line.variantId)) {
-      alert("Có sản phẩm trong giỏ thiếu thông tin phân loại. Vui lòng xoá và thêm lại sản phẩm.");
+      toastError("Có sản phẩm trong giỏ thiếu thông tin phân loại. Vui lòng xoá và thêm lại sản phẩm.");
       return;
     }
 
@@ -175,7 +176,7 @@ export default function CheckoutView() {
     setSubmitting(false);
 
     if (!result.ok) {
-      alert(result.message ?? "Đặt hàng không thành công, vui lòng thử lại.");
+      toastError(result.message ?? "Đặt hàng không thành công, vui lòng thử lại.");
       return;
     }
 
@@ -458,7 +459,7 @@ export default function CheckoutView() {
             {items.map((line) => (
               <div className="co-summary-item" key={line.key}>
                 <div className="co-summary-item-media">
-                  <img className="co-summary-thumb" src={resolveImage(line.image)} alt={line.name} />
+                  <img className="co-summary-thumb" src={resolveProductImage(line.image)} alt={line.name} />
                   <span className="co-summary-item-name">
                     {line.name}
                     {line.variantName && <em> · {line.variantName}</em>}

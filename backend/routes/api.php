@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SepayWebhookController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\Api\ReviewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +37,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
+    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel']);
+    Route::post('/reviews', [ReviewController::class, 'store']);
     Route::get('/wishlist', [WishlistController::class, 'index']);
     Route::post('/wishlist/{product}', [WishlistController::class, 'store']);
     Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy']);

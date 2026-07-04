@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getBlogs } from "@/lib/api";
-import { resolveBlogImage } from "@/lib/format";
+import { resolveBackendImage, resolveBlogImage } from "@/lib/format";
 import BlogSort from "@/components/blog/BlogSort";
 import BlogSearch from "@/components/blog/BlogSearch";
 
@@ -65,7 +65,7 @@ export default async function NewsPage({ searchParams }) {
         {/* Banner theo thiết kế Figma */}
         <div
           className="news-banner"
-          style={{ backgroundImage: `url('/image/banners/blog-banner.jpg')` }}
+          style={{ backgroundImage: `url('${resolveBackendImage("image/banners/blog-banner.jpg")}')` }}
         >
           <h1 className="news-banner-title">Cộng đồng yêu thú cưng</h1>
         </div>

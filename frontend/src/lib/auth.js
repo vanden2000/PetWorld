@@ -44,14 +44,18 @@ function updateStoredUser(user) {
 }
 
 async function accountRequest(path, options = {}) {
-  const isFormData = options.body instanceof FormData;
-  const response = await fetch(`${API_BASE_URL}/api/${path}`, {
-    ...options,
-    headers: { Accept: "application/json", ...(isFormData ? {} : { "Content-Type": "application/json" }), ...authHeaders(), ...options.headers },
-  });
-  const json = await response.json().catch(() => ({}));
-  if (!response.ok) return { ok: false, message: json.message || "Không thể xử lý yêu cầu.", errors: json.errors || {} };
-  return { ok: true, data: json.data || {} };
+  try {
+    const isFormData = options.body instanceof FormData;
+    const response = await fetch(`${API_BASE_URL}/api/${path}`, {
+      ...options,
+      headers: { Accept: "application/json", ...(isFormData ? {} : { "Content-Type": "application/json" }), ...authHeaders(), ...options.headers },
+    });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) return { ok: false, message: json.message || "Không thể xử lý yêu cầu.", errors: json.errors || {} };
+    return { ok: true, data: json.data || {} };
+  } catch {
+    return { ok: false, message: "Không kết nối được máy chủ. Vui lòng thử lại.", errors: {} };
+  }
 }
 
 export async function updateProfile(payload) {
@@ -79,6 +83,8 @@ export const getOrders = (params = {}) => {
   return accountRequest(`orders${query ? `?${query}` : ""}`);
 };
 export const getOrder = (id) => accountRequest(`orders/${id}`);
+export const cancelOrder = (id) => accountRequest(`orders/${id}/cancel`, { method: "PATCH" });
+export const createReview = (payload) => accountRequest("reviews", { method: "POST", body: JSON.stringify(payload) });
 
 export function clearAuth() {
   localStorage.removeItem(TOKEN_KEY);

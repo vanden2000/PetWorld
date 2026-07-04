@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { resolveBackendImage } from "@/lib/format";
 
 /**
  * Banner CTA ngang "Mua ngay, kẻo lỡ": logo + ảnh thú cưng + tiêu đề + nút.
@@ -7,12 +8,12 @@ export default function ShopCtaBanner() {
   return (
     <section className="shop-cta-banner">
       <img
-        src="/image/Special_Offer_1-removebg-preview.png"
+        src={resolveBackendImage("image/Special_Offer_1-removebg-preview.png")}
         alt="PetWorld"
         className="shop-cta-logo"
       />
       <img
-        src="/image/promo/cta-pets.png"
+        src={resolveBackendImage("image/promo/sidebar-pets.png")}
         alt=""
         aria-hidden="true"
         className="shop-cta-photo"

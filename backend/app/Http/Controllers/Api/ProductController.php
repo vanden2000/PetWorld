@@ -8,7 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Review;
-use App\Models\VariantType;
+use App\Models\VariantValue;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -57,7 +57,7 @@ class ProductController extends Controller
         
         $userId = $this->authenticatedUserId($request);
         $product = $this->baseProductQuery($userId)
-            ->with(['images', 'variants.variantTypes'])
+            ->with(['images', 'variants.variantValues.variantType'])
             ->where('slug', $slug)
             ->firstOrFail();
 
@@ -268,13 +268,14 @@ class ProductController extends Controller
                     'id' => $variant->id,
                     'sku' => $variant->sku,
                     'name' => $variant->display_name,
-                    'options' => $variant->variantTypes
-                        ->sortBy('id')
+                    'options' => $variant->variantValues
+                        ->sortBy('variant_type_id')
                         ->values()
-                        ->map(fn (VariantType $type): array => [
-                            'type_id' => $type->id,
-                            'type_name' => $type->name,
-                            'value' => $type->pivot->value,
+                        ->map(fn (VariantValue $value): array => [
+                            'type_id' => $value->variant_type_id,
+                            'type_name' => $value->variantType->name,
+                            'value_id' => $value->id,
+                            'value' => $value->value,
                         ])
                         ->all(),
                     'price' => (float) $variant->price,
@@ -290,7 +291,7 @@ class ProductController extends Controller
     private function formatReviews(Product $product): array
     {
         return Review::query()
-            ->with(['user', 'orderItem.productVariant.variantTypes'])
+            ->with(['user', 'orderItem.productVariant.variantValues.variantType'])
             ->where('status', 'approved')
             ->whereHas('orderItem.productVariant', fn (Builder $query) => $query->where('product_id', $product->id))
             ->latest()
