@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatPrice, resolveProductImage } from "@/lib/format";
-import { addToCart } from "@/lib/cart";
-import { toastSuccess, toastError } from "@/lib/toast";
+import { addToCart, checkQuantity } from "@/lib/cart";
+import { toastSuccess, toastError, toastInfo } from "@/lib/toast";
 import { ROUTES } from "@/lib/routes";
 import WishlistButton from "@/components/product/WishlistButton";
 
@@ -31,7 +31,7 @@ export default function ProductDetail({ product }) {
     ? product.images.map((image) => image.image_url)
     : [product.image];
 
-  const variants = product.variants ?? [];
+  const variants = useMemo(() => product.variants ?? [], [product.variants]);
   // Mặc định chọn biến thể có giá hiệu lực thấp nhất (đồng nhất với cách card hiển thị giá).
   const defaultVariant = useMemo(
     () => [...variants].sort((a, b) => a.effective_price - b.effective_price)[0] ?? null,
@@ -39,42 +39,77 @@ export default function ProductDetail({ product }) {
   );
 
   const [activeImage, setActiveImage] = useState(gallery[0]);
-  const [selectedVariantId, setSelectedVariantId] = useState(defaultVariant?.id ?? null);
+  const [selectedOptions, setSelectedOptions] = useState(() =>
+    Object.fromEntries(
+      (defaultVariant?.options ?? []).map((option) => [option.type_id, option.value]),
+    ),
+  );
   const [quantity, setQuantity] = useState(1);
 
-  const selectedVariant = variants.find((variant) => variant.id === selectedVariantId) ?? defaultVariant;
+  const selectedVariant = variants.find((variant) =>
+    variant.options?.length === Object.keys(selectedOptions).length
+      && variant.options.every(
+        (option) => selectedOptions[option.type_id] === option.value,
+      ),
+  ) ?? null;
 
   const currentPrice = selectedVariant ? selectedVariant.effective_price : product.price?.min;
   const oldPrice = selectedVariant?.sale_price ? selectedVariant.price : null;
   const discount = oldPrice ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100) : 0;
   const inStock = (selectedVariant?.quantity ?? product.stock_quantity ?? 0) > 0;
 
-  // Lấy các "Điểm nổi bật" (thẻ <li> đầu tiên trong mô tả HTML) để hiện gạch đầu dòng như mockup.
-  const highlights = useMemo(() => {
-    if (!product.description) return [];
-    return [...product.description.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)]
-      .map((match) => match[1].replace(/<[^>]+>/g, "").trim())
-      .filter(Boolean)
-      .slice(0, 3);
-  }, [product.description]);
-
-  // Gom biến thể theo loại (Kích thước, Loại bao bì...) để render thành từng nhóm như mockup.
+  // Gom các giá trị của mọi SKU theo loại để khách chọn từng phần của tổ hợp.
   const variantGroups = useMemo(() => {
     const groups = new Map();
     for (const variant of variants) {
-      const typeName = variant.type?.name ?? "Phân loại";
-      if (!groups.has(typeName)) groups.set(typeName, []);
-      groups.get(typeName).push(variant);
+      for (const option of variant.options ?? []) {
+        if (!groups.has(option.type_id)) {
+          groups.set(option.type_id, {
+            id: option.type_id,
+            name: option.type_name,
+            values: new Set(),
+          });
+        }
+        groups.get(option.type_id).values.add(option.value);
+      }
     }
-    return [...groups.entries()];
+    return [...groups.values()].map((group) => ({
+      ...group,
+      values: [...group.values],
+    }));
   }, [variants]);
+
+  const optionIsAvailable = (typeId, value) => variants.some((variant) => {
+    if (variant.quantity <= 0) return false;
+
+    const options = Object.fromEntries(
+      (variant.options ?? []).map((option) => [option.type_id, option.value]),
+    );
+
+    if (options[typeId] !== value) return false;
+
+    return Object.entries(selectedOptions).every(([selectedTypeId, selectedValue]) =>
+      Number(selectedTypeId) === Number(typeId)
+        || options[selectedTypeId] === selectedValue,
+    );
+  });
+
+  const selectOption = (typeId, value) => {
+    setSelectedOptions((current) => ({ ...current, [typeId]: value }));
+    setQuantity(1);
+  };
 
   const handleAddToCart = () => {
     if (!selectedVariant || !inStock) {
-      toastError("Sản phẩm tạm hết hàng, vui lòng chọn phân loại khác.");
+      toastError("Vui lòng chọn đầy đủ phân loại còn hàng.");
       return false;
     }
-    addToCart(
+    if (!checkQuantity(product.id, selectedVariant.id, quantity, selectedVariant.quantity)) {
+      toastError(`Trong giỏ đã có sản phẩm này. Bạn chỉ có thể mua tối đa ${selectedVariant.quantity}.`);
+      return false;
+    }
+
+    const added = addToCart(
       {
         productId: product.id,
         slug: product.slug,
@@ -84,9 +119,11 @@ export default function ProductDetail({ product }) {
         variantName: selectedVariant.name,
         price: selectedVariant.effective_price,
         oldPrice: selectedVariant?.sale_price ? selectedVariant.price : null,
+        stockQuantity: selectedVariant.quantity,
       },
       quantity,
     );
+    if (!added) return false;
     toastSuccess(`Đã thêm "${product.name}" vào giỏ hàng`);
     return true;
   };
@@ -142,27 +179,24 @@ export default function ProductDetail({ product }) {
           {oldPrice && <span className="pd-price-old">{formatPrice(oldPrice)}</span>}
         </div>
 
-        {highlights.length > 0 && (
-          <ul className="pd-highlights-list">
-            {highlights.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
-        )}
+          {product.short_description && (
+            <p className="pd-short-description">{product.short_description}</p>
+          )}
+        </div>
 
-        {variantGroups.map(([typeName, groupVariants]) => (
-          <div className="pd-variant-group" key={typeName}>
-            <span className="pd-variant-label">{typeName}:</span>
+        {variantGroups.map((group) => (
+          <div className="pd-variant-group" key={group.id}>
+            <span className="pd-variant-label">{group.name}:</span>
             <div className="pd-variant-options">
-              {groupVariants.map((variant) => (
+              {group.values.map((value) => (
                 <button
-                  key={variant.id}
+                  key={value}
                   type="button"
-                  className={`pd-variant-btn ${selectedVariantId === variant.id ? "active" : ""}`}
-                  onClick={() => setSelectedVariantId(variant.id)}
-                  disabled={variant.quantity <= 0}
+                  className={`pd-variant-btn ${selectedOptions[group.id] === value ? "active" : ""}`}
+                  onClick={() => selectOption(group.id, value)}
+                  disabled={!optionIsAvailable(group.id, value)}
                 >
-                  {variant.name}
+                  {value}
                 </button>
               ))}
             </div>
@@ -175,7 +209,19 @@ export default function ProductDetail({ product }) {
               −
             </button>
             <span>{quantity}</span>
-            <button type="button" onClick={() => setQuantity((q) => q + 1)} aria-label="Tăng">
+            <button
+              type="button"
+              onClick={() => {
+                if (!selectedVariant) return;
+                if (quantity >= selectedVariant.quantity) {
+                  toastInfo(`Biến thể đã vượt quá số lượng trong kho.`);
+                  return;
+                }
+                setQuantity((q) => q + 1);
+              }}
+              disabled={!selectedVariant}
+              aria-label="Tăng"
+            >
               +
             </button>
           </div>

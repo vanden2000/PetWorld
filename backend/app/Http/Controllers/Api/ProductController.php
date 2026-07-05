@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Review;
+use App\Models\VariantType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -56,7 +57,7 @@ class ProductController extends Controller
         
         $userId = $this->authenticatedUserId($request);
         $product = $this->baseProductQuery($userId)
-            ->with(['images', 'variants.variantType'])
+            ->with(['images', 'variants.variantTypes'])
             ->where('slug', $slug)
             ->firstOrFail();
 
@@ -250,6 +251,7 @@ class ProductController extends Controller
 
         return array_merge($card, [
             'description' => $product->description,
+            'short_description' => $product->short_description,
             'view_count' => $product->view_count,
             'images' => $product->images
                 ->sortByDesc('is_primary')
@@ -264,12 +266,17 @@ class ProductController extends Controller
                 ->values()
                 ->map(fn ($variant): array => [
                     'id' => $variant->id,
-                    'name' => $variant->variant_name,
-                    'type' => $variant->variantType ? [
-                        'id' => $variant->variantType->id,
-                        'name' => $variant->variantType->name,
-                        'status' => $variant->variantType->status,
-                    ] : null,
+                    'sku' => $variant->sku,
+                    'name' => $variant->display_name,
+                    'options' => $variant->variantTypes
+                        ->sortBy('id')
+                        ->values()
+                        ->map(fn (VariantType $type): array => [
+                            'type_id' => $type->id,
+                            'type_name' => $type->name,
+                            'value' => $type->pivot->value,
+                        ])
+                        ->all(),
                     'price' => (float) $variant->price,
                     'sale_price' => $variant->hasValidSalePrice() ? (float) $variant->sale_price : null,
                     'effective_price' => $variant->effectivePrice(),
@@ -283,7 +290,7 @@ class ProductController extends Controller
     private function formatReviews(Product $product): array
     {
         return Review::query()
-            ->with(['user', 'orderItem.productVariant'])
+            ->with(['user', 'orderItem.productVariant.variantTypes'])
             ->where('status', 'approved')
             ->whereHas('orderItem.productVariant', fn (Builder $query) => $query->where('product_id', $product->id))
             ->latest()
@@ -301,7 +308,7 @@ class ProductController extends Controller
                 ] : null,
                 'variant' => $review->orderItem?->productVariant ? [
                     'id' => $review->orderItem->productVariant->id,
-                    'name' => $review->orderItem->productVariant->variant_name,
+                    'name' => $review->orderItem->productVariant->display_name,
                 ] : null,
             ])
             ->all();

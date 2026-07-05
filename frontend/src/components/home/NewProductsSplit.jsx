@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef, useState } from "react";
 import ProductCard from "@/components/product/ProductCard";
 import Link from "next/link";
 
@@ -13,7 +16,59 @@ const SIDEBAR_LINKS = [
  * Khối "Sản Phẩm mới": sidebar tối bên trái + lưới 4 sản phẩm bên phải.
  */
 export default function NewProductsSplit({ products = [] }) {
+  const sliderRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, scrollLeft: 0 });
+  const activePointerId = useRef(null);
+  const didDrag = useRef(false);
+
   if (products.length === 0) return null;
+
+  const handlePointerDown = (event) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    activePointerId.current = event.pointerId;
+    didDrag.current = false;
+    dragStart.current = {
+      x: event.clientX,
+      scrollLeft: slider.scrollLeft,
+    };
+    setIsDragging(false);
+  };
+
+  const handlePointerMove = (event) => {
+    const slider = sliderRef.current;
+    if (!slider || activePointerId.current !== event.pointerId) return;
+
+    const distance = event.clientX - dragStart.current.x;
+    if (Math.abs(distance) <= 5) return;
+
+    if (!slider.hasPointerCapture(event.pointerId)) {
+      slider.setPointerCapture(event.pointerId);
+    }
+    didDrag.current = true;
+    setIsDragging(true);
+    slider.scrollLeft = dragStart.current.scrollLeft - distance;
+  };
+
+  const handlePointerUp = (event) => {
+    const slider = sliderRef.current;
+    if (slider?.hasPointerCapture(event.pointerId)) {
+      slider.releasePointerCapture(event.pointerId);
+    }
+    activePointerId.current = null;
+    window.setTimeout(() => {
+      didDrag.current = false;
+      setIsDragging(false);
+    }, 0);
+  };
+
+  const preventClickWhileDragging = (event) => {
+    if (!didDrag.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
 
   return (
     <section className="homepage-section">
@@ -38,10 +93,22 @@ export default function NewProductsSplit({ products = [] }) {
         <img src="/image/promo/sidebar-pets.png" alt="" className="sidebar-illustration" aria-hidden="true" />
       </aside>
 
-      <div className="products-grid-4">
-        {products.slice(0, 4).map((product) => (
-          <ProductCard key={product.id} product={product} badge="New" />
-        ))}
+      <div
+        ref={sliderRef}
+        className={`new-products-slider${isDragging ? " is-dragging" : ""}`}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onClickCapture={preventClickWhileDragging}
+      >
+        <div className="new-products-slider-track">
+          {products.map((product) => (
+            <div className="new-products-slider-item" key={product.id}>
+              <ProductCard product={product} badge="New" />
+            </div>
+          ))}
+        </div>
       </div>
       </div>
     </section>

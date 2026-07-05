@@ -23,6 +23,8 @@ export default function ProductSection({
   // Mỗi khối ở trang chủ chỉ hiển thị 1 hàng (mặc định = số cột); xem đầy đủ ở trang Cửa Hàng.
   limit = columns,
   isSlider = false,
+  showSoldCount = false,
+  showSale = true,
 }) {
   if (!products.length) return null;
 
@@ -40,7 +42,13 @@ export default function ProductSection({
 
         <div className={GRID_CLASS[columns] || GRID_CLASS[5]}>
           {visibleProducts.map((product) => (
-            <ProductCard key={product.id} product={product} badge={badge} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              badge={badge}
+              showSoldCount={showSoldCount}
+              showSale={showSale}
+            />
           ))}
         </div>
       </section>
@@ -53,11 +61,20 @@ export default function ProductSection({
       products={visibleProducts}
       viewAllHref={viewAllHref}
       badge={badge}
+      showSoldCount={showSoldCount}
+      showSale={showSale}
     />
   );
 }
 
-function ProductSliderSection({ title, products, viewAllHref, badge }) {
+function ProductSliderSection({
+  title,
+  products,
+  viewAllHref,
+  badge,
+  showSoldCount,
+  showSale,
+}) {
   const scrollRef = useRef(null);
   const [isDown, setIsDown] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -162,7 +179,12 @@ function ProductSliderSection({ title, products, viewAllHref, badge }) {
         <div className="product-slider-track">
           {products.map((product) => (
             <div key={product.id} className="product-slider-item">
-              <ProductCard product={product} badge={badge} />
+              <ProductCard
+                product={product}
+                badge={badge}
+                showSoldCount={showSoldCount}
+                showSale={showSale}
+              />
             </div>
           ))}
         </div>

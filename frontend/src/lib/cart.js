@@ -47,25 +47,49 @@ function saveCart(items) {
 /**
  * Thêm một dòng vào giỏ; nếu đã có cùng SP + biến thể thì cộng dồn số lượng.
  */
+export function checkQuantity(productId, variantId, quantity, stockQuantity) {
+  const key = lineKey(productId, variantId);
+  const existing = getCart().find((line) => line.key === key);
+  const currentQuantity = Math.max(0, Number(existing?.quantity) || 0);
+  const requestedQuantity = Math.max(1, Math.trunc(Number(quantity) || 1));
+  const maxQuantity = Math.max(0, Math.trunc(Number(stockQuantity) || 0));
+
+  return currentQuantity + requestedQuantity <= maxQuantity;
+}
+
 export function addToCart(item, quantity = 1) {
   const items = getCart();
   const key = lineKey(item.productId, item.variantId);
   const existing = items.find((line) => line.key === key);
-  const qtyNum = Number(quantity) || 1;
+  const qtyNum = Math.max(1, Math.trunc(Number(quantity) || 1));
+
+  if (Number.isFinite(Number(item.stockQuantity))
+      && !checkQuantity(item.productId, item.variantId, qtyNum, item.stockQuantity)) {
+    return false;
+  }
 
   if (existing) {
     existing.quantity += qtyNum;
+    existing.stockQuantity = item.stockQuantity;
   } else {
     items.push({ ...item, key, quantity: qtyNum });
   }
 
   saveCart(items);
+  return true;
 }
 
 export function updateQuantity(key, quantity) {
-  const qtyNum = Number(quantity);
+  const qtyNum = Math.trunc(Number(quantity) || 0);
   const items = getCart()
-    .map((line) => (line.key === key ? { ...line, quantity: qtyNum } : line))
+    .map((line) => {
+      if (line.key !== key) return line;
+      const stockQuantity = Number(line.stockQuantity);
+      const nextQuantity = Number.isFinite(stockQuantity)
+        ? Math.min(qtyNum, Math.max(0, stockQuantity))
+        : qtyNum;
+      return { ...line, quantity: nextQuantity };
+    })
     .filter((line) => line.quantity > 0);
   saveCart(items);
 }

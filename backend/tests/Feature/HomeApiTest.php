@@ -104,25 +104,21 @@ class HomeApiTest extends TestCase
             'is_primary' => true,
         ]);
 
-        ProductVariant::create([
-            'variant_type_id' => $variantType->id,
+        $this->createProductVariant([
             'product_id' => $product->id,
-            'variant_name' => '1kg',
             'price' => 100000,
             'sale_price' => 90000,
             'quantity' => 5,
             'status' => 'active',
-        ]);
+        ], [$variantType->id => '1kg']);
 
-        ProductVariant::create([
-            'variant_type_id' => $variantType->id,
+        $this->createProductVariant([
             'product_id' => $product->id,
-            'variant_name' => '2kg',
             'price' => 180000,
             'sale_price' => null,
             'quantity' => 3,
             'status' => 'active',
-        ]);
+        ], [$variantType->id => '2kg']);
 
         $accessory = Product::create([
             'category_id' => $accessoryCategory->id,
@@ -140,15 +136,13 @@ class HomeApiTest extends TestCase
             'is_primary' => true,
         ]);
 
-        ProductVariant::create([
-            'variant_type_id' => $variantType->id,
+        $this->createProductVariant([
             'product_id' => $accessory->id,
-            'variant_name' => 'M',
             'price' => 120000,
             'sale_price' => 150000,
             'quantity' => 4,
             'status' => 'active',
-        ]);
+        ], [$variantType->id => 'M']);
 
         $response = $this->getJson("/api/home?recent_product_ids={$product->id},{$accessory->id}");
 
@@ -209,14 +203,12 @@ class HomeApiTest extends TestCase
                 'status' => 'active',
             ]);
 
-            ProductVariant::create([
-                'variant_type_id' => $variantType->id,
+            $this->createProductVariant([
                 'product_id' => $product->id,
-                'variant_name' => 'Default',
                 'price' => 100000 + $index,
                 'quantity' => 1,
                 'status' => 'active',
-            ]);
+            ], [$variantType->id => 'Default']);
 
             $productIds[] = $product->id;
         }

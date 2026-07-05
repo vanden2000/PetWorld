@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,9 +15,8 @@ class ProductVariant extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'variant_type_id',
         'product_id',
-        'variant_name',
+        'sku',
         'price',
         'sale_price',
         'quantity',
@@ -63,9 +62,26 @@ class ProductVariant extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function variantType(): BelongsTo
+    public function variantTypes(): BelongsToMany
     {
-        return $this->belongsTo(VariantType::class);
+        return $this->belongsToMany(
+            VariantType::class,
+            'product_variant_types',
+            'product_variant_id',
+            'variant_type_id',
+        )->withPivot('value');
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        $types = $this->relationLoaded('variantTypes')
+            ? $this->variantTypes
+            : $this->variantTypes()->get();
+
+        return $types
+            ->sortBy('id')
+            ->map(fn (VariantType $type): string => (string) $type->pivot->value)
+            ->implode(' - ');
     }
 
     public function orderItems(): HasMany

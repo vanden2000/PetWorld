@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Address;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
@@ -178,6 +179,7 @@ class OrderController extends Controller
             'shippingMethod:id,name',
             'paymentMethod:id,name',
             'items.productVariant.product.primaryImage',
+            'items.productVariant.variantTypes',
         ]);
 
         $subtotal = $order->items->sum(fn ($item) => (float) $item->price * $item->quantity);
@@ -210,7 +212,7 @@ class OrderController extends Controller
             'items' => $order->items->map(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->product_name,
-                'variant' => $item->productVariant?->variant_name,
+                'variant' => $item->productVariant?->display_name,
                 'quantity' => $item->quantity,
                 'price' => (float) $item->price,
                 'slug' => $item->productVariant?->product?->slug,
@@ -219,7 +221,7 @@ class OrderController extends Controller
         ]]]);
     }
 
-    private function composeAddress(\App\Models\Address $address): string
+    private function composeAddress(Address $address): string
     {
         return implode(', ', array_filter([
             $address->address_line,

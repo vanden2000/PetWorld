@@ -39,16 +39,15 @@ export default function AddToCartButton({ product }) {
         const oldPrice =
           priceRange.compare_at ?? (priceRange.has_sale ? priceRange.regular_min : null) ?? null;
 
-        addToCart({
-          productId: fetchedProduct.id,
-          slug: fetchedProduct.slug,
-          name: fetchedProduct.name,
-          image: fetchedProduct.image,
-          variantId: null,
-          variantName: null,
-          price,
-          oldPrice,
-        });
+    addToCart({
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      image: product.image,
+      variantId: null,
+      variantName: null,
+      price,
+    });
 
         toastSuccess(`Đã thêm "${fetchedProduct.name}" vào giỏ hàng`);
       } else {
