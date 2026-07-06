@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AutủoRefresh from "@/components/system/AutoRefresh";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import {

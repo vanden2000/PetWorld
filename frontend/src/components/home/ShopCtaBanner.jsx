@@ -12,12 +12,6 @@ export default function ShopCtaBanner() {
         alt="PetWorld"
         className="shop-cta-logo"
       />
-      <img
-        src={resolveBackendImage("image/promo/sidebar-pets.png")}
-        alt=""
-        aria-hidden="true"
-        className="shop-cta-photo"
-      />
       <div className="shop-cta-text">
         <span className="shop-cta-tag">Công thức độc quyền</span>
         <h3 className="shop-cta-title">

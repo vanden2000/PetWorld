@@ -10,9 +10,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
-{    public function register(Request $request): JsonResponse
+{
+    public function register(Request $request): JsonResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -42,14 +44,17 @@ class AuthController extends Controller
             'role' => 'user',
             'status' => 'active',
         ]);
-
-        $token = $user->createToken('auth')->plainTextToken;
+        // kích hoạt cơ chế gửi email xác minh của laravel
+        event(new Registered($user));
+        // $token = $user->createToken('auth')->plainTextToken;
 
         return response()->json([
             'data' => [
-                'message' => 'Đăng ký thành công.',
+                'message' => 'Đăng ký thành công vui lòng kiểm tra email để xác minh tài khoản ',
                 'user' => $this->formatUser($user),
-                'token' => $token,
+                // 'token' => $token,
+                'requires_email_verification' => true,
+                'email_verification' => false,
             ],
         ], 201);
     }
@@ -67,12 +72,17 @@ class AuthController extends Controller
 
         $user = User::where('email', $credentials['email'])->first();
 
-        if (! $user || ! $this->passwordMatches($credentials['password'], $user)) {
+        if (!$user || !$this->passwordMatches($credentials['password'], $user)) {
             throw ValidationException::withMessages([
                 'email' => ['Email hoặc mật khẩu không đúng.'],
             ]);
         }
-
+        if(!$user->hasVerifiedEmail()){
+            return response()->json([
+                'message' => 'Tài khoản của bạn chưa được xác minh vui lòng kiểm tra email để xác minh tài khoản',
+                'code' => 'EMAIL_NOT_VERIFIED',
+            ],403);
+        }
         if ($user->status !== 'active') {
             throw ValidationException::withMessages([
                 'email' => ['Tài khoản của bạn đã bị khoá hoặc chưa kích hoạt.'],
@@ -115,10 +125,12 @@ class AuthController extends Controller
 
         $user->update($data);
 
-        return response()->json(['data' => [
-            'user' => $this->formatUser($user->fresh()),
-            'message' => 'Thông tin cá nhân đã được cập nhật.',
-        ]]);
+        return response()->json([
+            'data' => [
+                'user' => $this->formatUser($user->fresh()),
+                'message' => 'Thông tin cá nhân đã được cập nhật.',
+            ]
+        ]);
     }
 
     public function updatePassword(Request $request): JsonResponse
@@ -129,7 +141,7 @@ class AuthController extends Controller
         ]);
         $user = $request->user();
 
-        if (! $this->passwordMatches($data['current_password'], $user)) {
+        if (!$this->passwordMatches($data['current_password'], $user)) {
             throw ValidationException::withMessages([
                 'current_password' => ['Mật khẩu hiện tại không đúng.'],
             ]);
@@ -153,17 +165,19 @@ class AuthController extends Controller
         ]);
 
         $user = $request->user();
-        if ($user->avatar && ! str_contains($user->avatar, '://')) {
+        if ($user->avatar && !str_contains($user->avatar, '://')) {
             Storage::disk('public')->delete($user->avatar);
         }
 
         $user->avatar = $request->file('avatar')->store('avatars', 'public');
         $user->save();
 
-        return response()->json(['data' => [
-            'user' => $this->formatUser($user->fresh()),
-            'message' => 'Ảnh đại diện đã được cập nhật.',
-        ]]);
+        return response()->json([
+            'data' => [
+                'user' => $this->formatUser($user->fresh()),
+                'message' => 'Ảnh đại diện đã được cập nhật.',
+            ]
+        ]);
     }
 
     /**
@@ -202,7 +216,7 @@ class AuthController extends Controller
             'phone' => $user->phone,
             'date_of_birth' => $user->date_of_birth?->format('Y-m-d'),
             'avatar' => $user->avatar
-                ? (str_contains($user->avatar, '://') ? $user->avatar : asset('storage/'.$user->avatar))
+                ? (str_contains($user->avatar, '://') ? $user->avatar : asset('storage/' . $user->avatar))
                 : null,
             'role' => $user->role,
         ];

@@ -1,23 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
-/**
- * Làm mới dữ liệu Server Component khi tab được focus trở lại, để dữ liệu mới
- * thêm ở backend hiện ra mà không cần F5 thủ công.
- *
- * router.refresh() chạy lại các Server Component của route hiện tại và fetch lại
- * (kết hợp với fetch không cache trong lib/api.js).
- */
 export default function AutoRefresh() {
-  const router = useRouter();
-
   useEffect(() => {
+    let lastRefresh = Date.now();
+
     const refresh = () => {
-      if (document.visibilityState === "visible") {
-        router.refresh();
-      }
+      if (document.visibilityState !== "visible") return;
+
+      const now = Date.now();
+
+      // Tránh focus và visibilitychange gọi reload hai lần liên tiếp.
+      if (now - lastRefresh < 1000) return;
+
+      lastRefresh = now;
+      window.location.reload();
     };
 
     window.addEventListener("focus", refresh);
@@ -27,7 +25,7 @@ export default function AutoRefresh() {
       window.removeEventListener("focus", refresh);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [router]);
+  }, []);
 
   return null;
 }

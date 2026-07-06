@@ -26,6 +26,13 @@ import {
 } from "@/lib/checkout";
 import AddressLocationFields from "@/components/auth/AddressLocationFields";
 import { toastError } from "@/lib/toast";
+import {
+  clearBuyNow,
+  getBuyNowSnapshot,
+  getServerBuyNowSnapshot,
+  onBuyNowChange,
+  parseBuyNow,
+} from "@/lib/buyNow";
 
 // Mã QR hết hạn sau 15 phút, sau đó khách bấm tạo lại.
 const QR_TTL_SECONDS = 15 * 60;
@@ -53,7 +60,10 @@ export default function CheckoutView() {
   const user = useMemo(() => parseUser(userRaw), [userRaw]);
 
   const raw = useSyncExternalStore(onCartChange, getCartSnapshot, getServerCartSnapshot);
-  const items = useMemo(() => parseCart(raw), [raw]);
+  const cartItems = useMemo(() => parseCart(raw), [raw]);
+  const buyNowRaw = useSyncExternalStore(onBuyNowChange, getBuyNowSnapshot, getServerBuyNowSnapshot);
+  const buyNowItem = useMemo(() => parseBuyNow(buyNowRaw), [buyNowRaw]);
+  const items = useMemo(() => buyNowItem ? [buyNowItem] : cartItems, [buyNowItem, cartItems]);
 
   const [options, setOptions] = useState({ shipping_methods: [], payment_methods: [] });
   const [shippingMethodId, setShippingMethodId] = useState(null);
@@ -180,7 +190,11 @@ export default function CheckoutView() {
       return;
     }
 
-    clearCart();
+    if (buyNowItem) {
+      clearBuyNow();
+    } else {
+      clearCart();
+    }
     setOrderPaid(false);
     setQrSecondsLeft(QR_TTL_SECONDS);
     setPlacedOrder({ ...result.data, is_bank: isBankTransfer });

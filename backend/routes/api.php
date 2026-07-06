@@ -11,6 +11,10 @@ use App\Http\Controllers\Api\SepayWebhookController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\ReviewController;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Models\User;
+use Illuminate\Auth\Events\Verified;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,3 +58,35 @@ Route::get('/products', [ProductController::class, 'index']);
 // đã xem gần đây
 Route::get('/products/recent', [ProductController::class, 'recent']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);
+
+
+// check email 
+Route::get('/email/verify/{id}/{hash}', function (Request $request, int $id, string $hash) {
+    $user = User::query()->findOrFail($id);
+
+    // Kiểm tra hash email trong đường dẫn.
+    abort_unless(
+        hash_equals(
+            (string) $hash,
+            sha1($user->getEmailForVerification())
+        ),
+        403,
+        'Liên kết xác minh không hợp lệ.'
+    );
+
+    // Chỉ cập nhật nếu email chưa được xác minh.
+    if (!$user->hasVerifiedEmail()) {
+        $user->markEmailAsVerified();
+
+        event(new Verified($user));
+    }
+
+    // Xác minh xong thì chuyển sang trang Next.js.
+    return redirect(
+        config('app.frontend_url')
+        . '/verify-email/success'
+    );
+})->middleware([
+            'signed',
+            'throttle:6,1',
+        ])->name('verification.verify');

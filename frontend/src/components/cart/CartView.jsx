@@ -7,6 +7,7 @@ import { formatPrice, resolveProductImage } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { toastSuccess, toastError, toastInfo } from "@/lib/toast";
 import LoginRequiredDialog from "@/components/ui/LoginRequiredDialog";
+import { clearBuyNow } from "@/lib/buyNow";
 import {
   getUserSnapshot,
   getServerUserSnapshot,
@@ -54,6 +55,7 @@ export default function CartView() {
   };
 
   const handleCheckout = (event) => {
+    clearBuyNow();
     if (user) return;
 
     event.preventDefault();

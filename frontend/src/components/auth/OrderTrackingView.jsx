@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { cancelOrder, createReview, getOrder, getServerUserSnapshot, getUserSnapshot, logout, onAuthChange, parseUser } from "@/lib/auth";
+import { cancelOrder, createReview, getServerUserSnapshot, getUserSnapshot, logout, onAuthChange, parseUser } from "@/lib/auth";
+import { useOrder } from "@/lib/swr";
 import { resolveProductImage } from "@/lib/format";
 import { toastError, toastSuccess } from "@/lib/toast";
 import CancelOrderDialog from "@/components/ui/CancelOrderDialog";
@@ -22,21 +23,14 @@ export default function OrderTrackingView({ orderId }) {
   const router = useRouter();
   const raw = useSyncExternalStore(onAuthChange, getUserSnapshot, getServerUserSnapshot);
   const user = useMemo(() => parseUser(raw), [raw]);
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data, error: orderError, isLoading: loading, mutate } = useOrder(user, orderId);
+  const order = data?.order ?? null;
+  const error = orderError?.message || "";
   const [cancelling, setCancelling] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [reviewItem, setReviewItem] = useState(null);
   const [submittingReview, setSubmittingReview] = useState(false);
   const reviewItemId = reviewItem?.id ?? null;
-
-  useEffect(() => {
-    if (!user) return;
-    let active = true;
-    getOrder(orderId).then((result) => { if (!active) return; if (result.ok) setOrder(result.data.order); else setError(result.message || "Không tìm thấy đơn hàng."); setLoading(false); });
-    return () => { active = false; };
-  }, [orderId, user]);
 
   const handleCancelOrder = async () => {
     setCancelling(true);
@@ -49,11 +43,10 @@ export default function OrderTrackingView({ orderId }) {
     }
 
     setShowCancelDialog(false);
-    setOrder((current) => ({
+    await mutate((current) => ({
       ...current,
-      status: result.data.order.status,
-      updated_at: result.data.order.updated_at,
-    }));
+      order: { ...current.order, ...result.data.order },
+    }), { revalidate: false });
     toastSuccess("Đã hủy đơn hàng thành công.");
   };
 
@@ -69,12 +62,15 @@ export default function OrderTrackingView({ orderId }) {
       return;
     }
 
-    setOrder((current) => ({
+    await mutate((current) => ({
       ...current,
-      items: current.items.map((item) => item.id === reviewItemId
-        ? { ...item, review: result.data.review }
-        : item),
-    }));
+      order: {
+        ...current.order,
+        items: current.order.items.map((item) => item.id === reviewItemId
+          ? { ...item, review: result.data.review }
+          : item),
+      },
+    }), { revalidate: false });
     setReviewItem(null);
     toastSuccess("Cảm ơn bạn đã đánh giá sản phẩm.");
   };

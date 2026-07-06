@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { getOrders, getServerUserSnapshot, getUserSnapshot, logout, onAuthChange, parseUser } from "@/lib/auth";
+import { getServerUserSnapshot, getUserSnapshot, logout, onAuthChange, parseUser } from "@/lib/auth";
+import { useOrders } from "@/lib/swr";
 
 const icons = {
   user: <><path d="M20 21a8 8 0 0 0-16 0" /><circle cx="12" cy="7" r="4" /></>,
@@ -25,27 +26,15 @@ export default function OrdersView() {
   const router = useRouter();
   const raw = useSyncExternalStore(onAuthChange, getUserSnapshot, getServerUserSnapshot);
   const user = useMemo(() => parseUser(raw), [raw]);
-  const [orders, setOrders] = useState([]);
-  const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0, from: 0, to: 0 });
   const [status, setStatus] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const loadOrders = useCallback(async () => {
-    if (!user) return;
-    setLoading(true); setError("");
-    const result = await getOrders({ status, search, page });
-    if (result.ok) { setOrders(result.data.orders || []); setPagination(result.data.pagination || {}); }
-    else setError(result.message || "Không thể tải danh sách đơn hàng.");
-    setLoading(false);
-  }, [page, search, status, user]);
-
-  useEffect(() => {
-    Promise.resolve().then(loadOrders);
-  }, [loadOrders]);
+  const { data, error: ordersError, isLoading: loading, mutate } = useOrders(user, { status, search, page });
+  const orders = data?.orders || [];
+  const pagination = data?.pagination || { current_page: 1, last_page: 1, total: 0, from: 0, to: 0 };
+  const error = ordersError?.message || "";
+  const loadOrders = () => mutate();
 
   if (!user) return <section className="profile-guest"><Icon name="box" /><h1>Đơn hàng của bạn</h1><p>Vui lòng đăng nhập để xem và theo dõi lịch sử đơn hàng.</p><div><Link href="/login?redirect=/account/orders" className="profile-primary-btn">Đăng nhập</Link></div></section>;
 

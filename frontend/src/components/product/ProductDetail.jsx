@@ -1,12 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { formatPrice, resolveProductImage } from "@/lib/format";
 import { addToCart, checkQuantity } from "@/lib/cart";
 import { toastSuccess, toastError, toastInfo } from "@/lib/toast";
 import { ROUTES } from "@/lib/routes";
 import WishlistButton from "@/components/product/WishlistButton";
+import LoginRequiredDialog from "@/components/ui/LoginRequiredDialog";
+import { getUserSnapshot, getServerUserSnapshot, parseUser, onAuthChange } from "@/lib/auth";
+import { setBuyNow } from "@/lib/buyNow";
 
 function Stars({ value = 0 }) {
   return (
@@ -26,6 +29,8 @@ function Stars({ value = 0 }) {
  */
 export default function ProductDetail({ product }) {
   const router = useRouter();
+  const userRaw = useSyncExternalStore(onAuthChange, getUserSnapshot, getServerUserSnapshot);
+  const user = useMemo(() => parseUser(userRaw), [userRaw]);
 
   const gallery = product.images?.length
     ? product.images.map((image) => image.image_url)
@@ -45,6 +50,7 @@ export default function ProductDetail({ product }) {
     ),
   );
   const [quantity, setQuantity] = useState(1);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   const selectedVariant = variants.find((variant) =>
     variant.options?.length === Object.keys(selectedOptions).length
@@ -130,13 +136,49 @@ export default function ProductDetail({ product }) {
   };
 
   const handleBuyNow = () => {
-    if (handleAddToCart()) {
-      router.push(ROUTES.cart);
+    if (!selectedVariant || !inStock) {
+      toastError("Vui lòng chọn đầy đủ phân loại còn hàng.");
+      return;
     }
+    if (quantity > selectedVariant.quantity) {
+      toastError(`Bạn chỉ có thể mua tối đa ${selectedVariant.quantity}.`);
+      return;
+    }
+
+    setBuyNow({
+      key: `${product.id}:${selectedVariant.id}`,
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      image: product.image,
+      variantId: selectedVariant.id,
+      variantName: selectedVariant.name,
+      price: selectedVariant.effective_price,
+      oldPrice: selectedVariant?.sale_price ? selectedVariant.price : null,
+      stockQuantity: selectedVariant.quantity,
+      quantity,
+    });
+
+    if (!user) {
+      setShowLoginDialog(true);
+      return;
+    }
+
+    router.push(ROUTES.checkout);
+  };
+
+  const handleLogin = () => {
+    setShowLoginDialog(false);
+    router.push(`${ROUTES.login}?redirect=${encodeURIComponent(ROUTES.checkout)}`);
   };
 
   return (
     <div className="pd-top">
+      <LoginRequiredDialog
+        open={showLoginDialog}
+        onClose={() => setShowLoginDialog(false)}
+        onConfirm={handleLogin}
+      />
       {/* Gallery */}
       <div className="pd-gallery">
         <div className="pd-main-image">

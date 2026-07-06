@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OrderConfirmationMail;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Throwable;
+use App\Mail\OrderStatusMail;
 
 class OrderController extends Controller
 {
@@ -26,9 +30,9 @@ class OrderController extends Controller
 
         $orders = $request->user()->orders()
             ->withCount('items')
-            ->when(($data['status'] ?? null) === 'completed', fn ($query) => $query->where('order_status', 'completed'))
-            ->when(($data['status'] ?? null) === 'processing', fn ($query) => $query->whereIn('order_status', ['pending', 'confirmed', 'shipping']))
-            ->when(($data['status'] ?? null) === 'cancelled', fn ($query) => $query->where('order_status', 'cancelled'))
+            ->when(($data['status'] ?? null) === 'completed', fn($query) => $query->where('order_status', 'completed'))
+            ->when(($data['status'] ?? null) === 'processing', fn($query) => $query->whereIn('order_status', ['pending', 'confirmed', 'shipping']))
+            ->when(($data['status'] ?? null) === 'cancelled', fn($query) => $query->where('order_status', 'cancelled'))
             ->when($data['search'] ?? null, function ($query, string $search): void {
                 $numericId = preg_replace('/\D/', '', $search);
                 $query->where(function ($nested) use ($search, $numericId): void {
@@ -42,25 +46,27 @@ class OrderController extends Controller
             ->latest()
             ->paginate(self::HISTORY_PER_PAGE);
 
-        return response()->json(['data' => [
-            'orders' => collect($orders->items())->map(fn ($order) => [
-                'id' => $order->id,
-                'code' => 'PW'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
-                'created_at' => $order->created_at?->toIso8601String(),
-                'status' => $order->order_status,
-                'payment_status' => $order->payment_status,
-                'total_amount' => (float) $order->total_amount,
-                'items_count' => $order->items_count,
-            ])->values(),
-            'pagination' => [
-                'current_page' => $orders->currentPage(),
-                'last_page' => $orders->lastPage(),
-                'per_page' => $orders->perPage(),
-                'total' => $orders->total(),
-                'from' => $orders->firstItem(),
-                'to' => $orders->lastItem(),
-            ],
-        ]]);
+        return response()->json([
+            'data' => [
+                'orders' => collect($orders->items())->map(fn($order) => [
+                    'id' => $order->id,
+                    'code' => 'PW' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
+                    'created_at' => $order->created_at?->toIso8601String(),
+                    'status' => $order->order_status,
+                    'payment_status' => $order->payment_status,
+                    'total_amount' => (float) $order->total_amount,
+                    'items_count' => $order->items_count,
+                ])->values(),
+                'pagination' => [
+                    'current_page' => $orders->currentPage(),
+                    'last_page' => $orders->lastPage(),
+                    'per_page' => $orders->perPage(),
+                    'total' => $orders->total(),
+                    'from' => $orders->firstItem(),
+                    'to' => $orders->lastItem(),
+                ],
+            ]
+        ]);
     }
 
     public function show(Request $request, Order $order): JsonResponse
@@ -75,48 +81,52 @@ class OrderController extends Controller
             'items.review:id,order_item_id,rating,comment',
         ]);
 
-        $subtotal = $order->items->sum(fn ($item) => (float) $item->price * $item->quantity);
+        $subtotal = $order->items->sum(fn($item) => (float) $item->price * $item->quantity);
 
-        return response()->json(['data' => ['order' => [
-            'id' => $order->id,
-            'code' => 'PW'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
-            'payment_code' => $order->payment_code,
-            'status' => $order->order_status,
-            'payment_status' => $order->payment_status,
-            'created_at' => $order->created_at?->toIso8601String(),
-            'updated_at' => $order->updated_at?->toIso8601String(),
-            'recipient' => [
-                'name' => $order->recipient_name,
-                'phone' => $order->recipient_phone,
-                'address' => $order->recipient_address,
-            ],
-            'shipping' => [
-                'method' => $order->shippingMethod?->name,
-                'fee' => (float) $order->shipping_fee,
-                'tracking_code' => 'PW-'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
-            ],
-            'payment' => [
-                'method' => $order->paymentMethod?->name,
-                'subtotal' => $subtotal,
-                'discount' => (float) $order->discount_amount,
-                'total' => (float) $order->total_amount,
-            ],
-            'note' => $order->note,
-            'items' => $order->items->map(fn ($item) => [
-                'id' => $item->id,
-                'name' => $item->product_name,
-                'variant' => $item->productVariant?->display_name,
-                'quantity' => $item->quantity,
-                'price' => (float) $item->price,
-                'slug' => $item->productVariant?->product?->slug,
-                'image' => $item->productVariant?->product?->primaryImage?->image_url,
-                'review' => $item->review ? [
-                    'id' => $item->review->id,
-                    'rating' => $item->review->rating,
-                    'comment' => $item->review->comment,
-                ] : null,
-            ])->values(),
-        ]]]);
+        return response()->json([
+            'data' => [
+                'order' => [
+                    'id' => $order->id,
+                    'code' => 'PW' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
+                    'payment_code' => $order->payment_code,
+                    'status' => $order->order_status,
+                    'payment_status' => $order->payment_status,
+                    'created_at' => $order->created_at?->toIso8601String(),
+                    'updated_at' => $order->updated_at?->toIso8601String(),
+                    'recipient' => [
+                        'name' => $order->recipient_name,
+                        'phone' => $order->recipient_phone,
+                        'address' => $order->recipient_address,
+                    ],
+                    'shipping' => [
+                        'method' => $order->shippingMethod?->name,
+                        'fee' => (float) $order->shipping_fee,
+                        'tracking_code' => 'PW-' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
+                    ],
+                    'payment' => [
+                        'method' => $order->paymentMethod?->name,
+                        'subtotal' => $subtotal,
+                        'discount' => (float) $order->discount_amount,
+                        'total' => (float) $order->total_amount,
+                    ],
+                    'note' => $order->note,
+                    'items' => $order->items->map(fn($item) => [
+                        'id' => $item->id,
+                        'name' => $item->product_name,
+                        'variant' => $item->productVariant?->display_name,
+                        'quantity' => $item->quantity,
+                        'price' => (float) $item->price,
+                        'slug' => $item->productVariant?->product?->slug,
+                        'image' => $item->productVariant?->product?->primaryImage?->image_url,
+                        'review' => $item->review ? [
+                            'id' => $item->review->id,
+                            'rating' => $item->review->rating,
+                            'comment' => $item->review->comment,
+                        ] : null,
+                    ])->values(),
+                ]
+            ]
+        ]);
     }
 
     public function cancel(Request $request, Order $order): JsonResponse
@@ -154,6 +164,14 @@ class OrderController extends Controller
 
             return $lockedOrder->refresh();
         });
+        // lấy user sở hữu đơn hàng
+        $cancelledOrder->load('user');
+        try {
+            Mail::to($cancelledOrder->user->email)
+                ->send(new OrderStatusMail($cancelledOrder));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
 
         return response()->json([
             'message' => 'Đã hủy đơn hàng thành công.',
@@ -266,11 +284,21 @@ class OrderController extends Controller
             $order->items()->createMany($orderItems);
 
             // Mã đối soát chuyển khoản, sinh sau khi có id để đảm bảo duy nhất.
-            $order->update(['payment_code' => 'PW'.$order->id]);
+            $order->update(['payment_code' => 'PW' . $order->id]);
 
             return $order;
         });
-
+        $order->load([
+            'items',
+            'shippingMethod:id,name',
+            'paymentMethod:id,name',
+        ]);
+        try {
+            Mail::to($request->user()->email)
+                ->send(new OrderConfirmationMail($order));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
         return response()->json([
             'message' => 'Đặt hàng thành công.',
             'data' => $this->format($order->load('items')),
@@ -302,7 +330,7 @@ class OrderController extends Controller
             'payment_status' => $order->payment_status,
             'note' => $order->note,
             'created_at' => $order->created_at?->toDateTimeString(),
-            'items' => $order->items->map(fn ($item): array => [
+            'items' => $order->items->map(fn($item): array => [
                 'id' => $item->id,
                 'product_variant_id' => $item->product_variant_id,
                 'product_name' => $item->product_name,
