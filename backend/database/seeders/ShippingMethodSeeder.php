@@ -13,9 +13,9 @@ class ShippingMethodSeeder extends Seeder
     public function run(): void
     {
         $methods = [
-            ['name' => 'Giao hàng tiêu chuẩn', 'legacy_name' => 'Giao hang tieu chuan', 'shipping_fee' => 30000],
-            ['name' => 'Giao hàng nhanh', 'legacy_name' => 'Giao hang nhanh', 'shipping_fee' => 45000],
-            ['name' => 'Nhận tại cửa hàng', 'legacy_name' => 'Nhan tai cua hang', 'shipping_fee' => 0],
+            ['name' => 'Giao hàng tiêu chuẩn', 'legacy_name' => 'Giao Hàng Tiêu Chuẩn', 'shipping_fee' => 30000],
+            ['name' => 'Giao hàng nhanh', 'legacy_name' => 'Giao Hàng Nhanh', 'shipping_fee' => 45000],
+           
         ];
 
         foreach ($methods as $method) {

@@ -148,10 +148,14 @@ class HomeApiTest extends TestCase
 
         $response
             ->assertOk()
+            ->assertJsonPath('data.sections.banners.active', true)
+            ->assertJsonPath('data.sections.featured_products.active', true)
             ->assertJsonPath('data.banners.0.image', 'banners/home.jpg')
             ->assertJsonPath('data.categories.0.slug', 'food')
+            ->assertJsonPath('data.categories.0.active', true)
             ->assertJsonPath('data.brands.0.slug', 'petworld')
             ->assertJsonPath('data.featured_products.0.slug', 'sample-food')
+            ->assertJsonPath('data.featured_products.0.category.active', true)
             ->assertJsonPath('data.featured_products.0.image', 'products/sample-food.jpg')
             ->assertJsonPath('data.featured_products.0.price_range.min', 100000)
             ->assertJsonPath('data.featured_products.0.price_range.max', 180000)
@@ -175,6 +179,43 @@ class HomeApiTest extends TestCase
             ->assertJsonPath('data.latest_blogs.0.slug', 'blog-4')
             ->assertJsonMissingPath('data.latest_blogs.0.content')
             ->assertJsonCount(3, 'data.latest_blogs');
+    }
+
+    public function test_inactive_home_section_returns_no_data(): void
+    {
+        config()->set('home.sections.banners', false);
+
+        $this->getJson('/api/home')
+            ->assertOk()
+            ->assertJsonPath('data.sections.banners.active', false)
+            ->assertJsonCount(0, 'data.banners');
+    }
+
+    public function test_inactive_category_and_its_products_are_hidden(): void
+    {
+        $category = Category::create([
+            'name' => 'Hidden category',
+            'slug' => 'hidden-category',
+            'status' => 'inactive',
+        ]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Hidden product',
+            'slug' => 'hidden-product',
+            'status' => 'active',
+        ]);
+        ProductVariant::create([
+            'product_id' => $product->id,
+            'sku' => 'HIDDEN-01',
+            'price' => 100000,
+            'quantity' => 10,
+            'status' => 'active',
+        ]);
+
+        $this->getJson('/api/home')
+            ->assertOk()
+            ->assertJsonMissing(['slug' => 'hidden-category'])
+            ->assertJsonMissing(['slug' => 'hidden-product']);
     }
 
     public function test_recent_accessories_are_ordered_before_the_eight_item_limit(): void

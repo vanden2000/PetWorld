@@ -1,23 +1,24 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Thêm thương hiệu mới')
+@section('title', 'Chỉnh sửa thương hiệu')
 
 @section('styles')
 
 @endsection
 
 @section('content')
-<form action="{{ route('admin.brands.store') }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('admin.brands.update', $brand->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
+    @method('PUT')
 
     <!-- Dashboard Header Nav Bar -->
     <div class="dashboard-header" style="margin-bottom: 24px;">
         <div class="header-title-block">
-            <h1 style="color: var(--text-main); font-weight: 700; font-size: 1.75rem;">Thêm Thương Hiệu Mới</h1>
+            <h1 style="color: var(--text-main); font-weight: 700; font-size: 1.75rem;">Chỉnh Sửa Thương Hiệu</h1>
         </div>
         <div class="header-actions" style="display: flex; gap: 12px;">
             <a href="{{ route('admin.brands') }}" class="btn-cancel">Hủy bỏ</a>
-            <button type="submit" class="btn-save">Lưu Thương Hiệu</button>
+            <button type="submit" class="btn-save">Cập nhật Thương Hiệu</button>
         </div>
     </div>
 
@@ -31,12 +32,12 @@
         <div class="form-group-row">
             <div class="form-group">
                 <label for="name">Tên Thương Hiệu <span class="required">*</span></label>
-                <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required placeholder="Nhập tên thương hiệu">
+                <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $brand->name) }}" required placeholder="Nhập tên thương hiệu">
             </div>
             <div class="form-group">
                 <label for="slug">Đường dẫn (Slug)</label>
                 <div class="input-icon-wrapper">
-                    <input type="text" class="form-control" id="slug" name="slug" value="{{ old('slug') }}" placeholder="brand-name-slug">
+                    <input type="text" class="form-control" id="slug" name="slug" value="{{ old('slug', $brand->slug) }}" placeholder="brand-name-slug">
                     <span class="input-icon-right">
                         <i class="fa-solid fa-link"></i>
                     </span>
@@ -46,7 +47,7 @@
 
         <div class="form-group">
             <label for="website">Địa chỉ Website</label>
-            <input type="url" class="form-control" id="website" name="website" value="{{ old('website') }}" placeholder="https://example.com">
+            <input type="url" class="form-control" id="website" name="website" value="{{ old('website', $brand->website) }}" placeholder="https://example.com">
         </div>
 
         <div class="form-group" style="margin-bottom: 0;">
@@ -58,7 +59,7 @@
                     <button type="button" class="editor-btn" title="Bullet List"><i class="fa-solid fa-list-ul"></i></button>
                     <button type="button" class="editor-btn" title="Insert Link"><i class="fa-solid fa-link"></i></button>
                 </div>
-                <textarea class="editor-textarea" id="description" name="description" rows="6" placeholder="Nhập mô tả về câu chuyện thương hiệu của bạn...">{{ old('description') }}</textarea>
+                <textarea class="editor-textarea" id="description" name="description" rows="6" placeholder="Nhập mô tả về câu chuyện thương hiệu của bạn...">{{ old('description', $brand->description) }}</textarea>
             </div>
         </div>
     </div>
@@ -85,14 +86,20 @@
                     </div>
 
                     <!-- File preview card -->
-                    <div class="file-preview-card" id="filePreview" style="display: none; margin-top: 14px;">
+                    @php
+                        $hasImage = !empty($brand->image);
+                    @endphp
+                    <div class="file-preview-card" id="filePreview" style="display: {{ $hasImage ? 'flex' : 'none' }}; margin-top: 14px;">
+                        @if($hasImage)
+                            <input type="hidden" name="image_prefilled" value="yes" id="imagePrefilled">
+                        @endif
                         <div class="file-preview-left">
                             <div class="file-preview-img-container">
-                                <img src="" class="preview-img-fallback" id="previewImage" alt="Preview">
+                                <img src="{{ $hasImage ? asset($brand->image) : '' }}" class="preview-img-fallback" id="previewImage" alt="Preview">
                             </div>
                             <div class="file-preview-info">
-                                <span class="file-preview-name" id="fileName">logo-thumbnail.png</span>
-                                <span class="file-preview-size" id="fileSize">0.00 MB</span>
+                                <span class="file-preview-name" id="fileName">{{ $hasImage ? basename($brand->image) : 'logo-thumbnail.png' }}</span>
+                                <span class="file-preview-size" id="fileSize">Đã tải lên</span>
                             </div>
                         </div>
                         <button type="button" class="btn-delete-preview" id="btnDelete" title="Xóa hình ảnh">
@@ -103,13 +110,16 @@
             </div>
 
             <!-- Right Side: Status option list -->
+            @php
+                $statusVal = old('status', $brand->status ?? 'active');
+            @endphp
             <div class="form-group" style="margin-bottom: 0;">
                 <label>Trạng thái hoạt động</label>
                 <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 8px;">
                     <!-- Active card -->
-                    <label class="brand-radio-card active" id="radioActiveCard">
+                    <label class="brand-radio-card {{ $statusVal == 'active' ? 'active' : '' }}" id="radioActiveCard">
                         <span class="custom-radio-container">
-                            <input type="radio" name="status" value="active" checked id="radioActive">
+                            <input type="radio" name="status" value="active" {{ $statusVal == 'active' ? 'checked' : '' }} id="radioActive">
                             <span class="radio-indicator"></span>
                             <span class="radio-label-title" style="margin-left: 8px;">Đang Hoạt Động</span>
                         </span>
@@ -117,9 +127,9 @@
                     </label>
 
                     <!-- Inactive/Draft card -->
-                    <label class="brand-radio-card" id="radioDraftCard">
+                    <label class="brand-radio-card {{ $statusVal == 'draft' ? 'active' : '' }}" id="radioDraftCard">
                         <span class="custom-radio-container">
-                            <input type="radio" name="status" value="draft" id="radioDraft">
+                            <input type="radio" name="status" value="draft" {{ $statusVal == 'draft' ? 'checked' : '' }} id="radioDraft">
                             <span class="radio-indicator"></span>
                             <span class="radio-label-title" style="margin-left: 8px;">Ngừng Hoạt Động</span>
                         </span>
@@ -198,6 +208,10 @@
                         if (filePreview) filePreview.style.display = 'flex';
                     };
                     reader.readAsDataURL(file);
+
+                    // Remove prefilled status input to send full request
+                    const prefilled = document.getElementById('imagePrefilled');
+                    if (prefilled) prefilled.remove();
                 }
             });
         }
@@ -207,6 +221,10 @@
                 e.stopPropagation();
                 if (filePreview) filePreview.style.display = 'none';
                 if (fileInput) fileInput.value = '';
+                
+                // Remove prefilled status
+                const prefilled = document.getElementById('imagePrefilled');
+                if (prefilled) prefilled.remove();
             });
         }
     });

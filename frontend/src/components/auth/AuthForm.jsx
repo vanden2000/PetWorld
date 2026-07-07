@@ -83,7 +83,7 @@ export default function AuthForm({ mode = "login" }) {
             Hãy đăng nhập để tiếp tục hành trình chăm sóc những người bạn bốn chân của bạn cùng Petworld.
           </p>
           <div className="login-img-wrapper">
-            <img src={resolveBackendImage("image/promo/register-pets.png")}
+            <img src={resolveBackendImage("promo/register-pets.png")}
               alt="Chào mừng trở lại!"
               className="login-img" />
             <div className="login-badge-floating">
@@ -213,7 +213,7 @@ export default function AuthForm({ mode = "login" }) {
     <div className="auth-card">
       {/* Left Column: Image Banner with text overlay */}
       <div className="auth-banner">
-        <img src={resolveBackendImage("image/promo/register-pets.png")} alt="Chào mừng bạn đến với Ngôi nhà Petworld!" className="auth-banner-img" />
+        <img src={resolveBackendImage("promo/register-pets.png")} alt="Chào mừng bạn đến với Ngôi nhà Petworld!" className="auth-banner-img" />
         <div className="auth-banner-overlay">
           <h2>Chào mừng bạn đến với Ngôi nhà Petworld!</h2>
           <p>Gia nhập cộng đồng yêu thú cưng để nhận những ưu đãi đặc biệt và lộ trình chăm sóc sức khỏe tốt nhất cho người bạn bốn chân của bạn.</p>

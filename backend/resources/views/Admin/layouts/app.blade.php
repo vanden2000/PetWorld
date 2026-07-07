@@ -137,11 +137,14 @@
         </nav>
 
         <!-- Sidebar CTA -->
-        <div class="sidebar-footer">
-            <button class="btn-add-product">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Đăng Xuất</span>
-            </button>
+        <div class="sidebar-footer" style="padding: 1rem;">
+            <form action="{{ route('admin.logout') }}" method="POST" id="logout-form" style="width: 100%;">
+                @csrf
+                <button type="submit" class="btn-add-product" style="width: 100%; cursor: pointer;">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Đăng Xuất</span>
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -172,10 +175,10 @@
                 
                 <a href="#" class="profile-menu">
                     <!-- Default stock profile picture style using initial letter or avatar -->
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop" alt="Admin Avatar" class="profile-avatar">
+                    <img src="{{ Auth::user() && Auth::user()->avatar ? (str_contains(Auth::user()->avatar, '://') ? Auth::user()->avatar : asset('storage/' . Auth::user()->avatar)) : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop' }}" alt="Admin Avatar" class="profile-avatar">
                     <div class="profile-details">
-                        <span class="profile-name">Admin</span>
-                        <span class="profile-role">Quản lý</span>
+                        <span class="profile-name">{{ Auth::user() ? Auth::user()->name : 'Admin' }}</span>
+                        <span class="profile-role">{{ Auth::user() && Auth::user()->role === 'admin' ? 'Quản trị viên' : 'Quản lý' }}</span>
                     </div>
                     <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; color: var(--text-muted); margin-left: 4px;"></i>
                 </a>

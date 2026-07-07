@@ -23,7 +23,7 @@ class BrandSeeder extends Seeder
     public function run(): void
     {
         foreach (self::BRANDS as $brand) {
-            $brand['image'] = 'image/brands/'.$brand['image'];
+            $brand['image'] = 'brands/'.$brand['image'];
             Brand::updateOrCreate(
                 ['slug' => $brand['slug']],
                 $brand,

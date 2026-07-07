@@ -22,7 +22,7 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            $category['image'] = 'image/'.$category['image'];
+            $category['image'] = 'categories/' . $category['image'];
             Category::updateOrCreate(
                 ['slug' => $category['slug']],
                 $category,

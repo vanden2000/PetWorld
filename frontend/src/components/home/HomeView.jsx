@@ -19,7 +19,8 @@ export default function HomeView({ initialData }) {
     new_accessories = [], products_by_categories = [], latest_blogs = [], brands = [],
   } = data || {};
   const newProducts = new_products.length ? new_products : featured_products;
-  const accessoryProducts = new_accessories.length ? new_accessories : featured_products;
+  // Không lấy sản phẩm danh mục khác làm fallback khi danh mục phụ kiện bị tắt.
+  const accessoryProducts = new_accessories;
 
   return <main className="main-content"><div className="homepage-container">
     <HeroSlider banners={banners} />

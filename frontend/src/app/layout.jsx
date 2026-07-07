@@ -20,7 +20,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="vi" className={inter.variable}>
-      <link rel="icon" type="image/x-icon" href={resolveBackendImage("image/banners/logo.png")} />
+      <link rel="icon" type="image/x-icon" href={resolveBackendImage("logo/logo.png")} />
       <body>{children}</body>
     </html>
   );

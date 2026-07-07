@@ -12,7 +12,7 @@ const nextConfig = {
         protocol: backendUrl.protocol.replace(":", ""),
         hostname: backendUrl.hostname,
         port: backendUrl.port,
-        pathname: "/image/**",
+        pathname: "/storage/**",
       },
     ],
   },

@@ -13,9 +13,9 @@ class PaymentMethodSeeder extends Seeder
     public function run(): void
     {
         $methods = [
-            ['name' => 'Thanh toán khi nhận hàng', 'legacy_name' => 'Thanh toan khi nhan hang'],
-            ['name' => 'Chuyển khoản ngân hàng', 'legacy_name' => 'Chuyen khoan ngan hang'],
-            ['name' => 'Ví điện tử', 'legacy_name' => 'Vi dien tu'],
+            ['name' => 'Thanh toán khi nhận hàng', 'legacy_name' => 'Thanh Toán Khi Nhận Hàng'],
+            ['name' => 'Chuyển khoản ngân hàng', 'legacy_name' => 'Chuyen Khoan Ngan Hang'],
+            ['name' => 'Ví điện tử', 'legacy_name' => 'Vi Dien Tu'],
         ];
 
         foreach ($methods as $method) {

@@ -14,6 +14,8 @@ class Brand extends Model
         'name',
         'slug',
         'image',
+        'description',
+        'status',
     ];
 
     public function products(): HasMany

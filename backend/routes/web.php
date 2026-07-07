@@ -12,48 +12,85 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Admin\LoginController;
 
-Route::get('/', [AdminController::class, 'index'])
-    ->name('admin.dashboard');
+// Admin authentication routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+});
 
-Route::get('/categories', [CategoryController::class, 'index'])
-    ->name('admin.categories');
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminController::class, 'index'])
+        ->name('dashboard');
 
-Route::get('/categories/create', [CategoryController::class, 'create'])
-    ->name('admin.categories.create');
+    Route::get('/categories', [CategoryController::class, 'index'])
+        ->name('categories');
 
-Route::get('/brands', [BrandController::class, 'index'])
-    ->name('admin.brands');
+    Route::get('/categories/create', [CategoryController::class, 'create'])
+        ->name('categories.create');
 
-Route::get('/brands/create', [BrandController::class, 'create'])
-    ->name('admin.brands.create');
+    Route::post('/categories', [CategoryController::class, 'store'])
+        ->name('categories.store');
 
-Route::get('/banners', [BannerController::class, 'index'])
-    ->name('admin.banners');
+    Route::get('/categories/{slug}/edit', [CategoryController::class, 'edit'])
+        ->name('categories.edit');
 
-Route::get('/orders', [OrderController::class, 'index'])
-    ->name('admin.orders');
+    Route::put('/categories/{slug}', [CategoryController::class, 'update'])
+        ->name('categories.update');
 
-Route::get('/orders/{id}', [OrderController::class, 'show'])
-    ->name('admin.orders.show');
+    Route::get('/brands', [BrandController::class, 'index'])
+        ->name('brands');
 
-Route::get('/posts', [PostController::class, 'index'])
-    ->name('admin.posts');
+    Route::get('/brands/create', [BrandController::class, 'create'])
+        ->name('brands.create');
 
-Route::get('/products', [ProductController::class, 'index'])
-    ->name('admin.products');
+    Route::post('/brands', [BrandController::class, 'store'])
+        ->name('brands.store');
 
-Route::get('/products/create', [ProductController::class, 'create'])
-    ->name('admin.products.create');
+    Route::get('/brands/{id}/edit', [BrandController::class, 'edit'])
+        ->name('brands.edit');
 
-Route::get('/products/variants', [ProductController::class, 'variants'])
-    ->name('admin.products.variants');
+    Route::put('/brands/{id}', [BrandController::class, 'update'])
+        ->name('brands.update');
 
-// Route::get('/reviews', [ReviewController::class, 'index'])
+    Route::get('/banners', [BannerController::class, 'index'])
+        ->name('banners');
+
+    Route::get('/orders', [OrderController::class, 'index'])
+        ->name('orders');
+
+    Route::get('/orders/{id}', [OrderController::class, 'show'])
+        ->name('orders.show');
+
+    Route::get('/posts', [PostController::class, 'index'])
+        ->name('posts');
+
+    Route::get('/products', [ProductController::class, 'index'])
+        ->name('products');
+
+    Route::get('/products/create', [ProductController::class, 'create'])
+        ->name('products.create');
+
+    Route::get('/products/variants', [ProductController::class, 'variants'])
+        ->name('products.variants');
+
+    Route::get('/products/{id}/edit', [ProductController::class, 'edit'])
+        ->name('products.edit');
+
+    Route::put('/products/{id}', [ProductController::class, 'update'])
+        ->name('products.update');
+
+    Route::delete('/products/{id}', [ProductController::class, 'destroy'])
+        ->name('products.destroy');
+
+    // Route::get('/reviews', [ReviewController::class, 'index'])
 //     ->name('admin.reviews');
 
-Route::get('/users', [UserController::class, 'index'])
-    ->name('admin.users');
+    Route::get('/users', [UserController::class, 'index'])
+        ->name('users');
 
-Route::get('/vouchers', [VoucherController::class, 'index'])
-    ->name('admin.vouchers');
+    Route::get('/vouchers', [VoucherController::class, 'index'])
+        ->name('vouchers');
+});

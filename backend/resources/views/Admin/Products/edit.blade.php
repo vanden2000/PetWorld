@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Thêm Sản phẩm mới')
+@section('title', 'Sửa Sản phẩm')
 
 @section('styles')
 <style>
@@ -553,17 +553,19 @@
     <!-- Sticky Header Row -->
     <div class="listing-header">
         <div class="listing-title">
-            <h1>Thêm Sản Phẩm</h1>
+            <h1>Sửa Sản Phẩm</h1>
         </div>
         <div class="action-header-buttons">
             <a href="{{ route('admin.products') }}" class="btn-action-cancel">CANCEL</a>
-            <button type="submit" form="product-create-form" class="btn-action-save">SAVE CHANGES</button>
+            <button type="submit" form="product-edit-form" class="btn-action-save">SAVE CHANGES</button>
         </div>
     </div>
 
     <!-- Main Form Grid wrapper -->
-    <form id="product-create-form" action="{{ route('admin.products') }}" method="POST" enctype="multipart/form-data">
+    <form id="product-edit-form" action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
+        @method('PUT')
+        
         <div class="create-listing-wrapper">
             
             <!-- Left Side main information column -->
@@ -579,21 +581,25 @@
                     <div class="form-control-group">
                         <label for="name" class="form-field-label">Tên Sản Phẩm</label>
                         <input type="text" id="name" name="name" class="input-text-field" required
-                               placeholder="Ví dụ: Thức ăn Hạt Cao Cấp Royal Canin cho chó con">
+                               placeholder="Ví dụ: Thức ăn Hạt Cao Cấp Royal Canin cho chó con"
+                               value="{{ $product->name }}">
                     </div>
 
                     <div class="form-control-row">
                         <div class="form-control-group no-margin">
                             <label for="sku" class="form-field-label">Mã SKU Gốc</label>
                             <input type="text" id="sku" name="sku" class="input-text-field" required
-                                   placeholder="Ví dụ: RC-ADULT-5KG">
+                                   placeholder="Ví dụ: RC-ADULT-5KG"
+                                   value="{{ $product->variants->isNotEmpty() ? $product->variants->first()->sku : '' }}">
                         </div>
                         <div class="form-control-group no-margin">
                             <label for="category_id" class="form-field-label">Danh Mục</label>
                             <select id="category_id" name="category_id" class="input-select-field" required>
-                                <option value="" disabled selected>Chọn danh mục</option>
+                                <option value="" disabled>Chọn danh mục</option>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    <option value="{{ $category->id }}" {{ $product->category_id == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -609,7 +615,7 @@
                                 <button type="button" class="btn-editor-tool" title="Link"><i class="fa-solid fa-link"></i></button>
                             </div>
                             <textarea id="description" name="description" class="editor-textarea" 
-                                      placeholder="Mô tả chi tiết các thông số sản phẩm, hướng dẫn sử dụng..."></textarea>
+                                      placeholder="Mô tả chi tiết các thông số sản phẩm, hướng dẫn sử dụng...">{{ $product->description }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -625,17 +631,20 @@
                         <div class="form-control-group no-margin">
                             <label for="price" class="form-field-label">Giá Bán (đ)</label>
                             <input type="number" id="price" name="price" class="input-text-field" required step="1000" min="0"
-                                   placeholder="0">
+                                   placeholder="0"
+                                   value="{{ $product->variants->isNotEmpty() ? (float)$product->variants->first()->price : '' }}">
                         </div>
                         <div class="form-control-group no-margin">
-                            <label for="cost_price" class="form-field-label">Giá Vốn (đ)</label>
+                            <label for="cost_price" class="form-field-label">Giá Khuyến Mãi (đ)</label>
                             <input type="number" id="cost_price" name="cost_price" class="input-text-field" step="1000" min="0"
-                                   placeholder="0">
+                                   placeholder="Không có"
+                                   value="{{ $product->variants->isNotEmpty() ? (float)$product->variants->first()->sale_price : '' }}">
                         </div>
                         <div class="form-control-group no-margin">
-                            <label for="quantity" class="form-field-label">Số Lượng Tồn Kho Ban Đầu</label>
+                            <label for="quantity" class="form-field-label">Số Lượng Kho Hiện Tại</label>
                             <input type="number" id="quantity" name="quantity" class="input-text-field" required min="0"
-                                   placeholder="150">
+                                   placeholder="0"
+                                   value="{{ $product->variants->isNotEmpty() ? $product->variants->first()->quantity : '' }}">
                         </div>
                     </div>
                 </div>
@@ -656,8 +665,8 @@
                         <!-- Instantiated by JS: Attributes settings rows -->
                     </div>
 
-                    <div id="variants-table-wrapper" style="display: none; overflow-x: auto; margin-top: 20px;">
-                        <span class="form-field-label" style="display: block; margin-bottom: 10px;">Generated Variants Preview</span>
+                    <div id="variants-table-wrapper" style="display: {{ $product->variants->isNotEmpty() ? 'block' : 'none' }}; overflow-x: auto; margin-top: 20px;">
+                        <span class="form-field-label" style="display: block; margin-bottom: 10px;">Danh sách biến thể của sản phẩm</span>
                         <table class="variants-list-table">
                             <thead>
                                 <tr>
@@ -669,7 +678,17 @@
                                 </tr>
                             </thead>
                             <tbody id="variants-table-body">
-                                <!-- Instantiated dynamically by javascript -->
+                                @foreach($product->variants as $index => $variant)
+                                    <tr>
+                                        <td style="font-weight: 700;">{{ $variant->display_name ?: 'Biến thể mặc định' }}</td>
+                                        <td><input type="text" name="variants[{{ $index }}][sku]" value="{{ $variant->sku }}" class="cell-input-small"></td>
+                                        <td><input type="number" name="variants[{{ $index }}][price]" value="{{ (float)$variant->price }}" class="cell-input-small" step="1000" min="0"></td>
+                                        <td><input type="number" name="variants[{{ $index }}][quantity]" value="{{ $variant->quantity }}" class="cell-input-small" min="0"></td>
+                                        <td style="text-align: center;">
+                                            <input type="checkbox" name="variants[{{ $index }}][visible]" value="1" {{ $variant->status === 'active' ? 'checked' : '' }} style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -695,15 +714,15 @@
                     </div>
 
                     <div class="thumbnails-wrap-row" id="upload-thumbnails-preview">
-                        <!-- Mocks seeded display -->
-                        <div class="thumbnail-img-box">
-                            <img src="https://images.unsplash.com/photo-1589924691995-400dc9ecc119?q=80&w=150&auto=format&fit=crop" alt="Pet food photo preview">
-                            <button type="button" class="btn-delete-thumb" onclick="this.closest('.thumbnail-img-box').remove();">&times;</button>
-                        </div>
-                        <div class="thumbnail-img-box">
-                            <img src="https://images.unsplash.com/photo-1548767797-d8c844163c4c?q=80&w=150&auto=format&fit=crop" alt="Cat toys packaging preview">
-                            <button type="button" class="btn-delete-thumb" onclick="this.closest('.thumbnail-img-box').remove();">&times;</button>
-                        </div>
+                        @foreach($product->images as $img)
+                            @php
+                                $imgSrc = str_contains($img->image_url, '://') ? $img->image_url : asset('storage/' . $img->image_url);
+                            @endphp
+                            <div class="thumbnail-img-box">
+                                <img src="{{ $imgSrc }}" alt="Pet food photo preview">
+                                <button type="button" class="btn-delete-thumb" onclick="this.closest('.thumbnail-img-box').remove();">&times;</button>
+                            </div>
+                        @endforeach
                         <div class="thumbnail-btn-add" onclick="document.getElementById('product-images-input').click();">
                             <i class="fa-solid fa-plus"></i>
                         </div>
@@ -722,7 +741,9 @@
                         <select id="brand_id" name="brand_id" class="input-select-field">
                             <option value="">Không có thương hiệu</option>
                             @foreach($brands as $brand)
-                                <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                                <option value="{{ $brand->id }}" {{ $product->brand_id == $brand->id ? 'selected' : '' }}>
+                                    {{ $brand->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -799,7 +820,13 @@
             const rows = attributesContainer.querySelectorAll('.attribute-group-card');
             
             if (rows.length === 0) {
-                variantsTableWrapper.style.display = 'none';
+                // If there are raw db variants loaded originally, keep them visible
+                const initialCount = variantsTableBody.querySelectorAll('tr').length;
+                if (initialCount > 0) {
+                    variantsTableWrapper.style.display = 'block';
+                } else {
+                    variantsTableWrapper.style.display = 'none';
+                }
                 return;
             }
 
@@ -818,7 +845,6 @@
             });
 
             if (sets.length === 0) {
-                variantsTableWrapper.style.display = 'none';
                 return;
             }
 

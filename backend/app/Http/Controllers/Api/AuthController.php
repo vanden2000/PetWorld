@@ -88,6 +88,12 @@ class AuthController extends Controller
                 'email' => ['Tài khoản của bạn đã bị khoá hoặc chưa kích hoạt.'],
             ]);
         }
+        if ($user->role !== 'user') {
+            throw ValidationException::withMessages([
+                'message' => ['Tài khoản của bạn không có quyền truy cập.'],
+            ]);
+        }
+        
 
         $token = $user->createToken('auth')->plainTextToken;
 

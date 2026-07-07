@@ -92,7 +92,7 @@ class ProductImageSeeder extends Seeder
                 ->update(['is_primary' => false]);
 
             foreach ($imageUrls as $index => $imageUrl) {
-                $imagePath = 'image/products/'.$imageUrl;
+                $imagePath = 'products/'.$imageUrl;
                 $image = ProductImage::query()
                     ->where('product_id', $product->id)
                     ->whereIn('image_url', [$imageUrl, 'products/'.$imageUrl, $imagePath])

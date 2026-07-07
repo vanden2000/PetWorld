@@ -2,18 +2,22 @@
 const ASSET_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
 ).replace(/\/$/, "");
-const FALLBACK_PATH = "image/Special_Offer_1-removebg-preview.png";
+const FALLBACK_PATH = "Special_Offer_1-removebg-preview.png";
 
-export function resolveBackendImage(path, directory = "") {
-  if (path?.startsWith("http://") || path?.startsWith("https://")) return path;
+export function resolveBackendImage(path) {
+  if (!path) return FALLBACK_PATH;
 
-  const source = path || FALLBACK_PATH;
-  const normalized = source.replace(/^\/+/, "");
-  const relativePath = normalized.includes("/")
-    ? normalized
-    : ["image", directory, normalized].filter(Boolean).join("/");
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
 
-  return `${ASSET_BASE_URL}/${relativePath}`;
+  const normalized = path.replace(/^\/+/, "");
+
+  if (normalized.startsWith("storage/")) {
+    return `${ASSET_BASE_URL}/${normalized}`;
+  }
+
+  return `${ASSET_BASE_URL}/storage/${normalized}`;
 }
 
 /**
