@@ -207,3 +207,15 @@ export function onAuthChange(callback) {
   };
 }
 
+export function forgotPasswordSendOtp(email) {
+  return postAuth("forgot-password/send-otp", { email }, { saveSession: false });
+}
+
+export function forgotPasswordVerifyOtp(email, otp) {
+  return postAuth("forgot-password/verify-otp", { email, otp }, { saveSession: false });
+}
+
+export function forgotPasswordReset(email, reset_token, password, password_confirmation) {
+  return postAuth("forgot-password/reset-password", { email, reset_token, password, password_confirmation }, { saveSession: false });
+}
+
