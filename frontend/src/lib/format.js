@@ -39,6 +39,39 @@ export function formatPrice(value) {
 export function resolveImage(path) {
   return resolveBackendImage(path, "banners");
 }
+
+// Ảnh danh mục mới nằm trên public disk của Laravel: /storage/categories/{tên-file}.
+// Các tiền tố cũ vẫn được nhận diện để dữ liệu chưa migrate không làm vỡ giao diện.
+export function resolveCategoryImage(path) {
+  if (path?.startsWith("http://") || path?.startsWith("https://")) return path;
+  if (!path) return resolveBackendImage(null);
+
+  const normalized = path.replace(/^\/+/, "");
+  const filename = normalized.split("/").pop();
+
+  if (
+    normalized.startsWith("storage/image/categories/") ||
+    normalized.startsWith("image/categories/")
+  ) {
+    return `${ASSET_BASE_URL}/storage/categories/${filename}`;
+  }
+
+  if (normalized.startsWith("storage/") || normalized.startsWith("image/")) {
+    return `${ASSET_BASE_URL}/${normalized}`;
+  }
+
+  const storagePath = normalized.startsWith("categories/")
+    ? normalized
+    : `categories/${normalized}`;
+
+  return `${ASSET_BASE_URL}/storage/${storagePath}`;
+}
+
+// Khi ảnh lỗi, thay bằng logo cục bộ và vô hiệu handler để tránh lặp vô hạn.
+export function useImageFallback(event) {
+  event.currentTarget.onerror = null;
+  event.currentTarget.src = resolveBackendImage(null);
+}
 // đường dẫn ảnh brands
 export function resolveBrandImage(path) {
   return resolveBackendImage(path, "brands");

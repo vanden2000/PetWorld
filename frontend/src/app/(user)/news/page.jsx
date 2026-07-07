@@ -55,17 +55,16 @@ export default async function NewsPage({ searchParams }) {
     <main className="main-content">
       <div className="homepage-container">
         {/* Breadcrumb */}
-        <nav style={{ marginBottom: 20, fontSize: 14, color: "#666" }}>
-          <Link href="/" style={{ color: "#666", textDecoration: "none" }}>
-            Trang chủ
-          </Link>{" "}
-          / <span style={{ color: "var(--primary-orange)" }}>Tin tức</span>
+        <nav className="shop-breadcrumb">
+          <Link href="/">Trang chủ</Link> /
+          <span className="shop-breadcrumb-sep">
+            <span className="shop-breadcrumb-current">Tin tức</span></span>
         </nav>
 
         {/* Banner theo thiết kế Figma */}
         <div
           className="news-banner"
-          style={{ backgroundImage: `url('${resolveBackendImage("image/banners/blog-banner.jpg")}')` }}
+          style={{ backgroundImage: `url('${resolveBackendImage("storage/banners/blog-banner.jpg")}')` }}
         >
           <h1 className="news-banner-title">Cộng đồng yêu thú cưng</h1>
         </div>

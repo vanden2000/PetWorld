@@ -75,7 +75,7 @@ export default function AccessoriesPromo({ products = [] }) {
             Ghé Shop Ngay
           </Link>
         </div>
-        <img src={resolveBackendImage("image/promo/accessories.png")} alt="Phụ kiện cho pet" className="promo-img" />
+        <img src={resolveBackendImage("storage/promo/accessories.png")} alt="Phụ kiện cho pet" className="promo-img" />
       </div>
 
       <div className="promo-right">

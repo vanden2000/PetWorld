@@ -8,7 +8,7 @@ export default function ShopCtaBanner() {
   return (
     <section className="shop-cta-banner">
       <img
-        src={resolveBackendImage("image/Special_Offer_1-removebg-preview.png")}
+        src={resolveBackendImage("storage/logo/Special_Offer_1-removebg-preview.png")}
         alt="PetWorld"
         className="shop-cta-logo"
       />

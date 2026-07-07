@@ -91,7 +91,7 @@ export default function NewProductsSplit({ products = [] }) {
             </li>
           ))}
         </ul>
-        <img src={resolveBackendImage("image/promo/sidebar-pets.png")} alt="" className="sidebar-illustration" aria-hidden="true" />
+        <img src={resolveBackendImage("storage/promo/sidebar-pets.png")} alt="" className="sidebar-illustration" aria-hidden="true" />
       </aside>
 
       <div

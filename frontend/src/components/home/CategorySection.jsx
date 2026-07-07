@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { resolveImage } from "@/lib/format";
+import { resolveCategoryImage, useImageFallback } from "@/lib/format";
 
 export default function CategorySection({ categories = [] }) {
   return (
@@ -21,9 +21,11 @@ export default function CategorySection({ categories = [] }) {
             >
               <div className="category-img-box">
                 <img
-                  src={resolveImage(category.image)}
+                  src={resolveCategoryImage(category.image)}
                   alt={category.name}
                   className="category-figma-img"
+                  loading="lazy"
+                  onError={useImageFallback}
                 />
               </div>
               <span className="category-figma-name">{category.name}</span>

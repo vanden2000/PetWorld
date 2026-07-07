@@ -17,6 +17,7 @@ export const ROUTES = {
   orders: "/account/orders",
   login: "/login",
   register: "/register",
+  terms: "/dieu-khoan-su-dung",
   privacy: "/chinh-sach-bao-mat",
 };
 

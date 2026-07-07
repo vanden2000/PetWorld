@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Category;
+use Illuminate\Support\Facades\Cache;
 
 
 class CategoryController extends Controller
@@ -41,11 +42,13 @@ class CategoryController extends Controller
         $data = $request->only(['name', 'slug', 'description', 'status']);
 
         if ($request->hasFile('image')) {
+            // Lưu đường dẫn tương đối; URL công khai sẽ là /storage/categories/{tên-file}.
             $imagePath = $request->file('image')->store('categories', 'public');
             $data['image'] = $imagePath;
         }
 
         Category::create($data);
+        Cache::forget('api.home.sections.v1');
 
         return redirect()->route('admin.categories')->with('success', 'Tạo danh mục mới thành công!');
     }
@@ -77,11 +80,13 @@ class CategoryController extends Controller
         $data = $request->only(['name', 'slug', 'description', 'parent_id', 'status', 'meta_title', 'meta_description', 'meta_keywords']);
 
         if ($request->hasFile('image')) {
+            // Dùng cùng quy ước với lúc tạo để frontend chỉ cần một cách dựng URL.
             $imagePath = $request->file('image')->store('categories', 'public');
             $data['image'] = $imagePath;
         }
 
         $category->update($data);
+        Cache::forget('api.home.sections.v1');
 
         return redirect()->route('admin.categories')->with('success', 'Cập nhật danh mục thành công!');
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class BrandController extends Controller
 {
@@ -51,6 +52,7 @@ class BrandController extends Controller
         }
 
         \App\Models\Brand::create($data);
+        Cache::forget('api.home.sections.v1');
 
         return redirect()->route('admin.brands')->with('success', 'Thêm thương hiệu mới thành công!');
     }
@@ -95,6 +97,7 @@ class BrandController extends Controller
         }
 
         $brand->update($data);
+        Cache::forget('api.home.sections.v1');
 
         return redirect()->route('admin.brands')->with('success', 'Cập nhật thương hiệu thành công!');
     }

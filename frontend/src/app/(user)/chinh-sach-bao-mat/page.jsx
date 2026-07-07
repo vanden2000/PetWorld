@@ -132,7 +132,7 @@ export default function PrivacyPolicyPage() {
           <p>Nếu bạn cần giải thích rõ hơn về cách chúng tôi xử lý dữ liệu, đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp đỡ.</p>
           <div className="policy-cta-actions">
             <Link href="/contact" className="policy-cta-btn">Liên hệ chúng tôi</Link>
-            <Link href="#" className="policy-cta-btn outline">Xem Điều khoản</Link>
+            <Link href="/dieu-khoan-su-dung" className="policy-cta-btn outline">Xem Điều khoản</Link>
           </div>
         </section>
       </div>

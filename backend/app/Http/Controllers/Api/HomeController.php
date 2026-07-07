@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
@@ -20,41 +21,41 @@ class HomeController extends Controller
     {
         $this->validateRecentProductIds($request);
         // sold_quantity đã được tính trong productCardQuery().
-        $featuredProducts = $this->productCardQuery()
-            ->orderByDesc('sold_quantity')
-            ->orderByDesc('products.id')
-            ->limit(8)
-            ->get();
-
-        $saleProducts = $this->productCardQuery()
-            ->whereHas('variants', function ($query): void {
-                $query->where('status', 'active')
-                    ->where('sale_price', '>', 0)
-                    ->whereColumn('sale_price', '<', 'price');
-            })
-            ->orderByDesc('id')
-            ->limit(8)
-            ->get();
-
-        $newProducts = $this->productCardQuery()
-            ->orderByDesc('id')
-            ->limit(8)
-            ->get();
-
-        $newAccessories = $this->productCardQuery()
-            ->whereHas('category', function ($query): void {
-                $query->where('slug', 'phu-kien');
-            })
-            ->orderByDesc('id')
-            ->limit(8)
-            ->get();
-
         $recentViewedAccessories = $this->recentViewedAccessories(
             $this->recentProductIds($request),
         );
 
-        return response()->json([
-            'data' => [
+        // Các khối trang chủ giống nhau với mọi khách nên cache ngắn hạn để giảm truy vấn lặp.
+        $data = Cache::remember('api.home.sections.v1', now()->addSeconds(30), function (): array {
+            // Đặt truy vấn trong callback để lần cache hit có thể bỏ qua hoàn toàn phần database.
+            $featuredProducts = $this->productCardQuery()
+                ->orderByDesc('sold_quantity')
+                ->orderByDesc('products.id')
+                ->limit(8)
+                ->get();
+
+            $saleProducts = $this->productCardQuery()
+                ->whereHas('variants', function ($query): void {
+                    $query->where('status', 'active')
+                        ->where('sale_price', '>', 0)
+                        ->whereColumn('sale_price', '<', 'price');
+                })
+                ->orderByDesc('id')
+                ->limit(8)
+                ->get();
+
+            $newProducts = $this->productCardQuery()
+                ->orderByDesc('id')
+                ->limit(8)
+                ->get();
+
+            $newAccessories = $this->productCardQuery()
+                ->whereHas('category', fn ($query) => $query->where('slug', 'phu-kien'))
+                ->orderByDesc('id')
+                ->limit(8)
+                ->get();
+
+            return [
                 // Homepage hero slider data comes from formatBanners().
                 'banners' => $this->formatBanners(),
                 // Main category menu data comes from formatCategories().
@@ -66,12 +67,18 @@ class HomeController extends Controller
                 'sale_products' => $this->formatProducts($saleProducts),
                 'new_products' => $this->formatProducts($newProducts),
                 'new_accessories' => $this->formatProducts($newAccessories),
-                'recent_viewed_accessories' => $this->formatProducts($recentViewedAccessories),
                 // Category blocks are built in productsByCategories().
                 'products_by_categories' => $this->productsByCategories(),
                 // Blog cards are built in latestBlogs().
                 'latest_blogs' => $this->latestBlogs(),
-            ],
+            ];
+        });
+
+        // Sản phẩm vừa xem phụ thuộc từng trình duyệt nên không đưa vào cache dùng chung.
+        $data['recent_viewed_accessories'] = $this->formatProducts($recentViewedAccessories);
+
+        return response()->json([
+            'data' => $data,
         ]);
     }
 
