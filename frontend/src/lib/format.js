@@ -5,7 +5,7 @@ const ASSET_BASE_URL = (
 const FALLBACK_PATH = "Special_Offer_1-removebg-preview.png";
 
 export function resolveBackendImage(path) {
-  if (!path) return FALLBACK_PATH;
+  if (!path) return `${ASSET_BASE_URL}/image/logo/${FALLBACK_PATH}`;
 
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
@@ -13,8 +13,28 @@ export function resolveBackendImage(path) {
 
   const normalized = path.replace(/^\/+/, "");
 
-  if (normalized.startsWith("storage/")) {
+  // Nếu đường dẫn chỉ định rõ bắt đầu bằng image/ hoặc storage/ hoặc uploads/
+  if (
+    normalized.startsWith("storage/") ||
+    normalized.startsWith("image/") ||
+    normalized.startsWith("uploads/")
+  ) {
+    // Trường hợp đặc biệt: Nếu trỏ tới storage/logo hoặc storage/avatars nhưng thực tế ở thư mục static /image
+    if (normalized.startsWith("storage/logo/")) {
+      return `${ASSET_BASE_URL}/image/${normalized.substring("storage/".length)}`;
+    }
+    if (normalized.startsWith("storage/avatars/")) {
+      return `${ASSET_BASE_URL}/image/${normalized.substring("storage/".length)}`;
+    }
     return `${ASSET_BASE_URL}/${normalized}`;
+  }
+
+  // Chuyển hướng các đường dẫn tĩnh logo và avatars sang thư mục /image/ tương ứng trên backend
+  if (normalized.startsWith("logo/")) {
+    return `${ASSET_BASE_URL}/image/${normalized}`;
+  }
+  if (normalized.startsWith("avatars/")) {
+    return `${ASSET_BASE_URL}/image/${normalized}`;
   }
 
   return `${ASSET_BASE_URL}/storage/${normalized}`;
