@@ -1,14 +1,14 @@
-import AuthForm from "@/components/auth/AuthForm";
+import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 
 export const metadata = {
-  title: "Đăng nhập - PetWorld",
+  title: "Quên mật khẩu - PetWorld",
 };
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   return (
     <main className="main-content">
       <div className="homepage-container auth-page">
-        <AuthForm mode="login" />
+        <ForgotPasswordForm />
       </div>
     </main>
   );
