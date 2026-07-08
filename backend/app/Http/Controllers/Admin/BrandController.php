@@ -5,14 +5,19 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use App\Models\Brand;
 
 class BrandController extends Controller
 {
     public function index()
     {
-        $brands = \App\Models\Brand::all();
+        $brands = Brand::query()
+            ->withCount('products')
+            ->latest()
+            ->get();
+
         if ($brands->isEmpty()) {
-            \App\Models\Brand::create([
+            Brand::create([
                 'name' => 'Royal Canin',
                 'slug' => 'royal-canin',
                 'website' => 'https://royalcanin.com',
@@ -20,7 +25,10 @@ class BrandController extends Controller
                 'image' => null,
                 'status' => 'active'
             ]);
-            $brands = \App\Models\Brand::all();
+            $brands = Brand::query()
+                ->withCount('products')
+                ->latest()
+                ->get();
         }
         return view('admin.brands.index', compact('brands'));
     }
@@ -51,7 +59,7 @@ class BrandController extends Controller
             $data['image'] = 'uploads/brands/' . $filename;
         }
 
-        \App\Models\Brand::create($data);
+        Brand::create($data);
         Cache::forget('api.home.sections.v1');
 
         return redirect()->route('admin.brands')->with('success', 'Thêm thương hiệu mới thành công!');
@@ -59,13 +67,21 @@ class BrandController extends Controller
 
     public function edit($id)
     {
-        $brand = \App\Models\Brand::findOrFail($id);
+        $brand = Brand::query()
+            ->with([
+                'products' => function ($query) {
+                    $query->with(['category', 'primaryImage', 'variants'])->latest('id')->limit(6);
+                }
+            ])
+            ->withCount('products')
+            ->findOrFail($id);
+
         return view('admin.brands.edit', compact('brand'));
     }
 
     public function update(Request $request, $id)
     {
-        $brand = \App\Models\Brand::findOrFail($id);
+        $brand = Brand::findOrFail($id);
 
         $request->validate([
             'name' => 'required|string|max:255',
