@@ -91,6 +91,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users', [UserController::class, 'index'])
         ->name('users');
 
-    Route::get('/vouchers', [VoucherController::class, 'index'])
-        ->name('vouchers');
+    Route::get('/vouchers', [VoucherController::class, 'index'])->name('vouchers');
+    Route::get('/vouchers/create', [VoucherController::class, 'create'])->name('vouchers.create');
+    Route::post('/vouchers', [VoucherController::class, 'store'])->name('vouchers.store');
+    Route::get('/vouchers/{id}/edit', [VoucherController::class, 'edit'])->name('vouchers.edit');
+    Route::put('/vouchers/{id}', [VoucherController::class, 'update'])->name('vouchers.update');
+    Route::delete('/vouchers/{id}', [VoucherController::class, 'destroy'])->name('vouchers.destroy');
 });

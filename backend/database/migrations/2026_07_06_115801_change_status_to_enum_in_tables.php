@@ -11,25 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Change status column to enum in categories
-        if (Schema::hasColumn('categories', 'status')) {
-            Schema::table('categories', function (Blueprint $table) {
-                $table->enum('status', ['active', 'draft'])->default('active')->change();
-            });
-        }
+        if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+            // Change status column to enum in categories
+            if (Schema::hasColumn('categories', 'status')) {
+                Schema::table('categories', function (Blueprint $table) {
+                    $table->enum('status', ['active', 'draft'])->default('active')->change();
+                });
+            }
 
-        // Change status column to enum in brands
-        if (Schema::hasColumn('brands', 'status')) {
-            Schema::table('brands', function (Blueprint $table) {
-                $table->enum('status', ['active', 'draft'])->default('active')->change();
-            });
-        }
+            // Change status column to enum in brands
+            if (Schema::hasColumn('brands', 'status')) {
+                Schema::table('brands', function (Blueprint $table) {
+                    $table->enum('status', ['active', 'draft'])->default('active')->change();
+                });
+            }
 
-        // Change status column to enum in banners
-        if (Schema::hasColumn('banners', 'status')) {
-            Schema::table('banners', function (Blueprint $table) {
-                $table->enum('status', ['active', 'draft'])->default('active')->change();
-            });
+            // Change status column to enum in banners
+            if (Schema::hasColumn('banners', 'status')) {
+                Schema::table('banners', function (Blueprint $table) {
+                    $table->enum('status', ['active', 'draft'])->default('active')->change();
+                });
+            }
         }
     }
 
@@ -38,22 +40,24 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasColumn('categories', 'status')) {
-            Schema::table('categories', function (Blueprint $table) {
-                $table->string('status')->default('active')->change();
-            });
-        }
+        if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+            if (Schema::hasColumn('categories', 'status')) {
+                Schema::table('categories', function (Blueprint $table) {
+                    $table->string('status')->default('active')->change();
+                });
+            }
 
-        if (Schema::hasColumn('brands', 'status')) {
-            Schema::table('brands', function (Blueprint $table) {
-                $table->string('status')->default('active')->change();
-            });
-        }
+            if (Schema::hasColumn('brands', 'status')) {
+                Schema::table('brands', function (Blueprint $table) {
+                    $table->string('status')->default('active')->change();
+                });
+            }
 
-        if (Schema::hasColumn('banners', 'status')) {
-            Schema::table('banners', function (Blueprint $table) {
-                $table->string('status')->default('active')->change();
-            });
+            if (Schema::hasColumn('banners', 'status')) {
+                Schema::table('banners', function (Blueprint $table) {
+                    $table->string('status')->default('active')->change();
+                });
+            }
         }
     }
 };

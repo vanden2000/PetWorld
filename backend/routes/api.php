@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wishlist', [WishlistController::class, 'index']);
     Route::post('/wishlist/{product}', [WishlistController::class, 'store']);
     Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy']);
+    Route::get('/vouchers', [\App\Http\Controllers\Api\VoucherController::class, 'index']);
 });
 
 Route::get('/home', HomeController::class);

@@ -53,6 +53,24 @@ export async function createOrder(payload) {
 }
 
 /**
+ * Lấy danh sách voucher khả dụng kèm theo trạng thái áp dụng dựa trên subtotal.
+ */
+export async function getAvailableVouchers(subtotal) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/vouchers?subtotal=${subtotal}`, {
+      cache: "no-store",
+      headers: { Accept: "application/json", ...authHeaders() },
+    });
+    if (!res.ok) throw new Error(`Vouchers API trả về ${res.status}`);
+    const json = await res.json();
+    return json?.data?.vouchers ?? [];
+  } catch (error) {
+    console.error("[getAvailableVouchers] Không lấy được danh sách voucher:", error);
+    return [];
+  }
+}
+
+/**
  * Lấy chi tiết một đơn của user (dùng để poll trạng thái thanh toán). Trả về data hoặc null.
  */
 export async function getOrder(id) {

@@ -195,6 +195,7 @@ class OrderController extends Controller
             'items.*.variant_id' => ['required', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'note' => ['nullable', 'string', 'max:1000'],
+            'voucher_id' => ['nullable', 'integer', 'exists:vouchers,id'],
         ], [
             'address_id.required' => 'Vui lòng chọn địa chỉ giao hàng.',
             'shipping_method_id.required' => 'Vui lòng chọn phương thức vận chuyển.',
@@ -263,9 +264,30 @@ class OrderController extends Controller
                 ];
             }
 
+            // Xử lý Voucher nếu có
+            $voucherId = null;
+            $discountAmount = 0.0;
+            if ($request->filled('voucher_id')) {
+                $voucher = \App\Models\Voucher::query()
+                    ->where('status', 'active')
+                    ->lockForUpdate() // Khóa để tránh race condition khi đếm lượt sử dụng
+                    ->findOrFail($data['voucher_id']);
+
+                if (!$voucher->canBeApplied($subtotal)) {
+                    throw ValidationException::withMessages([
+                        'voucher_id' => ['Voucher không đủ điều kiện sử dụng hoặc đã hết lượt.'],
+                    ]);
+                }
+
+                $voucherId = $voucher->id;
+                // Số tiền giảm tối đa không vượt quá tổng phụ đơn hàng
+                $discountAmount = min((float) $voucher->discount_value, $subtotal);
+            }
+
             $shippingFee = (float) $shippingMethod->shipping_fee;
 
             $order = $request->user()->orders()->create([
+                'voucher_id' => $voucherId,
                 'shipping_method_id' => $shippingMethod->id,
                 'payment_method_id' => $data['payment_method_id'],
                 'address_id' => $address->id,
@@ -274,9 +296,9 @@ class OrderController extends Controller
                 'recipient_address' => $this->composeAddress($address),
                 'delivery_area' => $address->province,
                 'shipping_fee' => $shippingFee,
-                'discount_amount' => 0,
+                'discount_amount' => $discountAmount,
                 'order_status' => 'pending',
-                'total_amount' => $subtotal + $shippingFee,
+                'total_amount' => max(0.0, $subtotal + $shippingFee - $discountAmount),
                 'payment_status' => 'unpaid',
                 'note' => $data['note'] ?? null,
             ]);

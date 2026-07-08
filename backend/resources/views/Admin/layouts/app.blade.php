@@ -122,6 +122,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('admin.vouchers') }}" class="menu-item-link {{ request()->routeIs('admin.vouchers*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-ticket"></i>
+                        <span>Voucher</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#" class="menu-item-link">
                         <i class="fa-solid fa-chart-simple"></i>
                         <span>Báo Cáo</span>

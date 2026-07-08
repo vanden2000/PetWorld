@@ -23,6 +23,7 @@ import {
   createOrder,
   getOrder,
   buildSepayQrUrl,
+  getAvailableVouchers,
 } from "@/lib/checkout";
 import AddressLocationFields from "@/components/auth/AddressLocationFields";
 import { toastError } from "@/lib/toast";
@@ -82,6 +83,11 @@ export default function CheckoutView() {
   // Hết hiệu lực khi đếm ngược về 0 (suy ra từ state, không cần state riêng).
   const qrExpired = qrSecondsLeft <= 0;
 
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [vouchers, setVouchers] = useState([]);
+  const [showVoucherModal, setShowVoucherModal] = useState(false);
+  const [loadingVouchers, setLoadingVouchers] = useState(false);
+
   // Tải phương thức giao/thanh toán (public).
   useEffect(() => {
     let active = true;
@@ -133,7 +139,65 @@ export default function CheckoutView() {
   const subtotal = items.reduce((sum, line) => sum + line.price * line.quantity, 0);
   const shippingMethod = options.shipping_methods.find((m) => m.id === shippingMethodId);
   const shipping = items.length ? shippingMethod?.shipping_fee ?? 0 : 0;
-  const total = subtotal + shipping;
+
+  const discount = appliedVoucher ? Math.min(parseFloat(appliedVoucher.discount_value), subtotal) : 0;
+  const total = Math.max(0, subtotal + shipping - discount);
+
+  // Đọc voucher đã áp dụng từ localStorage nếu có
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("petworld_applied_voucher");
+        if (stored) {
+          setAppliedVoucher(JSON.parse(stored));
+        }
+      } catch (e) {
+        console.error("[CheckoutView] Lỗi đọc voucher:", e);
+      }
+    }
+  }, []);
+
+  // Tự động gỡ voucher nếu subtotal không đủ điều kiện tối thiểu
+  useEffect(() => {
+    if (appliedVoucher && subtotal < parseFloat(appliedVoucher.min_order_value)) {
+      const oldVoucher = appliedVoucher;
+      setAppliedVoucher(null);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("petworld_applied_voucher");
+      }
+      toastError(`Mã giảm giá ${oldVoucher.code} đã bị gỡ bỏ do tổng tiền đơn hàng chưa đạt tối thiểu ${formatPrice(oldVoucher.min_order_value)}.`);
+    }
+  }, [subtotal, appliedVoucher]);
+
+  const handleOpenVoucherModal = async () => {
+    setLoadingVouchers(true);
+    setShowVoucherModal(true);
+    try {
+      const list = await getAvailableVouchers(subtotal);
+      setVouchers(list);
+    } catch (error) {
+      console.error("[getAvailableVouchers] Lỗi khi tải voucher:", error);
+      toastError("Không thể tải danh sách mã giảm giá.");
+    } finally {
+      setLoadingVouchers(false);
+    }
+  };
+
+  const handleApplyVoucher = (voucher) => {
+    if (!voucher.can_apply) return;
+    setAppliedVoucher(voucher);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("petworld_applied_voucher", JSON.stringify(voucher));
+    }
+    setShowVoucherModal(false);
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("petworld_applied_voucher");
+    }
+  };
 
   const selectedPayment = options.payment_methods.find((m) => m.id === paymentMethodId);
   const isBankTransfer = (selectedPayment?.name ?? "").toLowerCase().includes("chuyển khoản");
@@ -180,6 +244,7 @@ export default function CheckoutView() {
       address_id: selectedAddressId,
       shipping_method_id: shippingMethodId,
       payment_method_id: paymentMethodId,
+      voucher_id: appliedVoucher?.id,
       note: "",
       items: items.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })),
     });
@@ -194,6 +259,9 @@ export default function CheckoutView() {
       clearBuyNow();
     } else {
       clearCart();
+    }
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("petworld_applied_voucher");
     }
     setOrderPaid(false);
     setQrSecondsLeft(QR_TTL_SECONDS);
@@ -498,6 +566,34 @@ export default function CheckoutView() {
               Đã áp dụng miễn phí vận chuyển
             </div>
           )}
+
+          {/* Voucher trigger */}
+          <div className="co-voucher-section">
+            {appliedVoucher ? (
+              <div className="co-voucher-applied">
+                <div className="co-voucher-applied-info">
+                  <span className="co-voucher-tag-icon">🎟</span>
+                  <span className="co-voucher-code-name"><strong>{appliedVoucher.code}</strong></span>
+                  <span className="co-voucher-discount-text">(-{formatPrice(discount)})</span>
+                </div>
+                <button type="button" className="co-voucher-remove-btn" onClick={handleRemoveVoucher}>Gỡ</button>
+              </div>
+            ) : (
+              <button type="button" className="co-voucher-select-trigger" onClick={handleOpenVoucherModal}>
+                <span className="co-voucher-tag-icon">🎟</span>
+                <span>Chọn mã giảm giá</span>
+                <span className="co-voucher-arrow">➔</span>
+              </button>
+            )}
+          </div>
+
+          {discount > 0 && (
+            <div className="co-summary-row co-summary-discount">
+              <span>Giảm giá</span>
+              <span className="co-discount-amount">-{formatPrice(discount)}</span>
+            </div>
+          )}
+
           <div className="co-summary-total">
             <span>Tổng thanh toán</span>
             <span>{formatPrice(total)}</span>
@@ -515,6 +611,86 @@ export default function CheckoutView() {
           </p>
         </aside>
       </div>
+
+      {/* Voucher Modal */}
+      {showVoucherModal && (
+        <div className="co-modal-overlay" onClick={() => setShowVoucherModal(false)}>
+          <div className="co-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="co-modal-header">
+              <h3>Chọn Voucher giảm giá</h3>
+              <button type="button" className="co-modal-close" onClick={() => setShowVoucherModal(false)}>×</button>
+            </div>
+            <div className="co-modal-body">
+              {loadingVouchers ? (
+                <div className="co-loading-wrap">
+                  <span className="co-spinner" aria-hidden="true"></span>
+                  <p>Đang tải danh sách voucher...</p>
+                </div>
+              ) : vouchers.length === 0 ? (
+                <p className="co-no-vouchers">Hiện tại không có voucher nào khả dụng.</p>
+              ) : (
+                <div className="co-voucher-list">
+                  {vouchers.map((voucher) => {
+                    const formattedMin = formatPrice(voucher.min_order_value);
+                    const formattedDiscount = formatPrice(voucher.discount_value);
+                    const startDateStr = new Date(voucher.start_date).toLocaleDateString('vi-VN');
+                    const endDateStr = new Date(voucher.end_date).toLocaleDateString('vi-VN');
+                    
+                    return (
+                      <div 
+                        key={voucher.id} 
+                        className={`co-voucher-item ${!voucher.can_apply ? 'disabled' : ''} ${appliedVoucher?.id === voucher.id ? 'selected' : ''}`}
+                      >
+                        <div className="co-voucher-card-left">
+                          <div className="co-voucher-discount-val">-{formattedDiscount}</div>
+                          <div className="co-voucher-badge-code">{voucher.code}</div>
+                        </div>
+                        <div className="co-voucher-card-right">
+                          <h4 className="co-voucher-title">{voucher.description || `Giảm ngay ${formattedDiscount}`}</h4>
+                          <p className="co-voucher-condition">Đơn tối thiểu: <strong>{formattedMin}</strong></p>
+                          <p className="co-voucher-duration">Hạn dùng: {startDateStr} - {endDateStr}</p>
+                          
+                          {!voucher.can_apply && (
+                            <p className="co-voucher-warning-text">
+                              Mua thêm <strong>{formatPrice(voucher.missing_amount)}</strong> để sử dụng mã này
+                            </p>
+                          )}
+                          
+                          <div className="co-voucher-action-btn-wrap">
+                            {voucher.can_apply ? (
+                              appliedVoucher?.id === voucher.id ? (
+                                <button 
+                                  type="button" 
+                                  className="co-voucher-btn selected"
+                                  onClick={handleRemoveVoucher}
+                                >
+                                  Đang chọn ✓
+                                </button>
+                              ) : (
+                                <button 
+                                  type="button" 
+                                  className="co-voucher-btn active"
+                                  onClick={() => handleApplyVoucher(voucher)}
+                                >
+                                  Áp dụng
+                                </button>
+                              )
+                            ) : (
+                              <button type="button" className="co-voucher-btn" disabled>
+                                Chưa đủ điều kiện
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

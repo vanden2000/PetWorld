@@ -56,11 +56,13 @@ return new class extends Migration
             $table->index('product_id', 'product_variants_product_id_index');
         });
 
-        Schema::table('product_variants', function (Blueprint $table) {
-            $table->dropForeign(['variant_type_id']);
-            $table->dropUnique(['product_id', 'variant_type_id', 'variant_name']);
-            $table->dropColumn(['variant_type_id', 'variant_name']);
-        });
+        if (DB::getDriverName() !== 'sqlite') {
+            Schema::table('product_variants', function (Blueprint $table) {
+                $table->dropForeign(['variant_type_id']);
+                $table->dropUnique(['product_id', 'variant_type_id', 'variant_name']);
+                $table->dropColumn(['variant_type_id', 'variant_name']);
+            });
+        }
     }
 
     public function down(): void
