@@ -562,7 +562,7 @@
     </div>
 
     <!-- Main Form Grid wrapper -->
-    <form id="product-edit-form" action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
+    <form id="product-edit-form" action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" onsubmit="return confirm('Bạn có chắc chắn muốn cập nhật sản phẩm này không?')">
         @csrf
         @method('PUT')
         

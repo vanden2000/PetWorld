@@ -140,22 +140,36 @@ export default function CheckoutView() {
   const shippingMethod = options.shipping_methods.find((m) => m.id === shippingMethodId);
   const shipping = items.length ? shippingMethod?.shipping_fee ?? 0 : 0;
 
+  const voucherKey = buyNowItem ? "petworld_buynow_applied_voucher" : "petworld_cart_applied_voucher";
+
   const discount = appliedVoucher ? Math.min(parseFloat(appliedVoucher.discount_value), subtotal) : 0;
   const total = Math.max(0, subtotal + shipping - discount);
 
-  // Đọc voucher đã áp dụng từ localStorage nếu có
+  // Đọc và kiểm tra tính hợp lệ của voucher từ localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
-        const stored = localStorage.getItem("petworld_applied_voucher");
+        const stored = localStorage.getItem(voucherKey);
         if (stored) {
-          setAppliedVoucher(JSON.parse(stored));
+          const parsed = JSON.parse(stored);
+          getAvailableVouchers(subtotal).then((list) => {
+            const found = list.find((v) => v.id === parsed.id && v.can_apply);
+            if (found) {
+              setAppliedVoucher(parsed);
+            } else {
+              localStorage.removeItem(voucherKey);
+              setAppliedVoucher(null);
+              toastError("Mã giảm giá đã lưu không còn hiệu lực hoặc đã hết lượt sử dụng.");
+            }
+          });
+        } else {
+          setAppliedVoucher(null);
         }
       } catch (e) {
         console.error("[CheckoutView] Lỗi đọc voucher:", e);
       }
     }
-  }, []);
+  }, [subtotal, voucherKey]);
 
   // Tự động gỡ voucher nếu subtotal không đủ điều kiện tối thiểu
   useEffect(() => {
@@ -163,11 +177,11 @@ export default function CheckoutView() {
       const oldVoucher = appliedVoucher;
       setAppliedVoucher(null);
       if (typeof window !== "undefined") {
-        localStorage.removeItem("petworld_applied_voucher");
+        localStorage.removeItem(voucherKey);
       }
       toastError(`Mã giảm giá ${oldVoucher.code} đã bị gỡ bỏ do tổng tiền đơn hàng chưa đạt tối thiểu ${formatPrice(oldVoucher.min_order_value)}.`);
     }
-  }, [subtotal, appliedVoucher]);
+  }, [subtotal, appliedVoucher, voucherKey]);
 
   const handleOpenVoucherModal = async () => {
     setLoadingVouchers(true);
@@ -187,7 +201,7 @@ export default function CheckoutView() {
     if (!voucher.can_apply) return;
     setAppliedVoucher(voucher);
     if (typeof window !== "undefined") {
-      localStorage.setItem("petworld_applied_voucher", JSON.stringify(voucher));
+      localStorage.setItem(voucherKey, JSON.stringify(voucher));
     }
     setShowVoucherModal(false);
   };
@@ -195,7 +209,7 @@ export default function CheckoutView() {
   const handleRemoveVoucher = () => {
     setAppliedVoucher(null);
     if (typeof window !== "undefined") {
-      localStorage.removeItem("petworld_applied_voucher");
+      localStorage.removeItem(voucherKey);
     }
   };
 
@@ -252,6 +266,12 @@ export default function CheckoutView() {
 
     if (!result.ok) {
       toastError(result.message ?? "Đặt hàng không thành công, vui lòng thử lại.");
+      if (result.errors && result.errors.voucher_id) {
+        setAppliedVoucher(null);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(voucherKey);
+        }
+      }
       return;
     }
 
@@ -260,8 +280,9 @@ export default function CheckoutView() {
     } else {
       clearCart();
     }
+    setAppliedVoucher(null);
     if (typeof window !== "undefined") {
-      localStorage.removeItem("petworld_applied_voucher");
+      localStorage.removeItem(voucherKey);
     }
     setOrderPaid(false);
     setQrSecondsLeft(QR_TTL_SECONDS);

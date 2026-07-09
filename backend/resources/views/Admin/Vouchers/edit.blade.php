@@ -108,11 +108,6 @@
         .custom-radio-container:hover {
             background-color: #f8f9fa;
         }
-        .custom-radio-container input[type="radio"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary);
-        }
         .radio-label-title {
             font-weight: 600;
             font-size: 0.95rem;
@@ -123,11 +118,101 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* Custom Confirmation Modal Styles */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .custom-modal-overlay.show {
+            opacity: 1;
+        }
+        .custom-modal-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.25s ease;
+        }
+        .custom-modal-overlay.show .custom-modal-card {
+            transform: scale(1);
+        }
+        .custom-modal-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            font-size: 1.5rem;
+        }
+        .custom-modal-icon.info {
+            background-color: #fff7ed;
+            color: #ea580c;
+            border: 1px solid #ffedd5;
+        }
+        .custom-modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .custom-modal-message {
+            font-size: 0.95rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .custom-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .btn-modal {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            flex: 1;
+        }
+        .btn-modal-cancel {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        .btn-modal-cancel:hover {
+            background-color: #e2e8f0;
+        }
+        .btn-modal-confirm {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+        .btn-modal-confirm:hover {
+            filter: brightness(0.9);
+        }
     </style>
 @endsection
 
 @section('content')
-<form action="{{ route('admin.vouchers.update', $voucher->id) }}" method="POST">
+<form action="{{ route('admin.vouchers.update', $voucher->id) }}" method="POST" id="voucherEditForm">
     @csrf
     @method('PUT')
     
@@ -245,18 +330,21 @@
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <label class="custom-radio-container">
                         <input type="radio" name="status" value="active" {{ old('status', $voucher->status) === 'active' ? 'checked' : '' }}>
+                        <span class="radio-indicator"></span>
                         <div class="radio-label-details">
                             <span class="radio-label-title">Hoạt động (Active)</span>
                         </div>
                     </label>
                     <label class="custom-radio-container">
                         <input type="radio" name="status" value="inactive" {{ old('status', $voucher->status) === 'inactive' ? 'checked' : '' }}>
+                        <span class="radio-indicator"></span>
                         <div class="radio-label-details">
                             <span class="radio-label-title">Tạm ẩn (Inactive)</span>
                         </div>
                     </label>
                     <label class="custom-radio-container">
                         <input type="radio" name="status" value="expired" {{ old('status', $voucher->status) === 'expired' ? 'checked' : '' }}>
+                        <span class="radio-indicator"></span>
                         <div class="radio-label-details">
                             <span class="radio-label-title">Hết hạn (Expired)</span>
                         </div>
@@ -278,12 +366,32 @@
         </div>
     </div>
 </form>
+
+<!-- Custom Confirmation Modal -->
+<div id="confirmModal" class="custom-modal-overlay" style="display: none;">
+    <div class="custom-modal-card">
+        <div class="custom-modal-icon info">
+            <i class="fa-solid fa-circle-question"></i>
+        </div>
+        <h3 class="custom-modal-title">Xác nhận cập nhật</h3>
+        <p class="custom-modal-message">Bạn có chắc chắn muốn lưu lại các thay đổi của voucher này không?</p>
+        <div class="custom-modal-actions">
+            <button type="button" class="btn-modal btn-modal-cancel" id="btnCancelModal">Hủy bỏ</button>
+            <button type="button" class="btn-modal btn-modal-confirm" id="btnConfirmModal">Xác nhận</button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const codeInput = document.getElementById('code');
+        const editForm = document.getElementById('voucherEditForm');
+        const confirmModal = document.getElementById('confirmModal');
+        const btnCancelModal = document.getElementById('btnCancelModal');
+        const btnConfirmModal = document.getElementById('btnConfirmModal');
+        let isConfirmed = false;
 
         if (codeInput) {
             codeInput.addEventListener('input', function() {
@@ -291,6 +399,38 @@
                 this.value = this.value.toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9]/g, '');
             });
         }
+
+        if (editForm) {
+            editForm.addEventListener('submit', function(e) {
+                if (!isConfirmed) {
+                    e.preventDefault();
+                    confirmModal.style.display = 'flex';
+                    setTimeout(() => {
+                        confirmModal.classList.add('show');
+                    }, 10);
+                }
+            });
+        }
+
+        btnCancelModal.addEventListener('click', function() {
+            confirmModal.classList.remove('show');
+            setTimeout(() => {
+                confirmModal.style.display = 'none';
+            }, 250);
+        });
+
+        btnConfirmModal.addEventListener('click', function() {
+            isConfirmed = true;
+            if (editForm) {
+                editForm.submit();
+            }
+        });
+
+        confirmModal.addEventListener('click', function(e) {
+            if (e.target === confirmModal) {
+                btnCancelModal.click();
+            }
+        });
     });
 </script>
 @endsection

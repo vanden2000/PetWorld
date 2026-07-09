@@ -162,6 +162,22 @@ class OrderController extends Controller
 
             $lockedOrder->update(['order_status' => 'cancelled']);
 
+            // Nếu đơn hàng có voucher và voucher đang ở trạng thái 'expired', tự động mở lại thành 'active' nếu còn lượt dùng
+            if ($lockedOrder->voucher_id) {
+                $voucher = \App\Models\Voucher::query()
+                    ->lockForUpdate()
+                    ->find($lockedOrder->voucher_id);
+                if ($voucher && $voucher->status === 'expired' && (int) $voucher->usage_limit > 0) {
+                    $usedOrders = $voucher->orders()
+                        ->where('order_status', '<>', 'cancelled')
+                        ->whereKeyNot($lockedOrder->id)
+                        ->count();
+                    if ($usedOrders < (int) $voucher->usage_limit) {
+                        $voucher->update(['status' => 'active']);
+                    }
+                }
+            }
+
             return $lockedOrder->refresh();
         });
         // lấy user sở hữu đơn hàng
@@ -265,6 +281,7 @@ class OrderController extends Controller
             }
 
             // Xử lý Voucher nếu có
+            $voucher = null;
             $voucherId = null;
             $discountAmount = 0.0;
             if ($request->filled('voucher_id')) {
@@ -307,6 +324,16 @@ class OrderController extends Controller
 
             // Mã đối soát chuyển khoản, sinh sau khi có id để đảm bảo duy nhất.
             $order->update(['payment_code' => 'PW' . $order->id]);
+
+            // Cập nhật trạng thái voucher thành 'expired' nếu đã đạt giới hạn sử dụng
+            if ($voucher && (int) $voucher->usage_limit > 0) {
+                $usedOrders = $voucher->orders()
+                    ->where('order_status', '<>', 'cancelled')
+                    ->count();
+                if ($usedOrders >= (int) $voucher->usage_limit) {
+                    $voucher->update(['status' => 'expired']);
+                }
+            }
 
             return $order;
         });

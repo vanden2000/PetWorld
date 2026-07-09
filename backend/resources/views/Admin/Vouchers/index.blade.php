@@ -26,6 +26,99 @@
         .btn-delete-voucher:hover {
             background-color: #fce8e6;
         }
+        .category-table th {
+            white-space: nowrap;
+        }
+        
+        /* Custom Confirmation Modal Styles */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .custom-modal-overlay.show {
+            opacity: 1;
+        }
+        .custom-modal-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.25s ease;
+        }
+        .custom-modal-overlay.show .custom-modal-card {
+            transform: scale(1);
+        }
+        .custom-modal-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            font-size: 1.5rem;
+        }
+        .custom-modal-icon.warning {
+            background-color: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fee2e2;
+        }
+        .custom-modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .custom-modal-message {
+            font-size: 0.95rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .custom-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .btn-modal {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            flex: 1;
+        }
+        .btn-modal-cancel {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        .btn-modal-cancel:hover {
+            background-color: #e2e8f0;
+        }
+        .btn-modal-confirm {
+            background-color: #dc2626;
+            color: #ffffff;
+        }
+        .btn-modal-confirm:hover {
+            background-color: #b91c1c;
+        }
     </style>
 @endsection
 
@@ -98,9 +191,11 @@
                             </td>
                             <td>
                                 @if($voucher->usage_limit === 0)
-                                    <span style="color: var(--text-muted); font-style: italic;">Vô hạn</span>
+                                    <span style="color: var(--text-muted); font-style: italic;">Vô hạn (Đã dùng: {{ $voucher->orders_count }})</span>
                                 @else
-                                    <span>{{ $voucher->usage_limit }} lượt</span>
+                                    <span style="font-weight: 500; color: {{ $voucher->orders_count >= $voucher->usage_limit ? 'var(--danger)' : 'var(--success)' }}">
+                                        {{ $voucher->orders_count }} / {{ $voucher->usage_limit }} lượt
+                                    </span>
                                 @endif
                             </td>
                             <td>
@@ -130,7 +225,7 @@
                                         style="padding: 6px 10px; border-radius: 6px; text-decoration: none;" title="Chỉnh sửa">
                                         <i class="fa-solid fa-pen" style="font-size: 0.75rem;"></i>
                                     </a>
-                                    <form action="{{ route('admin.vouchers.destroy', $voucher->id) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa voucher này không?')" style="display: inline;">
+                                    <form action="{{ route('admin.vouchers.destroy', $voucher->id) }}" method="POST" class="delete-voucher-form" style="display: inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn-delete-voucher" title="Xóa">
@@ -163,4 +258,70 @@
             </div>
         @endif
     </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal" class="custom-modal-overlay" style="display: none;">
+        <div class="custom-modal-card">
+            <div class="custom-modal-icon warning">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="custom-modal-title">Xác nhận xóa</h3>
+            <p class="custom-modal-message">Bạn có chắc chắn muốn xóa voucher này không? Hành động này không thể hoàn tác.</p>
+            <div class="custom-modal-actions">
+                <button type="button" class="btn-modal btn-modal-cancel" id="btnCancelModal">Hủy bỏ</button>
+                <button type="button" class="btn-modal btn-modal-confirm" id="btnConfirmModal">Xác nhận xóa</button>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmModal = document.getElementById('confirmModal');
+        const btnCancelModal = document.getElementById('btnCancelModal');
+        const btnConfirmModal = document.getElementById('btnConfirmModal');
+        let formToSubmit = null;
+
+        // Lắng nghe tất cả nút xóa voucher
+        const deleteForms = document.querySelectorAll('.delete-voucher-form');
+        deleteForms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!formToSubmit) {
+                    e.preventDefault();
+                    formToSubmit = this;
+                    
+                    // Hiện modal
+                    confirmModal.style.display = 'flex';
+                    setTimeout(() => {
+                        confirmModal.classList.add('show');
+                    }, 10);
+                }
+            });
+        });
+
+        // Bấm hủy
+        btnCancelModal.addEventListener('click', function() {
+            confirmModal.classList.remove('show');
+            setTimeout(() => {
+                confirmModal.style.display = 'none';
+                formToSubmit = null;
+            }, 250);
+        });
+
+        // Bấm xác nhận
+        btnConfirmModal.addEventListener('click', function() {
+            if (formToSubmit) {
+                formToSubmit.submit();
+            }
+        });
+
+        // Click ra ngoài modal để đóng
+        confirmModal.addEventListener('click', function(e) {
+            if (e.target === confirmModal) {
+                btnCancelModal.click();
+            }
+        });
+    });
+</script>
 @endsection
