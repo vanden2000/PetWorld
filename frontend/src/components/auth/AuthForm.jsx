@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { login, register } from "@/lib/auth";
 import { toastSuccess } from "@/lib/toast";
+import { resolveBackendImage } from "@/lib/format";
 
 const EMPTY_LOGIN = { email: "", password: "" };
 const EMPTY_REGISTER = { name: "", email: "", phone: "", password: "", password_confirmation: "" };
@@ -18,11 +19,11 @@ export default function AuthForm({ mode = "login" }) {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   // Custom states for password visibility toggles
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   // Checkbox agreement state
   const [agree, setAgree] = useState(false);
 
@@ -44,10 +45,25 @@ export default function AuthForm({ mode = "login" }) {
     const result = isLogin ? await login(form) : await register(form);
 
     if (result.ok) {
-      const redirect = searchParams.get("redirect") || "/";
-      router.push(redirect);
-      router.refresh();
-      toastSuccess("Đăng nhập thành công!");
+      if (isLogin) {
+        // Đăng nhập thành công → chuyển hướng về trang trước đó hoặc trang chủ
+        const redirect = searchParams.get("redirect") || "/";
+        router.push(redirect);
+        router.refresh();
+        toastSuccess("Đăng nhập thành công!");
+      } else {
+        // Đăng ký thành công → chuyển sang trang xác thực email
+        setMessage(
+          result.message ||
+          "Đăng ký thành công. Vui lòng kiểm tra email."
+        );
+
+        router.push(
+          `/verify-email?email=${encodeURIComponent(
+            form.email
+          )}`
+        );
+      }
       return;
     }
 
@@ -67,9 +83,9 @@ export default function AuthForm({ mode = "login" }) {
             Hãy đăng nhập để tiếp tục hành trình chăm sóc những người bạn bốn chân của bạn cùng Petworld.
           </p>
           <div className="login-img-wrapper">
-            <img src="/image/promo/register-pets.png" 
-              alt="Chào mừng trở lại!" 
-              className="login-img"/>
+            <img src={resolveBackendImage("promo/register-pets.png")}
+              alt="Chào mừng trở lại!"
+              className="login-img" />
             <div className="login-badge-floating">
               {/* Paw SVG Icon */}
               <svg width="15" height="15" viewBox="0 0 512 512" fill="currentColor" style={{ marginRight: '4px' }}>
@@ -100,13 +116,13 @@ export default function AuthForm({ mode = "login" }) {
                     <circle cx="12" cy="7" r="4" />
                   </svg>
                 </span>
-                <input 
-                  id="auth-email" 
-                  type="email" 
-                  className="auth-input" 
-                  placeholder="example@email.com" 
-                  value={form.email} 
-                  onChange={update("email")} 
+                <input
+                  id="auth-email"
+                  type="email"
+                  className="auth-input"
+                  placeholder="example@email.com"
+                  value={form.email}
+                  onChange={update("email")}
                 />
               </div>
               {errors.email && <span className="auth-error-msg">{errors.email[0]}</span>}
@@ -125,17 +141,17 @@ export default function AuthForm({ mode = "login" }) {
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
                 </span>
-                <input 
-                  id="auth-password" 
-                  type={showPassword ? "text" : "password"} 
-                  className="auth-input" 
-                  placeholder="••••••••" 
-                  value={form.password} 
-                  onChange={update("password")} 
+                <input
+                  id="auth-password"
+                  type={showPassword ? "text" : "password"}
+                  className="auth-input"
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={update("password")}
                 />
-                <button 
-                  type="button" 
-                  className="auth-password-toggle" 
+                <button
+                  type="button"
+                  className="auth-password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
@@ -197,7 +213,7 @@ export default function AuthForm({ mode = "login" }) {
     <div className="auth-card">
       {/* Left Column: Image Banner with text overlay */}
       <div className="auth-banner">
-        <img src="/image/promo/register-pets.png" alt="Chào mừng bạn đến với Ngôi nhà Petworld!" className="auth-banner-img" />
+        <img src={resolveBackendImage("promo/register-pets.png")} alt="Chào mừng bạn đến với Ngôi nhà Petworld!" className="auth-banner-img" />
         <div className="auth-banner-overlay">
           <h2>Chào mừng bạn đến với Ngôi nhà Petworld!</h2>
           <p>Gia nhập cộng đồng yêu thú cưng để nhận những ưu đãi đặc biệt và lộ trình chăm sóc sức khỏe tốt nhất cho người bạn bốn chân của bạn.</p>
@@ -224,13 +240,13 @@ export default function AuthForm({ mode = "login" }) {
                   <circle cx="12" cy="7" r="4" />
                 </svg>
               </span>
-              <input 
-                id="auth-name" 
-                type="text" 
-                className="auth-input" 
-                placeholder="Nguyễn Văn A" 
-                value={form.name} 
-                onChange={update("name")} 
+              <input
+                id="auth-name"
+                type="text"
+                className="auth-input"
+                placeholder="Nguyễn Văn A"
+                value={form.name}
+                onChange={update("name")}
               />
             </div>
             {errors.name && <span className="auth-error-msg">{errors.name[0]}</span>}
@@ -245,12 +261,12 @@ export default function AuthForm({ mode = "login" }) {
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
               </span>
-              <input 
-                id="auth-phone" 
-                type="tel" 
-                className="auth-input" 
+              <input
+                id="auth-phone"
+                type="tel"
+                className="auth-input"
                 placeholder="0912345678"
-                value={form.phone} 
+                value={form.phone}
                 onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value.replace(/\s/g, "") }))}
                 pattern="(0|\+84)(3|5|7|8|9)[0-9]{8}"
                 title="Số điện thoại Việt Nam hợp lệ, ví dụ 0912345678 hoặc +84912345678"
@@ -269,13 +285,13 @@ export default function AuthForm({ mode = "login" }) {
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
               </span>
-              <input 
-                id="auth-email" 
-                type="email" 
-                className="auth-input" 
-                placeholder="email@example.com" 
-                value={form.email} 
-                onChange={update("email")} 
+              <input
+                id="auth-email"
+                type="email"
+                className="auth-input"
+                placeholder="email@example.com"
+                value={form.email}
+                onChange={update("email")}
               />
             </div>
             {errors.email && <span className="auth-error-msg">{errors.email[0]}</span>}
@@ -291,17 +307,17 @@ export default function AuthForm({ mode = "login" }) {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </span>
-              <input 
-                id="auth-password" 
-                type={showPassword ? "text" : "password"} 
-                className="auth-input" 
-                placeholder="••••••" 
-                value={form.password} 
-                onChange={update("password")} 
+              <input
+                id="auth-password"
+                type={showPassword ? "text" : "password"}
+                className="auth-input"
+                placeholder="••••••"
+                value={form.password}
+                onChange={update("password")}
               />
-              <button 
-                type="button" 
-                className="auth-password-toggle" 
+              <button
+                type="button"
+                className="auth-password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
@@ -330,17 +346,17 @@ export default function AuthForm({ mode = "login" }) {
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                 </svg>
               </span>
-              <input 
-                id="auth-password-confirmation" 
-                type={showConfirmPassword ? "text" : "password"} 
-                className="auth-input" 
-                placeholder="••••••" 
-                value={form.password_confirmation} 
-                onChange={update("password_confirmation")} 
+              <input
+                id="auth-password-confirmation"
+                type={showConfirmPassword ? "text" : "password"}
+                className="auth-input"
+                placeholder="••••••"
+                value={form.password_confirmation}
+                onChange={update("password_confirmation")}
               />
-              <button 
-                type="button" 
-                className="auth-password-toggle" 
+              <button
+                type="button"
+                className="auth-password-toggle"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
@@ -362,10 +378,10 @@ export default function AuthForm({ mode = "login" }) {
           {/* Agreement Checkbox */}
           <div className="auth-field">
             <label className="auth-agreement">
-              <input 
-                type="checkbox" 
-                checked={agree} 
-                onChange={(e) => setAgree(e.target.checked)} 
+              <input
+                type="checkbox"
+                checked={agree}
+                onChange={(e) => setAgree(e.target.checked)}
               />
               <span>
                 Tôi đồng ý với các <Link href="/terms">Điều khoản dịch vụ</Link> và <Link href="/privacy">Chính sách bảo mật</Link> của Petworld.

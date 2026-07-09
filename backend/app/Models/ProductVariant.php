@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductVariant extends Model
 {
@@ -62,25 +63,47 @@ class ProductVariant extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function variantTypes(): BelongsToMany
+    public function variantValues(): BelongsToMany
     {
         return $this->belongsToMany(
-            VariantType::class,
-            'product_variant_types',
+            VariantValue::class,
+            'product_variant_values',
             'product_variant_id',
-            'variant_type_id',
-        )->withPivot('value');
+            'variant_value_id',
+        )->with('variantType')->withTimestamps();
+    }
+
+    public function syncVariantValues(array $valueIds): void
+    {
+        $valueIds = collect($valueIds)
+            ->map(fn (mixed $id): int => (int) $id)
+            ->unique()
+            ->values();
+
+        $values = VariantValue::query()
+            ->whereIn('id', $valueIds)
+            ->get(['id', 'variant_type_id']);
+
+        if ($values->count() !== $valueIds->count()) {
+            throw new \InvalidArgumentException('Danh sách giá trị biến thể không hợp lệ.');
+        }
+
+        if ($values->groupBy('variant_type_id')->contains(fn ($group): bool => $group->count() > 1)) {
+            throw new \InvalidArgumentException('Mỗi SKU chỉ được có một giá trị cho mỗi loại biến thể.');
+        }
+
+        $this->variantValues()->sync($valueIds->all());
     }
 
     public function getDisplayNameAttribute(): string
     {
-        $types = $this->relationLoaded('variantTypes')
-            ? $this->variantTypes
-            : $this->variantTypes()->get();
+        $values = $this->relationLoaded('variantValues')
+            ? $this->variantValues
+            : $this->variantValues()->with('variantType')->get();
 
-        return $types
-            ->sortBy('id')
-            ->map(fn (VariantType $type): string => (string) $type->pivot->value)
+        return $values
+            ->sortBy('variant_type_id')
+            ->map(fn (VariantValue $value): string => $value->value)
             ->implode(' - ');
     }
 

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\VariantType;
+use App\Models\VariantValue;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -53,32 +54,7 @@ class ProductVariantSeeder extends Seeder
                 $variant['product_slug'].'-'.implode('-', array_values($options)),
             ));
 
-            $matchingVariant = ProductVariant::query()
-                ->where('product_id', $product->id)
-                ->has('variantTypes', '=', count($options));
-
-            foreach ($options as $typeName => $value) {
-                $matchingVariant->whereHas('variantTypes', function ($query) use ($typeName, $value): void {
-                    $query->where('variant_types.name', $typeName)
-                        ->where('product_variant_types.value', $value);
-                });
-            }
-
-            $productVariant = $matchingVariant->first();
-
-            // Tận dụng variant một thuộc tính đã được migration từ cấu trúc cũ.
-            if ($productVariant === null && count($options) > 1) {
-                $firstType = array_key_first($options);
-                $firstValue = $options[$firstType];
-                $productVariant = ProductVariant::query()
-                    ->where('product_id', $product->id)
-                    ->has('variantTypes', '=', 1)
-                    ->whereHas('variantTypes', function ($query) use ($firstType, $firstValue): void {
-                        $query->where('variant_types.name', $firstType)
-                            ->where('product_variant_types.value', $firstValue);
-                    })
-                    ->first();
-            }
+            $productVariant = ProductVariant::where('sku', $sku)->first();
 
             $productVariant ??= ProductVariant::firstOrNew(['sku' => $sku]);
             $productVariant->fill([
@@ -90,15 +66,18 @@ class ProductVariantSeeder extends Seeder
                 'status' => 'active',
             ])->save();
 
-            $typeValues = collect($options)
-                ->mapWithKeys(function (string $value, string $typeName): array {
+            $valueIds = collect($options)
+                ->map(function (string $value, string $typeName): int {
                     $type = VariantType::where('name', $typeName)->firstOrFail();
+                    $variantValue = VariantValue::firstOrCreate(
+                        ['variant_type_id' => $type->id, 'value' => $value],
+                    );
 
-                    return [$type->id => ['value' => $value]];
+                    return $variantValue->id;
                 })
                 ->all();
 
-            $productVariant->variantTypes()->sync($typeValues);
+            $productVariant->syncVariantValues($valueIds);
         }
     }
 }

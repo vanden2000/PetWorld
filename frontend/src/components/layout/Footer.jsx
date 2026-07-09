@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { resolveBackendImage } from "@/lib/format";
 
 // Dấu chân thú cưng dùng làm hoa văn nền mờ phía sau footer.
 const PAW_PATH =
@@ -19,13 +20,13 @@ const ABOUT_LINKS = [
   { label: "Liên hệ", href: "/contact" },
 ];
 
-// Logo phương thức thanh toán. Lưu file ảnh vào public/image/payments/.
+// Logo phương thức thanh toán được backend phục vụ từ public/image/payments/.
 const PAYMENTS = [
-  { label: "Visa", src: "/image/payments/visa.png" },
-  { label: "Mastercard", src: "/image/payments/mastercard.png" },
-  { label: "PayPal", src: "/image/payments/paypal.png" },
-  { label: "Apple Pay", src: "/image/payments/apple-pay.png" },
-  { label: "Google Pay", src: "/image/payments/google-pay.png" },
+  { label: "Visa", src: resolveBackendImage("storage/payments/visa.png") },
+  { label: "Mastercard", src: resolveBackendImage("storage/payments/mastercard.png") },
+  { label: "PayPal", src: resolveBackendImage("storage/payments/paypal.png") },
+  { label: "Apple Pay", src: resolveBackendImage("storage/payments/apple-pay.png") },
+  { label: "Google Pay", src: resolveBackendImage("storage/payments/google-pay.png") },
 ];
 
 function Paw({ className }) {
@@ -164,7 +165,7 @@ export default function Footer() {
             ))}
           </div>
           <div className="footer-logo">
-            <img src="/image/Special_Offer_1-removebg-preview.png" alt="PetWorld" className="logo-img" />
+            <img src={resolveBackendImage("storage/logo/Special_Offer_1-removebg-preview.png")} alt="PetWorld" className="logo-img" />
           </div>
           <div className="footer-spacer" />
         </div>

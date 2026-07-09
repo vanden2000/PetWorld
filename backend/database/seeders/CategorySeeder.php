@@ -22,6 +22,8 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
+            // Ảnh seed dùng cùng quy ước với ảnh tải lên từ trang quản trị.
+            $category['image'] = 'categories/' . $category['image'];
             Category::updateOrCreate(
                 ['slug' => $category['slug']],
                 $category,

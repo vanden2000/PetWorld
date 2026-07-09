@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { resolveImage } from "@/lib/format";
+import { resolveCategoryImage, useImageFallback } from "@/lib/format";
 
 export default function CategorySection({ categories = [] }) {
   return (
     <section className="homepage-section">
       <div className="section-header">
-        <h2 className="section-title category-section-title">Danh mục Sản Phẩm</h2>
-        <Link href="/shop" className="view-all-link category-view-all">
+        <h2 className="section-title">Danh mục Sản Phẩm</h2>
+        <Link href="/shop" className="view-all-link">
           xem tất cả ➔
         </Link>
       </div>
@@ -21,9 +21,11 @@ export default function CategorySection({ categories = [] }) {
             >
               <div className="category-img-box">
                 <img
-                  src={resolveImage(category.image)}
+                  src={resolveCategoryImage(category.image)}
                   alt={category.name}
                   className="category-figma-img"
+                  loading="lazy"
+                  onError={useImageFallback}
                 />
               </div>
               <span className="category-figma-name">{category.name}</span>

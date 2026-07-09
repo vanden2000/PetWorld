@@ -3,17 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OrderConfirmationMail;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Throwable;
+use App\Mail\OrderStatusMail;
 
 class OrderController extends Controller
 {
+    private const HISTORY_PER_PAGE = 3;
+
     public function index(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -24,9 +30,9 @@ class OrderController extends Controller
 
         $orders = $request->user()->orders()
             ->withCount('items')
-            ->when(($data['status'] ?? null) === 'completed', fn ($query) => $query->where('order_status', 'completed'))
-            ->when(($data['status'] ?? null) === 'processing', fn ($query) => $query->whereIn('order_status', ['pending', 'confirmed', 'shipping']))
-            ->when(($data['status'] ?? null) === 'cancelled', fn ($query) => $query->where('order_status', 'cancelled'))
+            ->when(($data['status'] ?? null) === 'completed', fn($query) => $query->where('order_status', 'completed'))
+            ->when(($data['status'] ?? null) === 'processing', fn($query) => $query->whereIn('order_status', ['pending', 'confirmed', 'shipping']))
+            ->when(($data['status'] ?? null) === 'cancelled', fn($query) => $query->where('order_status', 'cancelled'))
             ->when($data['search'] ?? null, function ($query, string $search): void {
                 $numericId = preg_replace('/\D/', '', $search);
                 $query->where(function ($nested) use ($search, $numericId): void {
@@ -38,29 +44,150 @@ class OrderController extends Controller
                 });
             })
             ->latest()
-            ->paginate(6);
+            ->paginate(self::HISTORY_PER_PAGE);
 
-        return response()->json(['data' => [
-            'orders' => collect($orders->items())->map(fn ($order) => [
-                'id' => $order->id,
-                'code' => 'PW'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
-                'created_at' => $order->created_at?->toIso8601String(),
-                'status' => $order->order_status,
-                'payment_status' => $order->payment_status,
-                'total_amount' => (float) $order->total_amount,
-                'items_count' => $order->items_count,
-            ])->values(),
-            'pagination' => [
-                'current_page' => $orders->currentPage(),
-                'last_page' => $orders->lastPage(),
-                'per_page' => $orders->perPage(),
-                'total' => $orders->total(),
-                'from' => $orders->firstItem(),
-                'to' => $orders->lastItem(),
-            ],
-        ]]);
+        return response()->json([
+            'data' => [
+                'orders' => collect($orders->items())->map(fn($order) => [
+                    'id' => $order->id,
+                    'code' => 'PW' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
+                    'created_at' => $order->created_at?->toIso8601String(),
+                    'status' => $order->order_status,
+                    'payment_status' => $order->payment_status,
+                    'total_amount' => (float) $order->total_amount,
+                    'items_count' => $order->items_count,
+                ])->values(),
+                'pagination' => [
+                    'current_page' => $orders->currentPage(),
+                    'last_page' => $orders->lastPage(),
+                    'per_page' => $orders->perPage(),
+                    'total' => $orders->total(),
+                    'from' => $orders->firstItem(),
+                    'to' => $orders->lastItem(),
+                ],
+            ]
+        ]);
     }
 
+<<<<<<< HEAD
+=======
+    public function show(Request $request, Order $order): JsonResponse
+    {
+        abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
+
+        $order->load([
+            'shippingMethod:id,name',
+            'paymentMethod:id,name',
+            'items.productVariant.product.primaryImage',
+            'items.productVariant.variantValues.variantType',
+            'items.review:id,order_item_id,rating,comment',
+        ]);
+
+        $subtotal = $order->items->sum(fn($item) => (float) $item->price * $item->quantity);
+
+        return response()->json([
+            'data' => [
+                'order' => [
+                    'id' => $order->id,
+                    'code' => 'PW' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
+                    'payment_code' => $order->payment_code,
+                    'status' => $order->order_status,
+                    'payment_status' => $order->payment_status,
+                    'created_at' => $order->created_at?->toIso8601String(),
+                    'updated_at' => $order->updated_at?->toIso8601String(),
+                    'recipient' => [
+                        'name' => $order->recipient_name,
+                        'phone' => $order->recipient_phone,
+                        'address' => $order->recipient_address,
+                    ],
+                    'shipping' => [
+                        'method' => $order->shippingMethod?->name,
+                        'fee' => (float) $order->shipping_fee,
+                        'tracking_code' => 'PW-' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
+                    ],
+                    'payment' => [
+                        'method' => $order->paymentMethod?->name,
+                        'subtotal' => $subtotal,
+                        'discount' => (float) $order->discount_amount,
+                        'total' => (float) $order->total_amount,
+                    ],
+                    'note' => $order->note,
+                    'items' => $order->items->map(fn($item) => [
+                        'id' => $item->id,
+                        'name' => $item->product_name,
+                        'variant' => $item->productVariant?->display_name,
+                        'quantity' => $item->quantity,
+                        'price' => (float) $item->price,
+                        'slug' => $item->productVariant?->product?->slug,
+                        'image' => $item->productVariant?->product?->primaryImage?->image_url,
+                        'review' => $item->review ? [
+                            'id' => $item->review->id,
+                            'rating' => $item->review->rating,
+                            'comment' => $item->review->comment,
+                        ] : null,
+                    ])->values(),
+                ]
+            ]
+        ]);
+    }
+
+    public function cancel(Request $request, Order $order): JsonResponse
+    {
+        abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
+
+        $cancelledOrder = DB::transaction(function () use ($order): Order {
+            $lockedOrder = Order::query()
+                ->whereKey($order->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedOrder->order_status !== 'pending') {
+                abort(409, 'Chỉ có thể hủy đơn hàng đang chờ xác nhận.');
+            }
+
+            if ($lockedOrder->payment_status === 'paid') {
+                abort(409, 'Đơn hàng đã thanh toán không thể tự hủy. Vui lòng liên hệ PetWorld.');
+            }
+
+            $items = $lockedOrder->items()->get();
+            $variantIds = $items->pluck('product_variant_id')->filter()->unique()->values();
+
+            $variants = ProductVariant::query()
+                ->whereIn('id', $variantIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach ($items as $item) {
+                $variants->get($item->product_variant_id)?->increment('quantity', $item->quantity);
+            }
+
+            $lockedOrder->update(['order_status' => 'cancelled']);
+
+            return $lockedOrder->refresh();
+        });
+        // lấy user sở hữu đơn hàng
+        $cancelledOrder->load('user');
+        try {
+            Mail::to($cancelledOrder->user->email)
+                ->send(new OrderStatusMail($cancelledOrder));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
+        return response()->json([
+            'message' => 'Đã hủy đơn hàng thành công.',
+            'data' => [
+                'order' => [
+                    'id' => $cancelledOrder->id,
+                    'status' => $cancelledOrder->order_status,
+                    'updated_at' => $cancelledOrder->updated_at?->toIso8601String(),
+                ],
+            ],
+        ]);
+    }
+
+>>>>>>> origin/develop
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -71,6 +198,7 @@ class OrderController extends Controller
             'items.*.variant_id' => ['required', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'note' => ['nullable', 'string', 'max:1000'],
+            'voucher_id' => ['nullable', 'integer', 'exists:vouchers,id'],
         ], [
             'address_id.required' => 'Vui lòng chọn địa chỉ giao hàng.',
             'shipping_method_id.required' => 'Vui lòng chọn phương thức vận chuyển.',
@@ -127,8 +255,8 @@ class OrderController extends Controller
 
                 $variant->decrement('quantity', $quantity);
 
-                $name = $variant->variant_name
-                    ? "{$variant->product->name} - {$variant->variant_name}"
+                $name = $variant->display_name
+                    ? "{$variant->product->name} - {$variant->display_name}"
                     : $variant->product->name;
 
                 $orderItems[] = [
@@ -139,9 +267,30 @@ class OrderController extends Controller
                 ];
             }
 
+            // Xử lý Voucher nếu có
+            $voucherId = null;
+            $discountAmount = 0.0;
+            if ($request->filled('voucher_id')) {
+                $voucher = \App\Models\Voucher::query()
+                    ->where('status', 'active')
+                    ->lockForUpdate() // Khóa để tránh race condition khi đếm lượt sử dụng
+                    ->findOrFail($data['voucher_id']);
+
+                if (!$voucher->canBeApplied($subtotal)) {
+                    throw ValidationException::withMessages([
+                        'voucher_id' => ['Voucher không đủ điều kiện sử dụng hoặc đã hết lượt.'],
+                    ]);
+                }
+
+                $voucherId = $voucher->id;
+                // Số tiền giảm tối đa không vượt quá tổng phụ đơn hàng
+                $discountAmount = min((float) $voucher->discount_value, $subtotal);
+            }
+
             $shippingFee = (float) $shippingMethod->shipping_fee;
 
             $order = $request->user()->orders()->create([
+                'voucher_id' => $voucherId,
                 'shipping_method_id' => $shippingMethod->id,
                 'payment_method_id' => $data['payment_method_id'],
                 'address_id' => $address->id,
@@ -150,9 +299,9 @@ class OrderController extends Controller
                 'recipient_address' => $this->composeAddress($address),
                 'delivery_area' => $address->province,
                 'shipping_fee' => $shippingFee,
-                'discount_amount' => 0,
+                'discount_amount' => $discountAmount,
                 'order_status' => 'pending',
-                'total_amount' => $subtotal + $shippingFee,
+                'total_amount' => max(0.0, $subtotal + $shippingFee - $discountAmount),
                 'payment_status' => 'unpaid',
                 'note' => $data['note'] ?? null,
             ]);
@@ -160,11 +309,21 @@ class OrderController extends Controller
             $order->items()->createMany($orderItems);
 
             // Mã đối soát chuyển khoản, sinh sau khi có id để đảm bảo duy nhất.
-            $order->update(['payment_code' => 'PW'.$order->id]);
+            $order->update(['payment_code' => 'PW' . $order->id]);
 
             return $order;
         });
-
+        $order->load([
+            'items',
+            'shippingMethod:id,name',
+            'paymentMethod:id,name',
+        ]);
+        try {
+            Mail::to($request->user()->email)
+                ->send(new OrderConfirmationMail($order));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
         return response()->json([
             'message' => 'Đặt hàng thành công.',
             'data' => $this->format($order->load('items')),
@@ -246,7 +405,7 @@ class OrderController extends Controller
             'payment_status' => $order->payment_status,
             'note' => $order->note,
             'created_at' => $order->created_at?->toDateTimeString(),
-            'items' => $order->items->map(fn ($item): array => [
+            'items' => $order->items->map(fn($item): array => [
                 'id' => $item->id,
                 'product_variant_id' => $item->product_variant_id,
                 'product_name' => $item->product_name,

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import ProductCard from "@/components/product/ProductCard";
 import RecentlyViewed from "@/components/home/RecentlyViewed";
 import Link from "next/link";
+import { resolveBackendImage } from "@/lib/format";
 
 /**
  * Khối "Phụ Kiện Cho Pet": banner promo cam bên trái + cột phải gồm lưới
@@ -74,7 +75,7 @@ export default function AccessoriesPromo({ products = [] }) {
             Ghé Shop Ngay
           </Link>
         </div>
-        <img src="/image/promo/accessories.png" alt="Phụ kiện cho pet" className="promo-img" />
+        <img src={resolveBackendImage("storage/promo/accessories.png")} alt="Phụ kiện cho pet" className="promo-img" />
       </div>
 
       <div className="promo-right">

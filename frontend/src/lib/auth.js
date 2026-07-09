@@ -33,9 +33,16 @@ export function getUser() {
 }
 
 function saveAuth(user, token) {
+  if (!user || !token) {
+    return;
+  }
+
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
-  window.dispatchEvent(new CustomEvent(AUTH_EVENT));
+
+  window.dispatchEvent(
+    new CustomEvent(AUTH_EVENT)
+  );
 }
 
 function updateStoredUser(user) {
@@ -44,14 +51,18 @@ function updateStoredUser(user) {
 }
 
 async function accountRequest(path, options = {}) {
-  const isFormData = options.body instanceof FormData;
-  const response = await fetch(`${API_BASE_URL}/api/${path}`, {
-    ...options,
-    headers: { Accept: "application/json", ...(isFormData ? {} : { "Content-Type": "application/json" }), ...authHeaders(), ...options.headers },
-  });
-  const json = await response.json().catch(() => ({}));
-  if (!response.ok) return { ok: false, message: json.message || "Không thể xử lý yêu cầu.", errors: json.errors || {} };
-  return { ok: true, data: json.data || {} };
+  try {
+    const isFormData = options.body instanceof FormData;
+    const response = await fetch(`${API_BASE_URL}/api/${path}`, {
+      ...options,
+      headers: { Accept: "application/json", ...(isFormData ? {} : { "Content-Type": "application/json" }), ...authHeaders(), ...options.headers },
+    });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) return { ok: false, message: json.message || "Không thể xử lý yêu cầu.", errors: json.errors || {} };
+    return { ok: true, data: json.data || {} };
+  } catch {
+    return { ok: false, message: "Không kết nối được máy chủ. Vui lòng thử lại.", errors: {} };
+  }
 }
 
 export async function updateProfile(payload) {
@@ -79,6 +90,8 @@ export const getOrders = (params = {}) => {
   return accountRequest(`orders${query ? `?${query}` : ""}`);
 };
 export const getOrder = (id) => accountRequest(`orders/${id}`);
+export const cancelOrder = (id) => accountRequest(`orders/${id}/cancel`, { method: "PATCH" });
+export const createReview = (payload) => accountRequest("reviews", { method: "POST", body: JSON.stringify(payload) });
 
 export function clearAuth() {
   localStorage.removeItem(TOKEN_KEY);
@@ -92,12 +105,17 @@ export function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-// Gọi API auth, chuẩn hoá kết quả thành { ok, user?, message?, errors? }.
-async function postAuth(path, payload) {
+
+// Gọi API đăng ký hoặc đăng nhập.
+// saveSession = true chỉ dùng cho đăng nhập thành công.
+async function postAuth(path, payload, { saveSession = false } = {}) {
   try {
     const res = await fetch(`${API_BASE_URL}/api/${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify(payload),
     });
 
@@ -106,25 +124,61 @@ async function postAuth(path, payload) {
     if (!res.ok) {
       return {
         ok: false,
-        message: json?.message ?? "Đã có lỗi xảy ra, vui lòng thử lại.",
+        message:
+          json?.message ??
+          json?.data?.message ??
+          "Đã có lỗi xảy ra, vui lòng thử lại.",
         errors: json?.errors ?? {},
+        code: json?.code ?? null,
       };
     }
 
-    const { user, token } = json.data;
-    saveAuth(user, token);
-    return { ok: true, user };
+    const data = json?.data ?? {};
+    const user = data?.user ?? null;
+    const token = data?.token ?? null;
+
+    // Chỉ lưu token khi đăng nhập.
+    if (saveSession) {
+      if (!user || !token) {
+        return {
+          ok: false,
+          message: "Phản hồi đăng nhập không hợp lệ.",
+          errors: {},
+        };
+      }
+
+      saveAuth(user, token);
+    }
+
+    return {
+      ok: true,
+      user,
+      data,
+      message:
+        json?.message ??
+        data?.message ??
+        "Thao tác thành công.",
+    };
   } catch {
-    return { ok: false, message: "Không kết nối được máy chủ. Vui lòng kiểm tra API.", errors: {} };
+    return {
+      ok: false,
+      message:
+        "Không kết nối được máy chủ. Vui lòng kiểm tra API.",
+      errors: {},
+    };
   }
 }
 
 export function register(payload) {
-  return postAuth("register", payload);
+  return postAuth("register", payload, {
+    saveSession: false,
+  });
 }
 
 export function login(payload) {
-  return postAuth("login", payload);
+  return postAuth("login", payload, {
+    saveSession: true,
+  });
 }
 
 export async function logout() {
@@ -152,3 +206,16 @@ export function onAuthChange(callback) {
     window.removeEventListener("storage", callback);
   };
 }
+
+export function forgotPasswordSendOtp(email) {
+  return postAuth("forgot-password/send-otp", { email }, { saveSession: false });
+}
+
+export function forgotPasswordVerifyOtp(email, otp) {
+  return postAuth("forgot-password/verify-otp", { email, otp }, { saveSession: false });
+}
+
+export function forgotPasswordReset(email, reset_token, password, password_confirmation) {
+  return postAuth("forgot-password/reset-password", { email, reset_token, password, password_confirmation }, { saveSession: false });
+}
+

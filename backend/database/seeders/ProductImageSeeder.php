@@ -92,13 +92,14 @@ class ProductImageSeeder extends Seeder
                 ->update(['is_primary' => false]);
 
             foreach ($imageUrls as $index => $imageUrl) {
+                $imagePath = 'products/'.$imageUrl;
                 $image = ProductImage::query()
                     ->where('product_id', $product->id)
-                    ->whereIn('image_url', [$imageUrl, 'products/'.$imageUrl])
+                    ->whereIn('image_url', [$imageUrl, 'products/'.$imageUrl, $imagePath])
                     ->first() ?? new ProductImage(['product_id' => $product->id]);
 
                 $image->fill([
-                    'image_url' => $imageUrl,
+                    'image_url' => $imagePath,
                     'is_primary' => $index === 0,
                 ])->save();
             }

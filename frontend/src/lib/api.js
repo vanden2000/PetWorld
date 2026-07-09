@@ -17,7 +17,7 @@ export const API_BASE_URL = (
 export async function getHomeData() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/home`, {
-      // Luôn lấy mới để dữ liệu backend cập nhật ngay (kết hợp AutoRefresh khi focus).
+      // SWR quản lý thời điểm cập nhật; mỗi lần thật sự gọi API vẫn cần lấy dữ liệu mới nhất.
       cache: "no-store",
     });
 

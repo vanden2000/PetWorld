@@ -114,7 +114,7 @@ export default async function ShopPage({ searchParams }) {
               </>
             ) : (
               <div className="shop-empty">
-                Không tìm thấy sản phẩm nào. Vui lòng bật API Laravel hoặc thử bộ lọc khác.
+                <p>Không tìm thấy sản phẩm nào.</p>
               </div>
             )}
           </div>

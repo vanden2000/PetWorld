@@ -130,7 +130,7 @@ class BlogSeeder extends Seeder
                     'description' => $blog['description'],
                     'content' => $blog['content'],
                     'view_count' => $blog['view_count'],
-                    'image' => $blog['image'],
+                    'image' => 'blogs/'.$blog['image'],
                     'status' => 'active',
                 ],
             );

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import ProductCard from "@/components/product/ProductCard";
 import Link from "next/link";
+import { resolveBackendImage } from "@/lib/format";
 
 const SIDEBAR_LINKS = [
   "Ưu đãi",
@@ -90,7 +91,7 @@ export default function NewProductsSplit({ products = [] }) {
             </li>
           ))}
         </ul>
-        <img src="/image/promo/sidebar-pets.png" alt="" className="sidebar-illustration" aria-hidden="true" />
+        <img src={resolveBackendImage("storage/promo/sidebar-pets.png")} alt="" className="sidebar-illustration" aria-hidden="true" />
       </aside>
 
       <div
