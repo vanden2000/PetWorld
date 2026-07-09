@@ -163,14 +163,6 @@
     .be-slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--primary); border: 3px solid #fff; cursor: pointer; }
     .be-slider-scale { display: flex; justify-content: space-between; margin-top: 8px; color: var(--text-muted); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; }
 
-    /* SEO */
-    .be-count { float: right; color: var(--text-muted); font-size: 0.7rem; font-weight: 600; }
-    .be-seo-preview { margin-top: 16px; padding: 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-color); }
-    .be-seo-preview .be-pv-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
-    .be-seo-preview .be-pv-title { color: #1a0dab; font-size: 1rem; line-height: 1.3; margin-bottom: 2px; }
-    .be-seo-preview .be-pv-url { color: #006621; font-size: 0.78rem; margin-bottom: 3px; }
-    .be-seo-preview .be-pv-desc { color: #4d5156; font-size: 0.78rem; line-height: 1.4; }
-
     /* Tip card */
     .be-tip { position: relative; overflow: hidden; border-radius: 12px; padding: 22px; background: var(--primary); color: #fff; }
     .be-tip i.be-tip-bg { position: absolute; right: -12px; bottom: -18px; font-size: 6rem; opacity: 0.12; }
@@ -228,8 +220,6 @@
     $statusVal = old('status', $brand->status ?? 'active');
     $hasImage = !empty($brand->image);
     $slugValue = old('slug', $brand->slug);
-    $seoTitle = $brand->name . ' | PetWorld';
-    $seoDesc = \Illuminate\Support\Str::limit(strip_tags($brand->description ?: ''), 155);
     $productCategories = $products->map(fn ($p) => optional($p->category)->name)->filter()->unique()->values();
 @endphp
 
@@ -540,40 +530,12 @@
                 </div>
             </div>
 
-            <!-- SEO -->
-            <div class="form-card">
-                <div class="be-card-head">
-                    <i class="fa-solid fa-globe"></i>
-                    <span>Quản lý SEO</span>
-                </div>
-
-                <div class="be-field">
-                    <label class="be-label" for="seo_title">SEO Title <span class="be-count"><span id="seoTitleCount">0</span>/70</span></label>
-                    <input type="text" class="form-control" id="seo_title" maxlength="70" value="{{ $seoTitle }}" placeholder="Tiêu đề hiển thị trên Google">
-                </div>
-                <div class="be-field">
-                    <label class="be-label" for="seo_desc">Meta Description <span class="be-count"><span id="seoDescCount">0</span>/160</span></label>
-                    <textarea class="form-control" id="seo_desc" maxlength="160" rows="3" placeholder="Mô tả ngắn gọn về thương hiệu...">{{ $seoDesc }}</textarea>
-                </div>
-                <div class="be-field">
-                    <label class="be-label" for="seo_keywords">SEO Keywords</label>
-                    <input type="text" class="form-control" id="seo_keywords" placeholder="VD: thức ăn mèo, {{ $brand->slug }}">
-                </div>
-
-                <div class="be-seo-preview">
-                    <div class="be-pv-label">Xem trước kết quả tìm kiếm</div>
-                    <div class="be-pv-title" id="pvTitle">{{ $seoTitle }}</div>
-                    <div class="be-pv-url">petworld.com › brand › {{ $brand->slug }}</div>
-                    <div class="be-pv-desc" id="pvDesc">{{ $seoDesc ?: 'Mô tả ngắn gọn về thương hiệu sẽ hiển thị ở đây.' }}</div>
-                </div>
-            </div>
-
             <!-- Tip -->
             <div class="be-tip">
                 <i class="fa-solid fa-bolt be-tip-bg"></i>
                 <h4>Mẹo quản trị</h4>
                 <p>Thương hiệu có hình ảnh sắc nét và mô tả trên 300 từ thường có tỷ lệ chuyển đổi cao hơn 25%.</p>
-                <a href="#"><span>Xem hướng dẫn SEO</span> <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                <a href="#"><span>Xem hướng dẫn quản trị</span> <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
             </div>
         </aside>
     </div>
@@ -731,21 +693,6 @@
                 reader.readAsDataURL(coverInput.files[0]);
             });
         }
-
-        // ---- SEO counters + live preview ----
-        const seoTitle = document.getElementById('seo_title');
-        const seoDesc = document.getElementById('seo_desc');
-        const seoTitleCount = document.getElementById('seoTitleCount');
-        const seoDescCount = document.getElementById('seoDescCount');
-        const pvTitle = document.getElementById('pvTitle');
-        const pvDesc = document.getElementById('pvDesc');
-        function syncSeo() {
-            if (seoTitle && seoTitleCount) { seoTitleCount.textContent = seoTitle.value.length; if (pvTitle) pvTitle.textContent = seoTitle.value || 'Tiêu đề thương hiệu'; }
-            if (seoDesc && seoDescCount) { seoDescCount.textContent = seoDesc.value.length; if (pvDesc) pvDesc.textContent = seoDesc.value || 'Mô tả ngắn gọn về thương hiệu sẽ hiển thị ở đây.'; }
-        }
-        if (seoTitle) seoTitle.addEventListener('input', syncSeo);
-        if (seoDesc) seoDesc.addEventListener('input', syncSeo);
-        syncSeo();
 
         // ---- Revenue chart period toggle ----
         const chartPeriod = document.getElementById('chartPeriod');

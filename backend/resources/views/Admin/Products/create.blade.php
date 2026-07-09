@@ -556,8 +556,8 @@
             <h1>Thêm Sản Phẩm</h1>
         </div>
         <div class="action-header-buttons">
-            <a href="{{ route('admin.products') }}" class="btn-action-cancel">CANCEL</a>
-            <button type="submit" form="product-create-form" class="btn-action-save">SAVE CHANGES</button>
+            <a href="{{ route('admin.products') }}" class="btn-action-cancel">Hủy</a>
+            <button type="submit" form="product-create-form" class="btn-action-save">Lưu thay đổi</button>
         </div>
     </div>
 
@@ -603,10 +603,10 @@
                         <label for="description" class="form-field-label">Mô Tả Sản Phẩm</label>
                         <div class="editor-wrapper">
                             <div class="editor-toolbar">
-                                <button type="button" class="btn-editor-tool" title="Bold"><i class="fa-solid fa-bold"></i></button>
-                                <button type="button" class="btn-editor-tool" title="Italic"><i class="fa-solid fa-italic"></i></button>
-                                <button type="button" class="btn-editor-tool" title="List"><i class="fa-solid fa-list-ul"></i></button>
-                                <button type="button" class="btn-editor-tool" title="Link"><i class="fa-solid fa-link"></i></button>
+                                <button type="button" class="btn-editor-tool" title="Đậm"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" class="btn-editor-tool" title="Nghiêng"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" class="btn-editor-tool" title="Danh sách"><i class="fa-solid fa-list-ul"></i></button>
+                                <button type="button" class="btn-editor-tool" title="Liên kết"><i class="fa-solid fa-link"></i></button>
                             </div>
                             <textarea id="description" name="description" class="editor-textarea" 
                                       placeholder="Mô tả chi tiết các thông số sản phẩm, hướng dẫn sử dụng..."></textarea>
@@ -648,7 +648,7 @@
                             <span>Biến Thể Sản Phẩm</span>
                         </h3>
                         <button type="button" id="btn-add-attribute" class="btn-add-attribute-rule">
-                            <i class="fa-solid fa-plus"></i> Add Attribute
+                            <i class="fa-solid fa-plus"></i> Thêm thuộc tính
                         </button>
                     </div>
 
@@ -657,7 +657,7 @@
                     </div>
 
                     <div id="variants-table-wrapper" style="display: none; overflow-x: auto; margin-top: 20px;">
-                        <span class="form-field-label" style="display: block; margin-bottom: 10px;">Generated Variants Preview</span>
+                        <span class="form-field-label" style="display: block; margin-bottom: 10px;">Xem trước biến thể được tạo</span>
                         <table class="variants-list-table">
                             <thead>
                                 <tr>
@@ -665,7 +665,7 @@
                                     <th>Mã SKU</th>
                                     <th>Giá Bán (đ)</th>
                                     <th>Tồn Kho</th>
-                                    <th style="text-align: center; width: 80px;">Visible</th>
+                                    <th style="text-align: center; width: 80px;">Hiển thị</th>
                                 </tr>
                             </thead>
                             <tbody id="variants-table-body">
@@ -689,8 +689,8 @@
 
                     <div class="upload-zone-wrapper" onclick="document.getElementById('product-images-input').click();">
                         <i class="fa-solid fa-cloud-arrow-up upload-zone-icon"></i>
-                        <div class="upload-zone-title">CLICK TO UPLOAD</div>
-                        <div class="upload-zone-sub">Support for PNG, JPG. Maximum file size 5MB.</div>
+                        <div class="upload-zone-title">Nhấn để tải lên</div>
+                        <div class="upload-zone-sub">Hỗ trợ PNG, JPG. Kích thước tối đa 5MB.</div>
                         <input type="file" id="product-images-input" name="images[]" multiple accept="image/*" style="display: none;">
                     </div>
 
@@ -714,7 +714,7 @@
                 <div class="form-card">
                     <div class="form-card-title" style="border: none; margin-bottom: 0;">
                         <i class="fa-solid fa-sitemap"></i>
-                        <span>ORGANIZATION</span>
+                        <span>Phân Loại</span>
                     </div>
 
                     <div class="form-control-group">
@@ -728,17 +728,17 @@
                     </div>
 
                     <div class="form-control-group">
-                        <label for="tags_input" class="form-field-label">Tags</label>
+                        <label for="tags_input" class="form-field-label">Thẻ</label>
                         <div class="tags-input-container">
                             <span class="tag-pill">
-                                Organic
+                                Hữu cơ
                                 <button type="button" class="tag-pill-btn-remove" onclick="this.closest('.tag-pill').remove();">&times;</button>
                             </span>
                             <span class="tag-pill">
-                                Puppy
+                                Chó con
                                 <button type="button" class="tag-pill-btn-remove" onclick="this.closest('.tag-pill').remove();">&times;</button>
                             </span>
-                            <input type="text" id="tags_input" placeholder="Add tags..." class="tag-field-input">
+                            <input type="text" id="tags_input" placeholder="Thêm thẻ..." class="tag-field-input">
                         </div>
                     </div>
                 </div>
@@ -751,11 +751,11 @@
         <div class="bottom-fixed-actions-bar">
             <div class="last-edited-text">
                 <i class="fa-solid fa-history"></i>
-                <span>Last edited by Admin: Just now</span>
+                <span>Chỉnh sửa lần cuối bởi Admin: Vừa xong</span>
             </div>
             <div class="action-header-buttons">
-                <a href="{{ route('admin.products') }}" class="btn-action-cancel">CANCEL</a>
-                <button type="submit" class="btn-action-save">SAVE PRODUCT</button>
+                <a href="{{ route('admin.products') }}" class="btn-action-cancel">Hủy</a>
+                <button type="submit" class="btn-action-save">Lưu sản phẩm</button>
             </div>
         </div>
     </form>
@@ -874,19 +874,19 @@
             card.className = 'attribute-group-card';
             card.innerHTML = `
                 <div class="form-control-group no-margin">
-                    <label class="form-field-label">Attribute Type</label>
+                    <label class="form-field-label">Loại thuộc tính</label>
                     <select class="input-select-field js-attr-type">
-                        <option value="Size">Size (Kích thước)</option>
-                        <option value="Color">Color (Màu sắc)</option>
-                        <option value="Packing">Quy cách (Packing)</option>
-                        <option value="Flavor">Hương vị (Flavor)</option>
+                        <option value="Size">Kích thước</option>
+                        <option value="Color">Màu sắc</option>
+                        <option value="Packing">Quy cách</option>
+                        <option value="Flavor">Hương vị</option>
                     </select>
                 </div>
                 <div class="form-control-group no-margin">
-                    <label class="form-field-label">Options (Comma separated)</label>
-                    <input type="text" class="input-text-field js-attr-options" placeholder="e.g. Small, Medium, Large">
+                    <label class="form-field-label">Tùy chọn (cách nhau bởi dấu phẩy)</label>
+                    <input type="text" class="input-text-field js-attr-options" placeholder="VD: Nhỏ, Vừa, Lớn">
                 </div>
-                <button type="button" class="btn-delete-attribute-row js-btn-delete-row" title="Delete attribute">
+                <button type="button" class="btn-delete-attribute-row js-btn-delete-row" title="Xóa thuộc tính">
                     <i class="fa-solid fa-trash-can"></i>
                 </button>
             `;
