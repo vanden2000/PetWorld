@@ -223,7 +223,7 @@
     $productCategories = $products->map(fn ($p) => optional($p->category)->name)->filter()->unique()->values();
 @endphp
 
-<form action="{{ route('admin.brands.update', $brand->id) }}" method="POST" enctype="multipart/form-data" class="be-page" id="brandEditForm">
+<form action="{{ route('admin.brands.update', $brand->id) }}" method="POST" enctype="multipart/form-data" class="be-page" id="brandEditForm" onsubmit="return confirm('Bạn có chắc chắn muốn cập nhật thương hiệu này không?')">
     @csrf
     @method('PUT')
 

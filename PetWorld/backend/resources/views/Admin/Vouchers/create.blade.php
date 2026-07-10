@@ -108,11 +108,6 @@
         .custom-radio-container:hover {
             background-color: #f8f9fa;
         }
-        .custom-radio-container input[type="radio"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary);
-        }
         .radio-label-title {
             font-weight: 600;
             font-size: 0.95rem;
@@ -244,18 +239,21 @@
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <label class="custom-radio-container">
                         <input type="radio" name="status" value="active" {{ old('status', 'active') === 'active' ? 'checked' : '' }}>
+                        <span class="radio-indicator"></span>
                         <div class="radio-label-details">
                             <span class="radio-label-title">Hoạt động (Active)</span>
                         </div>
                     </label>
                     <label class="custom-radio-container">
                         <input type="radio" name="status" value="inactive" {{ old('status') === 'inactive' ? 'checked' : '' }}>
+                        <span class="radio-indicator"></span>
                         <div class="radio-label-details">
                             <span class="radio-label-title">Tạm ẩn (Inactive)</span>
                         </div>
                     </label>
                     <label class="custom-radio-container">
                         <input type="radio" name="status" value="expired" {{ old('status') === 'expired' ? 'checked' : '' }}>
+                        <span class="radio-indicator"></span>
                         <div class="radio-label-details">
                             <span class="radio-label-title">Hết hạn (Expired)</span>
                         </div>

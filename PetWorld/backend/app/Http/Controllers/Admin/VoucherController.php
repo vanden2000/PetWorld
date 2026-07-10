@@ -14,7 +14,16 @@ class VoucherController extends Controller
      */
     public function index()
     {
+        // Tự động cập nhật các voucher đã hết hạn theo thời gian
+        Voucher::query()
+            ->where('status', 'active')
+            ->where('end_date', '<', now())
+            ->update(['status' => 'expired']);
+
         $vouchers = Voucher::query()
+            ->withCount(['orders' => function ($q) {
+                $q->where('order_status', '<>', 'cancelled');
+            }])
             ->orderBy('id', 'desc')
             ->paginate(10);
 
@@ -95,6 +104,25 @@ class VoucherController extends Controller
             'end_date.required' => 'Vui lòng chọn ngày kết thúc.',
             'end_date.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
         ]);
+
+        $usedOrders = $voucher->orders()
+            ->where('order_status', '<>', 'cancelled')
+            ->count();
+
+        // Chỉ tự động kích hoạt lại nếu trạng thái cũ đang là 'expired',
+        // và admin đã chủ động tăng giới hạn sử dụng hoặc gia hạn thêm ngày kết thúc.
+        if ($voucher->status === 'expired' && $data['status'] === 'expired') {
+            $limitIncreased = (int) $data['usage_limit'] > (int) $voucher->usage_limit;
+            $dateExtended = \Carbon\Carbon::parse($data['end_date'])->gt(\Carbon\Carbon::parse($voucher->end_date));
+
+            if ($limitIncreased || $dateExtended) {
+                $newLimit = (int) $data['usage_limit'];
+                $endDate = \Carbon\Carbon::parse($data['end_date']);
+                if (($newLimit === 0 || $usedOrders < $newLimit) && $endDate->isFuture()) {
+                    $data['status'] = 'active';
+                }
+            }
+        }
 
         $voucher->update($data);
 

@@ -7,7 +7,7 @@
 @endsection
 
 @section('content')
-    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" enctype="multipart/form-data" onsubmit="return confirm('Bạn có chắc chắn muốn cập nhật danh mục này không?')">
         @csrf
         @method('PUT')
 
