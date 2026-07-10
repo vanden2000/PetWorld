@@ -8,17 +8,12 @@ use App\Http\Controllers\Api\CheckoutOptionController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SepayWebhookController;
 use App\Http\Controllers\Api\WishlistController;
-<<<<<<< HEAD
-use Illuminate\Support\Facades\Route;
-=======
-use App\Http\Controllers\Api\ReviewController;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
->>>>>>> origin/develop
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,12 +51,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
-<<<<<<< HEAD
-
-=======
     Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     Route::post('/reviews', [ReviewController::class, 'store']);
->>>>>>> origin/develop
     Route::get('/wishlist', [WishlistController::class, 'index']);
     Route::post('/wishlist/{product}', [WishlistController::class, 'store']);
     Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy']);
