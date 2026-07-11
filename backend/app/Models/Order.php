@@ -65,4 +65,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function sepayTransactions(): HasMany
+    {
+        return $this->hasMany(SepayTransaction::class);
+    }
 }

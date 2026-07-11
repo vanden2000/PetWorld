@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\BannerController;
@@ -24,6 +25,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])
         ->name('dashboard');
+
+    Route::get('/account', [AdminAccountController::class, 'edit'])
+        ->name('account.edit');
+
+    Route::put('/account/profile', [AdminAccountController::class, 'updateProfile'])
+        ->name('account.profile.update');
+
+    Route::put('/account/password', [AdminAccountController::class, 'updatePassword'])
+        ->name('account.password.update');
 
     Route::get('/categories', [CategoryController::class, 'index'])
         ->name('categories');
@@ -64,6 +74,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/orders/{id}', [OrderController::class, 'show'])
         ->name('orders.show');
 
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
+        ->name('orders.update-status');
+
     Route::get('/posts', [PostController::class, 'index'])
         ->name('posts');
 
@@ -73,8 +86,29 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/products/create', [ProductController::class, 'create'])
         ->name('products.create');
 
+    Route::post('/products', [ProductController::class, 'store'])
+        ->name('products.store');
+
     Route::get('/products/variants', [ProductController::class, 'variants'])
         ->name('products.variants');
+
+    Route::post('/products/variants/types', [ProductController::class, 'storeVariantType'])
+        ->name('products.variants.types.store');
+
+    Route::put('/products/variants/types/{variantType}', [ProductController::class, 'updateVariantType'])
+        ->name('products.variants.types.update');
+
+    Route::delete('/products/variants/types/{variantType}', [ProductController::class, 'destroyVariantType'])
+        ->name('products.variants.types.destroy');
+
+    Route::post('/products/variants/types/{variantType}/values', [ProductController::class, 'storeVariantValue'])
+        ->name('products.variants.values.store');
+
+    Route::put('/products/variants/values/{variantValue}', [ProductController::class, 'updateVariantValue'])
+        ->name('products.variants.values.update');
+
+    Route::delete('/products/variants/values/{variantValue}', [ProductController::class, 'destroyVariantValue'])
+        ->name('products.variants.values.destroy');
 
     Route::get('/products/{id}/edit', [ProductController::class, 'edit'])
         ->name('products.edit');

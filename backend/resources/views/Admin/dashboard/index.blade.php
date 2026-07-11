@@ -220,7 +220,7 @@
     <div class="dashboard-card">
         <div class="card-header-styled">
             <span class="card-title-styled">Đơn hàng gần đây</span>
-            <a href="#" class="support-link" style="font-size: 0.8rem; font-weight: 600;">XEM TẤT CẢ</a>
+            <a href="{{ route('admin.orders') }}" class="support-link" style="font-size: 0.8rem; font-weight: 600;">XEM TẤT CẢ</a>
         </div>
         
         <div class="table-container">
@@ -229,40 +229,47 @@
                     <tr>
                         <th style="width: 15%">ID ĐƠN</th>
                         <th style="width: 25%">KHÁCH HÀNG</th>
-                        <th style="width: 30%">SẢN PHẨM</th>
+                        <th style="width: 27%">SẢN PHẨM</th>
                         <th style="width: 16%">TỔNG TIỀN</th>
                         <th style="width: 14%">TRẠNG THÁI</th>
+                        <th style="width: 8%; text-align: right;">XEM</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td class="col-order-id">#PW-8291</td>
-                        <td class="col-customer">Nguyễn Văn A</td>
-                        <td>Royal Canin Adult 5kg</td>
-                        <td class="col-total">1.250.000đ</td>
-                        <td><span class="badge-status status-completed">HOÀN TẤT</span></td>
-                    </tr>
-                    <tr>
-                        <td class="col-order-id">#PW-8292</td>
-                        <td class="col-customer">Trần Thị B</td>
-                        <td>Dây dắt tự động LED</td>
-                        <td class="col-total">450.000đ</td>
-                        <td><span class="badge-status status-pending">CHỜ XỬ LÝ</span></td>
-                    </tr>
-                    <tr>
-                        <td class="col-order-id">#PW-8293</td>
-                        <td class="col-customer">Lê Hoàng C</td>
-                        <td>Pate Whiskas 12 gói</td>
-                        <td class="col-total">180.000đ</td>
-                        <td><span class="badge-status status-completed">HOÀN TẤT</span></td>
-                    </tr>
-                    <tr>
-                        <td class="col-order-id">#PW-8294</td>
-                        <td class="col-customer">Phạm Minh D</td>
-                        <td>Chuồng chó inox 304</td>
-                        <td class="col-total">2.800.000đ</td>
-                        <td><span class="badge-status status-cancelled">ĐÃ HỦY</span></td>
-                    </tr>
+                    @forelse($recentOrders as $order)
+                        @php
+                            $orderCode = $order->payment_code ?: '' . $order->id;
+                            $firstItem = $order->items->first();
+                            $otherItems = max($order->items->count() - 1, 0);
+                        @endphp
+                        <tr @class(['order-row-cancelled' => $order->order_status === 'cancelled'])>
+                            <td class="col-order-id">{{ $orderCode }}</td>
+                            <td class="col-customer">{{ $order->recipient_name }}</td>
+                            <td>
+                                {{ $firstItem?->product_name ?? 'Không có sản phẩm' }}
+                                @if($otherItems > 0)
+                                    <span style="color: var(--text-muted); font-size: 0.75rem;">+{{ $otherItems }}</span>
+                                @endif
+                            </td>
+                            <td class="col-total">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</td>
+                            <td>
+                                <span class="badge-status {{ $orderStatusClasses[$order->order_status] ?? 'status-pending' }}">
+                                    {{ $orderStatusLabels[$order->order_status] ?? $order->order_status }}
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <a href="{{ route('admin.orders.show', $order->id) }}" class="dashboard-detail-icon" title="Xem chi tiết">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 28px;">
+                                Chưa có đơn hàng gần đây.
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

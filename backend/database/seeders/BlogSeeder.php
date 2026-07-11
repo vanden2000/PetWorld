@@ -16,10 +16,10 @@ class BlogSeeder extends Seeder
     public function run(): void
     {
         $author = User::updateOrCreate(
-            ['email' => 'admin@petworld.test'],
+            ['email' => 'nguyenthediem2004@gmail.com'],
             [
                 'name' => 'PetWorld Admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('123456'),
                 'role' => 'admin',
                 'status' => 'active',
             ],

@@ -87,7 +87,6 @@
         grid-template-columns: 2fr 1fr;
         gap: 24px;
         align-items: start;
-        margin-bottom: 80px;
     }
 
     .layout-column-main, .layout-column-sidebar {
@@ -505,6 +504,78 @@
         border-color: var(--theme-primary);
     }
 
+    .variant-builder-tools {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .variant-builder-note {
+        color: var(--theme-text-gray);
+        font-size: 0.82rem;
+    }
+
+    .variant-option-picker {
+        display: grid;
+        grid-template-columns: minmax(120px, 0.9fr) minmax(120px, 1fr) auto;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .variant-option-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-height: 28px;
+    }
+
+    .variant-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--theme-primary-light);
+        color: var(--theme-primary);
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        font-weight: 800;
+    }
+
+    .variant-chip button {
+        border: 0;
+        background: none;
+        color: inherit;
+        cursor: pointer;
+        font-size: 0.8rem;
+        padding: 0;
+    }
+
+    .btn-add-variant-row {
+        background: var(--theme-primary);
+        border: 0;
+        border-radius: 6px;
+        color: #ffffff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        padding: 9px 12px;
+    }
+
+    .btn-variant-mini {
+        border: 1px solid var(--theme-border);
+        background: #ffffff;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--theme-text-main);
+        height: 34px;
+        min-width: 34px;
+    }
+
     /* Fixed Actions Bottom Bar */
     .bottom-fixed-actions-bar {
         position: fixed;
@@ -562,7 +633,7 @@
     </div>
 
     <!-- Main Form Grid wrapper -->
-    <form id="product-create-form" action="{{ route('admin.products') }}" method="POST" enctype="multipart/form-data">
+    <form id="product-create-form" action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="create-listing-wrapper">
             
@@ -628,9 +699,9 @@
                                    placeholder="0">
                         </div>
                         <div class="form-control-group no-margin">
-                            <label for="cost_price" class="form-field-label">Giá Vốn (đ)</label>
-                            <input type="number" id="cost_price" name="cost_price" class="input-text-field" step="1000" min="0"
-                                   placeholder="0">
+                            <label for="sale_price" class="form-field-label">Giá khuyến mãi (đ)</label>
+                            <input type="number" id="sale_price" name="sale_price" class="input-text-field" step="1000" min="0"
+                                   placeholder="Không có">
                         </div>
                         <div class="form-control-group no-margin">
                             <label for="quantity" class="form-field-label">Số Lượng Tồn Kho Ban Đầu</label>
@@ -647,29 +718,32 @@
                             <i class="fa-solid fa-sliders"></i>
                             <span>Biến Thể Sản Phẩm</span>
                         </h3>
-                        <button type="button" id="btn-add-attribute" class="btn-add-attribute-rule">
-                            <i class="fa-solid fa-plus"></i> Thêm thuộc tính
+                        <button type="button" id="btn-add-variant-row" class="btn-add-attribute-rule">
+                            <i class="fa-solid fa-plus"></i> Thêm biến thể
                         </button>
                     </div>
 
-                    <div id="attributes-container">
-                        <!-- Instantiated by JS: Attributes settings rows -->
+                    <div class="variant-builder-tools">
+                        <span class="variant-builder-note">Chọn loại biến thể rồi chọn giá trị tương ứng cho từng SKU.</span>
+                        <button type="button" id="btn-add-variant-row-inline" class="btn-add-variant-row">
+                            <i class="fa-solid fa-plus"></i> Thêm dòng
+                        </button>
                     </div>
 
-                    <div id="variants-table-wrapper" style="display: none; overflow-x: auto; margin-top: 20px;">
-                        <span class="form-field-label" style="display: block; margin-bottom: 10px;">Xem trước biến thể được tạo</span>
+                    <div id="variants-table-wrapper" style="overflow-x: auto; margin-top: 10px;">
                         <table class="variants-list-table">
                             <thead>
                                 <tr>
-                                    <th>Biến thể</th>
-                                    <th>Mã SKU</th>
-                                    <th>Giá Bán (đ)</th>
-                                    <th>Tồn Kho</th>
+                                    <th style="min-width: 360px;">Tùy chọn</th>
+                                    <th style="min-width: 150px;">SKU</th>
+                                    <th style="min-width: 120px;">Giá bán</th>
+                                    <th style="min-width: 120px;">Giảm giá</th>
+                                    <th style="min-width: 100px;">Tồn kho</th>
                                     <th style="text-align: center; width: 80px;">Hiển thị</th>
+                                    <th style="width: 52px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="variants-table-body">
-                                <!-- Instantiated dynamically by javascript -->
                             </tbody>
                         </table>
                     </div>
@@ -695,15 +769,6 @@
                     </div>
 
                     <div class="thumbnails-wrap-row" id="upload-thumbnails-preview">
-                        <!-- Mocks seeded display -->
-                        <div class="thumbnail-img-box">
-                            <img src="https://images.unsplash.com/photo-1589924691995-400dc9ecc119?q=80&w=150&auto=format&fit=crop" alt="Pet food photo preview">
-                            <button type="button" class="btn-delete-thumb" onclick="this.closest('.thumbnail-img-box').remove();">&times;</button>
-                        </div>
-                        <div class="thumbnail-img-box">
-                            <img src="https://images.unsplash.com/photo-1548767797-d8c844163c4c?q=80&w=150&auto=format&fit=crop" alt="Cat toys packaging preview">
-                            <button type="button" class="btn-delete-thumb" onclick="this.closest('.thumbnail-img-box').remove();">&times;</button>
-                        </div>
                         <div class="thumbnail-btn-add" onclick="document.getElementById('product-images-input').click();">
                             <i class="fa-solid fa-plus"></i>
                         </div>
@@ -719,8 +784,8 @@
 
                     <div class="form-control-group">
                         <label for="brand_id" class="form-field-label">Thương Hiệu</label>
-                        <select id="brand_id" name="brand_id" class="input-select-field">
-                            <option value="">Không có thương hiệu</option>
+                        <select id="brand_id" name="brand_id" class="input-select-field" required>
+                            <option value="" disabled selected>Chọn thương hiệu</option>
                             @foreach($brands as $brand)
                                 <option value="{{ $brand->id }}">{{ $brand->name }}</option>
                             @endforeach
@@ -783,132 +848,147 @@
             }
         });
 
-        // Dynamic Attributes Generation
-        const attributesContainer = document.getElementById('attributes-container');
-        const btnAddAttribute = document.getElementById('btn-add-attribute');
-        const variantsTableWrapper = document.getElementById('variants-table-wrapper');
+        const variantTypes = @json($variantTypeOptions);
+
+        const btnAddVariant = document.getElementById('btn-add-variant-row');
+        const btnAddVariantInline = document.getElementById('btn-add-variant-row-inline');
         const variantsTableBody = document.getElementById('variants-table-body');
-        
         const baseSkuInput = document.getElementById('sku');
         const basePriceInput = document.getElementById('price');
+        const baseSalePriceInput = document.getElementById('sale_price');
         const baseQtyInput = document.getElementById('quantity');
 
-        let attributeIndex = 0;
+        let variantIndex = 0;
 
-        function updateVariantsTable() {
-            const rows = attributesContainer.querySelectorAll('.attribute-group-card');
-            
-            if (rows.length === 0) {
-                variantsTableWrapper.style.display = 'none';
-                return;
-            }
-
-            // Gather attributes rules
-            let sets = [];
-            rows.forEach(card => {
-                const type = card.querySelector('.input-select-field').value;
-                const optionsString = card.querySelector('.input-text-field').value;
-                const options = optionsString.split(',')
-                    .map(o => o.trim())
-                    .filter(o => o.length > 0);
-                
-                if (options.length > 0) {
-                    sets.push({ type, options });
-                }
-            });
-
-            if (sets.length === 0) {
-                variantsTableWrapper.style.display = 'none';
-                return;
-            }
-
-            // Cartesian product function to combine arrays
-            function cartesian(arrays) {
-                return arrays.reduce((acc, curr) => {
-                    return acc.flatMap(d => curr.options.map(e => ([...d, { type: curr.type, value: e }])));
-                }, [[]]);
-            }
-
-            const combinations = cartesian(sets);
-            variantsTableBody.innerHTML = '';
-            
-            const baseSku = (baseSkuInput.value || 'PW-FOOD').toUpperCase();
-            const basePrice = basePriceInput.value || '49.99';
-            const baseQty = baseQtyInput.value || '150';
-
-            combinations.forEach((combo, index) => {
-                const label = combo.map(c => c.value).join(' - ');
-                const codeSuffix = combo.map(c => c.value.substring(0, 3).toUpperCase()).join('-');
-                const skuCode = `${baseSku}-${codeSuffix}`;
-                
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="font-weight: 700;">${label}</td>
-                    <td><input type="text" name="variants[${index}][sku]" value="${skuCode}" class="cell-input-small"></td>
-                    <td><input type="number" name="variants[${index}][price]" value="${basePrice}" class="cell-input-small" step="1000" min="0"></td>
-                    <td><input type="number" name="variants[${index}][quantity]" value="${baseQty}" class="cell-input-small" min="0"></td>
-                    <td style="text-align: center;">
-                        <input type="checkbox" name="variants[${index}][visible]" value="1" checked style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
-                    </td>
-                `;
-                variantsTableBody.appendChild(tr);
-            });
-
-            variantsTableWrapper.style.display = combosCount() > 0 ? 'block' : 'none';
+        function typeOptions() {
+            return variantTypes
+                .map(type => `<option value="${type.id}">${type.name}</option>`)
+                .join('');
         }
 
-        function combosCount() {
-            const rows = attributesContainer.querySelectorAll('.attribute-group-card');
-            let count = 0;
-            rows.forEach(card => {
-                const optLength = card.querySelector('.input-text-field').value.split(',').map(o => o.trim()).filter(o => o.length > 0).length;
-                if (optLength > 0) count++;
-            });
-            return count;
+        function valueOptions(typeId, selectedIds = []) {
+            const type = variantTypes.find(item => String(item.id) === String(typeId)) || variantTypes[0];
+            if (!type) return '';
+
+            return type.values
+                .map(value => `<option value="${value.id}" ${selectedIds.includes(Number(value.id)) ? 'selected' : ''}>${value.value}</option>`)
+                .join('');
         }
 
-        // Add Attribute listener
-        btnAddAttribute.addEventListener('click', function() {
-            const idx = attributeIndex++;
-            const card = document.createElement('div');
-            card.className = 'attribute-group-card';
-            card.innerHTML = `
-                <div class="form-control-group no-margin">
-                    <label class="form-field-label">Loại thuộc tính</label>
-                    <select class="input-select-field js-attr-type">
-                        <option value="Size">Kích thước</option>
-                        <option value="Color">Màu sắc</option>
-                        <option value="Packing">Quy cách</option>
-                        <option value="Flavor">Hương vị</option>
-                    </select>
-                </div>
-                <div class="form-control-group no-margin">
-                    <label class="form-field-label">Tùy chọn (cách nhau bởi dấu phẩy)</label>
-                    <input type="text" class="input-text-field js-attr-options" placeholder="VD: Nhỏ, Vừa, Lớn">
-                </div>
-                <button type="button" class="btn-delete-attribute-row js-btn-delete-row" title="Xóa thuộc tính">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
+        function findValue(valueId) {
+            for (const type of variantTypes) {
+                const value = type.values.find(item => Number(item.id) === Number(valueId));
+                if (value) return { type, value };
+            }
+
+            return null;
+        }
+
+        function renderChips(row, selectedIds) {
+            const chips = row.querySelector('.variant-option-chips');
+            const hidden = row.querySelector('.variant-hidden-values');
+            chips.innerHTML = '';
+            hidden.innerHTML = '';
+
+            selectedIds.forEach(valueId => {
+                const found = findValue(valueId);
+                if (!found) return;
+
+                const chip = document.createElement('span');
+                chip.className = 'variant-chip';
+                chip.innerHTML = `${found.type.name}: ${found.value.value} <button type="button" data-value-id="${valueId}">&times;</button>`;
+                chips.appendChild(chip);
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `variants[${row.dataset.index}][value_ids][]`;
+                input.value = valueId;
+                hidden.appendChild(input);
+            });
+        }
+
+        function addVariantRow(initial = {}) {
+            const index = variantIndex++;
+            const selectedIds = (initial.value_ids || []).map(Number);
+            const firstTypeId = variantTypes[0]?.id || '';
+            const row = document.createElement('tr');
+            row.dataset.index = index;
+            row.dataset.selectedIds = JSON.stringify(selectedIds);
+
+            const sku = initial.sku || (baseSkuInput.value ? `${baseSkuInput.value.toUpperCase()}-${index + 1}` : '');
+            const price = initial.price ?? basePriceInput.value ?? '';
+            const salePrice = initial.sale_price ?? baseSalePriceInput.value ?? '';
+            const quantity = initial.quantity ?? baseQtyInput.value ?? '';
+            const active = initial.status ? initial.status === 'active' : true;
+
+            row.innerHTML = `
+                <td>
+                    <input type="hidden" name="variants[${index}][id]" value="${initial.id || ''}">
+                    <div class="variant-option-picker">
+                        <select class="cell-input-small js-variant-type">${typeOptions()}</select>
+                        <select class="cell-input-small js-variant-value">${valueOptions(firstTypeId)}</select>
+                        <button type="button" class="btn-variant-mini js-add-option" title="Thêm tùy chọn"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="variant-option-chips"></div>
+                    <div class="variant-hidden-values"></div>
+                </td>
+                <td><input type="text" name="variants[${index}][sku]" value="${sku}" class="cell-input-small" required></td>
+                <td><input type="number" name="variants[${index}][price]" value="${price}" class="cell-input-small" step="1000" min="0" required></td>
+                <td><input type="number" name="variants[${index}][sale_price]" value="${salePrice || ''}" class="cell-input-small" step="1000" min="0"></td>
+                <td><input type="number" name="variants[${index}][quantity]" value="${quantity}" class="cell-input-small" min="0" required></td>
+                <td style="text-align: center;"><input type="checkbox" name="variants[${index}][visible]" value="1" ${active ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;"></td>
+                <td><button type="button" class="btn-variant-mini js-remove-variant" title="Xóa dòng"><i class="fa-solid fa-trash-can"></i></button></td>
             `;
-            
-            attributesContainer.appendChild(card);
-            
-            // Wire listeners to regenerate table on change
-            card.querySelector('.js-attr-type').addEventListener('change', updateVariantsTable);
-            card.querySelector('.js-attr-options').addEventListener('input', updateVariantsTable);
-            
-            card.querySelector('.js-btn-delete-row').addEventListener('click', function() {
-                card.remove();
-                updateVariantsTable();
-            });
 
-            updateVariantsTable();
+            variantsTableBody.appendChild(row);
+            renderChips(row, selectedIds);
+        }
+
+        function selectedIdsFor(row) {
+            return JSON.parse(row.dataset.selectedIds || '[]');
+        }
+
+        variantsTableBody.addEventListener('change', function(event) {
+            if (!event.target.classList.contains('js-variant-type')) return;
+
+            const row = event.target.closest('tr');
+            const valueSelect = row.querySelector('.js-variant-value');
+            valueSelect.innerHTML = valueOptions(event.target.value, selectedIdsFor(row));
         });
 
-        // Regenerate on base specs inputs
-        baseSkuInput.addEventListener('input', updateVariantsTable);
-        basePriceInput.addEventListener('input', updateVariantsTable);
-        baseQtyInput.addEventListener('input', updateVariantsTable);
+        variantsTableBody.addEventListener('click', function(event) {
+            const row = event.target.closest('tr');
+            if (!row) return;
+
+            if (event.target.closest('.js-add-option')) {
+                const valueId = Number(row.querySelector('.js-variant-value').value);
+                const ids = selectedIdsFor(row);
+
+                if (valueId && !ids.includes(valueId)) {
+                    ids.push(valueId);
+                    row.dataset.selectedIds = JSON.stringify(ids);
+                    renderChips(row, ids);
+                }
+            }
+
+            if (event.target.closest('.variant-chip button')) {
+                const valueId = Number(event.target.closest('button').dataset.valueId);
+                const ids = selectedIdsFor(row).filter(id => id !== valueId);
+                row.dataset.selectedIds = JSON.stringify(ids);
+                renderChips(row, ids);
+            }
+
+            if (event.target.closest('.js-remove-variant')) {
+                row.remove();
+            }
+        });
+
+        btnAddVariant.addEventListener('click', () => addVariantRow());
+        btnAddVariantInline.addEventListener('click', () => addVariantRow());
+
+        if (variantTypes.length > 0) {
+            addVariantRow();
+        }
 
         // Preview images upload
         const imagesInput = document.getElementById('product-images-input');

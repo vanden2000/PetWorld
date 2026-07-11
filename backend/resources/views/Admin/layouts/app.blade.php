@@ -134,9 +134,9 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="menu-item-link">
+                    <a href="{{ route('admin.account.edit') }}" class="menu-item-link {{ request()->routeIs('admin.account.*') ? 'active' : '' }}">
                         <i class="fa-solid fa-gear"></i>
-                        <span>Cài Đặt</span>
+                        <span>Tài khoản admin</span>
                     </a>
                 </li>
             </ul>
@@ -166,28 +166,65 @@
             </div>
             
             <div class="header-right">
-                <a href="#" class="header-icon-btn">
-                    <i class="fa-regular fa-bell"></i>
-                    <span class="badge-dot"></span>
-                </a>
+                <div class="notification-menu">
+                    <button type="button" class="header-icon-btn">
+                        <i class="fa-regular fa-bell"></i>
+                        @if(($adminNotificationsTotal ?? 0) > 0)
+                            <span class="badge-dot"></span>
+                            <span class="notification-count">{{ $adminNotificationsTotal > 99 ? '99+' : $adminNotificationsTotal }}</span>
+                        @endif
+                    </button>
+                    <div class="notification-dropdown">
+                        <div class="notification-dropdown-header">
+                            <strong>Thông báo</strong>
+                            <span>{{ $adminNotificationsTotal ?? 0 }} mới</span>
+                        </div>
+                        @foreach(($adminNotifications ?? []) as $notification)
+                            <a href="{{ $notification['url'] }}" class="notification-item">
+                                <span class="notification-item-icon">
+                                    <i class="{{ $notification['icon'] }}"></i>
+                                </span>
+                                <span class="notification-item-text">{{ $notification['label'] }}</span>
+                                <strong>{{ $notification['count'] }}</strong>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
                 <a href="#" class="header-icon-btn">
                     <i class="fa-regular fa-circle-question"></i>
-                </a>
-                <a href="#" class="support-link">
-                    <span>Support</span>
                 </a>
                 
                 <div class="divider-vertical"></div>
                 
-                <a href="#" class="profile-menu">
-                    <!-- Default stock profile picture style using initial letter or avatar -->
-                    <img src="{{ Auth::user() && Auth::user()->avatar ? (str_contains(Auth::user()->avatar, '://') ? Auth::user()->avatar : asset('storage/' . Auth::user()->avatar)) : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop' }}" alt="Admin Avatar" class="profile-avatar">
-                    <div class="profile-details">
-                        <span class="profile-name">{{ Auth::user() ? Auth::user()->name : 'Admin' }}</span>
-                        <span class="profile-role">{{ Auth::user() && Auth::user()->role === 'admin' ? 'Quản trị viên' : 'Quản lý' }}</span>
+                @php
+                    $adminUser = Auth::user();
+                    $adminAvatar = $adminUser && $adminUser->avatar
+                        ? (str_contains($adminUser->avatar, '://') ? $adminUser->avatar : asset('storage/' . $adminUser->avatar))
+                        : asset('image/logo/logo.png');
+                @endphp
+                <div class="profile-dropdown">
+                    <button type="button" class="profile-menu">
+                        <img src="{{ $adminAvatar }}" alt="Admin Avatar" class="profile-avatar">
+                        <div class="profile-details">
+                            <span class="profile-name">{{ $adminUser?->name ?? 'Admin' }}</span>
+                            <span class="profile-role">Admin đang đăng nhập</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; color: var(--text-muted); margin-left: 4px;"></i>
+                    </button>
+                    <div class="profile-dropdown-menu">
+                        <a href="{{ route('admin.account.edit') }}" class="profile-dropdown-item">
+                            <i class="fa-regular fa-user"></i>
+                            <span>Quản lý tài khoản</span>
+                        </a>
+                        <form action="{{ route('admin.logout') }}" method="POST" id="logout-form">
+                            @csrf
+                            <button type="submit" class="profile-dropdown-item profile-logout-btn">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span>Đăng xuất</span>
+                            </button>
+                        </form>
                     </div>
-                    <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; color: var(--text-muted); margin-left: 4px;"></i>
-                </a>
+                </div>
             </div>
         </header>
 

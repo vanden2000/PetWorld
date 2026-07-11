@@ -547,6 +547,190 @@
             width: 100%;
         }
     }
+
+    /* Ecommerce admin polish */
+    .product-header-container {
+        align-items: flex-start;
+        gap: 18px;
+        margin-bottom: 18px;
+    }
+
+    .product-header-container h1 {
+        font-size: 1.55rem;
+        letter-spacing: 0;
+        line-height: 1.2;
+    }
+
+    .header-action-buttons {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .btn-export-data,
+    .btn-add-product-new,
+    .btn-filter-submit {
+        min-height: 40px;
+        white-space: nowrap;
+    }
+
+    .filter-card-wrapper,
+    .products-table-card {
+        border-radius: 8px;
+        box-shadow: none;
+    }
+
+    .filter-card-wrapper {
+        padding: 16px;
+        margin-bottom: 18px;
+    }
+
+    .filter-grid-form {
+        grid-template-columns: minmax(260px, 1.8fr) minmax(180px, 1fr) minmax(180px, 1fr) auto;
+        gap: 12px;
+    }
+
+    .filter-input-element {
+        gap: 6px;
+    }
+
+    .field-input-box,
+    .field-select-box {
+        min-height: 40px;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .tbl-products {
+        min-width: 1080px;
+    }
+
+    .tbl-products th {
+        padding: 12px 14px;
+        white-space: nowrap;
+    }
+
+    .tbl-products td {
+        padding: 13px 14px;
+    }
+
+    .product-thumbnail-img {
+        width: 56px;
+        height: 56px;
+    }
+
+    .product-title-bold {
+        font-size: 0.92rem;
+    }
+
+    .product-desc-muted,
+    .sku-badge-variants,
+    .variant-sku-gray {
+        line-height: 1.35;
+    }
+
+    .category-pill-badge,
+    .variant-qty-badge {
+        border-radius: 6px;
+        line-height: 1.45;
+    }
+
+    .status-badge-cell {
+        border-radius: 999px;
+        background: #f9fafb;
+        width: fit-content;
+    }
+
+    .status-success-text {
+        background: rgba(22, 163, 74, 0.1);
+    }
+
+    .status-warning-text {
+        background: rgba(245, 158, 11, 0.12);
+    }
+
+    .status-danger-text {
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .action-icon-cell {
+        gap: 8px;
+    }
+
+    .btn-action-tool {
+        width: 34px;
+        height: 34px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+    }
+
+    .btn-action-tool:hover {
+        background: var(--theme-primary-light);
+        border-color: rgba(255, 120, 45, 0.18);
+        color: var(--theme-primary);
+        transform: none;
+    }
+
+    .btn-action-tool-delete:hover {
+        background: #fef2f2;
+        border-color: rgba(239, 68, 68, 0.18);
+        color: var(--theme-danger);
+    }
+
+    .variant-drawer-row {
+        background: #fbfcfd;
+    }
+
+    .variant-drawer-inner {
+        padding: 14px 18px 18px;
+        border-top: 1px solid var(--theme-border);
+        border-bottom: 1px solid var(--theme-border);
+    }
+
+    .variants-grid-list {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+
+    .variant-item-box {
+        align-items: flex-start;
+        border-radius: 8px;
+        gap: 12px;
+        min-height: 74px;
+    }
+
+    .variant-options-label {
+        line-height: 1.35;
+    }
+
+    .products-pagination-container {
+        padding: 14px 16px;
+    }
+
+    @media (max-width: 960px) {
+        .product-header-container {
+            flex-direction: column;
+        }
+
+        .header-action-buttons {
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .filter-grid-form {
+            grid-template-columns: 1fr;
+        }
+
+        .btn-filter-submit {
+            grid-column: auto;
+        }
+
+        .products-pagination-container {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 12px;
+        }
+    }
 </style>
 @endsection
 
@@ -664,17 +848,22 @@
                                     <div class="product-info-cell">
                                         <!-- Primary Image resolution -->
                                         @php
-                                            $imageUrl = 'https://placehold.co/80x80?text=PetWorld';
-                                            if ($product->primaryImage) {
-                                                $imageUrl = str_contains($product->primaryImage->image_url, '://') 
-                                                    ? $product->primaryImage->image_url 
-                                                    : asset('storage/' . $product->primaryImage->image_url);
-                                            } elseif ($product->images->first()) {
-                                                $imageUrl = str_contains($product->images->first()->image_url, '://')
-                                                    ? $product->images->first()->image_url
-                                                    : asset('storage/' . $product->images->first()->image_url);
-                                            }
-                                        @endphp
+    $imageUrl = 'https://placehold.co/80x80?text=PetWorld';
+
+    $image = $product->primaryImage ?? $product->images->first();
+
+    if ($image?->image_url) {
+        $path = ltrim($image->image_url, '/');
+
+        if (str_contains($path, '://')) {
+            $imageUrl = $path;
+        } elseif (str_starts_with($path, 'storage/')) {
+            $imageUrl = asset($path);
+        } else {
+            $imageUrl = asset('storage/' . $path);
+        }
+    }
+@endphp
                                         <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="product-thumbnail-img">
                                         <div class="product-text-details">
                                             <span class="product-title-bold">{{ $product->name }}</span>
