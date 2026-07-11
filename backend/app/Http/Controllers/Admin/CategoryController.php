@@ -18,13 +18,7 @@ class CategoryController extends Controller
 
     public function create()
     {
-        $parentCategories = Category::query()
-            
-            ->where('status', 'active')
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        return view('admin.categories.create', compact('parentCategories'));
+        return view('admin.categories.create');
     }
 
     public function store(Request $request)
@@ -56,13 +50,7 @@ class CategoryController extends Controller
     public function edit($id)
     {
         $category = Category::findOrFail($id);
-        $parentCategories = Category::query()
-            ->where('status', 'active')
-            ->whereKeyNot($category->id)
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        return view('admin.categories.edit', compact('category', 'parentCategories'));
+        return view('admin.categories.edit', compact('category'));
     }
 
     public function update(Request $request, $id)
@@ -77,7 +65,7 @@ class CategoryController extends Controller
             'status' => 'required|in:active,draft',
         ]);
 
-        $data = $request->only(['name', 'slug', 'description', 'parent_id', 'status', 'meta_title', 'meta_description', 'meta_keywords']);
+        $data = $request->only(['name', 'slug', 'description', 'status']);
 
         if ($request->hasFile('image')) {
             // Dùng cùng quy ước với lúc tạo để frontend chỉ cần một cách dựng URL.
