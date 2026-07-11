@@ -5093,8 +5093,49 @@ body {
   .products-grid-5,
   .products-grid-4,
   .products-grid-3 {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .product-card {
+    padding: 12px;
+    min-height: 310px;
+    border-radius: 12px;
+  }
+  .product-img-wrapper {
+    height: 120px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+  }
+  .price-current {
+    font-size: 15px;
+  }
+  .price-old {
+    font-size: 11px;
+  }
+  .product-title {
+    font-size: 13.5px;
+    height: 38px;
+    margin-bottom: 8px;
+  }
+  .product-wishlist-btn {
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+  }
+  .product-wishlist-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  .product-badge {
+    top: 8px;
+    left: 8px;
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  .product-add-btn {
+    width: 32px;
+    height: 32px;
   }
 
   /* Shop CTA Banner vertical stacking on mobile */
@@ -5186,6 +5227,9 @@ body {
 }
 
 /* Sidebar bộ lọc */
+.shop-sidebar-toggle {
+  display: none;
+}
 .shop-sidebar {
   background-color: #ffffff;
   border: 1px solid #eef1f5;
@@ -5483,9 +5527,42 @@ body {
 @media (max-width: 900px) {
   .shop-layout {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   .shop-sidebar {
     position: static;
+    padding: 16px 20px;
+    border-radius: 12px;
+  }
+  .shop-sidebar-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--primary-orange);
+    font-size: 16px;
+    font-weight: 800;
+    padding: 6px 0;
+  }
+  .shop-sidebar-toggle-text {
+    display: inline-flex;
+    align-items: center;
+  }
+  .shop-sidebar-toggle-arrow {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .shop-sidebar-content {
+    display: none;
+    margin-top: 16px;
+    border-top: 1px solid #eef1f5;
+    padding-top: 16px;
+  }
+  .shop-sidebar.is-open .shop-sidebar-content {
+    display: block;
   }
 }
 
@@ -5493,8 +5570,10 @@ body {
   .shop-toolbar {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
 }
+
 
 /* ============================================================
    Trang Chi tiết sản phẩm (/shop/[slug])
@@ -6047,6 +6126,26 @@ body {
   }
   .pd-actions {
     flex-wrap: wrap;
+    gap: 12px;
+  }
+  .pd-qty {
+    order: 1;
+    flex: 1;
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+  }
+  .pd-wishlist-btn {
+    order: 2;
+    height: 53px;
+  }
+  .pd-add-btn {
+    order: 3;
+    flex: 0 0 100%;
+    width: 100%;
+    justify-content: center;
+    min-height: 50px;
   }
 }
 
