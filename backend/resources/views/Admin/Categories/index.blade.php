@@ -56,7 +56,6 @@
                         <th>STT</th>
                         <th>Ảnh</th>
                         <th>TÊN DANH MỤC</th>
-                        <th>DANH MỤC CHA</th>
                         <th>SLUG</th>
                         <th>SẢN PHẨM</th>
                         <th>TRẠNG THÁI</th>
@@ -80,19 +79,9 @@
                                 @endif
                             </td>
                             <td>
-                                @if($category->parent_id)
-                                    <span style="color: var(--text-muted); font-size: 0.8rem;">— </span>
-                                @endif
                                 <strong style="color: var(--text-main);">{{ $category->name }}</strong>
                             </td>
-                            <td>
-                                @if($category->parent)
-                                    <span class="badge-count"
-                                        style="background-color: var(--primary-light); color: var(--primary); padding: 4px 8px; border-radius: 4px;">{{ $category->parent->name }}</span>
-                                @else
-                                    <span style="color: var(--text-muted); font-size: 0.85rem;">Danh mục gốc</span>
-                                @endif
-                            </td>
+
                             <td><span class="slug-text">{{ $category->slug }}</span></td>
                             <td>
                                 <span class="badge-count">{{ $category->products ? $category->products->count() : 0 }}</span>
