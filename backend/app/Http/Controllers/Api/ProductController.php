@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductSlugHistory;
 use App\Models\ProductVariant;
 use App\Models\Review;
 use App\Models\VariantValue;
@@ -15,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -53,23 +55,41 @@ class ProductController extends Controller
     }
 
     public function show(Request $request, string $slug): JsonResponse
-    {   
-        
+    {
         $userId = $this->authenticatedUserId($request);
         $product = $this->baseProductQuery($userId)
             ->with(['images', 'variants.variantValues.variantType'])
             ->where('slug', $slug)
-            ->firstOrFail();
+            ->first();
+        $redirectSlug = null;
+
+        if (!$product) {
+            $productId = ProductSlugHistory::query()
+                ->where('slug', $slug)
+                ->value('product_id');
+
+            if ($productId) {
+                $product = $this->baseProductQuery($userId)
+                    ->with(['images', 'variants.variantValues.variantType'])
+                    ->whereKey($productId)
+                    ->first();
+                $redirectSlug = $product?->slug;
+            }
+        }
+
+        abort_if(!$product, 404);
 
         $this->recordProductView($product);
 
         return response()->json([
             'data' => [
+                'redirect_slug' => $redirectSlug,
+                'seo' => $this->formatSeo($product),
                 'breadcrumb' => [
                     ['label' => 'Trang chủ', 'url' => '/'],
                     ['label' => 'Cửa hàng', 'url' => '/shop'],
-                    ['label' => $product->category?->name, 'url' => $product->category ? '/shop?category='.$product->category->slug : null],
-                    ['label' => $product->name, 'url' => '/shop/'.$product->slug],
+                    ['label' => $product->category?->name, 'url' => $product->category ? '/shop?category=' . $product->category->slug : null],
+                    ['label' => $product->name, 'url' => '/shop/' . $product->slug],
                 ],
                 'product' => $this->formatProductDetail($product),
                 'reviews' => $this->formatReviews($product),
@@ -97,7 +117,7 @@ class ProductController extends Controller
         $products = $this->baseProductQuery($this->authenticatedUserId($request))
             ->whereIn('slug', $slugs)
             ->get()
-            ->sortBy(fn (Product $product): int => $positions[$product->slug] ?? PHP_INT_MAX)
+            ->sortBy(fn(Product $product): int => $positions[$product->slug] ?? PHP_INT_MAX)
             ->values();
 
         return response()->json([
@@ -117,12 +137,12 @@ class ProductController extends Controller
             ->with(['brand', 'category', 'primaryImage', 'variants'])
             ->withCount('wishlists')
             ->where('status', 'active')
-            ->whereHas('variants', fn (Builder $query) => $query->where('status', 'active'));
+            ->whereHas('variants', fn(Builder $query) => $query->where('status', 'active'));
 
         if ($userId !== null) {
             // Gắn trạng thái wishlist ngay trong query chính để tránh một query cho mỗi sản phẩm.
             $query->withExists([
-                'wishlists as is_wishlisted' => fn (Builder $wishlist) => $wishlist->where('user_id', $userId),
+                'wishlists as is_wishlisted' => fn(Builder $wishlist) => $wishlist->where('user_id', $userId),
             ]);
         }
 
@@ -138,21 +158,21 @@ class ProductController extends Controller
                 $query->where('name', 'like', "%{$keyword}%")
                     ->orWhere('slug', 'like', "%{$keyword}%")
                     ->orWhere('description', 'like', "%{$keyword}%")
-                    ->orWhereHas('brand', fn (Builder $brand) => $brand->where('name', 'like', "%{$keyword}%"))
-                    ->orWhereHas('category', fn (Builder $category) => $category->where('name', 'like', "%{$keyword}%"));
+                    ->orWhereHas('brand', fn(Builder $brand) => $brand->where('name', 'like', "%{$keyword}%"))
+                    ->orWhereHas('category', fn(Builder $category) => $category->where('name', 'like', "%{$keyword}%"));
             });
         }
 
         if ($request->filled('category')) {
             $categorySlugs = $this->csvValues($request->query('category'));
 
-            $query->whereHas('category', fn (Builder $category) => $category->whereIn('slug', $categorySlugs));
+            $query->whereHas('category', fn(Builder $category) => $category->whereIn('slug', $categorySlugs));
         }
 
         if ($request->filled('brand')) {
             $brandSlugs = $this->csvValues($request->query('brand'));
 
-            $query->whereHas('brand', fn (Builder $brand) => $brand->whereIn('slug', $brandSlugs));
+            $query->whereHas('brand', fn(Builder $brand) => $brand->whereIn('slug', $brandSlugs));
         }
 
         if ($request->filled('min_price') || $request->filled('max_price')) {
@@ -188,17 +208,17 @@ class ProductController extends Controller
         return $products
             ->map(function (Product $product): array {
                 $activeVariants = $product->variants->where('status', 'active');
-                $regularPrices = $activeVariants->pluck('price')->map(fn (string $price): float => (float) $price);
+                $regularPrices = $activeVariants->pluck('price')->map(fn(string $price): float => (float) $price);
                 $salePrices = $activeVariants
-                    ->filter(fn (ProductVariant $variant): bool => $variant->hasValidSalePrice())
+                    ->filter(fn(ProductVariant $variant): bool => $variant->hasValidSalePrice())
                     ->pluck('sale_price')
-                    ->map(fn (string $price): float => (float) $price);
-                $effectivePrices = $activeVariants->map(fn (ProductVariant $variant): float => $variant->effectivePrice());
+                    ->map(fn(string $price): float => (float) $price);
+                $effectivePrices = $activeVariants->map(fn(ProductVariant $variant): float => $variant->effectivePrice());
 
                 // Biến thể rẻ nhất theo giá hiệu lực = giá hiển thị; giá gạch chỉ có
                 // khi chính biến thể đó đang giảm (ghép đúng cặp, tránh lệch giá gốc/giá sale).
                 $displayVariant = $activeVariants
-                    ->sortBy(fn (ProductVariant $variant): float => $variant->effectivePrice())
+                    ->sortBy(fn(ProductVariant $variant): float => $variant->effectivePrice())
                     ->first();
                 $displayPrice = $displayVariant?->effectivePrice();
                 $compareAtPrice = $displayVariant?->hasValidSalePrice()
@@ -210,6 +230,7 @@ class ProductController extends Controller
                     'name' => $product->name,
                     'slug' => $product->slug,
                     'image' => $product->primaryImage?->image_url,
+                    'image_alt' => $product->primaryImage?->alt_text ?: $product->name,
                     'category' => $product->category ? [
                         'id' => $product->category->id,
                         'name' => $product->category->name,
@@ -254,24 +275,25 @@ class ProductController extends Controller
             'short_description' => $product->short_description,
             'view_count' => $product->view_count,
             'images' => $product->images
-                ->sortByDesc('is_primary')
                 ->values()
-                ->map(fn ($image): array => [
+                ->map(fn($image, int $index): array => [
                     'id' => $image->id,
                     'image_url' => $image->image_url,
+                    'alt_text' => $image->alt_text ?: $product->name . ($index > 0 ? ' - ảnh ' . ($index + 1) : ''),
+                    'sort_order' => (int) $image->sort_order,
                     'is_primary' => (bool) $image->is_primary,
                 ])
                 ->all(),
             'variants' => $activeVariants
                 ->values()
-                ->map(fn ($variant): array => [
+                ->map(fn($variant): array => [
                     'id' => $variant->id,
                     'sku' => $variant->sku,
                     'name' => $variant->display_name,
                     'options' => $variant->variantValues
                         ->sortBy('variant_type_id')
                         ->values()
-                        ->map(fn (VariantValue $value): array => [
+                        ->map(fn(VariantValue $value): array => [
                             'type_id' => $value->variant_type_id,
                             'type_name' => $value->variantType->name,
                             'value_id' => $value->id,
@@ -288,16 +310,31 @@ class ProductController extends Controller
         ]);
     }
 
+    private function formatSeo(Product $product): array
+    {
+        $fallbackDescription = Str::limit(
+            Str::squish(strip_tags((string) ($product->short_description ?: $product->description))),
+            160,
+            '',
+        );
+
+        return [
+            'title' => $product->seo_title ?: $product->name . ' | PetWorld',
+            'description' => $product->seo_description ?: $fallbackDescription,
+            'canonical_url' => '/shop/' . $product->slug,
+        ];
+    }
+
     private function formatReviews(Product $product): array
     {
         return Review::query()
             ->with(['user', 'orderItem.productVariant.variantValues.variantType'])
             ->where('status', 'approved')
-            ->whereHas('orderItem.productVariant', fn (Builder $query) => $query->where('product_id', $product->id))
+            ->whereHas('orderItem.productVariant', fn(Builder $query) => $query->where('product_id', $product->id))
             ->latest()
             ->limit(10)
             ->get()
-            ->map(fn (Review $review): array => [
+            ->map(fn(Review $review): array => [
                 'id' => $review->id,
                 'rating' => $review->rating,
                 'comment' => $review->comment,
@@ -359,10 +396,12 @@ class ProductController extends Controller
                 'numeric',
                 'min:0',
                 function (string $attribute, mixed $value, \Closure $fail) use ($request): void {
-                    if ($request->filled('min_price')
+                    if (
+                        $request->filled('min_price')
                         && is_numeric($value)
                         && is_numeric($request->query('min_price'))
-                        && (float) $value < (float) $request->query('min_price')) {
+                        && (float) $value < (float) $request->query('min_price')
+                    ) {
                         $fail('Giá tối đa phải lớn hơn hoặc bằng giá tối thiểu.');
                     }
                 },
@@ -388,7 +427,7 @@ class ProductController extends Controller
     private function listQueryRule(int $maxItems, int $maxItemLength): \Closure
     {
         return function (string $attribute, mixed $value, \Closure $fail) use ($maxItemLength, $maxItems): void {
-            if (! is_string($value) && ! is_array($value)) {
+            if (!is_string($value) && !is_array($value)) {
                 $fail("{$attribute} phải là chuỗi hoặc mảng.");
 
                 return;
@@ -403,7 +442,7 @@ class ProductController extends Controller
             }
 
             foreach ($items as $item) {
-                if (! is_string($item) || mb_strlen(trim($item)) > $maxItemLength) {
+                if (!is_string($item) || mb_strlen(trim($item)) > $maxItemLength) {
                     $fail("Mỗi giá trị của {$attribute} không được vượt quá {$maxItemLength} ký tự.");
 
                     return;
@@ -423,11 +462,11 @@ class ProductController extends Controller
         return [
             'categories' => Category::query()
                 ->withCount([
-                    'products as product_count' => fn (Builder $products) => $this->onlyStorefrontProducts($products),
+                    'products as product_count' => fn(Builder $products) => $this->onlyStorefrontProducts($products),
                 ])
                 ->orderBy('id')
                 ->get(['id', 'name', 'slug', 'image'])
-                ->map(fn (Category $category): array => [
+                ->map(fn(Category $category): array => [
                     'id' => $category->id,
                     'name' => $category->name,
                     'slug' => $category->slug,
@@ -437,11 +476,11 @@ class ProductController extends Controller
                 ->all(),
             'brands' => Brand::query()
                 ->withCount([
-                    'products as product_count' => fn (Builder $products) => $this->onlyStorefrontProducts($products),
+                    'products as product_count' => fn(Builder $products) => $this->onlyStorefrontProducts($products),
                 ])
                 ->orderBy('id')
                 ->get(['id', 'name', 'slug', 'image'])
-                ->map(fn (Brand $brand): array => [
+                ->map(fn(Brand $brand): array => [
                     'id' => $brand->id,
                     'name' => $brand->name,
                     'slug' => $brand->slug,
@@ -457,7 +496,7 @@ class ProductController extends Controller
                     ->whereNull('product_variants.deleted_at')
                     ->where('products.status', 'active')
                     ->whereNull('products.deleted_at')
-                    ->selectRaw('MAX('.ProductVariant::effectivePriceExpression().') as max_price')
+                    ->selectRaw('MAX(' . ProductVariant::effectivePriceExpression() . ') as max_price')
                     ->value('max_price') ?? 0),
             ],
         ];
@@ -468,7 +507,7 @@ class ProductController extends Controller
         // Bộ lọc phải đếm đúng cùng tập sản phẩm mà API danh sách có thể trả về.
         return $products
             ->where('status', 'active')
-            ->whereHas('variants', fn (Builder $variants) => $variants->where('status', 'active'));
+            ->whereHas('variants', fn(Builder $variants) => $variants->where('status', 'active'));
     }
 
     private function sortOptions(): array
@@ -505,7 +544,7 @@ class ProductController extends Controller
         $values = is_array($value) ? $value : explode(',', (string) $value);
 
         return collect($values)
-            ->map(fn (mixed $item): string => trim((string) $item))
+            ->map(fn(mixed $item): string => trim((string) $item))
             ->filter()
             ->unique()
             ->values()
@@ -514,9 +553,9 @@ class ProductController extends Controller
 
     private function minEffectivePriceSubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('product_variants')
-            ->selectRaw('MIN('.ProductVariant::effectivePriceExpression().')')
+            ->selectRaw('MIN(' . ProductVariant::effectivePriceExpression() . ')')
             ->whereColumn('product_variants.product_id', 'products.id')
             ->where('product_variants.status', 'active')
             ->whereNull('product_variants.deleted_at');
@@ -524,9 +563,9 @@ class ProductController extends Controller
 
     private function maxEffectivePriceSubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('product_variants')
-            ->selectRaw('MAX('.ProductVariant::effectivePriceExpression().')')
+            ->selectRaw('MAX(' . ProductVariant::effectivePriceExpression() . ')')
             ->whereColumn('product_variants.product_id', 'products.id')
             ->where('product_variants.status', 'active')
             ->whereNull('product_variants.deleted_at');
@@ -534,7 +573,7 @@ class ProductController extends Controller
 
     private function saleVariantCountSubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('product_variants')
             ->selectRaw('COUNT(*)')
             ->whereColumn('product_variants.product_id', 'products.id')
@@ -546,7 +585,7 @@ class ProductController extends Controller
 
     private function ratingAverageSubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('reviews')
             ->join('order_items', 'reviews.order_item_id', '=', 'order_items.id')
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')
@@ -557,7 +596,7 @@ class ProductController extends Controller
 
     private function ratingCountSubquery(): \Closure
     {
-        return fn ($query) => $query
+        return fn($query) => $query
             ->from('reviews')
             ->join('order_items', 'reviews.order_item_id', '=', 'order_items.id')
             ->join('product_variants', 'order_items.product_variant_id', '=', 'product_variants.id')

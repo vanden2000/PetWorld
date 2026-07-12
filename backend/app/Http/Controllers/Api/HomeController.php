@@ -50,7 +50,7 @@ class HomeController extends Controller
                 ->get();
 
             $newAccessories = $this->productCardQuery()
-                ->whereHas('category', fn ($query) => $query->where('slug', 'phu-kien'))
+                ->whereHas('category', fn($query) => $query->where('slug', 'phu-kien'))
                 ->orderByDesc('id')
                 ->limit(8)
                 ->get();
@@ -155,6 +155,7 @@ class HomeController extends Controller
                     'name' => $product->name,
                     'slug' => $product->slug,
                     'image' => $product->primaryImage?->image_url,
+                    'image_alt' => $product->primaryImage?->alt_text ?: $product->name,
                     'default_variant_id' => $displayVariant?->id,
                     'category' => $product->category ? [
                         'id' => $product->category->id,
@@ -302,7 +303,7 @@ class HomeController extends Controller
             'recent_product_ids' => [
                 'nullable',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (! is_string($value) && ! is_array($value)) {
+                    if (!is_string($value) && !is_array($value)) {
                         $fail('Danh sách sản phẩm đã xem phải là chuỗi hoặc mảng.');
 
                         return;

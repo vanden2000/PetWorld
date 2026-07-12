@@ -50,7 +50,7 @@ export default function ProductCard({
       <Link href={href} className="product-img-wrapper">
         <img
           src={resolveProductImage(product.image)}
-          alt={product.name}
+          alt={product.image_alt || product.name}
           className="product-img"
           loading="lazy"
           decoding="async"

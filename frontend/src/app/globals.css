@@ -238,12 +238,18 @@ body {
     box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Khi cuộn trang, làm nhỏ padding của navbar để tiết kiệm không gian và thêm đổ bóng nhẹ */
+/* Khi cuộn trang, làm nhỏ padding dọc và làm trong suốt hoàn toàn nền/độ mờ ở 2 bên */
 .header-wrapper.scrolled .navbar-container {
   padding-top: 10px;
   padding-bottom: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-  background-color: rgba(250, 248, 246, 0.95);
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Khi cuộn trang, tăng cường đổ bóng cho riêng phần capsule ở giữa (.navbar) */
+.header-wrapper.scrolled .navbar {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 .navbar {
@@ -5751,6 +5757,18 @@ body {
   font-size: 18px;
   color: var(--text-muted);
   text-decoration: line-through;
+}
+
+.pd-desc {
+  margin: 16px 0 20px;
+}
+
+.pd-short-description {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.65;
+  white-space: pre-line;
 }
 
 .pd-variant-group {

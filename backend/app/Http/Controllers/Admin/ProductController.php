@@ -2,57 +2,42 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ProductExport;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\ProductSlugHistory;
 use App\Models\VariantType;
 use App\Models\VariantValue;
+use App\Queries\AdminProductQuery;
+use App\Support\ProductDescriptionSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(private readonly ProductDescriptionSanitizer $descriptionSanitizer)
+    {
+    }
+
+    public function index(Request $request, AdminProductQuery $productQuery)
     {
         $search = $request->input('search');
         $categoryId = $request->input('category_id');
-        $status = $request->input('status', 'active');
+        $status = $request->input('status', 'all');
 
-        $query = Product::query()
-            ->with(['category', 'brand', 'variants.variantValues.variantType', 'images', 'primaryImage']);
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('slug', 'like', "%{$search}%")
-                    ->orWhereHas('variants', function ($qv) use ($search) {
-                        $qv->where('sku', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        if ($categoryId && $categoryId !== 'all') {
-            $query->where('category_id', $categoryId);
-        }
-
-        if ($status !== 'all') {
-            if ($status === 'active') {
-                $query->where('status', 'active')
-                    ->whereHas('variants', fn ($qv) => $qv->where('quantity', '>', 0));
-            } elseif ($status === 'inactive') {
-                $query->where('status', 'inactive');
-            } elseif ($status === 'out_of_stock') {
-                $query->where('status', 'active')
-                    ->whereDoesntHave('variants', fn ($qv) => $qv->where('quantity', '>', 0));
-            }
-        }
-
-        $products = $query->paginate(10);
+        $products = $productQuery->build($request->only([
+            'search',
+            'category_id',
+            'status',
+        ]))->paginate(10);
         $products->withQueryString();
 
         $totalCount = Product::count();
@@ -68,32 +53,98 @@ class ProductController extends Controller
         ));
     }
 
+    public function export(Request $request, AdminProductQuery $productQuery)
+    {
+        if ($request->input('category_id') === 'all') {
+            $request->merge(['category_id' => null]);
+        }
+
+        $validated = $request->validate([
+            'scope' => ['nullable', Rule::in(['filtered', 'all', 'active', 'inactive'])],
+            'include_variants' => ['nullable', 'boolean'],
+            'search' => ['nullable', 'string', 'max:255'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'status' => ['nullable', Rule::in(['all', 'active', 'inactive'])],
+        ]);
+
+        $scope = $validated['scope'] ?? 'filtered';
+        $filters = match ($scope) {
+            'all' => [],
+            'active' => ['status' => 'active'],
+            'inactive' => ['status' => 'inactive'],
+            default => [
+                'search' => $validated['search'] ?? null,
+                'category_id' => $validated['category_id'] ?? null,
+                'status' => $validated['status'] ?? 'all',
+            ],
+        };
+
+        $query = $productQuery->build($filters);
+
+        if (!(clone $query)->exists()) {
+            return redirect()
+                ->route('admin.products', $request->only(['search', 'category_id', 'status']))
+                ->with('error', 'Không có sản phẩm phù hợp để xuất.');
+        }
+
+        $includeVariants = $request->boolean('include_variants', true);
+        $filename = 'danh-sach-san-pham-' . now()->format('d-m-Y-Hi') . '.xlsx';
+
+        return Excel::download(
+            new ProductExport($query, $includeVariants),
+            $filename,
+        );
+    }
+
     public function create()
     {
         $categories = Category::orderBy('name')->get(['id', 'name']);
         $brands = Brand::orderBy('name')->get(['id', 'name']);
         $variantTypes = $this->activeVariantTypes();
         $variantTypeOptions = $this->variantTypeOptions($variantTypes);
+        $product = new Product();
+        $product->setRelation('images', collect());
+        $product->setRelation('primaryImage', null);
+        $productVariantRows = [];
+        $isCreate = true;
 
-        return view('admin.products.create', compact('categories', 'brands', 'variantTypes', 'variantTypeOptions'));
+        return view('admin.products.create', compact(
+            'categories',
+            'brands',
+            'variantTypes',
+            'variantTypeOptions',
+            'product',
+            'productVariantRows',
+            'isCreate',
+        ));
     }
 
     public function store(Request $request)
     {
         $validated = $this->validateProduct($request);
 
-        $product = Product::create([
-            'name' => $validated['name'],
-            'slug' => $this->uniqueSlug($validated['name']),
-            'category_id' => $validated['category_id'],
-            'brand_id' => $validated['brand_id'],
-            'description' => $validated['description'] ?? null,
-            'status' => 'active',
-        ]);
+        $product = DB::transaction(function () use ($request, $validated) {
+            $product = Product::create([
+                'name' => $validated['name'],
+                'slug' => $this->uniqueSlug($validated['slug'] ?? $validated['name']),
+                'category_id' => $validated['category_id'],
+                'brand_id' => $validated['brand_id'],
+                'description' => $this->descriptionSanitizer->sanitize($validated['description'] ?? null),
+                'short_description' => $this->cleanSeoText($validated['short_description'] ?? null),
+                'seo_title' => $this->cleanSeoText($validated['seo_title'] ?? null),
+                'seo_description' => $this->cleanSeoText($validated['seo_description'] ?? null),
+                'status' => 'active',
+            ]);
 
-        $this->syncSubmittedVariants($request, $product, $validated);
+            $this->syncSubmittedVariants($request, $product, $validated);
 
-        $this->storeImages($request, $product);
+            // storeImages performs file system operations and creates image records.
+            // Keeping it inside the DB transaction ensures DB changes rollback on failure.
+            $this->storeImages($request, $product);
+
+            return $product;
+        });
+
         Cache::forget('api.home.sections.v1');
 
         return redirect()->route('admin.products')->with('success', 'Sản phẩm đã được tạo thành công.');
@@ -112,7 +163,7 @@ class ProductController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhereHas('values', fn ($valueQuery) => $valueQuery->where('value', 'like', "%{$search}%"));
+                    ->orWhereHas('values', fn($valueQuery) => $valueQuery->where('value', 'like', "%{$search}%"));
             });
         }
 
@@ -242,7 +293,7 @@ class ProductController extends Controller
         $brands = Brand::orderBy('name')->get(['id', 'name']);
         $variantTypes = $this->activeVariantTypes();
         $variantTypeOptions = $this->variantTypeOptions($variantTypes);
-        $productVariantRows = $product->variants->values()->map(fn ($variant): array => [
+        $productVariantRows = $product->variants->values()->map(fn($variant): array => [
             'id' => $variant->id,
             'sku' => $variant->sku,
             'price' => (float) $variant->price,
@@ -259,57 +310,98 @@ class ProductController extends Controller
     {
         $product = Product::with('variants')->findOrFail($id);
         $firstVariant = $product->variants->first();
-        $validated = $this->validateProduct($request, $firstVariant?->id);
+        $validated = $this->validateProduct($request, $firstVariant?->id, $product);
+        $imageChanges = $this->validateImageChanges($request, $product);
+        $slug = $this->uniqueSlug($validated['slug'] ?? $validated['name'], $product->id);
 
-        $product->update([
-            'name' => $validated['name'],
-            'category_id' => $validated['category_id'],
-            'brand_id' => $validated['brand_id'],
-            'description' => $validated['description'] ?? null,
-        ]);
+        DB::transaction(function () use ($request, $product, $firstVariant, $validated, $slug): void {
+            if ($product->slug !== $slug) {
+                ProductSlugHistory::query()
+                    ->where('product_id', $product->id)
+                    ->where('slug', $slug)
+                    ->delete();
 
-        if ($this->hasSubmittedVariants($request)) {
-            $this->syncSubmittedVariants($request, $product, $validated);
-        } else {
-            $variantData = [
-                'sku' => $validated['sku'],
-                'price' => $validated['price'],
-                'sale_price' => $validated['sale_price'] ?? null,
-                'quantity' => $validated['quantity'],
-                'status' => 'active',
-            ];
+                ProductSlugHistory::firstOrCreate([
+                    'product_id' => $product->id,
+                    'slug' => $product->slug,
+                ]);
+            }
 
-            $firstVariant
-                ? $firstVariant->update($variantData)
-                : $product->variants()->create($variantData);
-        }
+            $product->update([
+                'name' => $validated['name'],
+                'slug' => $slug,
+                'category_id' => $validated['category_id'],
+                'brand_id' => $validated['brand_id'],
+                'description' => $this->descriptionSanitizer->sanitize($validated['description'] ?? null),
+                'short_description' => $this->cleanSeoText($validated['short_description'] ?? null),
+                'seo_title' => $this->cleanSeoText($validated['seo_title'] ?? null),
+                'seo_description' => $this->cleanSeoText($validated['seo_description'] ?? null),
+            ]);
 
-        $this->storeImages($request, $product);
+            if ($this->hasSubmittedVariants($request)) {
+                $this->syncSubmittedVariants($request, $product, $validated);
+            } else {
+                $variantData = [
+                    'sku' => $validated['sku'],
+                    'price' => $validated['price'],
+                    'sale_price' => $validated['sale_price'] ?? null,
+                    'quantity' => $validated['quantity'],
+                    'status' => 'active',
+                ];
+
+                $firstVariant
+                    ? $firstVariant->update($variantData)
+                    : $product->variants()->create($variantData);
+            }
+        });
+
+        $this->syncImages($product, $imageChanges);
         Cache::forget('api.home.sections.v1');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Sản phẩm đã được cập nhật thành công.',
+                'updated_at' => now()->format('H:i d/m/Y'),
+            ]);
+        }
 
         return redirect()->route('admin.products')->with('success', 'Sản phẩm đã được cập nhật thành công.');
     }
 
-    public function destroy($id)
-    {
-        $product = Product::findOrFail($id);
-        $product->delete();
-        Cache::forget('api.home.sections.v1');
-
-        return redirect()->route('admin.products')->with('success', 'Sản phẩm đã được xóa thành công.');
-    }
-
-    private function validateProduct(Request $request, ?int $variantId = null): array
+    public function updateStatus(Request $request, Product $product)
     {
         $validated = $request->validate([
+            'status' => ['required', Rule::in(['active', 'inactive'])],
+        ]);
+
+        $product->update(['status' => $validated['status']]);
+        Cache::forget('api.home.sections.v1');
+
+        $message = $validated['status'] === 'inactive'
+            ? 'Đã ẩn sản phẩm thành công.'
+            : 'Đã hiển thị lại sản phẩm.';
+
+        return redirect()->route('admin.products')->with('success', $message);
+    }
+
+    private function validateProduct(Request $request, ?int $variantId = null, ?Product $product = null): array
+    {
+        $hasSubmittedVariants = $this->hasSubmittedVariants($request);
+        $baseRequirement = $hasSubmittedVariants ? 'nullable' : 'required';
+
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|max:255|unique:product_variants,sku'.($variantId ? ','.$variantId : ''),
+            'slug' => 'nullable|string|max:180',
+            'sku' => $baseRequirement . '|string|max:255|unique:product_variants,sku' . ($variantId ? ',' . $variantId : ''),
             'category_id' => 'required|exists:categories,id',
             'brand_id' => 'required|exists:brands,id',
-            'price' => 'required|numeric|min:0',
+            'price' => $baseRequirement . '|numeric|min:0',
             'sale_price' => 'nullable|numeric|min:0|lt:price',
-            'quantity' => 'required|integer|min:0',
+            'quantity' => $baseRequirement . '|integer|min:0',
             'description' => 'nullable|string',
+            'short_description' => 'nullable|string|max:500',
+            'seo_title' => 'nullable|string|max:255',
+            'seo_description' => 'nullable|string|max:320',
             'variants' => 'nullable|array',
             'variants.*.id' => 'nullable|integer|exists:product_variants,id',
             'variants.*.sku' => 'nullable|string|max:255',
@@ -320,11 +412,31 @@ class ProductController extends Controller
             'variants.*.value_ids' => 'nullable|array',
             'variants.*.value_ids.*' => 'integer|exists:variant_values,id',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'images' => 'nullable|array|max:8',
+            'deleted_image_ids' => 'nullable|array',
+            'deleted_image_ids.*' => 'integer|exists:images,id',
+            'primary_image_id' => 'nullable|integer|exists:images,id',
+            'primary_image_new_index' => 'nullable|integer|min:0',
+            'image_order' => 'nullable|array|max:8',
+            'image_order.*' => 'string|max:64',
+            'new_image_keys' => 'nullable|array|max:8',
+            'new_image_keys.*' => 'string|max:64',
+            'image_alt_texts' => 'nullable|array',
+            'image_alt_texts.*' => 'nullable|string|max:255',
+            'new_image_alt_texts' => 'nullable|array',
+            'new_image_alt_texts.*' => 'nullable|string|max:255',
         ]);
 
         foreach ($request->input('variants', []) as $index => $variant) {
             $salePrice = $variant['sale_price'] ?? null;
             $price = $variant['price'] ?? null;
+            $sku = trim((string) ($variant['sku'] ?? ''));
+
+            if ($sku !== '' && ($price === null || $price === '' || ! array_key_exists('quantity', $variant) || $variant['quantity'] === '')) {
+                throw ValidationException::withMessages([
+                    "variants.{$index}" => 'Mỗi biến thể có SKU phải có giá bán và tồn kho.',
+                ]);
+            }
 
             if ($salePrice !== null && $salePrice !== '' && $price !== null && (float) $salePrice >= (float) $price) {
                 throw ValidationException::withMessages([
@@ -333,10 +445,13 @@ class ProductController extends Controller
             }
         }
 
-        $variantSkus = collect($request->input('variants', []))
+        $variantSkuInputs = collect($request->input('variants', []))
             ->pluck('sku')
             ->filter()
-            ->map(fn (string $sku): string => trim($sku))
+            ->map(fn(string $sku): string => trim($sku))
+            ->values();
+        $variantSkus = $variantSkuInputs
+            ->map(fn(string $sku): string => mb_strtolower($sku))
             ->values();
 
         if ($variantSkus->duplicates()->isNotEmpty()) {
@@ -348,12 +463,30 @@ class ProductController extends Controller
         $variantIds = collect($request->input('variants', []))
             ->pluck('id')
             ->filter()
-            ->map(fn ($id): int => (int) $id)
+            ->map(fn($id): int => (int) $id)
             ->all();
 
+        if (count($variantIds) !== count(array_unique($variantIds))) {
+            throw ValidationException::withMessages([
+                'variants' => 'Một biến thể không thể xuất hiện nhiều lần trong cùng biểu mẫu.',
+            ]);
+        }
+
+        if ($product && $variantIds !== []) {
+            $ownedVariantCount = $product->variants()
+                ->whereIn('id', $variantIds)
+                ->count();
+
+            if ($ownedVariantCount !== count($variantIds)) {
+                throw ValidationException::withMessages([
+                    'variants' => 'Có biến thể không thuộc sản phẩm này.',
+                ]);
+            }
+        }
+
         $existingSku = \App\Models\ProductVariant::query()
-            ->whereIn('sku', $variantSkus->all())
-            ->when(! empty($variantIds), fn ($query) => $query->whereNotIn('id', $variantIds))
+            ->whereIn('sku', $variantSkuInputs->all())
+            ->when(!empty($variantIds), fn($query) => $query->whereNotIn('id', $variantIds))
             ->value('sku');
 
         if ($existingSku) {
@@ -368,10 +501,10 @@ class ProductController extends Controller
     private function syncSubmittedVariants(Request $request, Product $product, array $fallback): void
     {
         $variants = collect($request->input('variants', []))
-            ->filter(fn (array $variant): bool => ! empty($variant['sku']));
+            ->filter(fn(array $variant): bool => !empty($variant['sku']));
 
         if ($variants->isEmpty()) {
-            if ($skipVariantId === null && ! $product->variants()->exists()) {
+            if (! $product->variants()->exists()) {
                 $product->variants()->create([
                     'sku' => $fallback['sku'],
                     'price' => $fallback['price'],
@@ -397,7 +530,7 @@ class ProductController extends Controller
                 'status' => isset($variantInput['visible']) ? 'active' : 'inactive',
             ];
 
-            if (! empty($variantInput['id'])) {
+            if (!empty($variantInput['id'])) {
                 $variant = $product->variants()->whereKey($variantInput['id'])->first();
 
                 if ($variant) {
@@ -416,16 +549,26 @@ class ProductController extends Controller
     private function hasSubmittedVariants(Request $request): bool
     {
         return collect($request->input('variants', []))
-            ->contains(fn (array $variant): bool => ! empty($variant['sku']));
+            ->contains(fn(array $variant): bool => !empty($variant['sku']));
     }
 
-    private function uniqueSlug(string $name): string
+    private function uniqueSlug(string $value, ?int $ignoreProductId = null): string
     {
-        $base = Str::slug($name);
+        $base = Str::slug($value);
+        $base = Str::limit($base !== '' ? $base : 'san-pham', 170, '');
         $slug = $base;
         $counter = 2;
 
-        while (Product::where('slug', $slug)->exists()) {
+        while (
+            Product::query()
+                ->where('slug', $slug)
+                ->when($ignoreProductId, fn($query) => $query->whereKeyNot($ignoreProductId))
+                ->exists()
+            || ProductSlugHistory::query()
+                ->where('slug', $slug)
+                ->when($ignoreProductId, fn($query) => $query->where('product_id', '!=', $ignoreProductId))
+                ->exists()
+        ) {
             $slug = "{$base}-{$counter}";
             $counter++;
         }
@@ -433,19 +576,26 @@ class ProductController extends Controller
         return $slug;
     }
 
+    private function cleanSeoText(?string $value): ?string
+    {
+        $value = Str::squish(strip_tags((string) $value));
+
+        return $value !== '' ? $value : null;
+    }
+
     private function syncNewVariantValues(VariantType $variantType, string $rawValues): void
     {
         collect(explode(',', $rawValues))
-            ->map(fn (string $value): string => trim($value))
+            ->map(fn(string $value): string => trim($value))
             ->filter()
-            ->unique(fn (string $value): string => mb_strtolower($value))
-            ->each(fn (string $value) => $variantType->values()->firstOrCreate(['value' => $value]));
+            ->unique(fn(string $value): string => mb_strtolower($value))
+            ->each(fn(string $value) => $variantType->values()->firstOrCreate(['value' => $value]));
     }
 
     private function activeVariantTypes()
     {
         return VariantType::query()
-            ->with(['values' => fn ($query) => $query->orderBy('value')])
+            ->with(['values' => fn($query) => $query->orderBy('value')])
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
@@ -453,10 +603,10 @@ class ProductController extends Controller
 
     private function variantTypeOptions($variantTypes): array
     {
-        return $variantTypes->map(fn (VariantType $type): array => [
+        return $variantTypes->map(fn(VariantType $type): array => [
             'id' => $type->id,
             'name' => $type->name,
-            'values' => $type->values->map(fn (VariantValue $value): array => [
+            'values' => $type->values->map(fn(VariantValue $value): array => [
                 'id' => $value->id,
                 'value' => $value->value,
             ])->values()->all(),
@@ -467,7 +617,7 @@ class ProductController extends Controller
     {
         return collect($valueIds)
             ->filter()
-            ->map(fn ($id): int => (int) $id)
+            ->map(fn($id): int => (int) $id)
             ->unique()
             ->values()
             ->all();
@@ -475,33 +625,237 @@ class ProductController extends Controller
 
     private function storeImages(Request $request, Product $product): void
     {
-        if (! $request->hasFile('images')) {
+        if (!$request->hasFile('images')) {
             return;
         }
 
         $targetDir = public_path('image/products');
 
-        if (! is_dir($targetDir)) {
+        if (!is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
         }
 
         $hasPrimary = $product->images()->where('is_primary', true)->exists();
 
         foreach ($request->file('images') as $image) {
-            if (! $image->isValid()) {
+            if (!$image->isValid()) {
                 continue;
             }
 
-            $filename = uniqid('product_', true).'.'.$image->getClientOriginalExtension();
+            $filename = $this->imageFilename($product, $image->extension());
             $image->move($targetDir, $filename);
 
             ProductImage::create([
                 'product_id' => $product->id,
-                'image_url' => 'image/products/'.$filename,
-                'is_primary' => ! $hasPrimary,
+                'image_url' => 'image/products/' . $filename,
+                'sort_order' => $product->images()->count(),
+                'is_primary' => !$hasPrimary,
             ]);
 
             $hasPrimary = true;
+        }
+    }
+
+    private function validateImageChanges(Request $request, Product $product): array
+    {
+        $deletedIds = collect($request->input('deleted_image_ids', []))
+            ->map(fn($id): int => (int) $id)
+            ->unique()
+            ->values();
+        $imagesToDelete = $product->images()->whereIn('id', $deletedIds)->get();
+
+        if ($imagesToDelete->count() !== $deletedIds->count()) {
+            throw ValidationException::withMessages([
+                'images' => 'Danh sách ảnh cần xóa không hợp lệ.',
+            ]);
+        }
+
+        $newImages = collect($request->file('images', []));
+        $remainingCount = $product->images()->count() - $imagesToDelete->count();
+        $finalCount = $remainingCount + $newImages->count();
+
+        if ($finalCount > 8) {
+            throw ValidationException::withMessages([
+                'images' => 'Mỗi sản phẩm được có tối đa 8 ảnh.',
+            ]);
+        }
+
+        if ($finalCount < 1) {
+            throw ValidationException::withMessages([
+                'images' => 'Sản phẩm phải có ít nhất một ảnh.',
+            ]);
+        }
+
+        $remainingImages = $product->images()
+            ->whereNotIn('id', $deletedIds)
+            ->get();
+        $remainingIds = $remainingImages->pluck('id')->map(fn ($id): int => (int) $id);
+        $primaryImageId = $request->integer('primary_image_id') ?: null;
+        if ($primaryImageId && ! $remainingIds->contains($primaryImageId)) {
+            throw ValidationException::withMessages([
+                'primary_image_id' => 'Ảnh chính không thuộc sản phẩm này.',
+            ]);
+        }
+
+        $newImageKeys = collect($request->input('new_image_keys', []))->values();
+        if ($newImageKeys->count() !== $newImages->count() || $newImageKeys->unique()->count() !== $newImageKeys->count()) {
+            throw ValidationException::withMessages([
+                'images' => 'Danh sách ảnh mới không hợp lệ.',
+            ]);
+        }
+
+        $newPrimaryIndex = $request->input('primary_image_new_index');
+        if ($newPrimaryIndex !== null && !$newImages->has((int) $newPrimaryIndex)) {
+            throw ValidationException::withMessages([
+                'primary_image_new_index' => 'Ảnh chính mới không hợp lệ.',
+            ]);
+        }
+
+        $expectedOrder = $remainingIds->map(fn (int $id): string => "existing:{$id}")
+            ->merge($newImageKeys->map(fn (string $key): string => "new:{$key}"))
+            ->sort()
+            ->values();
+        $imageOrder = collect($request->input('image_order', []))->values();
+
+        if ($imageOrder->sort()->values()->all() !== $expectedOrder->all()) {
+            throw ValidationException::withMessages([
+                'image_order' => 'Thứ tự ảnh không hợp lệ.',
+            ]);
+        }
+
+        $existingAltTexts = collect($request->input('image_alt_texts', []));
+        if ($existingAltTexts->keys()->map(fn ($id): int => (int) $id)->diff($remainingIds)->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'image_alt_texts' => 'Mô tả ảnh không hợp lệ.',
+            ]);
+        }
+
+        $newAltTexts = collect($request->input('new_image_alt_texts', []));
+        if ($newAltTexts->keys()->diff($newImageKeys)->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'new_image_alt_texts' => 'Mô tả ảnh mới không hợp lệ.',
+            ]);
+        }
+
+        return compact(
+            'imagesToDelete',
+            'newImages',
+            'newImageKeys',
+            'primaryImageId',
+            'newPrimaryIndex',
+            'imageOrder',
+            'existingAltTexts',
+            'newAltTexts',
+        );
+    }
+
+    private function syncImages(Product $product, array $changes): void
+    {
+        $targetDir = public_path('image/products');
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        $createdFiles = [];
+        $createdImages = collect();
+
+        try {
+            foreach ($changes['newImages'] as $index => $image) {
+                if (!$image->isValid()) {
+                    continue;
+                }
+
+                $filename = $this->imageFilename($product, $image->extension());
+                $image->move($targetDir, $filename);
+                $createdFiles[] = $targetDir . DIRECTORY_SEPARATOR . $filename;
+                $imageKey = $changes['newImageKeys']->get($index);
+                $createdImages->put($imageKey, new ProductImage([
+                    'product_id' => $product->id,
+                    'image_url' => 'image/products/' . $filename,
+                    'alt_text' => $this->cleanImageAltText($changes['newAltTexts']->get($imageKey)),
+                    'is_primary' => false,
+                ]));
+            }
+
+            DB::transaction(function () use ($product, $changes, $createdImages): void {
+                $changes['imagesToDelete']->each->delete();
+                $createdImages->each->save();
+
+                $remaining = $product->images()->get();
+                $primary = null;
+
+                if ($changes['newPrimaryIndex'] !== null) {
+                    $imageKey = $changes['newImageKeys']->get((int) $changes['newPrimaryIndex']);
+                    $primary = $createdImages->get($imageKey);
+                } elseif ($changes['primaryImageId']) {
+                    $primary = $remaining->firstWhere('id', $changes['primaryImageId']);
+                }
+
+                $primary ??= $remaining->first();
+
+                $product->images()->update(['is_primary' => false]);
+                $primary?->update(['is_primary' => true]);
+
+                $imagesByToken = $remaining
+                    ->mapWithKeys(fn (ProductImage $image): array => ["existing:{$image->id}" => $image])
+                    ->merge($createdImages->mapWithKeys(fn (ProductImage $image, string $key): array => ["new:{$key}" => $image]));
+                $primaryToken = $createdImages->contains($primary)
+                    ? 'new:'.$createdImages->search($primary)
+                    : "existing:{$primary?->id}";
+                $orderedTokens = $changes['imageOrder']->reject(fn (string $token): bool => $token === $primaryToken);
+                $orderedTokens->prepend($primaryToken)->values()->each(function (string $token, int $sortOrder) use ($imagesByToken, $changes): void {
+                    $image = $imagesByToken->get($token);
+                    if (! $image) {
+                        return;
+                    }
+
+                    $altText = str_starts_with($token, 'existing:')
+                        ? $this->cleanImageAltText($changes['existingAltTexts']->get($image->id))
+                        : $image->alt_text;
+                    $image->update(['sort_order' => $sortOrder, 'alt_text' => $altText]);
+                });
+            });
+        } catch (\Throwable $exception) {
+            foreach ($createdFiles as $path) {
+                if (is_file($path)) {
+                    unlink($path);
+                }
+            }
+
+            throw $exception;
+        }
+
+        foreach ($changes['imagesToDelete'] as $image) {
+            $this->deleteProductImageFile($image->image_url);
+        }
+    }
+
+    private function imageFilename(Product $product, string $extension): string
+    {
+        return $product->slug . '-' . Str::lower(Str::random(10)) . '.' . Str::lower($extension);
+    }
+
+    private function cleanImageAltText(?string $value): ?string
+    {
+        $value = Str::squish(strip_tags((string) $value));
+
+        return $value !== '' ? $value : null;
+    }
+
+    private function deleteProductImageFile(string $imageUrl): void
+    {
+        $relativePath = ltrim(str_replace('\\', '/', $imageUrl), '/');
+
+        if (!str_starts_with($relativePath, 'image/products/')) {
+            return;
+        }
+
+        $path = public_path($relativePath);
+        $directory = realpath(public_path('image/products'));
+        $resolvedPath = realpath($path);
+
+        if ($directory && $resolvedPath && str_starts_with($resolvedPath, $directory . DIRECTORY_SEPARATOR)) {
+            unlink($resolvedPath);
         }
     }
 }
