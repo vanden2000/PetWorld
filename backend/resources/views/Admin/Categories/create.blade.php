@@ -3,7 +3,122 @@
 @section('title', 'Thêm danh mục mới')
 
 @section('styles')
-
+    <style>
+        .error-message {
+            color: #d93025;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+        .form-control.is-invalid {
+            border-color: #d93025;
+        }
+        .form-group label {
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            display: inline-block;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: #fff;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 120, 45, 0.15);
+        }
+        .btn-cancel {
+            background-color: #f1f3f4;
+            color: #5f6368;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-cancel:hover {
+            background-color: #e8eaed;
+        }
+        .btn-save {
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-save:hover {
+            filter: brightness(0.95);
+        }
+        /* Custom layout styles matching voucher create grid */
+        .category-create-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        .form-card {
+            background-color: #fff;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .form-card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+        .form-card-title i {
+            color: var(--primary);
+        }
+        .form-group-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .custom-radio-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .custom-radio-container:hover {
+            background-color: #f8f9fa;
+        }
+        .radio-label-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+        @media (max-width: 992px) {
+            .category-create-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -11,7 +126,7 @@
     @csrf
     
     <!-- Dashboard Header Nav Bar -->
-    <div class="dashboard-header" style="margin-bottom: 24px;">
+    <div class="dashboard-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
         <div class="header-title-block">
             <h1 style="color: var(--text-main); font-weight: 700; font-size: 1.75rem;">Thêm danh mục mới</h1>
             <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.95rem;">Tạo danh mục sản phẩm mới cho hệ thống cửa hàng PetWorld.</p>
@@ -35,126 +150,76 @@
 
                 <div class="form-group-row">
                     <div class="form-group">
-                        <label for="name">Tên danh mục <span class="required">*</span></label>
-                        <input type="text" class="form-control" id="name" name="name" required placeholder="Ví dụ: Thức ăn cho chó">
+                        <label for="name">Tên danh mục <span class="required" style="color: #d93025;">*</span></label>
+                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required placeholder="Ví dụ: Thức ăn cho chó">
+                        @error('name')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label for="slug">Slug (Đường dẫn)</label>
-                        <div class="input-icon-wrapper">
-                            <input type="text" class="form-control" id="slug" name="slug" placeholder="thuc-an-cho-cho">
-                            <span class="input-icon-right">
-                                <i class="fa-solid fa-link"></i>
-                            </span>
-                        </div>
+                        <input type="text" class="form-control @error('slug') is-invalid @enderror" id="slug" name="slug" value="{{ old('slug') }}" placeholder="thuc-an-cho-cho">
+                        @error('slug')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="parent_id">Danh mục cha</label>
-                    <select class="form-control" id="parent_id" name="parent_id">
-                        <option value="">Không có (Danh mục gốc)</option>
-                        @foreach($parentCategories as $parentCategory)
-                            <option value="{{ $parentCategory->id }}" {{ (string) old('parent_id') === (string) $parentCategory->id ? 'selected' : '' }}>
-                                {{ $parentCategory->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <label for="description">Mô tả danh mục</label>
+                    <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="4" placeholder="Nhập mô tả chi tiết về danh mục này...">{{ old('description') }}</textarea>
+                    @error('description')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label for="description">Mô tả danh mục</label>
-                    <textarea class="form-control" id="description" name="description" rows="6" placeholder="Nhập mô tả chi tiết về danh mục này..."></textarea>
+                    <label for="category_image">Hình ảnh đại diện</label>
+                    <input type="file" class="form-control @error('image') is-invalid @enderror" id="category_image" name="image" accept="image/*">
+                    @error('image')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">Tải lên ảnh PNG, JPG, GIF tối đa 5MB.</p>
                 </div>
             </div>
-
-            <!-- Scroll Accordion SEO Card -->
-            <details class="form-card seo-details">
-                <summary class="seo-summary">
-                    <div class="seo-summary-left">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <span>Tối ưu SEO (Tìm kiếm)</span>
-                    </div>
-                    <i class="fa-solid fa-chevron-down arrow-icon"></i>
-                </summary>
-                <div class="seo-content">
-                    <div style="border-top: 1px solid var(--border-color); margin-bottom: 20px;"></div>
-                    <div class="form-group">
-                        <label for="meta_title">Tiêu đề SEO</label>
-                        <input type="text" class="form-control" id="meta_title" name="meta_title" placeholder="Mặc định sẽ tự động lấy theo tên danh mục">
-                    </div>
-                    <div class="form-group">
-                        <label for="meta_description">Mô tả SEO (Meta Description)</label>
-                        <textarea class="form-control" id="meta_description" name="meta_description" rows="3" placeholder="Nhập mô tả chuẩn SEO dành cho Google hiển thị..."></textarea>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="meta_keywords">Từ khóa SEO (Meta Keywords)</label>
-                        <input type="text" class="form-control" id="meta_keywords" name="meta_keywords" placeholder="Ví dụ: thuc an cho cho, pate cho meo, petworld...">
-                    </div>
-                </div>
-            </details>
         </div>
 
         <!-- Right Sidebar Form Column -->
         <div class="category-sidebar-col">
             <!-- Status Card -->
             <div class="form-card" style="padding: 24px;">
-                <h3 class="sidebar-card-title">TRẠNG THÁI</h3>
-                <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 16px;">
+                <div class="form-card-title" style="margin-bottom: 16px; padding-bottom: 8px;">
+                    <i class="fa-solid fa-toggle-on"></i>
+                    <span>Trạng thái</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
                     <label class="custom-radio-container">
-                        <input type="radio" name="status" value="active" checked>
+                        <input type="radio" name="status" value="active" {{ old('status', 'active') === 'active' ? 'checked' : '' }}>
                         <span class="radio-indicator"></span>
                         <div class="radio-label-details">
-                            <span class="radio-label-title">Hiển thị công khai</span>
+                            <span class="radio-label-title">Hiển thị (Active)</span>
                         </div>
                     </label>
                     <label class="custom-radio-container">
-                        <input type="radio" name="status" value="draft">
+                        <input type="radio" name="status" value="draft" {{ old('status') === 'draft' ? 'checked' : '' }}>
                         <span class="radio-indicator"></span>
                         <div class="radio-label-details">
-                            <span class="radio-label-title">Ẩn khỏi hệ thống</span>
+                            <span class="radio-label-title">Tạm ẩn (Draft)</span>
                         </div>
                     </label>
                 </div>
             </div>
 
-            <!-- Image Thumbnail box -->
-            <div class="form-card" style="padding: 24px;">
-                <h3 class="sidebar-card-title">HÌNH ẢNH ĐẠI DIỆN</h3>
-                <div class="image-upload-wrapper" style="margin-top: 16px;">
-                    <div class="upload-dropzone" id="dropzone">
-                        <div class="cloud-icon">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                        </div>
-                        <p class="dropzone-text-primary">Nhấp để tải lên hoặc kéo thả</p>
-                        <p class="dropzone-text-sub">PNG, JPG tối đa 5MB (800x800px)</p>
-                        <input type="file" id="category_image" name="image" style="display: none;" accept="image/*">
-                    </div>
-                    
-                    <!-- File preview thumbnail -->
-                    <div class="file-preview-card" id="filePreview" style="display: flex;">
-                        <input type="hidden" name="image_prefilled" value="yes">
-                        <div class="file-preview-left">
-                            <div class="file-preview-img-container">
-                                <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=120" class="preview-img-fallback" id="previewImage" alt="Preview">
-                            </div>
-                            <div class="file-preview-info">
-                                <span class="file-preview-name" id="fileName">category-thumbnail.png</span>
-                                <span class="file-preview-size" id="fileSize">1.2 MB</span>
-                            </div>
-                        </div>
-                        <button type="button" class="btn-delete-preview" id="btnDelete" title="Xóa hình ảnh">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Advice Box -->
-            <div class="advisor-quote-card">
-                <p class="advisor-quote-text">
-                    "Việc sắp xếp danh mục rõ ràng giúp khách hàng của PetWorld dễ dàng tìm kiếm sản phẩm và tăng tỷ lệ chuyển đổi đơn hàng lên tới 30%."
-                </p>
-                <span class="advisor-quote-author">— HỆ THỐNG TƯ VẤN PETWORLD</span>
+            <!-- Tips Card -->
+            <div style="background-color: #fff9e6; border: 1px solid #ffeeba; border-radius: 12px; padding: 20px;">
+                <h4 style="color: #856404; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-lightbulb"></i> Lưu ý thiết lập:
+                </h4>
+                <ul style="color: #856404; font-size: 0.85rem; padding-left: 20px; line-height: 1.5; margin: 0;">
+                    <li>Tên danh mục nên ngắn gọn và mô tả đúng loại sản phẩm (ví dụ: Thức ăn hạt, Phụ kiện...).</li>
+                    <li>Đường dẫn (Slug) tự động tạo từ tên danh mục, dùng để tối ưu SEO cho đường dẫn URL.</li>
+                    <li>Trạng thái "Hiển thị" giúp khách hàng có thể nhìn thấy danh mục và sản phẩm ngoài trang chủ.</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -182,52 +247,6 @@
                 // Remove leading/trailing hyphens
                 slug = slug.replace(/^-+|-+$/g, '');
                 slugInput.value = slug;
-            });
-        }
-
-        // Image Dropzone trigger action
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('category_image');
-        const filePreview = document.getElementById('filePreview');
-        const previewImage = document.getElementById('previewImage');
-        const fileName = document.getElementById('fileName');
-        const fileSize = document.getElementById('fileSize');
-        const btnDelete = document.getElementById('btnDelete');
-
-        if (dropzone && fileInput) {
-            dropzone.addEventListener('click', function() {
-                fileInput.click();
-            });
-
-            fileInput.addEventListener('change', function() {
-                if (fileInput.files && fileInput.files[0]) {
-                    const file = fileInput.files[0];
-                    
-                    // Set filename and size
-                    if (fileName) fileName.textContent = file.name;
-                    if (fileSize) fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
-                    
-                    // FileReader for image preview
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        if (previewImage) previewImage.src = e.target.result;
-                        if (filePreview) filePreview.style.display = 'flex';
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-
-        // Action delete image thumbnail preview
-        if (btnDelete) {
-            btnDelete.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (filePreview) filePreview.style.display = 'none';
-                if (fileInput) fileInput.value = '';
-                
-                // Clear prefilled input if exists
-                const prefilled = document.querySelector('input[name="image_prefilled"]');
-                if (prefilled) prefilled.remove();
             });
         }
     });

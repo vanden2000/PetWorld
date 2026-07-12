@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore, useEffect } from "react";
 import {
   getCartSnapshot,
   getServerCartSnapshot,
@@ -25,6 +25,15 @@ export default function Header() {
   const [keyword, setKeyword] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Số lượng trong giỏ (localStorage) cho badge, cập nhật realtime khi giỏ đổi.
   const cartRaw = useSyncExternalStore(onCartChange, getCartSnapshot, getServerCartSnapshot);
@@ -52,7 +61,7 @@ export default function Header() {
   };
 
   return (
-    <header className="header-wrapper">
+    <header className={`header-wrapper ${isScrolled ? "scrolled" : ""}`}>
       {/* Top Header Bar */}
       <div className="top-bar">
         <div className="top-bar-left">
