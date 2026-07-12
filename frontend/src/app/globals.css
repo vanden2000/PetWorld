@@ -238,10 +238,13 @@ body {
     box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Khi cuộn trang, làm nhỏ padding dọc của navbar-container để tiết kiệm không gian */
+/* Khi cuộn trang, làm nhỏ padding dọc và làm trong suốt hoàn toàn nền/độ mờ ở 2 bên */
 .header-wrapper.scrolled .navbar-container {
   padding-top: 10px;
   padding-bottom: 10px;
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* Khi cuộn trang, tăng cường đổ bóng cho riêng phần capsule ở giữa (.navbar) */
