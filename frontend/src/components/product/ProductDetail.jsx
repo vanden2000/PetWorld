@@ -33,8 +33,8 @@ export default function ProductDetail({ product }) {
   const user = useMemo(() => parseUser(userRaw), [userRaw]);
 
   const gallery = product.images?.length
-    ? product.images.map((image) => image.image_url)
-    : [product.image];
+    ? product.images
+    : [{ image_url: product.image, alt_text: product.name }];
 
   const variants = useMemo(() => product.variants ?? [], [product.variants]);
   // Mặc định chọn biến thể có giá hiệu lực thấp nhất (đồng nhất với cách card hiển thị giá).
@@ -54,9 +54,9 @@ export default function ProductDetail({ product }) {
 
   const selectedVariant = variants.find((variant) =>
     variant.options?.length === Object.keys(selectedOptions).length
-      && variant.options.every(
-        (option) => selectedOptions[option.type_id] === option.value,
-      ),
+    && variant.options.every(
+      (option) => selectedOptions[option.type_id] === option.value,
+    ),
   ) ?? null;
 
   const currentPrice = selectedVariant ? selectedVariant.effective_price : product.price?.min;
@@ -97,7 +97,7 @@ export default function ProductDetail({ product }) {
 
     return Object.entries(selectedOptions).every(([selectedTypeId, selectedValue]) =>
       Number(selectedTypeId) === Number(typeId)
-        || options[selectedTypeId] === selectedValue,
+      || options[selectedTypeId] === selectedValue,
     );
   });
 
@@ -184,18 +184,18 @@ export default function ProductDetail({ product }) {
         <div className="pd-main-image">
           {discount > 0 && <span className="pd-badge-discount">-{discount}%</span>}
           {product.category?.name && <span className="pd-badge-cat">{product.category.name}</span>}
-          <img src={resolveProductImage(activeImage)} alt={product.name} />
+          <img src={resolveProductImage(activeImage?.image_url)} alt={activeImage?.alt_text || product.name} />
         </div>
         {gallery.length > 1 && (
           <div className="pd-thumbs">
             {gallery.map((image, index) => (
               <button
-                key={index}
+                key={`${image.id || image.image_url}-${index}`}
                 type="button"
-                className={`pd-thumb ${activeImage === image ? "active" : ""}`}
+                className={`pd-thumb ${activeImage?.image_url === image.image_url ? "active" : ""}`}
                 onClick={() => setActiveImage(image)}
               >
-                <img src={resolveProductImage(image)} alt={`${product.name} ${index + 1}`} />
+                <img src={resolveProductImage(image.image_url)} alt={image.alt_text || `${product.name} - ảnh ${index + 1}`} />
               </button>
             ))}
           </div>

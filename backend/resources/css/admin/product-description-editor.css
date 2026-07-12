@@ -1,0 +1,34 @@
+.product-description-editor .ql-toolbar.ql-snow {
+    border-color: var(--theme-border);
+    border-radius: 8px 8px 0 0;
+    background: #f9fafb;
+}
+
+.product-description-editor .ql-container.ql-snow {
+    height: auto;
+    overflow: visible;
+    border-color: var(--theme-border);
+    border-radius: 0 0 8px 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.product-description-editor .ql-editor {
+    min-height: 280px;
+    height: auto;
+    overflow-y: visible;
+    line-height: 1.65;
+}
+
+.product-description-editor .ql-editor:focus {
+    box-shadow: inset 0 0 0 1px var(--theme-primary);
+}
+
+.product-description-editor .ql-editor h2,
+.product-description-editor .ql-editor h3,
+.product-description-editor .ql-editor p,
+.product-description-editor .ql-editor ol,
+.product-description-editor .ql-editor ul,
+.product-description-editor .ql-editor blockquote {
+    margin-bottom: 0.75em;
+}

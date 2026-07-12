@@ -1,14 +1,45 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { getProductDetail } from "@/lib/api";
 import ProductDetail from "@/components/product/ProductDetail";
 import ProductSection from "@/components/product/ProductSection";
 import TrackRecentlyViewed from "@/components/product/TrackRecentlyViewed";
+import { resolveBackendImage } from "@/lib/format";
+
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+
+function absoluteUrl(path = "/") {
+  return new URL(path, `${SITE_URL}/`).toString();
+}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const data = await getProductDetail(slug);
-  return { title: `${data?.product?.name ?? slug} - PetWorld` };
+  const product = data?.product;
+  const seo = data?.seo;
+  const title = seo?.title || `${product?.name ?? slug} | PetWorld`;
+  const description = seo?.description || product?.short_description || "";
+  const canonical = absoluteUrl(seo?.canonical_url || `/shop/${product?.slug || slug}`);
+  const image = product?.image ? resolveBackendImage(product.image) : null;
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: canonical,
+      images: image ? [{ url: image, alt: product?.name || title }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : [],
+    },
+  };
 }
 
 function ReviewStars({ value = 0 }) {
@@ -27,15 +58,72 @@ export default async function ProductDetailPage({ params }) {
   const { slug } = await params;
   const data = await getProductDetail(slug);
 
+  if (data?.redirect_slug && data.redirect_slug !== slug) {
+    permanentRedirect(`/shop/${data.redirect_slug}`);
+  }
+
   if (!data?.product) {
     notFound();
   }
 
   const { product, reviews = [], related_products = [] } = data;
+  const canonicalUrl = absoluteUrl(data.seo?.canonical_url || `/shop/${product.slug}`);
+  const productImages = (product.images || [])
+    .map((image) => resolveBackendImage(image.image_url))
+    .filter(Boolean);
+  const minPrice = product.price?.min;
+  const maxPrice = product.price?.max;
+  const offer = minPrice === maxPrice
+    ? {
+        "@type": "Offer",
+        priceCurrency: "VND",
+        price: minPrice,
+        availability: product.stock_quantity > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+        url: canonicalUrl,
+      }
+    : {
+        "@type": "AggregateOffer",
+        priceCurrency: "VND",
+        lowPrice: minPrice,
+        highPrice: maxPrice,
+        offerCount: product.variants?.length || 0,
+        availability: product.stock_quantity > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+        url: canonicalUrl,
+      };
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: data.seo?.description || product.short_description || "",
+    sku: product.variants?.[0]?.sku,
+    brand: product.brand?.name
+      ? { "@type": "Brand", name: product.brand.name }
+      : undefined,
+    image: productImages,
+    url: canonicalUrl,
+    offers: offer,
+    aggregateRating: product.rating?.count > 0
+      ? {
+          "@type": "AggregateRating",
+          ratingValue: product.rating.average,
+          reviewCount: product.rating.count,
+        }
+      : undefined,
+  };
 
   return (
     <main className="main-content">
-      <TrackRecentlyViewed slug={slug} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
+      <TrackRecentlyViewed slug={product.slug} />
       <div className="homepage-container">
         <nav className="shop-breadcrumb">
           <Link href="/">Trang chủ</Link>
