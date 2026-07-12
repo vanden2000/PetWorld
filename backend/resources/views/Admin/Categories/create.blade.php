@@ -118,6 +118,118 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* Modern Drag & Drop Zone */
+        .upload-dropzone {
+            border: 2px dashed #dadce0;
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            background-color: #fafafa;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 160px;
+            margin-top: 6px;
+        }
+        .upload-dropzone:hover, .upload-dropzone.dragover {
+            border-color: var(--primary);
+            background-color: rgba(255, 120, 45, 0.02);
+        }
+        .upload-dropzone .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .dropzone-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .dropzone-icon {
+            font-size: 2.5rem;
+            color: #bdc1c6;
+            transition: color 0.2s ease;
+        }
+        .upload-dropzone:hover .dropzone-icon, .upload-dropzone.dragover .dropzone-icon {
+            color: var(--primary);
+        }
+        .dropzone-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #5f6368;
+            margin: 0;
+        }
+        .dropzone-text span {
+            color: var(--primary);
+        }
+        .dropzone-subtext {
+            font-size: 0.8rem;
+            color: #9aa0a6;
+            margin: 0;
+        }
+        
+        /* Preview container */
+        .dropzone-preview {
+            position: relative;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+        .preview-image {
+            max-height: 140px;
+            max-width: 100%;
+            border-radius: 8px;
+            object-fit: contain;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid var(--border-color);
+            background-color: #fff;
+            padding: 4px;
+        }
+        .btn-remove-preview {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background-color: #d93025;
+            color: #fff;
+            border: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(217, 48, 37, 0.4);
+            transition: all 0.2s ease;
+            z-index: 30;
+        }
+        .btn-remove-preview:hover {
+            transform: scale(1.1);
+            background-color: #b31b12;
+        }
+        .d-none {
+            display: none !important;
+        }
+        .upload-dropzone.is-invalid {
+            border-color: #d93025;
+            background-color: rgba(219, 48, 37, 0.02);
+        }
     </style>
 @endsection
 
@@ -175,11 +287,23 @@
 
                 <div class="form-group" style="margin-bottom: 0;">
                     <label for="category_image">Hình ảnh đại diện</label>
-                    <input type="file" class="form-control @error('image') is-invalid @enderror" id="category_image" name="image" accept="image/*">
+                    <div class="upload-dropzone @error('image') is-invalid @enderror" id="dropzone">
+                        <input type="file" id="category_image" name="image" accept="image/*" class="file-input">
+                        <div class="dropzone-content" id="dropzone_content">
+                            <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                            <p class="dropzone-text">Kéo thả tệp vào đây hoặc <span>click để chọn ảnh</span></p>
+                            <p class="dropzone-subtext">PNG, JPG, GIF tối đa 5MB</p>
+                        </div>
+                        <div class="dropzone-preview d-none" id="dropzone_preview">
+                            <img src="" alt="Xem trước ảnh" id="preview_img" class="preview-image">
+                            <button type="button" class="btn-remove-preview" id="btn_remove_preview" title="Xóa ảnh chọn">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
                     @error('image')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
-                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 4px;">Tải lên ảnh PNG, JPG, GIF tối đa 5MB.</p>
                 </div>
             </div>
         </div>
@@ -247,6 +371,65 @@
                 // Remove leading/trailing hyphens
                 slug = slug.replace(/^-+|-+$/g, '');
                 slugInput.value = slug;
+            });
+        }
+
+        // Drag and Drop & Preview Image logic
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('category_image');
+        const dropzoneContent = document.getElementById('dropzone_content');
+        const dropzonePreview = document.getElementById('dropzone_preview');
+        const previewImg = document.getElementById('preview_img');
+        const btnRemove = document.getElementById('btn_remove_preview');
+
+        if (dropzone && fileInput) {
+            // Drag events
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('dragover');
+                }, false);
+            });
+
+            // Handle file select
+            fileInput.addEventListener('change', function() {
+                handleFiles(this.files);
+            });
+
+            function handleFiles(files) {
+                if (files && files[0]) {
+                    const file = files[0];
+                    if (!file.type.startsWith('image/')) {
+                        alert('Vui lòng chỉ chọn tệp hình ảnh!');
+                        fileInput.value = '';
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        dropzoneContent.classList.add('d-none');
+                        dropzonePreview.classList.remove('d-none');
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Remove preview
+            btnRemove.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInput.value = '';
+                previewImg.src = '';
+                dropzoneContent.classList.remove('d-none');
+                dropzonePreview.classList.add('d-none');
             });
         }
     });
