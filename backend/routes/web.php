@@ -89,6 +89,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/products', [ProductController::class, 'store'])
         ->name('products.store');
 
+    Route::get('/products/export', [ProductController::class, 'export'])
+        ->name('products.export');
+
     Route::get('/products/variants', [ProductController::class, 'variants'])
         ->name('products.variants');
 
@@ -116,8 +119,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/products/{id}', [ProductController::class, 'update'])
         ->name('products.update');
 
-    Route::delete('/products/{id}', [ProductController::class, 'destroy'])
-        ->name('products.destroy');
+    Route::patch('/products/{product}/status', [ProductController::class, 'updateStatus'])
+        ->name('products.status.update');
 
     // Route::get('/reviews', [ReviewController::class, 'index'])
 //     ->name('admin.reviews');
