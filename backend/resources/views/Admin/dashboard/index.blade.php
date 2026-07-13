@@ -284,7 +284,7 @@
         <ul class="best-sellers-list">
             <li class="seller-item">
                 <div class="seller-item-left">
-                    <img src="{{ asset('image/thuc-an-hat.jpg') }}" alt="Royal Canin" class="seller-thumb" onerror="this.src='https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=120&auto=format&fit=crop'">
+                    <img src="{{ asset('image/categories/thuc-an-hat.jpg') }}" alt="Royal Canin" class="seller-thumb">
                     <div class="seller-info">
                         <span class="seller-title" title="Royal Canin Mother & Babycat">Royal Canin Mother & Babycat</span>
                         <span class="seller-count">612 lượt bán</span>
@@ -299,7 +299,7 @@
             <li class="seller-item">
                 <div class="seller-item-left">
                     <!-- Standard clean backup pattern or dynamic svg if missing -->
-                    <img src="{{ asset('image/phu-kien.jpg') }}" alt="Máy lọc nước" class="seller-thumb" onerror="this.src='https://images.unsplash.com/photo-1601758228041-f3b2795255f1?q=80&w=120&auto=format&fit=crop'">
+                    <img src="{{ asset('image/categories/phu-kien.jpg') }}" alt="Máy lọc nước" class="seller-thumb">
                     <div class="seller-info">
                         <span class="seller-title" title="Máy lọc nước tự động PETKIT">Máy lọc nước tự động PETKIT</span>
                         <span class="seller-count">612 lượt bán</span>
@@ -313,7 +313,7 @@
 
             <li class="seller-item">
                 <div class="seller-item-left">
-                    <img src="{{ asset('image/do-choi.jpg') }}" alt="Xương gặm KONG" class="seller-thumb" onerror="this.src='https://images.unsplash.com/photo-1576201836106-db1758fd1c97?q=80&w=120&auto=format&fit=crop'">
+                    <img src="{{ asset('image/logo/logo.png') }}" alt="Xương gặm KONG" class="seller-thumb">
                     <div class="seller-info">
                         <span class="seller-title" title="Xương gặm KONG Classic Red">Xương gặm KONG Classic Red</span>
                         <span class="seller-count">549 lượt bán</span>
@@ -328,7 +328,7 @@
             <li class="seller-item">
                 <div class="seller-item-left">
                     <!-- Fallback premium dog/cat bed placeholder -->
-                    <img src="{{ asset('image/snack.jpg') }}" alt="Đệm nằm nhung" class="seller-thumb" onerror="this.src='https://images.unsplash.com/photo-1541599540903-216a46ca1ad0?q=80&w=120&auto=format&fit=crop'">
+                    <img src="{{ asset('image/logo/logo.png') }}" alt="Đệm nằm nhung" class="seller-thumb">
                     <div class="seller-info">
                         <span class="seller-title" title="Đệm nằm nhung cao cấp">Đệm nằm nhung cao cấp</span>
                         <span class="seller-count">420 lượt bán</span>

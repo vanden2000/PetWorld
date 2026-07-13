@@ -98,7 +98,23 @@ export function resolveBrandImage(path) {
   return resolveBackendImage(path, "brands");
 }
 export function resolveProductImage(path) {
-  return resolveBackendImage(path, "products");
+  if (!path) return resolveBackendImage(null);
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+
+  const normalized = path.replace(/^\/+/, "");
+
+  // Product uploads are stored on Laravel's public disk, exposed via
+  // /storage after `php artisan storage:link` has been run on the backend.
+  if (normalized.startsWith("products/")) {
+    return `${ASSET_BASE_URL}/storage/${normalized}`;
+  }
+
+  // Support the old location while existing database records are migrated.
+  if (normalized.startsWith("image/products/")) {
+    return `${ASSET_BASE_URL}/storage/products/${normalized.substring("image/products/".length)}`;
+  }
+
+  return resolveBackendImage(normalized);
 }
 
 // đường dẫn ảnh blogs

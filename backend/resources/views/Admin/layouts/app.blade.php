@@ -166,7 +166,7 @@
             <div class="header-left">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" class="search-input" placeholder="Tìm kiếm hệ thống...">
+                    <input type="text" id="admin-global-search" name="admin_global_search" class="search-input" placeholder="Tìm kiếm hệ thống...">
                 </div>
             </div>
             
