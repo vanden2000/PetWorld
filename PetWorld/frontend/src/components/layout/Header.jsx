@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore, useEffect } from "react";
 import {
   getCartSnapshot,
   getServerCartSnapshot,
@@ -24,6 +24,19 @@ export default function Header() {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+<<<<<<< HEAD:PetWorld/frontend/src/components/layout/Header.jsx
+=======
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+>>>>>>> origin/develop:frontend/src/components/layout/Header.jsx
 
   // Số lượng trong giỏ (localStorage) cho badge, cập nhật realtime khi giỏ đổi.
   const cartRaw = useSyncExternalStore(onCartChange, getCartSnapshot, getServerCartSnapshot);
@@ -51,7 +64,7 @@ export default function Header() {
   };
 
   return (
-    <header className="header-wrapper">
+    <header className={`header-wrapper ${isScrolled ? "scrolled" : ""}`}>
       {/* Top Header Bar */}
       <div className="top-bar">
         <div className="top-bar-left">
@@ -63,7 +76,7 @@ export default function Header() {
             </span>
             +033 2477 689
           </a>
-          <a href="petworldshopvv@gmail.com" className="top-bar-item">
+          <a href="mailto:petworldshopvv@gmail.com" className="top-bar-item">
             <span className="top-bar-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -110,6 +123,7 @@ export default function Header() {
       {/* Floating Navigation Bar */}
       <div className="navbar-container">
         <nav className="navbar">
+<<<<<<< HEAD:PetWorld/frontend/src/components/layout/Header.jsx
           <button
             type="button"
             className="mobile-menu-toggle"
@@ -120,6 +134,20 @@ export default function Header() {
             <span />
             <span />
             <span />
+=======
+          {/* Hamburger Menu button */}
+          <button
+            type="button"
+            className="hamburger-btn"
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Mở menu điều hướng"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+>>>>>>> origin/develop:frontend/src/components/layout/Header.jsx
           </button>
 
           <Link href={ROUTES.home} className="logo-link" id="logo">
@@ -173,7 +201,20 @@ export default function Header() {
           </form>
 
           <div className="nav-actions">
-            <Link href={ROUTES.notifications} className="action-item" id="notifications-btn" aria-label="Thông báo">
+            {/* Mobile Search Toggle */}
+            <button
+              type="button"
+              className="action-item mobile-search-toggle"
+              onClick={() => setIsMobileSearchOpen((prev) => !prev)}
+              aria-label="Tìm kiếm di động"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
+
+            <Link href={ROUTES.notifications} className="action-item desktop-only" id="notifications-btn" aria-label="Thông báo">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
                 <path d="M10 21h4" />
@@ -228,6 +269,119 @@ export default function Header() {
             </Link>
           </div>
         </nav>
+
+        {/* Dropdown Mobile Search Bar */}
+        {isMobileSearchOpen && (
+          <form className="mobile-search-row" onSubmit={(e) => { handleSearch(e); setIsMobileSearchOpen(false); }}>
+            <input
+              type="text"
+              className="mobile-search-row-input"
+              placeholder="Sen muốn tìm gì?...."
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+              autoFocus
+            />
+            <button type="submit" className="mobile-search-row-button">
+              Tìm kiếm
+            </button>
+          </form>
+        )}
+      </div>
+
+      {/* Mobile Menu Drawer Overlay & Content */}
+      <div className={`mobile-drawer ${isMobileMenuOpen ? "open" : ""}`}>
+        <div className="mobile-drawer-overlay" onClick={() => setIsMobileMenuOpen(false)} />
+        <div className="mobile-drawer-content">
+          <div className="mobile-drawer-header">
+            <Link href={ROUTES.home} onClick={() => setIsMobileMenuOpen(false)}>
+              <img src={resolveBackendImage("logo/Special_Offer_1-removebg-preview.png")} alt="PetWorld Logo" className="mobile-drawer-logo" />
+            </Link>
+            <button
+              type="button"
+              className="mobile-drawer-close"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label="Đóng menu"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div className="mobile-drawer-body">
+            {/* Search within Drawer */}
+            <form className="mobile-drawer-search" onSubmit={(e) => { handleSearch(e); setIsMobileMenuOpen(false); }}>
+              <input
+                type="text"
+                className="mobile-drawer-search-input"
+                placeholder="Sen muốn tìm gì?...."
+                value={keyword}
+                onChange={(event) => setKeyword(event.target.value)}
+              />
+              <button type="submit" className="mobile-drawer-search-btn" aria-label="Tìm kiếm">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </button>
+            </form>
+
+            {/* Navigation links */}
+            <ul className="mobile-drawer-links">
+              {MAIN_NAV.map((item) => {
+                const isActive =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(item.href);
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={`mobile-drawer-link ${isActive ? "active" : ""}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* Account Section in Drawer Footer */}
+          <div className="mobile-drawer-footer">
+            {user ? (
+              <div className="mobile-drawer-user">
+                <div className="user-info">
+                  <strong className="user-name">{user.name}</strong>
+                  <span className="user-email">{user.email}</span>
+                </div>
+                <Link href={ROUTES.account} className="drawer-btn" onClick={() => setIsMobileMenuOpen(false)}>
+                  Thông tin cá nhân
+                </Link>
+                <Link href={ROUTES.wishlist} className="drawer-btn" onClick={() => setIsMobileMenuOpen(false)}>
+                  Sản phẩm yêu thích
+                </Link>
+                <Link href={ROUTES.orders} className="drawer-btn" onClick={() => setIsMobileMenuOpen(false)}>
+                  Đơn hàng
+                </Link>
+                <button type="button" className="drawer-btn logout" onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}>
+                  Đăng xuất
+                </button>
+              </div>
+            ) : (
+              <div className="mobile-drawer-auth">
+                <Link href={ROUTES.login} className="drawer-auth-btn login" onClick={() => setIsMobileMenuOpen(false)}>
+                  Đăng nhập
+                </Link>
+                <Link href={ROUTES.register} className="drawer-auth-btn register" onClick={() => setIsMobileMenuOpen(false)}>
+                  Đăng ký
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </header>
   );

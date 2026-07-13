@@ -15,11 +15,14 @@ class ProductImage extends Model
     protected $fillable = [
         'product_id',
         'image_url',
+        'sort_order',
         'is_primary',
+        'alt_text',
     ];
 
     protected $casts = [
         'is_primary' => 'boolean',
+        'sort_order' => 'integer',
     ];
 
     public function product(): BelongsTo

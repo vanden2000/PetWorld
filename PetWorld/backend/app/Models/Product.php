@@ -23,6 +23,8 @@ class Product extends Model
         'slug',
         'description',
         'short_description',
+        'seo_title',
+        'seo_description',
         'view_count',
         'status',
     ];
@@ -44,7 +46,9 @@ class Product extends Model
 
     public function images(): HasMany
     {
-        return $this->hasMany(ProductImage::class);
+        return $this->hasMany(ProductImage::class)
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function primaryImage(): HasOne
@@ -58,13 +62,18 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+    public function slugHistories(): HasMany
+    {
+        return $this->hasMany(ProductSlugHistory::class);
+    }
+
     public function wishlists()
     {
         return $this->belongsToMany(
-         User::class,
-         'wishlists',
-        'product_id',
-        'user_id'
-    )->withTimestamps();
+            User::class,
+            'wishlists',
+            'product_id',
+            'user_id'
+        )->withTimestamps();
     }
 }

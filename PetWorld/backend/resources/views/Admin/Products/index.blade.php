@@ -537,6 +537,12 @@
         border: 1px solid rgba(0, 92, 78, 0.15);
     }
 
+    .alert-error-box {
+        color: var(--theme-danger);
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
     /* Responsive scaling */
     @media (max-width: 960px) {
         .filter-grid-form {
@@ -546,6 +552,224 @@
             grid-column: span 2;
             width: 100%;
         }
+    }
+
+    /* Ecommerce admin polish */
+    .product-header-container {
+        align-items: flex-start;
+        gap: 18px;
+        margin-bottom: 18px;
+    }
+
+    .product-header-container h1 {
+        font-size: 1.55rem;
+        letter-spacing: 0;
+        line-height: 1.2;
+    }
+
+    .header-action-buttons {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .btn-export-data,
+    .btn-add-product-new,
+    .btn-filter-submit {
+        min-height: 40px;
+        white-space: nowrap;
+    }
+
+    .filter-card-wrapper,
+    .products-table-card {
+        border-radius: 8px;
+        box-shadow: none;
+    }
+
+    .filter-card-wrapper {
+        padding: 16px;
+        margin-bottom: 18px;
+    }
+
+    .filter-grid-form {
+        grid-template-columns: minmax(260px, 1.8fr) minmax(180px, 1fr) minmax(180px, 1fr) auto;
+        gap: 12px;
+    }
+
+    .filter-input-element {
+        gap: 6px;
+    }
+
+    .field-input-box,
+    .field-select-box {
+        min-height: 40px;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .tbl-products {
+        min-width: 1080px;
+    }
+
+    .tbl-products th {
+        padding: 12px 14px;
+        white-space: nowrap;
+    }
+
+    .tbl-products td {
+        padding: 13px 14px;
+    }
+
+    .product-thumbnail-img {
+        width: 56px;
+        height: 56px;
+    }
+
+    .product-title-bold {
+        font-size: 0.92rem;
+    }
+
+    .product-desc-muted,
+    .sku-badge-variants,
+    .variant-sku-gray {
+        line-height: 1.35;
+    }
+
+    .category-pill-badge,
+    .variant-qty-badge {
+        border-radius: 6px;
+        line-height: 1.45;
+    }
+
+    .status-badge-cell {
+        border-radius: 999px;
+        background: #f9fafb;
+        width: fit-content;
+    }
+
+    .status-success-text {
+        background: rgba(22, 163, 74, 0.1);
+    }
+
+    .status-warning-text {
+        background: rgba(245, 158, 11, 0.12);
+    }
+
+    .status-danger-text {
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .action-icon-cell {
+        gap: 8px;
+    }
+
+    .btn-action-tool {
+        width: 34px;
+        height: 34px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+    }
+
+    .btn-action-tool:hover {
+        background: var(--theme-primary-light);
+        border-color: rgba(255, 120, 45, 0.18);
+        color: var(--theme-primary);
+        transform: none;
+    }
+
+    .btn-action-tool-delete:hover {
+        background: #fef2f2;
+        border-color: rgba(239, 68, 68, 0.18);
+        color: var(--theme-danger);
+    }
+
+    .variant-drawer-row {
+        background: #fbfcfd;
+    }
+
+    .variant-drawer-inner {
+        padding: 14px 18px 18px;
+        border-top: 1px solid var(--theme-border);
+        border-bottom: 1px solid var(--theme-border);
+    }
+
+    .variants-grid-list {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+
+    .variant-item-box {
+        align-items: flex-start;
+        border-radius: 8px;
+        gap: 12px;
+        min-height: 74px;
+    }
+
+    .variant-options-label {
+        line-height: 1.35;
+    }
+
+    .products-pagination-container {
+        padding: 14px 16px;
+    }
+
+    @media (max-width: 960px) {
+        .product-header-container {
+            flex-direction: column;
+        }
+
+        .header-action-buttons {
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .filter-grid-form {
+            grid-template-columns: 1fr;
+        }
+
+        .btn-filter-submit {
+            grid-column: auto;
+        }
+
+        .products-pagination-container {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 12px;
+        }
+    }
+    .product-main-row .js-toggle-drawer { cursor: pointer; }
+    .product-main-row .js-toggle-drawer:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
+    .product-main-row.is-inactive > td { background: rgba(255, 120, 45, .16); }
+    .product-main-row.is-inactive > td:first-child { border-left: 4px solid var(--theme-primary); }
+    .product-main-row.is-inactive:hover > td { background: rgba(255, 120, 45, .23); }
+    .variant-status-chip { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 8px; font-size: .75rem; font-weight: 700; }
+    .variant-status-chip.active { color: var(--theme-success); background: rgba(34, 197, 94, .1); }
+    .variant-status-chip.inactive { color: var(--theme-text-gray); background: var(--theme-gray-light); }
+    .btn-action-tool-hide { color: var(--theme-warning); }
+    .btn-action-tool-show { color: var(--theme-success); }
+    .confirm-modal[hidden] { display: none; }
+    .confirm-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(15, 23, 42, .48); }
+    .confirm-modal-card { width: min(440px, 100%); padding: 24px; border-radius: 16px; background: #fff; box-shadow: 0 24px 60px rgba(15, 23, 42, .22); }
+    .confirm-modal-card h3 { margin: 0 0 10px; color: var(--theme-text-dark); }
+    .confirm-modal-card p { margin: 0; color: var(--theme-text-gray); line-height: 1.6; }
+    .confirm-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+    .confirm-modal-button { border: 0; border-radius: 9px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+    .confirm-modal-cancel { color: var(--theme-text-dark); background: var(--theme-gray-light); }
+    .confirm-modal-submit { color: #fff; background: var(--theme-primary); }
+    .export-modal-card { width: min(560px, 100%); }
+    .export-options { display: grid; gap: 18px; margin-top: 20px; }
+    .export-option-group { display: grid; gap: 10px; }
+    .export-option-group > span { color: var(--theme-text-dark); font-size: .85rem; font-weight: 800; }
+    .export-option-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .export-option { display: flex; align-items: flex-start; gap: 9px; padding: 12px; border: 1px solid var(--theme-border); border-radius: 10px; cursor: pointer; }
+    .export-option:has(input:checked) { border-color: var(--theme-primary); background: var(--theme-primary-light); }
+    .export-option input { margin-top: 3px; accent-color: var(--theme-primary); }
+    .export-option strong { display: block; color: var(--theme-text-dark); font-size: .86rem; }
+    .export-option small { display: block; margin-top: 3px; color: var(--theme-text-gray); line-height: 1.35; }
+    .confirm-modal-submit:disabled { cursor: wait; opacity: .7; }
+
+    @media (max-width: 600px) {
+        .export-option-list { grid-template-columns: 1fr; }
     }
 </style>
 @endsection
@@ -559,6 +783,12 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="alert-panel alert-error-box">
+            <i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}
+        </div>
+    @endif
+
     <!-- Header Block -->
     <div class="product-header-container">
         <div class="header-title-block">
@@ -566,9 +796,9 @@
             <p>Tổng cộng {{ number_format($totalCount, 0, ',', '.') }} sản phẩm đang được niêm yết.</p>
         </div>
         <div class="header-action-buttons">
-            <a href="#" class="btn-export-data">
+            <button type="button" class="btn-export-data" id="open-export-modal">
                 <i class="fa-solid fa-download"></i> Xuất dữ liệu
-            </a>
+            </button>
             <a href="{{ route('admin.products.create') }}" class="btn-add-product-new">
                 <i class="fa-solid fa-plus"></i> Thêm Sản phẩm mới
             </a>
@@ -604,9 +834,8 @@
                 <label for="status">Trạng thái</label>
                 <select id="status" name="status" class="field-select-box">
                     <option value="all" {{ $status == 'all' ? 'selected' : '' }}>Tất cả trạng thái</option>
-                    <option value="active" {{ $status == 'active' ? 'selected' : '' }}>Đang hoạt động</option>
+                    <option value="active" {{ $status == 'active' ? 'selected' : '' }}>Đang hiển thị</option>
                     <option value="inactive" {{ $status == 'inactive' ? 'selected' : '' }}>Đã ẩn</option>
-                    <option value="out_of_stock" {{ $status == 'out_of_stock' ? 'selected' : '' }}>Hết hàng</option>
                 </select>
             </div>
 
@@ -628,7 +857,6 @@
                         <th>SLUG</th>
                         <th>DANH MỤC</th>
                         <th>GIÁ</th>
-                        <th>TỒN KHO</th>
                         <th>TRẠNG THÁI</th>
                         <th style="text-align: right; padding-right: 24px;">HÀNH ĐỘNG</th>
                     </tr>
@@ -636,7 +864,7 @@
                 <tbody>
                     @if($products->isEmpty())
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 32px; color: var(--theme-text-gray);">
+                            <td colspan="7" style="text-align: center; padding: 32px; color: var(--theme-text-gray);">
                                 <i class="fa-solid fa-box-open" style="font-size: 2rem; margin-bottom: 8px;"></i>
                                 <p>Không tìm thấy sản phẩm nào khớp với tìm kiếm.</p>
                             </td>
@@ -644,9 +872,6 @@
                     @else
                         @foreach($products as $product)
                             @php
-                                // Accumulate variants quantity
-                                $totalQuantity = $product->variants->sum('quantity');
-
                                 // Find price range
                                 $prices = $product->variants->map(function($v) {
                                     return $v->hasValidSalePrice() ? (float)$v->sale_price : (float)$v->price;
@@ -656,26 +881,33 @@
                                 $maxPrice = count($prices) ? max($prices) : 0;
                             @endphp
                             <!-- Main Product Row -->
-                            <tr data-product-id="{{ $product->id }}">
+                            <tr class="product-main-row {{ $product->status === 'inactive' ? 'is-inactive' : '' }}" data-product-id="{{ $product->id }}">
                                 <td class="col-expand-btn js-toggle-drawer" title="Chi tiết biến thể">
                                     <i class="fa-solid fa-chevron-right arrow-icon"></i>
                                 </td>
-                                <td>
+                                <td class="js-toggle-drawer" tabindex="0" role="button" aria-expanded="false" aria-controls="drawer-{{ $product->id }}">
                                     <div class="product-info-cell">
-                                        <!-- Primary Image resolution -->
                                         @php
-                                            $imageUrl = 'https://placehold.co/80x80?text=PetWorld';
-                                            if ($product->primaryImage) {
-                                                $imageUrl = str_contains($product->primaryImage->image_url, '://') 
-                                                    ? $product->primaryImage->image_url 
-                                                    : asset('storage/' . $product->primaryImage->image_url);
-                                            } elseif ($product->images->first()) {
-                                                $imageUrl = str_contains($product->images->first()->image_url, '://')
-                                                    ? $product->images->first()->image_url
-                                                    : asset('storage/' . $product->images->first()->image_url);
+                                            $fallbackImageUrl = 'https://placehold.co/80x80?text=PetWorld';
+                                            $imageUrl = $fallbackImageUrl;
+                                            $image = $product->primaryImage ?? $product->images->first();
+                                            $imageAlt = $image?->alt_text ?: $product->name;
+
+                                            if ($image?->image_url) {
+                                                $path = ltrim($image->image_url, '/');
+
+                                                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                                                    $imageUrl = $path;
+                                                } elseif (str_starts_with($path, 'image/') || str_starts_with($path, 'products/') || str_starts_with($path, 'storage/')) {
+                                                    $imageUrl = asset($path);
+                                                } else {
+                                                    // Compatibility for legacy product images stored without a directory prefix.
+                                                    $imageUrl = asset('storage/'.$path);
+                                                }
                                             }
                                         @endphp
-                                        <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="product-thumbnail-img">
+                                        <img src="{{ $imageUrl }}" alt="{{ $imageAlt }}" class="product-thumbnail-img"
+                                             onerror="this.onerror=null;this.src='{{ $fallbackImageUrl }}';">
                                         <div class="product-text-details">
                                             <span class="product-title-bold">{{ $product->name }}</span>
                                              @if($product->variants->count() > 1)
@@ -708,37 +940,34 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="stock-count-style {{ $totalQuantity == 0 ? 'stock-critical' : '' }}">
-                                        {{ $totalQuantity }}
-                                    </span>
-                                </td>
-                                <td>
                                     @if($product->status === 'inactive')
                                         <div class="status-badge-cell status-warning-text">                              
                                             <span>Đã ẩn</span>
                                         </div>
-                                    @elseif($totalQuantity <= 0)
-                                        <div class="status-badge-cell status-danger-text">
-                                            <span>Hết hàng</span>
-                                        </div>
                                     @else
                                         <div class="status-badge-cell status-success-text">
-                                            <span>Hoạt động</span>
+                                            <span>Đang hiển thị</span>
                                         </div>
                                     @endif
                                 </td>
                                 <td>
                                     <div class="action-icon-cell" style="justify-content: flex-end; padding-right: 8px;">
-                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="btn-action-tool" title="Xem/Sửa">
-                                            <i class="fa-regular fa-eye"></i>
+                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="btn-action-tool" title="Sửa sản phẩm">
+                                            <i class="fa-solid fa-pen"></i>
                                         </a>
-                                        <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" 
-                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');" style="margin: 0;">
+                                        <form action="{{ route('admin.products.status.update', $product) }}" method="POST" style="margin: 0;">
                                             @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn-action-tool btn-action-tool-delete" title="Xóa">
-                                                <i class="fa-solid fa-trash-can"></i>
-                                            </button>
+                                            @method('PATCH')
+                                            <input type="hidden" name="status" value="{{ $product->status === 'active' ? 'inactive' : 'active' }}">
+                                            @if($product->status === 'active')
+                                                <button type="button" class="btn-action-tool btn-action-tool-hide js-open-hide-modal" title="Ẩn sản phẩm" data-product-name="{{ $product->name }}">
+                                                    <i class="fa-solid fa-eye-slash"></i>
+                                                </button>
+                                            @else
+                                                <button type="submit" class="btn-action-tool btn-action-tool-show" title="Hiện lại sản phẩm">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            @endif
                                         </form>
                                     </div>
                                 </td>
@@ -747,7 +976,7 @@
                             <!-- Variants Drawer Sub-Row -->
                             @if($product->variants->isNotEmpty())
                                 <tr class="variant-drawer-row" id="drawer-{{ $product->id }}">
-                                    <td colspan="8" style="padding: 0;">
+                                    <td colspan="7" style="padding: 0;">
                                         <div class="variant-drawer-inner">
                                             <div style="font-size: 0.8rem; font-weight: 700; color: var(--theme-text-gray); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em;">
                                                 Chi Tiết Các Biến Thể của Sản Phẩm ({{ $product->variants->count() }})
@@ -779,6 +1008,9 @@
                                                             <div>
                                                                 <span class="variant-qty-badge {{ $variant->quantity > 0 ? 'badge-qty-in-stock' : 'badge-qty-out-stock' }}">
                                                                     Còn lại: {{ $variant->quantity }}
+                                                                </span>
+                                                                <span class="variant-status-chip {{ $variant->status }}">
+                                                                    {{ $variant->status === 'active' ? 'Đang hiển thị' : 'Đã ẩn' }}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -850,33 +1082,195 @@
         @endif
     </div>
 
+    <div class="confirm-modal" id="export-product-modal" hidden aria-hidden="true">
+        <div class="confirm-modal-card export-modal-card" role="dialog" aria-modal="true" aria-labelledby="export-product-title">
+            <h3 id="export-product-title">Xuất dữ liệu sản phẩm</h3>
+            <p>Chọn phạm vi và nội dung cần đưa vào file Excel.</p>
+
+            <form action="{{ route('admin.products.export') }}" method="GET" id="product-export-form">
+                <input type="hidden" name="search" value="{{ $search }}">
+                <input type="hidden" name="category_id" value="{{ $categoryId }}">
+                <input type="hidden" name="status" value="{{ $status }}">
+
+                <div class="export-options">
+                    <div class="export-option-group">
+                        <span>Phạm vi xuất</span>
+                        <div class="export-option-list">
+                            <label class="export-option">
+                                <input type="radio" name="scope" value="filtered" checked>
+                                <span><strong>Theo bộ lọc hiện tại</strong><small>Xuất toàn bộ kết quả phù hợp, không giới hạn trang.</small></span>
+                            </label>
+                            <label class="export-option">
+                                <input type="radio" name="scope" value="all">
+                                <span><strong>Tất cả sản phẩm</strong><small>Bỏ qua các bộ lọc đang chọn.</small></span>
+                            </label>
+                            <label class="export-option">
+                                <input type="radio" name="scope" value="active">
+                                <span><strong>Đang hiển thị</strong><small>Chỉ sản phẩm đang hiển thị.</small></span>
+                            </label>
+                            <label class="export-option">
+                                <input type="radio" name="scope" value="inactive">
+                                <span><strong>Đã ẩn</strong><small>Chỉ sản phẩm đang bị ẩn.</small></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="export-option-group">
+                        <span>Nội dung file</span>
+                        <div class="export-option-list">
+                            <label class="export-option">
+                                <input type="radio" name="include_variants" value="1" checked>
+                                <span><strong>Sản phẩm và biến thể</strong><small>Tạo hai sheet trong cùng file.</small></span>
+                            </label>
+                            <label class="export-option">
+                                <input type="radio" name="include_variants" value="0">
+                                <span><strong>Chỉ sản phẩm</strong><small>Chỉ tạo sheet thông tin sản phẩm.</small></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="confirm-modal-actions">
+                    <button type="button" class="confirm-modal-button confirm-modal-cancel" id="cancel-product-export">Hủy</button>
+                    <button type="submit" class="confirm-modal-button confirm-modal-submit" id="submit-product-export">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>Xuất Excel</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="confirm-modal" id="hide-product-modal" hidden aria-hidden="true">
+        <div class="confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="hide-product-title">
+            <h3 id="hide-product-title">Ẩn sản phẩm?</h3>
+            <p>
+                Sản phẩm “<strong id="hide-product-name"></strong>” và các biến thể sẽ không còn hiển thị cho khách hàng.
+                Dữ liệu sản phẩm vẫn được giữ lại.
+            </p>
+            <div class="confirm-modal-actions">
+                <button type="button" class="confirm-modal-button confirm-modal-cancel" id="cancel-hide-product">Hủy</button>
+                <button type="button" class="confirm-modal-button confirm-modal-submit" id="confirm-hide-product">Xác nhận ẩn</button>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Toggle Variants Drawer Sub-Row Handler
         const togglers = document.querySelectorAll('.js-toggle-drawer');
-        
-        togglers.forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                const parentRow = this.closest('tr');
-                const productId = parentRow.getAttribute('data-product-id');
-                const drawerRow = document.getElementById('drawer-' + productId);
-                const arrowIcon = this.querySelector('.arrow-icon');
-                
-                if (drawerRow) {
-                    const isVisible = window.getComputedStyle(drawerRow).display !== 'none';
-                    
-                    if (isVisible) {
-                        drawerRow.style.display = 'none';
-                        arrowIcon.style.transform = 'rotate(0deg)';
-                    } else {
-                        drawerRow.style.display = 'table-row';
-                        arrowIcon.style.transform = 'rotate(90deg)';
-                    }
+
+        function closeDrawers(exceptId = null) {
+            document.querySelectorAll('.variant-drawer-row').forEach(drawer => {
+                if (drawer.id !== exceptId) drawer.style.display = 'none';
+            });
+
+            document.querySelectorAll('.product-main-row').forEach(row => {
+                if ('drawer-' + row.dataset.productId !== exceptId) {
+                    row.querySelectorAll('.js-toggle-drawer').forEach(toggle => toggle.setAttribute('aria-expanded', 'false'));
+                    const arrow = row.querySelector('.arrow-icon');
+                    if (arrow) arrow.style.transform = 'rotate(0deg)';
                 }
             });
+        }
+
+        function toggleDrawer(toggle) {
+            const parentRow = toggle.closest('tr');
+            const drawerId = 'drawer-' + parentRow.dataset.productId;
+            const drawerRow = document.getElementById(drawerId);
+            const arrowIcon = parentRow.querySelector('.arrow-icon');
+
+            if (!drawerRow) return;
+
+            const isVisible = window.getComputedStyle(drawerRow).display !== 'none';
+            closeDrawers(isVisible ? null : drawerId);
+            drawerRow.style.display = isVisible ? 'none' : 'table-row';
+            parentRow.querySelectorAll('.js-toggle-drawer').forEach(item => item.setAttribute('aria-expanded', String(!isVisible)));
+            if (arrowIcon) arrowIcon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(90deg)';
+        }
+
+        togglers.forEach(btn => {
+            btn.addEventListener('click', function() {
+                toggleDrawer(this);
+            });
+
+            btn.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    toggleDrawer(this);
+                }
+            });
+        });
+
+        const exportModal = document.getElementById('export-product-modal');
+        const openExportButton = document.getElementById('open-export-modal');
+        const cancelExportButton = document.getElementById('cancel-product-export');
+        const exportForm = document.getElementById('product-export-form');
+        const submitExportButton = document.getElementById('submit-product-export');
+        const submitExportLabel = submitExportButton.querySelector('span');
+
+        function closeExportModal() {
+            exportModal.hidden = true;
+            exportModal.setAttribute('aria-hidden', 'true');
+            openExportButton.focus();
+        }
+
+        openExportButton.addEventListener('click', function() {
+            exportModal.hidden = false;
+            exportModal.setAttribute('aria-hidden', 'false');
+            cancelExportButton.focus();
+        });
+
+        cancelExportButton.addEventListener('click', closeExportModal);
+        exportModal.addEventListener('click', function(event) {
+            if (event.target === exportModal) closeExportModal();
+        });
+
+        exportForm.addEventListener('submit', function() {
+            submitExportButton.disabled = true;
+            submitExportLabel.textContent = 'Đang tạo file...';
+
+            window.setTimeout(function() {
+                submitExportButton.disabled = false;
+                submitExportLabel.textContent = 'Xuất Excel';
+                closeExportModal();
+            }, 2500);
+        });
+
+        const modal = document.getElementById('hide-product-modal');
+        const productName = document.getElementById('hide-product-name');
+        const cancelButton = document.getElementById('cancel-hide-product');
+        const confirmButton = document.getElementById('confirm-hide-product');
+        let pendingForm = null;
+
+        function closeModal() {
+            modal.hidden = true;
+            modal.setAttribute('aria-hidden', 'true');
+            pendingForm = null;
+        }
+
+        document.querySelectorAll('.js-open-hide-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                pendingForm = this.closest('form');
+                productName.textContent = this.dataset.productName;
+                modal.hidden = false;
+                modal.setAttribute('aria-hidden', 'false');
+                cancelButton.focus();
+            });
+        });
+
+        cancelButton.addEventListener('click', closeModal);
+        confirmButton.addEventListener('click', function() {
+            if (pendingForm) pendingForm.submit();
+        });
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && !exportModal.hidden) closeExportModal();
+            if (event.key === 'Escape' && !modal.hidden) closeModal();
         });
     });
 </script>
