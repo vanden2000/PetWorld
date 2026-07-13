@@ -219,6 +219,7 @@ export default function ProductDetail({ product }) {
         <div className="pd-price">
           <span className="pd-price-current">{formatPrice(currentPrice)}</span>
           {oldPrice && <span className="pd-price-old">{formatPrice(oldPrice)}</span>}
+          <WishlistButton product={product} className="pd-wishlist-btn" />
         </div>
         <div className="pd-desc">
           {product.short_description && (
@@ -275,7 +276,6 @@ export default function ProductDetail({ product }) {
             </svg>
             Thêm giỏ hàng
           </button>
-          <WishlistButton product={product} className="pd-wishlist-btn" />
         </div>
 
         <button type="button" className="pd-buy-btn" onClick={handleBuyNow} disabled={!inStock}>

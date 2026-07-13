@@ -61,7 +61,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/home', HomeController::class);
 Route::get('/checkout-options', CheckoutOptionController::class);
-// Webhook SePay gọi về khi nhận được chuyển khoản (xác thực bằng API key bên trong).
 Route::post('/webhooks/sepay', SepayWebhookController::class);
 Route::get('/blogs', [BlogController::class, 'index']);
 Route::get('/blogs/{slug}', [BlogController::class, 'show']);

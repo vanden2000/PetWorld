@@ -36,7 +36,7 @@ export default async function ProductDetailPage({ params }) {
   return (
     <main className="main-content">
       <TrackRecentlyViewed slug={slug} />
-      <div className="homepage-container">
+      <div className="homepage-container product-detail-page">
         <nav className="shop-breadcrumb">
           <Link href="/">Trang chủ</Link>
           <span className="shop-breadcrumb-sep">›</span>

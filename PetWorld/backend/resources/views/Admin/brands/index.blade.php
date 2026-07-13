@@ -28,6 +28,26 @@
     .brand-admin-detail-card:hover { border-color: var(--primary); transform: translateY(-1px); }
     .brand-admin-detail-card i { color: var(--primary); font-size: 1.2rem; }
     .brand-admin-detail-card strong { font-size: 0.92rem; }
+    .brand-alert {
+        margin-bottom: 20px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+    .brand-alert-success {
+        background: #e6f4ea;
+        border: 1px solid #ceead6;
+        color: #137333;
+    }
+    .brand-alert-error {
+        background: #fff1f1;
+        border: 1px solid #ffd1d1;
+        color: var(--danger);
+    }
     @media (max-width: 1100px) { .brand-admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 640px) {
         .brand-admin-stats { grid-template-columns: 1fr; }
@@ -45,6 +65,20 @@
 @endphp
 
 <div class="brand-admin-page">
+    @if(session('success'))
+        <div class="brand-alert brand-alert-success">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="brand-alert brand-alert-error">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
     <div class="dashboard-header brand-admin-header" style="margin-bottom: 24px;">
         <div class="header-title-block">
             <div style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Quản lý / Thương hiệu</div>

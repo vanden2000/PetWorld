@@ -14,6 +14,8 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\LoginController;
 
+Route::get('/', fn() => response('PetWorld API'));
+
 // Admin authentication routes
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');

@@ -69,8 +69,6 @@ class OrderController extends Controller
         ]);
     }
 
-<<<<<<< HEAD
-=======
     public function show(Request $request, Order $order): JsonResponse
     {
         abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
@@ -203,7 +201,6 @@ class OrderController extends Controller
         ]);
     }
 
->>>>>>> origin/develop
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -355,56 +352,6 @@ class OrderController extends Controller
             'message' => 'Đặt hàng thành công.',
             'data' => $this->format($order->load('items')),
         ], 201);
-    }
-
-    public function show(Request $request, Order $order): JsonResponse
-    {
-        abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
-
-        $order->load([
-            'shippingMethod:id,name',
-            'paymentMethod:id,name',
-            'items.productVariant.product.primaryImage',
-            'items.productVariant.variantTypes',
-        ]);
-
-        $subtotal = $order->items->sum(fn ($item) => (float) $item->price * $item->quantity);
-
-        return response()->json(['data' => ['order' => [
-            'id' => $order->id,
-            'code' => 'PW'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
-            'payment_code' => $order->payment_code,
-            'status' => $order->order_status,
-            'payment_status' => $order->payment_status,
-            'created_at' => $order->created_at?->toIso8601String(),
-            'updated_at' => $order->updated_at?->toIso8601String(),
-            'recipient' => [
-                'name' => $order->recipient_name,
-                'phone' => $order->recipient_phone,
-                'address' => $order->recipient_address,
-            ],
-            'shipping' => [
-                'method' => $order->shippingMethod?->name,
-                'fee' => (float) $order->shipping_fee,
-                'tracking_code' => 'PW-'.str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
-            ],
-            'payment' => [
-                'method' => $order->paymentMethod?->name,
-                'subtotal' => $subtotal,
-                'discount' => (float) $order->discount_amount,
-                'total' => (float) $order->total_amount,
-            ],
-            'note' => $order->note,
-            'items' => $order->items->map(fn ($item) => [
-                'id' => $item->id,
-                'name' => $item->product_name,
-                'variant' => $item->productVariant?->display_name,
-                'quantity' => $item->quantity,
-                'price' => (float) $item->price,
-                'slug' => $item->productVariant?->product?->slug,
-                'image' => $item->productVariant?->product?->primaryImage?->image_url,
-            ])->values(),
-        ]]]);
     }
 
     private function composeAddress(Address $address): string

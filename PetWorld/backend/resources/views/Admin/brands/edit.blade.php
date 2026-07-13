@@ -211,6 +211,9 @@
     @media (max-width: 760px) {
         .be-images { grid-template-columns: 1fr; }
     }
+    .brand-alert { margin-bottom: 20px; padding: 12px 16px; border-radius: 8px; display: flex; align-items: flex-start; gap: 10px; font-size: 0.9rem; font-weight: 700; }
+    .brand-alert-error { background: #fff1f1; border: 1px solid #ffd1d1; color: var(--danger); }
+    .brand-alert ul { margin: 4px 0 0; padding-left: 18px; font-weight: 600; }
 </style>
 @endsection
 
@@ -222,6 +225,20 @@
     $slugValue = old('slug', $brand->slug);
     $productCategories = $products->map(fn ($p) => optional($p->category)->name)->filter()->unique()->values();
 @endphp
+
+@if($errors->any())
+    <div class="brand-alert brand-alert-error">
+        <i class="fa-solid fa-circle-exclamation" style="margin-top: 2px;"></i>
+        <div>
+            <div>Vui lòng kiểm tra lại thông tin thương hiệu.</div>
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+@endif
 
 <form action="{{ route('admin.brands.update', $brand->id) }}" method="POST" enctype="multipart/form-data" class="be-page" id="brandEditForm" onsubmit="return confirm('Bạn có chắc chắn muốn cập nhật thương hiệu này không?')">
     @csrf

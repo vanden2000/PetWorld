@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import AuthForm from "@/components/auth/AuthForm";
 
 export const metadata = {
@@ -8,7 +9,9 @@ export default function RegisterPage() {
   return (
     <main className="main-content">
       <div className="homepage-container auth-page">
-        <AuthForm mode="register" />
+        <Suspense fallback={null}>
+          <AuthForm mode="register" />
+        </Suspense>
       </div>
     </main>
   );

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use App\Models\Brand;
 
 class BrandController extends Controller
 {
@@ -23,13 +23,15 @@ class BrandController extends Controller
                 'website' => 'https://royalcanin.com',
                 'description' => 'Thương hiệu thức ăn thú cưng cao cấp nhập khẩu Pháp.',
                 'image' => null,
-                'status' => 'active'
+                'status' => 'active',
             ]);
+
             $brands = Brand::query()
                 ->withCount('products')
                 ->latest()
                 ->get();
         }
+
         return view('admin.brands.index', compact('brands'));
     }
 
@@ -54,7 +56,6 @@ class BrandController extends Controller
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
-            // Store public/uploads/brands
             $file->move(public_path('uploads/brands'), $filename);
             $data['image'] = 'uploads/brands/' . $filename;
         }
@@ -62,7 +63,9 @@ class BrandController extends Controller
         Brand::create($data);
         Cache::forget('api.home.sections.v1');
 
-        return redirect()->route('admin.brands')->with('success', 'Thêm thương hiệu mới thành công!');
+        return redirect()
+            ->route('admin.brands')
+            ->with('success', 'Thêm thương hiệu mới thành công!');
     }
 
     public function edit($id)
@@ -70,8 +73,10 @@ class BrandController extends Controller
         $brand = Brand::query()
             ->with([
                 'products' => function ($query) {
-                    $query->with(['category', 'primaryImage', 'variants'])->latest('id')->limit(6);
-                }
+                    $query->with(['category', 'primaryImage', 'variants'])
+                        ->latest('id')
+                        ->limit(6);
+                },
             ])
             ->withCount('products')
             ->findOrFail($id);
@@ -82,6 +87,7 @@ class BrandController extends Controller
     public function update(Request $request, $id)
     {
         $brand = Brand::findOrFail($id);
+        $oldStatus = $brand->status;
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -95,7 +101,6 @@ class BrandController extends Controller
         $data = $request->only(['name', 'slug', 'website', 'description', 'status']);
 
         if ($request->hasFile('image')) {
-            // Delete old file if exists
             if ($brand->image && file_exists(public_path($brand->image))) {
                 @unlink(public_path($brand->image));
             }
@@ -105,16 +110,25 @@ class BrandController extends Controller
             $file->move(public_path('uploads/brands'), $filename);
             $data['image'] = 'uploads/brands/' . $filename;
         } elseif ($request->input('image_prefilled') !== 'yes') {
-            // User deleted current image preview
             if ($brand->image && file_exists(public_path($brand->image))) {
                 @unlink(public_path($brand->image));
             }
+
             $data['image'] = null;
         }
 
         $brand->update($data);
         Cache::forget('api.home.sections.v1');
 
-        return redirect()->route('admin.brands')->with('success', 'Cập nhật thương hiệu thành công!');
+        $message = 'Cập nhật thương hiệu thành công!';
+        if ($oldStatus !== $brand->status) {
+            $message = $brand->status === 'active'
+                ? 'Thương hiệu đã được hiển thị lại thành công!'
+                : 'Thương hiệu đã được ẩn thành công!';
+        }
+
+        return redirect()
+            ->route('admin.brands')
+            ->with('success', $message);
     }
 }

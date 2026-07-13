@@ -1,13 +1,8 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { resolveBackendImage } from "@/lib/format";
 
-// Font Inter có subset tiếng Việt để hiển thị đầy đủ dấu.
-const inter = Inter({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-inter",
-  display: "swap",
-});
+// Use a local/system font stack so dev and build do not depend on Google Fonts.
+const fontStack = '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 export const metadata = {
   title: "PetWorld - Siêu Thị Thú Cưng Hàng Đầu | Thức Ăn & Phụ Kiện Chính Hãng",
@@ -19,7 +14,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="vi" className={inter.variable}>
+    <html lang="vi" style={{ "--font-inter": fontStack }}>
       <link rel="icon" type="image/x-icon" href={resolveBackendImage("logo/logo.png")} />
       <body>{children}</body>
     </html>
