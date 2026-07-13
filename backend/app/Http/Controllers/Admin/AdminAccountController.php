@@ -65,6 +65,12 @@ class AdminAccountController extends Controller
                 ->withInput();
         }
 
+        if (Hash::check($data['password'], $admin->password)) {
+            return back()
+                ->withErrors(['password' => 'Mật khẩu mới cần khác mật khẩu hiện tại.'])
+                ->withInput();
+        }
+
         $admin->update([
             'password' => $data['password'],
         ]);
