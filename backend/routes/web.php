@@ -134,6 +134,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users', [UserController::class, 'index'])
         ->name('users');
 
+    Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])
+        ->name('users.status.update');
+
+    Route::patch('/users/{user}/grant-admin', [UserController::class, 'grantAdmin'])
+        ->name('users.grant-admin');
+
+    Route::patch('/users/{user}/revoke-admin', [UserController::class, 'revokeAdmin'])
+        ->name('users.revoke-admin');
+
     Route::get('/vouchers', [VoucherController::class, 'index'])->name('vouchers');
     Route::get('/vouchers/create', [VoucherController::class, 'create'])->name('vouchers.create');
     Route::post('/vouchers', [VoucherController::class, 'store'])->name('vouchers.store');
