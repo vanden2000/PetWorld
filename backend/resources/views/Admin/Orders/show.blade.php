@@ -41,10 +41,10 @@
         </h1>
     </div>
     <div class="header-actions">
-        <button class="btn-outline-print" type="button" onclick="window.print()">
+        <a class="btn-outline-print" href="{{ route('admin.orders.invoice', $order->id) }}" target="_blank" rel="noopener">
             <i class="fa-solid fa-print"></i>
             <span>IN HÓA ĐƠN</span>
-        </button>
+        </a>
     </div>
 </div>
 

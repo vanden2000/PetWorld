@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\OrdersExport;
 use App\Http\Controllers\Controller;
 use App\Mail\OrderStatusMail;
 use App\Models\Order;
 use App\Models\ProductVariant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
 
 class OrderController extends Controller
@@ -92,19 +95,34 @@ class OrderController extends Controller
         ]);
     }
 
+    public function export(Request $request)
+    {
+        $filters = $request->validate([
+            'scope' => ['nullable', Rule::in(['filtered', 'all'])],
+            'search' => ['nullable', 'string', 'max:80'],
+            'payment_status' => ['nullable', Rule::in(array_keys(self::PAYMENT_STATUSES))],
+            'order_status' => ['nullable', Rule::in(array_keys(self::ORDER_STATUSES))],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
+        $query = $this->exportQuery(($filters['scope'] ?? 'filtered') === 'all' ? [] : $filters);
+
+        if (! (clone $query)->exists()) {
+            return redirect()
+                ->route('admin.orders', $request->only(['search', 'payment_status', 'order_status', 'date_from', 'date_to']))
+                ->with('error', 'Không có đơn hàng phù hợp để xuất.');
+        }
+
+        return Excel::download(
+            new OrdersExport($query),
+            'don-hang-petworld_' . now()->format('Ymd-Hi') . '.xlsx',
+        );
+    }
+
     public function show($id)
     {
-        $order = Order::query()
-            ->with([
-                'user:id,name,email',
-                'paymentMethod:id,name',
-                'shippingMethod:id,name',
-                'voucher:id,code,discount_value',
-                'items.productVariant.product.primaryImage',
-                'items.productVariant.variantValues.variantType',
-                'sepayTransactions' => fn ($query) => $query->latest(),
-            ])
-            ->findOrFail($id);
+        $order = $this->findOrderWithDetails($id);
 
         return view('admin.orders.show', [
             'order' => $order,
@@ -114,6 +132,18 @@ class OrderController extends Controller
             'paymentStatusClasses' => self::PAYMENT_STATUS_CLASS,
             'nextOrderStatuses' => $this->nextOrderStatuses($order->order_status),
             'nextPaymentStatuses' => $this->nextPaymentStatuses($order->payment_status),
+        ]);
+    }
+
+    /** Display a print-ready A5 sales receipt for an order. */
+    public function invoice($id)
+    {
+        $order = $this->findOrderWithDetails($id);
+
+        return view('admin.orders.invoice', [
+            'order' => $order,
+            'orderStatuses' => self::ORDER_STATUSES,
+            'paymentStatuses' => self::PAYMENT_STATUSES,
         ]);
     }
 
@@ -223,5 +253,44 @@ class OrderController extends Controller
         foreach ($order->items as $item) {
             $variants->get($item->product_variant_id)?->increment('quantity', $item->quantity);
         }
+    }
+
+    private function exportQuery(array $filters): Builder
+    {
+        return Order::query()
+            ->when($filters['search'] ?? null, function (Builder $query, string $search): void {
+                $numericId = preg_replace('/\D/', '', $search);
+                $query->where(function (Builder $nested) use ($search, $numericId): void {
+                    if ($numericId !== '') {
+                        $nested->where('id', (int) $numericId);
+                    }
+
+                    $nested->orWhere('payment_code', 'like', "%{$search}%")
+                        ->orWhere('recipient_name', 'like', "%{$search}%")
+                        ->orWhere('recipient_phone', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn (Builder $userQuery) => $userQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%"));
+                });
+            })
+            ->when($filters['payment_status'] ?? null, fn (Builder $query, string $status) => $query->where('payment_status', $status))
+            ->when($filters['order_status'] ?? null, fn (Builder $query, string $status) => $query->where('order_status', $status))
+            ->when($filters['date_from'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '>=', $date))
+            ->when($filters['date_to'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '<=', $date));
+    }
+
+    private function findOrderWithDetails($id): Order
+    {
+        return Order::query()
+            ->with([
+                'user:id,name,email',
+                'paymentMethod:id,name',
+                'shippingMethod:id,name',
+                'voucher:id,code,discount_value',
+                'items.productVariant.product.primaryImage',
+                'items.productVariant.variantValues.variantType',
+                'sepayTransactions' => fn ($query) => $query->latest(),
+            ])
+            ->findOrFail($id);
     }
 }

@@ -71,6 +71,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/orders', [OrderController::class, 'index'])
         ->name('orders');
 
+    Route::get('/orders/export', [OrderController::class, 'export'])
+        ->name('orders.export');
+
+    Route::get('/orders/{id}/invoice', [OrderController::class, 'invoice'])
+        ->name('orders.invoice');
+
     Route::get('/orders/{id}', [OrderController::class, 'show'])
         ->name('orders.show');
 

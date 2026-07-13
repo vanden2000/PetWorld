@@ -2,6 +2,45 @@
 
 @section('title', 'Quan ly don hang')
 
+@section('styles')
+<style>
+    .order-action-icons { display: inline-flex; align-items: center; gap: 8px; }
+    .order-action-icons .action-view-details,
+    .order-action-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text-main);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    .order-action-icons .action-view-details span { display: none; }
+    .order-action-icons .action-view-details:hover,
+    .order-action-icon:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); transform: translateY(-1px); }
+    .order-export-modal[hidden] { display: none; }
+    .order-export-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(15, 23, 42, .48); }
+    .order-export-card { width: min(480px, 100%); padding: 24px; border-radius: 12px; background: #fff; box-shadow: 0 24px 60px rgba(15, 23, 42, .22); }
+    .order-export-card h3 { margin: 0 0 10px; color: var(--text-main); }
+    .order-export-card p { margin: 0; color: var(--text-muted); line-height: 1.5; }
+    .order-export-options { display: grid; gap: 10px; margin-top: 18px; }
+    .order-export-option { display: flex; gap: 9px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; }
+    .order-export-option:has(input:checked) { border-color: var(--primary); background: var(--primary-light); }
+    .order-export-option input { margin-top: 3px; accent-color: var(--primary); }
+    .order-export-option strong, .order-export-option small { display: block; }
+    .order-export-option small { margin-top: 3px; color: var(--text-muted); }
+    .order-export-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+    .order-export-actions button { border: 0; border-radius: 8px; padding: 10px 16px; font-weight: 700; cursor: pointer; }
+    .order-export-cancel { background: var(--bg-color); color: var(--text-main); }
+    .order-export-submit { background: var(--primary); color: #fff; }
+    .order-export-submit:disabled { cursor: wait; opacity: .7; }
+</style>
+@endsection
+
 @section('content')
 @if(session('success'))
     <div class="alert-panel alert-success-box">
@@ -22,7 +61,7 @@
         <p style="color: var(--text-muted); margin-top: 4px;">Theo dõi đơn hàng, thanh toán và trạng thái giao hàng từ dữ liệu thực tế.</p>
     </div>
     <div class="header-actions">
-        <button class="btn-dark-slate" type="button">
+        <button class="btn-dark-slate" type="button" id="open-order-export-modal">
             <i class="fa-solid fa-download"></i>
             <span>Xuất Dữ liệu Excel</span>
         </button>
@@ -161,10 +200,15 @@
                             </div>
                         </td>
                         <td style="text-align: right;">
-                            <a href="{{ route('admin.orders.show', $order->id) }}" class="action-view-details">
+                            <div class="order-action-icons">
+                            <a href="{{ route('admin.orders.show', $order->id) }}" class="action-view-details" title="Xem chi tiết đơn hàng" aria-label="Xem chi tiết đơn hàng">
                                 <span>Xem chi tiết</span>
-                                <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i>
+                                <i class="fa-solid fa-eye" style="font-size: 0.85rem;"></i>
                             </a>
+                            <a href="{{ route('admin.orders.invoice', $order->id) }}" class="order-action-icon" target="_blank" rel="noopener" title="In hóa đơn" aria-label="In hóa đơn">
+                                <i class="fa-solid fa-print"></i>
+                            </a>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -218,6 +262,34 @@
         </div>
     </div>
 </div>
+
+<div class="order-export-modal" id="order-export-modal" hidden aria-hidden="true">
+    <div class="order-export-card" role="dialog" aria-modal="true" aria-labelledby="order-export-title">
+        <h3 id="order-export-title">Xuất dữ liệu đơn hàng</h3>
+        <p>File Excel gồm hai sheet: tổng hợp đơn hàng và chi tiết sản phẩm.</p>
+        <form action="{{ route('admin.orders.export') }}" method="GET" id="order-export-form">
+            <input type="hidden" name="search" value="{{ $filters['search'] ?? '' }}">
+            <input type="hidden" name="payment_status" value="{{ $filters['payment_status'] ?? '' }}">
+            <input type="hidden" name="order_status" value="{{ $filters['order_status'] ?? '' }}">
+            <input type="hidden" name="date_from" value="{{ $filters['date_from'] ?? '' }}">
+            <input type="hidden" name="date_to" value="{{ $filters['date_to'] ?? '' }}">
+            <div class="order-export-options">
+                <label class="order-export-option">
+                    <input type="radio" name="scope" value="filtered" checked>
+                    <span><strong>Theo bộ lọc hiện tại</strong><small>Xuất toàn bộ kết quả phù hợp, không chỉ trang đang xem.</small></span>
+                </label>
+                <label class="order-export-option">
+                    <input type="radio" name="scope" value="all">
+                    <span><strong>Tất cả đơn hàng</strong><small>Bỏ qua bộ lọc đang chọn.</small></span>
+                </label>
+            </div>
+            <div class="order-export-actions">
+                <button type="button" class="order-export-cancel" id="cancel-order-export">Hủy</button>
+                <button type="submit" class="order-export-submit" id="submit-order-export"><i class="fa-solid fa-file-excel"></i> <span>Xuất Excel</span></button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -237,6 +309,34 @@
 
         document.addEventListener('click', function () {
             document.querySelectorAll('.quick-status-menu').forEach((menu) => menu.classList.remove('show'));
+        });
+
+        const exportModal = document.getElementById('order-export-modal');
+        const openExportButton = document.getElementById('open-order-export-modal');
+        const cancelExportButton = document.getElementById('cancel-order-export');
+        const exportForm = document.getElementById('order-export-form');
+        const submitExportButton = document.getElementById('submit-order-export');
+
+        function closeExportModal() {
+            exportModal.hidden = true;
+            exportModal.setAttribute('aria-hidden', 'true');
+            openExportButton.focus();
+        }
+
+        openExportButton.addEventListener('click', function () {
+            exportModal.hidden = false;
+            exportModal.setAttribute('aria-hidden', 'false');
+            cancelExportButton.focus();
+        });
+
+        cancelExportButton.addEventListener('click', closeExportModal);
+        exportModal.addEventListener('click', function (event) {
+            if (event.target === exportModal) closeExportModal();
+        });
+        exportForm.addEventListener('submit', function () {
+            submitExportButton.disabled = true;
+            submitExportButton.querySelector('span').textContent = 'Đang tạo file...';
+            window.setTimeout(function () { submitExportButton.disabled = false; }, 2500);
         });
     });
 </script>
