@@ -83,6 +83,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
         ->name('orders.update-status');
 
+    Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews');
+    Route::patch('/reviews/{review}/status', [ReviewController::class, 'updateStatus'])->name('reviews.status.update');
+
     Route::get('/posts', [PostController::class, 'index'])
         ->name('posts');
 

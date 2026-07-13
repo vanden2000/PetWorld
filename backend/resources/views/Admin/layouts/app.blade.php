@@ -40,11 +40,16 @@
                         <span>Thống Kê</span>
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('admin.orders')}}" class="menu-item-link {{ request()->routeIs('admin.orders') ? 'active' : '' }} ">
+                <li class="menu-item-dropdown {{ request()->routeIs('admin.orders*') || request()->routeIs('admin.reviews*') ? 'open' : '' }}">
+                    <a href="{{ route('admin.orders')}}" class="menu-item-link dropdown-toggle orders-dropdown-toggle {{ request()->routeIs('admin.orders') ? 'active' : '' }} ">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <span>Đơn Hàng</span>
+                        <i class="fa-solid fa-chevron-down dropdown-arrow" style="margin-left: auto; font-size: 0.75rem; transition: var(--transition);"></i>
                     </a>
+                    <ul class="submenu">
+                        <li><a href="{{ route('admin.orders') }}" class="submenu-item-link {{ request()->routeIs('admin.orders*') ? 'active' : '' }}"><i class="fa-solid fa-list-ul"></i><span>Danh sách đơn hàng</span></a></li>
+                        <li><a href="{{ route('admin.reviews') }}" class="submenu-item-link {{ request()->routeIs('admin.reviews*') ? 'active' : '' }}"><i class="fa-solid fa-star"></i><span>Đánh giá sản phẩm</span></a></li>
+                    </ul>
                 </li>
                 <li class="menu-item-dropdown {{ request()->routeIs('admin.categories*') ? 'open' : '' }}">
                     <a href="{{ route('admin.categories') }}" class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.categories*') ? 'active' : '' }}">
