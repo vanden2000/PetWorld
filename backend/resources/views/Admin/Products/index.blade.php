@@ -739,6 +739,9 @@
     }
     .product-main-row .js-toggle-drawer { cursor: pointer; }
     .product-main-row .js-toggle-drawer:focus-visible { outline: 2px solid var(--theme-primary); outline-offset: -2px; }
+    .product-main-row.is-inactive > td { background: rgba(255, 120, 45, .16); }
+    .product-main-row.is-inactive > td:first-child { border-left: 4px solid var(--theme-primary); }
+    .product-main-row.is-inactive:hover > td { background: rgba(255, 120, 45, .23); }
     .variant-status-chip { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 8px; font-size: .75rem; font-weight: 700; }
     .variant-status-chip.active { color: var(--theme-success); background: rgba(34, 197, 94, .1); }
     .variant-status-chip.inactive { color: var(--theme-text-gray); background: var(--theme-gray-light); }
@@ -878,7 +881,7 @@
                                 $maxPrice = count($prices) ? max($prices) : 0;
                             @endphp
                             <!-- Main Product Row -->
-                            <tr class="product-main-row" data-product-id="{{ $product->id }}">
+                            <tr class="product-main-row {{ $product->status === 'inactive' ? 'is-inactive' : '' }}" data-product-id="{{ $product->id }}">
                                 <td class="col-expand-btn js-toggle-drawer" title="Chi tiết biến thể">
                                     <i class="fa-solid fa-chevron-right arrow-icon"></i>
                                 </td>
@@ -895,7 +898,7 @@
 
                                                 if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
                                                     $imageUrl = $path;
-                                                } elseif (str_starts_with($path, 'image/') || str_starts_with($path, 'storage/')) {
+                                                } elseif (str_starts_with($path, 'image/') || str_starts_with($path, 'products/') || str_starts_with($path, 'storage/')) {
                                                     $imageUrl = asset($path);
                                                 } else {
                                                     // Compatibility for legacy product images stored without a directory prefix.

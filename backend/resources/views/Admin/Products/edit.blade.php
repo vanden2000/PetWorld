@@ -1427,7 +1427,7 @@
 
                                 if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
                                     $imgSrc = $path;
-                                } elseif (str_starts_with($path, 'image/') || str_starts_with($path, 'storage/')) {
+                                } elseif (str_starts_with($path, 'image/') || str_starts_with($path, 'products/') || str_starts_with($path, 'storage/')) {
                                     $imgSrc = asset($path);
                                 } elseif ($path !== '') {
                                     $imgSrc = asset('storage/'.$path);
@@ -1443,7 +1443,6 @@
                                 @endif
                                 <button type="button" class="btn-primary-thumb js-set-primary" title="Đặt làm ảnh chính"><i class="fa-solid fa-star"></i></button>
                                 <button type="button" class="btn-delete-thumb js-delete-existing-image" title="Xóa ảnh">&times;</button>
-                                <button type="button" class="btn-undo-delete js-undo-delete" hidden>Hoàn tác</button>
                             </div>
                         @endforeach
                         <div class="thumbnail-btn-add" id="add-product-image" role="button" tabindex="0">
@@ -1587,6 +1586,7 @@
         </div>
     </div>
     <div id="product-save-toast" class="product-save-toast" role="status" aria-live="polite" hidden></div>
+    <div id="image-delete-modal" class="product-save-modal" hidden role="dialog" aria-modal="true" aria-labelledby="image-delete-modal-title"><div class="product-save-modal-card"><div class="product-save-modal-icon"><i class="fa-solid fa-trash"></i></div><h3 id="image-delete-modal-title">Xác nhận xóa ảnh</h3><p>Ảnh sẽ bị bỏ khỏi sản phẩm khi lưu. Thao tác này không thể hoàn tác.</p><div class="product-save-modal-actions"><button type="button" id="btn-cancel-image-delete" class="btn-action-cancel">Hủy</button><button type="button" id="btn-confirm-image-delete" class="btn-action-save">Xóa ảnh</button></div></div></div>
 
 @endsection
 
@@ -1601,8 +1601,21 @@
         const saveButtons = [...document.querySelectorAll('.btn-action-save[type="submit"]')];
         const isCreatingProduct = @json($isCreate);
         const confirmSaveLabel = isCreatingProduct ? 'Tạo sản phẩm' : 'Lưu thay đổi';
+        const imageDeleteModal = document.getElementById('image-delete-modal');
+        let pendingImageDeleteBox = null;
         let productIsSaving = false;
         let toastTimeout;
+
+        function confirmImageDelete(box) { pendingImageDeleteBox = box; imageDeleteModal.hidden = false; }
+        document.getElementById('btn-cancel-image-delete').addEventListener('click', () => { pendingImageDeleteBox = null; imageDeleteModal.hidden = true; });
+        document.getElementById('btn-confirm-image-delete').addEventListener('click', () => {
+            const box = pendingImageDeleteBox; if (!box) return;
+            if (box.classList.contains('js-new-image')) selectedImages = selectedImages.filter(item => item.key !== box.dataset.imageKey);
+            else deletedImageIds.add(Number(box.dataset.imageId));
+            if (selectedImageToken === imageToken(box)) selectedImageToken = null;
+            if (selectedPrimary?.value === (box.classList.contains('js-new-image') ? box.dataset.imageKey : Number(box.dataset.imageId))) selectedPrimary = null;
+            box.remove(); pendingImageDeleteBox = null; imageDeleteModal.hidden = true; updateImageState();
+        });
 
         function showProductSaveToast(message, isError = false) {
             productSaveToast.textContent = message;
@@ -2268,7 +2281,9 @@
                 .filter(box => box.classList.contains('js-new-image'))
                 .map(box => box.dataset.imageKey);
             const imagesByKey = new Map(selectedImages.map(image => [image.key, image]));
-            selectedImages = newOrderKeys.map(key => imagesByKey.get(key)).filter(Boolean);
+            if (newOrderKeys.length === selectedImages.length) {
+                selectedImages = newOrderKeys.map(key => imagesByKey.get(key)).filter(Boolean);
+            }
             imageMetadataInputs.innerHTML = '';
 
             boxes.forEach(box => {
@@ -2293,6 +2308,26 @@
                 }
                 imageMetadataInputs.appendChild(alt);
             });
+
+            selectedImages
+                .filter(image => !newOrderKeys.includes(image.key))
+                .forEach(image => {
+                    const order = document.createElement('input');
+                    order.type = 'hidden';
+                    order.name = 'image_order[]';
+                    order.value = `new:${image.key}`;
+
+                    const key = document.createElement('input');
+                    key.type = 'hidden';
+                    key.name = 'new_image_keys[]';
+                    key.value = image.key;
+
+                    const alt = document.createElement('input');
+                    alt.type = 'hidden';
+                    alt.name = `new_image_alt_texts[${image.key}]`;
+                    alt.value = image.altText || '';
+                    imageMetadataInputs.append(order, key, alt);
+                });
         }
 
         function chooseFallbackPrimary() {
@@ -2496,32 +2531,12 @@
             }
 
             if (event.target.closest('.js-delete-new-image')) {
-                selectedImages = selectedImages.filter(item => item.key !== box.dataset.imageKey);
-                if (selectedPrimary?.type === 'new' && selectedPrimary.value === box.dataset.imageKey) {
-                    selectedPrimary = null;
-                }
-                if (selectedImageToken === imageToken(box)) selectedImageToken = null;
-                renderNewImages();
+                confirmImageDelete(box);
+                return;
             }
 
             if (event.target.closest('.js-delete-existing-image')) {
-                if (!window.confirm('Xóa ảnh này khỏi sản phẩm khi lưu thay đổi?')) return;
-                const id = Number(box.dataset.imageId);
-                deletedImageIds.add(id);
-                box.classList.add('pending-delete');
-                box.querySelector('.js-undo-delete').hidden = false;
-                if (selectedPrimary?.type === 'existing' && selectedPrimary.value === id) selectedPrimary = null;
-                if (selectedImageToken === imageToken(box)) selectedImageToken = null;
-                updateImageState();
-            }
-
-            if (event.target.closest('.js-undo-delete')) {
-                const id = Number(box.dataset.imageId);
-                deletedImageIds.delete(id);
-                box.classList.remove('pending-delete');
-                box.querySelector('.js-undo-delete').hidden = true;
-                selectImage(box);
-                updateImageState();
+                confirmImageDelete(box);
             }
         });
 
