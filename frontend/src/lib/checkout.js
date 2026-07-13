@@ -94,8 +94,8 @@ export async function getOrder(id) {
  * Trả về null nếu chưa cấu hình base.
  */
 export function buildSepayQrUrl(paymentCode, amount) {
-  const base = process.env.NEXT_PUBLIC_SEPAY_QR_BASE;
-  if (!base) return null;
+  const base = process.env.NEXT_PUBLIC_SEPAY_QR_BASE
+    || "https://vietqr.app/img?bank=MBBank&acc=VQRQAKCIT7920&template=compact&showinfo=true&fullacc=true&holder=LE%20TRAN%20PHAT";
   const sep = base.includes("?") ? "&" : "?";
   return `${base}${sep}amount=${Math.round(amount)}&des=${encodeURIComponent(paymentCode)}`;
 }
