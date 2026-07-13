@@ -24,8 +24,6 @@ export default function Header() {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-<<<<<<< HEAD:PetWorld/frontend/src/components/layout/Header.jsx
-=======
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -36,7 +34,6 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
->>>>>>> origin/develop:frontend/src/components/layout/Header.jsx
 
   // Số lượng trong giỏ (localStorage) cho badge, cập nhật realtime khi giỏ đổi.
   const cartRaw = useSyncExternalStore(onCartChange, getCartSnapshot, getServerCartSnapshot);
@@ -123,18 +120,6 @@ export default function Header() {
       {/* Floating Navigation Bar */}
       <div className="navbar-container">
         <nav className="navbar">
-<<<<<<< HEAD:PetWorld/frontend/src/components/layout/Header.jsx
-          <button
-            type="button"
-            className="mobile-menu-toggle"
-            aria-label={isMobileMenuOpen ? "Đóng menu" : "Mở menu"}
-            aria-expanded={isMobileMenuOpen}
-            onClick={() => setIsMobileMenuOpen((open) => !open)}
-          >
-            <span />
-            <span />
-            <span />
-=======
           {/* Hamburger Menu button */}
           <button
             type="button"
@@ -147,23 +132,13 @@ export default function Header() {
               <line x1="3" y1="6" x2="21" y2="6"></line>
               <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
->>>>>>> origin/develop:frontend/src/components/layout/Header.jsx
           </button>
 
           <Link href={ROUTES.home} className="logo-link" id="logo">
             <img src={resolveBackendImage("logo/Special_Offer_1-removebg-preview.png")} alt="PetWorld Logo" className="logo-img" />
           </Link>
 
-          <Link href={ROUTES.cart} className="mobile-cart-link" aria-label="Giỏ hàng">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="9" cy="21" r="1" />
-              <circle cx="20" cy="21" r="1" />
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-            </svg>
-            <span className="action-badge">{cartCount}</span>
-          </Link>
-
-          <ul className={`nav-menu ${isMobileMenuOpen ? "open" : ""}`}>
+          <ul className="nav-menu">
             {MAIN_NAV.map((item) => {
               const isActive =
                 item.href === "/"
@@ -174,7 +149,6 @@ export default function Header() {
                   <Link
                     href={item.href}
                     className={`nav-link ${isActive ? "active" : ""}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.label}
                   </Link>

@@ -117,10 +117,6 @@ export default async function ProductDetailPage({ params }) {
 
   return (
     <main className="main-content">
-<<<<<<< HEAD:PetWorld/frontend/src/app/(user)/shop/[slug]/page.jsx
-      <TrackRecentlyViewed slug={slug} />
-      <div className="homepage-container product-detail-page">
-=======
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -129,7 +125,6 @@ export default async function ProductDetailPage({ params }) {
       />
       <TrackRecentlyViewed slug={product.slug} />
       <div className="homepage-container">
->>>>>>> origin/develop:frontend/src/app/(user)/shop/[slug]/page.jsx
         <nav className="shop-breadcrumb">
           <Link href="/">Trang chủ</Link>
           <span className="shop-breadcrumb-sep">›</span>

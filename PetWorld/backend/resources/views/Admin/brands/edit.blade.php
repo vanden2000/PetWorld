@@ -126,6 +126,51 @@
     .be-seg-btn.is-active[data-status="draft"] {
         background: #fff7ed; border-color: #d97706; color: #d97706;
     }
+    .be-status-notice {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: #eef8f4;
+        border: 1px solid #ceead6;
+        color: var(--success);
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+    .be-status-notice.is-draft {
+        background: #fff7ed;
+        border-color: #fed7aa;
+        color: #d97706;
+    }
+    .be-status-toast {
+        position: fixed;
+        right: 24px;
+        bottom: 24px;
+        z-index: 1200;
+        max-width: 360px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        background: #eef8f4;
+        border: 1px solid #ceead6;
+        color: var(--success);
+        box-shadow: 0 16px 36px rgba(49, 38, 30, 0.14);
+        font-size: 0.86rem;
+        font-weight: 800;
+        line-height: 1.45;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(12px);
+        transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .be-status-toast.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .be-status-toast.is-draft {
+        background: #fff7ed;
+        border-color: #fed7aa;
+        color: #d97706;
+    }
 
     /* Tier tags */
     .be-tags { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -243,6 +288,7 @@
 <form action="{{ route('admin.brands.update', $brand->id) }}" method="POST" enctype="multipart/form-data" class="be-page" id="brandEditForm" onsubmit="return confirm('Bạn có chắc chắn muốn cập nhật thương hiệu này không?')">
     @csrf
     @method('PUT')
+    <div class="be-status-toast {{ $statusVal === 'draft' ? 'is-draft' : '' }}" id="brandStatusToast" role="status" aria-live="polite"></div>
 
     <!-- Header -->
     <div class="dashboard-header" style="margin-bottom: 24px; align-items: flex-start;">
@@ -500,6 +546,9 @@
                             <i class="fa-solid fa-circle-xmark"></i> Tạm dừng
                         </button>
                     </div>
+                    <div class="be-status-notice {{ $statusVal === 'draft' ? 'is-draft' : '' }}" id="brandStatusNotice" role="status" aria-live="polite">
+                        {{ $statusVal === 'active' ? 'Thương hiệu đang hoạt động và được hiển thị trên Storefront.' : 'Thương hiệu đang tạm dừng và sẽ được ẩn khỏi Storefront.' }}
+                    </div>
                 </div>
 
                 <div class="be-field">
@@ -581,6 +630,33 @@
         const statusInput = document.getElementById('statusInput');
         const segBtns = document.querySelectorAll('.be-seg-btn');
         const toggleStorefront = document.getElementById('toggleStorefront');
+        const statusNotice = document.getElementById('brandStatusNotice');
+        const statusToast = document.getElementById('brandStatusToast');
+        let statusToastTimeout;
+        function showStatusToast(message, isActive) {
+            if (!statusToast) return;
+            clearTimeout(statusToastTimeout);
+            statusToast.classList.toggle('is-draft', !isActive);
+            statusToast.textContent = message;
+            statusToast.classList.add('is-visible');
+            statusToastTimeout = setTimeout(function () {
+                statusToast.classList.remove('is-visible');
+            }, 2600);
+        }
+        function updateStatusNotice(value) {
+            if (!statusNotice) return;
+            const isActive = value === 'active';
+            statusNotice.classList.toggle('is-draft', !isActive);
+            statusNotice.textContent = isActive
+                ? 'Thương hiệu đang hoạt động và được hiển thị trên Storefront. Bấm Lưu thay đổi để áp dụng.'
+                : 'Thương hiệu đang tạm dừng và sẽ được ẩn khỏi Storefront. Bấm Lưu thay đổi để áp dụng.';
+            showStatusToast(
+                isActive
+                    ? 'Đã chọn Hoạt động. Bấm Lưu thay đổi để áp dụng.'
+                    : 'Đã chọn Tạm dừng. Bấm Lưu thay đổi để áp dụng.',
+                isActive
+            );
+        }
         segBtns.forEach(function (btn) {
             btn.addEventListener('click', function () {
                 const value = btn.dataset.status;
@@ -588,6 +664,7 @@
                 segBtns.forEach(b => b.classList.remove('is-active'));
                 btn.classList.add('is-active');
                 if (toggleStorefront) toggleStorefront.classList.toggle('is-on', value === 'active');
+                updateStatusNotice(value);
             });
         });
 
@@ -600,6 +677,7 @@
                     const on = sw.classList.contains('is-on');
                     statusInput.value = on ? 'active' : 'draft';
                     segBtns.forEach(b => b.classList.toggle('is-active', b.dataset.status === statusInput.value));
+                    updateStatusNotice(statusInput.value);
                 }
             });
         });

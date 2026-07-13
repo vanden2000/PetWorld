@@ -40,9 +40,9 @@ const QR_TTL_SECONDS = 15 * 60;
 
 // Thông tin ngân hàng hiển thị (chuyển khoản thủ công) — cấu hình qua env.
 const BANK_INFO = {
-  name: process.env.NEXT_PUBLIC_BANK_NAME,
-  account: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER,
-  holder: process.env.NEXT_PUBLIC_BANK_ACCOUNT_HOLDER,
+  name: process.env.NEXT_PUBLIC_BANK_NAME || "MBBank",
+  account: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || "VQRQAKCIT7920",
+  holder: process.env.NEXT_PUBLIC_BANK_ACCOUNT_HOLDER || "LE TRAN PHAT",
 };
 
 const EMPTY_ADDRESS = {
@@ -254,6 +254,13 @@ export default function CheckoutView() {
     }
 
     setSubmitting(true);
+    const voucherSnapshot = appliedVoucher
+      ? {
+          id: appliedVoucher.id,
+          code: appliedVoucher.code,
+          discount_value: appliedVoucher.discount_value,
+        }
+      : null;
     const result = await createOrder({
       address_id: selectedAddressId,
       shipping_method_id: shippingMethodId,
@@ -286,12 +293,21 @@ export default function CheckoutView() {
     }
     setOrderPaid(false);
     setQrSecondsLeft(QR_TTL_SECONDS);
-    setPlacedOrder({ ...result.data, is_bank: isBankTransfer });
+    setPlacedOrder({ ...result.data, is_bank: isBankTransfer, voucher: voucherSnapshot });
   };
 
   // Tạo lại mã QR: cùng đơn/nội dung CK, chỉ làm mới thời hạn và tiếp tục poll.
   const handleRegenerateQr = () => {
     setQrSecondsLeft(QR_TTL_SECONDS);
+  };
+
+  const copyText = async (value) => {
+    if (!value || typeof navigator === "undefined" || !navigator.clipboard) return;
+    try {
+      await navigator.clipboard.writeText(String(value));
+    } catch {
+      // Clipboard is best-effort only; checkout flow must not depend on it.
+    }
   };
 
   // --- Các trạng thái màn hình ---
@@ -311,80 +327,116 @@ export default function CheckoutView() {
     const qrUrl = buildSepayQrUrl(placedOrder.payment_code, placedOrder.total_amount);
     const mm = String(Math.floor(qrSecondsLeft / 60)).padStart(2, "0");
     const ss = String(qrSecondsLeft % 60).padStart(2, "0");
+    const orderItems = placedOrder.items ?? [];
+    const placedDiscount = Number(placedOrder.discount_amount ?? 0);
 
     return (
       <div className="co-result">
-        <div className="co-result-head">
-          <span className="co-result-check">✔</span>
-          <h2 className="co-result-title">Đặt hàng thành công</h2>
-          <p className="co-result-code">Mã đơn hàng #{placedOrder.payment_code}</p>
+        <div className="co-result-hero">
+          <div className="co-result-success">
+            <span className="co-result-check">✓</span>
+            <div>
+              <h2 className="co-result-title">Đặt hàng thành công!</h2>
+              <p className="co-result-subtitle">Cảm ơn bạn đã mua sắm tại PetWorld</p>
+              <p className="co-result-code">
+                Mã đơn hàng: <strong>{placedOrder.payment_code}</strong>
+                <button type="button" onClick={() => copyText(placedOrder.payment_code)} aria-label="Sao chép mã đơn hàng">⧉</button>
+              </p>
+            </div>
+          </div>
+          <div className="co-secure-note">
+            <span>🔒</span>
+            <div>
+              <strong>Thanh toán bảo mật</strong>
+              <small>SSL 256-bit</small>
+            </div>
+          </div>
+        </div>
+
+        <div className="co-result-timer">
+          <span>Vui lòng thanh toán trong vòng</span>
+          <strong>{mm}</strong>
+          <em>Phút</em>
+          <strong>{ss}</strong>
+          <em>Giây</em>
+          <span>để hệ thống xác nhận đơn hàng.</span>
         </div>
 
         <div className="co-result-layout">
           <div className="co-result-main">
             <div className="co-pay-wrap">
-              <div className="co-pay-header">Hướng dẫn thanh toán qua chuyển khoản ngân hàng</div>
-
               <div className="co-pay-body">
-                <div className="co-pay-methods">
-                  {/* Cách 1: QR */}
-                  <div className="co-pay-method">
-                    <h3 className="co-pay-method-title">Cách 1: Quét mã QR</h3>
-
-                    {orderPaid ? (
-                      <div className="co-pay-paid">✅ Đã thanh toán</div>
-                    ) : qrExpired ? (
-                      <div className="co-qr-expired">
-                        <p>Mã QR đã hết hạn (15 phút).</p>
-                        <button type="button" className="co-btn-solid" onClick={handleRegenerateQr}>
-                          Tạo lại mã QR
-                        </button>
-                      </div>
-                    ) : qrUrl ? (
-                      <>
-                        <img src={qrUrl} alt="Mã QR thanh toán" className="co-qr-img" />
-                        <p className="co-qr-ttl">Mã QR còn hiệu lực: <strong>{mm}:{ss}</strong></p>
-                      </>
-                    ) : (
-                      <p className="co-pay-note">Chưa cấu hình mã QR (NEXT_PUBLIC_SEPAY_QR_BASE).</p>
-                    )}
-
-                    <p className="co-qr-status">
-                      {orderPaid ? (
-                        <>Trạng thái: <strong>Đã thanh toán ✓</strong></>
-                      ) : (
-                        <>Trạng thái: Chờ thanh toán... <span className="co-spinner" aria-hidden="true" /></>
-                      )}
-                    </p>
+                <section className="co-pay-section">
+                  <div className="co-pay-section-head">
+                    <h3>1. Thanh toán nhanh bằng QR Code</h3>
                   </div>
+                  <p className="co-pay-desc">Quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử</p>
 
-                  {/* Cách 2: Chuyển khoản thủ công */}
-                  <div className="co-pay-method co-pay-method-manual">
-                    <h3 className="co-pay-method-title">Cách 2: Chuyển khoản thủ công</h3>
-                    <div className="co-bank-info">
-                      <div className="co-bank-row"><span>Ngân hàng</span><strong className="co-bank-accent">{BANK_INFO.name ?? "—"}</strong></div>
-                      <div className="co-bank-row"><span>Chủ tài khoản</span><strong>{BANK_INFO.holder ?? "—"}</strong></div>
-                      <div className="co-bank-row"><span>Số tài khoản</span><strong>{BANK_INFO.account ?? "—"}</strong></div>
-                      <div className="co-bank-row"><span>Số tiền</span><strong>{formatPrice(placedOrder.total_amount)}</strong></div>
-                      <div className="co-bank-row co-bank-row-last"><span>Nội dung CK</span><strong className="co-bank-accent">{placedOrder.payment_code}</strong></div>
+                  {orderPaid ? (
+                    <div className="co-pay-paid">✓ Đã thanh toán</div>
+                  ) : qrExpired ? (
+                    <div className="co-qr-expired">
+                      <p>Mã QR đã hết hạn sau 15 phút.</p>
+                      <button type="button" className="co-btn-solid" onClick={handleRegenerateQr}>
+                        Tạo lại mã QR
+                      </button>
                     </div>
-                    <p className="co-pay-warning">
-                      Lưu ý: Vui lòng giữ nguyên nội dung chuyển khoản <strong>{placedOrder.payment_code}</strong> để
-                      hệ thống tự động xác nhận thanh toán.
-                    </p>
+                  ) : (
+                    <div className="co-qr-panel">
+                      <img
+                        src={qrUrl}
+                        alt="QR thanh toán - Ngân hàng TMCP Quân Đội - VQRQAKCIT7920 - LE TRAN PHAT"
+                        className="co-qr-img"
+                        width="300"
+                      />
+                    </div>
+                  )}
+
+                  <div className="co-payment-logos" aria-label="Ứng dụng hỗ trợ quét QR">
+                    <span>Vietcombank</span>
+                    <span>BIDV</span>
+                    <span>MB Bank</span>
+                    <span>Momo</span>
+                    <span>ZaloPay</span>
+                    <span>VNPay</span>
                   </div>
-                </div>
+                </section>
+
+                <div className="co-divider"><span>Hoặc</span></div>
+
+                <section className="co-pay-section co-pay-section-manual">
+                  <div className="co-pay-section-head">
+                    <h3>2. Chuyển khoản thủ công</h3>
+                  </div>
+                  <p className="co-pay-desc">Sử dụng thông tin bên dưới để chuyển khoản qua ứng dụng ngân hàng</p>
+                  <div className="co-bank-info">
+                    {[
+                      ["Ngân hàng", BANK_INFO.name],
+                      ["Chủ tài khoản", BANK_INFO.holder],
+                      ["Số tài khoản", BANK_INFO.account],
+                      ["Số tiền", formatPrice(placedOrder.total_amount)],
+                      ["Nội dung chuyển khoản", placedOrder.payment_code],
+                    ].map(([label, value]) => (
+                      <div className="co-bank-row" key={label}>
+                        <span>{label}</span>
+                        <strong className={label === "Số tiền" || label.includes("Nội dung") ? "co-bank-accent" : ""}>{value}</strong>
+                        <button type="button" onClick={() => copyText(value)}>Sao chép</button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="co-pay-warning">
+                    Lưu ý quan trọng: Chuyển khoản đúng số tiền và nội dung để đơn hàng được xác nhận nhanh chóng.
+                  </p>
+                </section>
               </div>
             </div>
-
-            <Link href="/shop" className="co-continue-btn">🛍 Tiếp tục mua sắm</Link>
           </div>
 
           {/* Tóm tắt đơn hàng */}
-          <aside className="co-summary">
-            <h3 className="co-summary-title">Đơn hàng của bạn</h3>
+          <aside className="co-summary co-result-summary">
+            <h3 className="co-summary-title">Thông tin đơn hàng</h3>
             <div className="co-summary-items">
-              {(placedOrder.items ?? []).map((item) => (
+              {orderItems.map((item) => (
                 <div className="co-summary-item" key={item.id}>
                   <span className="co-summary-item-name">
                     {item.product_name} <em>× {item.quantity}</em>
@@ -397,14 +449,42 @@ export default function CheckoutView() {
               <span>Phí vận chuyển</span>
               <span>{formatPrice(placedOrder.shipping_fee)}</span>
             </div>
+            {placedDiscount > 0 && (
+              <div className="co-summary-row co-summary-discount">
+                <span>{placedOrder.voucher?.code ? `Voucher (${placedOrder.voucher.code})` : "Voucher"}</span>
+                <span className="co-discount-amount">-{formatPrice(placedDiscount)}</span>
+              </div>
+            )}
             <div className="co-summary-total">
-              <span>Tổng cộng</span>
+              <span>Tổng thanh toán</span>
               <span>{formatPrice(placedOrder.total_amount)}</span>
+            </div>
+            <p className="co-vat-note">(Đã bao gồm VAT)</p>
+            <div className="co-result-commitments">
+              <strong>Cam kết từ PetWorld</strong>
+              <span>100% sản phẩm chính hãng</span>
+              <span>Đổi trả miễn phí trong 7 ngày</span>
+              <span>Giao hàng nhanh toàn quốc</span>
+              <span>Đóng gói cẩn thận, thân thiện</span>
+            </div>
+            <div className="co-result-support">
+              <strong>Cần hỗ trợ thanh toán?</strong>
+              <span>Chat với chúng tôi</span>
+              <span>Gọi hotline 1900 1234</span>
+              <span>Email support@petworld.vn</span>
             </div>
             <Link href={`/account/orders/${placedOrder.id}`} className="co-detail-btn">
               Xem chi tiết đơn hàng
             </Link>
+            <Link href="/shop" className="co-continue-btn">Tiếp tục mua sắm →</Link>
           </aside>
+        </div>
+
+        <div className="co-result-footer">
+          <span>🔒 Thanh toán an toàn</span>
+          <span>🎧 Hỗ trợ nhanh chóng</span>
+          <span>🚚 Giao hàng toàn quốc</span>
+          <span>🔁 Đổi trả dễ dàng</span>
         </div>
       </div>
     );
