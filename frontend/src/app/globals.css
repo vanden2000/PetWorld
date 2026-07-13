@@ -6160,35 +6160,225 @@ body {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .pd-top {
+    gap: 24px;
+    margin-bottom: 30px;
+  }
+  .pd-main-image {
+    border-radius: 16px;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 450px;
+    aspect-ratio: 1 / 1;
+  }
+  .pd-thumbs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .pd-thumb {
+    flex: 0 0 70px;
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+  }
+  .pd-info {
+    display: grid;
+    grid-template-columns: 120px 1fr 50px;
+    gap: 14px 0;
+  }
   .pd-title {
-    font-size: 24px;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    color: var(--primary-orange);
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 0;
+    line-height: 1.3;
+  }
+  .pd-desc {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-bottom: 0;
+  }
+  .pd-price {
+    grid-column: 1 / 3;
+    grid-row: 3;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+  .pd-price-current {
+    font-size: 26px;
+    font-weight: 800;
+  }
+  .pd-price-old {
+    font-size: 16px;
+  }
+  .pd-actions {
+    display: contents;
+  }
+  .pd-wishlist-btn {
+    grid-column: 3;
+    grid-row: 3;
+    justify-self: end;
+    align-self: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 1.5px solid #e0e3e8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  .pd-wishlist-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: #8892a0;
+  }
+  .pd-wishlist-btn.active {
+    border-color: #ffd2d6;
+    background-color: #fff2f3;
+    color: #ff4757;
+  }
+  .pd-wishlist-btn.active svg {
+    fill: #ff4757;
+    stroke: #ff4757;
+  }
+  .pd-variant-group {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+  .pd-variant-group:nth-of-type(1) {
+    grid-row: 4;
+  }
+  .pd-variant-group:nth-of-type(2) {
+    grid-row: 5;
+  }
+  .pd-variant-group:nth-of-type(3) {
+    grid-row: 6;
+  }
+  .pd-variant-label {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .pd-variant-options {
+    gap: 8px;
+  }
+  .pd-variant-btn {
+    padding: 8px 16px;
+    font-size: 13.5px;
+    border-radius: 8px;
+  }
+  .pd-qty {
+    grid-column: 1;
+    grid-row: 7;
+    height: 46px;
+    border-radius: 8px;
+  }
+  .pd-qty button {
+    width: 36px;
+    min-height: auto;
+    font-size: 18px;
+  }
+  .pd-qty span {
+    min-width: 36px;
+    font-size: 15px;
+  }
+  .pd-add-btn {
+    grid-column: 2 / -1;
+    grid-row: 7;
+    height: 46px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  .pd-buy-btn {
+    grid-column: 1 / -1;
+    grid-row: 8;
+    height: 46px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .pd-attrs {
+    grid-column: 1 / -1;
+    grid-row: 9;
+    margin-top: 12px;
+    border-top: 1px solid #eef1f5;
+    padding-top: 16px;
+    position: relative;
+    padding-right: 150px;
+  }
+  .pd-attrs p {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .pd-socials {
+    grid-column: 1 / -1;
+    grid-row: 9;
+    justify-self: end;
+    align-self: start;
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+  }
+  .pd-social-link {
+    width: 32px;
+    height: 32px;
+    border-color: #ffd8bf;
+  }
+  .pd-social-link svg {
+    width: 14px;
+    height: 14px;
+  }
+  .pd-meta {
+    grid-column: 1 / -1;
+    grid-row: 10;
+    border-top: 1px dashed #eef1f5;
+    padding-top: 14px;
+    margin-top: 0;
+    margin-bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .pd-rating {
+    font-size: 13.5px;
+  }
+  .pd-stars svg {
+    width: 14px;
+    height: 14px;
+  }
+  .pd-stock {
+    font-size: 13.5px;
+  }
+  .pd-card {
+    padding: 20px;
+    border-radius: 16px;
+  }
+  .pd-card-title {
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  .pd-description {
+    font-size: 14px;
+    line-height: 1.6;
   }
   .pd-highlights {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
   .pd-actions {
     flex-wrap: wrap;
-    gap: 12px;
-  }
-  .pd-qty {
-    order: 1;
-    flex: 1;
-    display: inline-flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #ffffff;
-  }
-  .pd-wishlist-btn {
-    order: 2;
-    height: 53px;
-  }
-  .pd-add-btn {
-    order: 3;
-    flex: 0 0 100%;
-    width: 100%;
-    justify-content: center;
-    min-height: 50px;
   }
 }
 

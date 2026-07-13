@@ -14,6 +14,8 @@ use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\LoginController;
+use App\Http\Controllers\Admin\ReportController;
+
 
 // Admin authentication routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -152,4 +154,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/vouchers/{id}/edit', [VoucherController::class, 'edit'])->name('vouchers.edit');
     Route::put('/vouchers/{id}', [VoucherController::class, 'update'])->name('vouchers.update');
     Route::delete('/vouchers/{id}', [VoucherController::class, 'destroy'])->name('vouchers.destroy');
+upstream
 });
+
+    // Reports/Statistics routes
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/revenue', [ReportController::class, 'revenue'])->name('revenue');
+        Route::get('/order-status', [ReportController::class, 'orderStatus'])->name('order-status');
+        Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
+        Route::get('/best-sellers', [ReportController::class, 'bestSellers'])->name('best-sellers');
+        Route::get('/low-stock', [ReportController::class, 'lowStock'])->name('low-stock');
+        Route::get('/latest-orders', [ReportController::class, 'latestOrders'])->name('latest-orders');
+    });
+});
+>>>>>>> Stashed changes

@@ -341,7 +341,178 @@
             </li>
         </ul>
 
-        <a href="#" class="btn-detailed-report">BÁO CÁO CHI TIẾT</a>
+        <a href="{{ route('admin.reports.best-sellers') }}" class="btn-detailed-report">BÁO CÁO CHI TIẾT</a>
+    </div>
+</div>
+
+<!-- Customer Statistics Row -->
+<div class="dashboard-row" style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <!-- Customer Metrics Card -->
+    <div class="dashboard-card" style="margin-top: 0; width: 100%;">
+        <div class="card-header-styled">
+            <span class="card-title-styled">Thống kê Khách hàng</span>
+            <a href="{{ route('admin.reports.customers') }}" class="support-link" style="font-size: 0.8rem; font-weight: 600;">CHI TIẾT</a>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+            <div style="background-color: var(--primary-light); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">TỔNG KHÁCH HÀNG</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-top: 4px;">1,350</div>
+                <div style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 2px;"><i class="fa-solid fa-arrow-trend-up"></i> +6.2%</div>
+            </div>
+            <div style="background-color: var(--info-light); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">KHÁCH HÀNG MỚI</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--info); margin-top: 4px;">120</div>
+                <div style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 2px;"><i class="fa-solid fa-arrow-trend-up"></i> +15.4%</div>
+            </div>
+            <div style="background-color: var(--success-light); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">TỶ LỆ QUAY LẠI</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--success); margin-top: 4px;">68.2%</div>
+                <div style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 2px;"><i class="fa-solid fa-arrow-trend-up"></i> +4.2%</div>
+            </div>
+            <div style="background-color: var(--purple-light); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">TRUNG BÌNH/KHÁCH</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--purple); margin-top: 4px;">998kđ</div>
+                <div style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 2px;"><i class="fa-solid fa-arrow-trend-up"></i> +3.2%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top VIP Customers Card -->
+    <div class="dashboard-card" style="margin-top: 0; width: 100%;">
+        <div class="card-header-styled">
+            <span class="card-title-styled">Top Khách hàng mua nhiều nhất</span>
+        </div>
+        
+        <div class="table-container" style="margin-top: 8px;">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>TÊN</th>
+                        <th>ĐƠN MUA</th>
+                        <th>CHI TIÊU</th>
+                        <th>HẠNG</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 28px; height: 28px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem;">P</div>
+                                <strong style="color: var(--text-main); font-size: 0.85rem;">Phạm Minh D</strong>
+                            </div>
+                        </td>
+                        <td style="font-size: 0.85rem;">18 đơn</td>
+                        <td style="font-weight: 700; color: var(--success); font-size: 0.85rem;">32.400.000đ</td>
+                        <td><span style="padding: 2px 6px; background-color: #fef3c7; color: #d97706; border: 1px solid #fcd34d; font-size: 0.7rem; font-weight: 700; border-radius: 4px;">VIP</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 28px; height: 28px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem;">N</div>
+                                <strong style="color: var(--text-main); font-size: 0.85rem;">Nguyễn Văn A</strong>
+                            </div>
+                        </td>
+                        <td style="font-size: 0.85rem;">12 đơn</td>
+                        <td style="font-weight: 700; color: var(--success); font-size: 0.85rem;">15.300.000đ</td>
+                        <td><span style="padding: 2px 6px; background-color: #fffbeb; color: #b45309; border: 1px solid #fef3c7; font-size: 0.7rem; font-weight: 700; border-radius: 4px;">GOLD</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 28px; height: 28px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem;">T</div>
+                                <strong style="color: var(--text-main); font-size: 0.85rem;">Trần Thị B</strong>
+                            </div>
+                        </td>
+                        <td style="font-size: 0.85rem;">9 đơn</td>
+                        <td style="font-weight: 700; color: var(--success); font-size: 0.85rem;">11.200.000đ</td>
+                        <td><span style="padding: 2px 6px; background-color: #fffbeb; color: #b45309; border: 1px solid #fef3c7; font-size: 0.7rem; font-weight: 700; border-radius: 4px;">GOLD</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Products Row -->
+<div class="dashboard-row" style="margin-top: 24px;">
+    <div class="dashboard-card" style="width: 100%;">
+        <div class="card-header-styled">
+            <span class="card-title-styled">Sản phẩm sắp hết hàng</span>
+            <a href="{{ route('admin.reports.low-stock') }}" class="support-link" style="font-size: 0.8rem; font-weight: 600;">XEM CHI TIẾT BÁO CÁO</a>
+        </div>
+        
+        <div class="table-container">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%">SẢN PHẨM / PHÂN LOẠI</th>
+                        <th style="width: 20%">MÃ SKU</th>
+                        <th style="width: 15%">TỒN KHO CÒN</th>
+                        <th style="width: 15%">TRẠNG THÁI</th>
+                        <th style="width: 15%">TÁC VỤ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div>
+                                <strong>Pate Royal Canin Mini Puppy</strong>
+                                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Lon 195g</span>
+                            </div>
+                        </td>
+                        <td><span class="slug-text">RC-PUP-LON-195G</span></td>
+                        <td style="font-weight: 700; color: var(--danger);">0 SP</td>
+                        <td><span class="badge-status status-cancelled">HẾT HÀNG</span></td>
+                        <td>
+                            <button class="btn-action-stock" style="padding: 6px 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition);" onclick="alert('Đã gửi yêu cầu nhập thêm sản phẩm RC-PUP-LON-195G')">Nhập hàng</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div>
+                                <strong>Pate Me-O Cá Ngừ</strong>
+                                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Lốc 12 túi</span>
+                            </div>
+                        </td>
+                        <td><span class="slug-text">ME-O-CANGU-12</span></td>
+                        <td style="font-weight: 700; color: var(--danger);">0 SP</td>
+                        <td><span class="badge-status status-cancelled">HẾT HÀNG</span></td>
+                        <td>
+                            <button class="btn-action-stock" style="padding: 6px 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition);" onclick="alert('Đã gửi yêu cầu nhập thêm sản phẩm ME-O-CANGU-12')">Nhập hàng</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div>
+                                <strong>Royal Canin Mini Adult</strong>
+                                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Bao 3kg</span>
+                            </div>
+                        </td>
+                        <td><span class="slug-text">RC-MA-BAO-3KG</span></td>
+                        <td style="font-weight: 700; color: var(--warning);">1 SP</td>
+                        <td><span class="badge-status status-pending">SẮP HẾT</span></td>
+                        <td>
+                            <button class="btn-action-stock" style="padding: 6px 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition);" onclick="alert('Đã gửi yêu cầu nhập thêm sản phẩm RC-MA-BAO-3KG')">Nhập hàng</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div>
+                                <strong>Dây dắt Trixie Premium</strong>
+                                <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Kích thước S</span>
+                            </div>
+                        </td>
+                        <td><span class="slug-text">TX-DD-PRE-S</span></td>
+                        <td style="font-weight: 700; color: var(--warning);">3 SP</td>
+                        <td><span class="badge-status status-pending">SẮP HẾT</span></td>
+                        <td>
+                            <button class="btn-action-stock" style="padding: 6px 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition);" onclick="alert('Đã gửi yêu cầu nhập thêm sản phẩm TX-DD-PRE-S')">Nhập hàng</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @endsection
