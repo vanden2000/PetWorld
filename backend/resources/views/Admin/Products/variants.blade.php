@@ -76,7 +76,7 @@
 
     .variant-grid {
         display: grid;
-        grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.7fr);
+        grid-template-columns: 1fr;
         gap: 20px;
         align-items: start;
     }
@@ -173,9 +173,9 @@
     }
 
     .variant-type-list {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
     }
 
     .variant-type-card {
@@ -187,9 +187,10 @@
         background: #ffffff;
         border-bottom: 1px solid var(--variant-border);
         display: grid;
-        grid-template-columns: 1fr 150px auto;
+        grid-template-columns: 1fr auto;
         gap: 12px;
         padding: 16px;
+        cursor: pointer;
     }
 
     .variant-type-name {
@@ -252,24 +253,33 @@
 
     .variant-values {
         padding: 16px;
+        display: none;
     }
+
+    .variant-type-card.is-open .variant-values { display: block; }
+    .variant-type-card.is-open .variant-type-head { background: var(--variant-primary-light); }
+    .variant-type-card .variant-type-head::after { content: '\f078'; font-family: "Font Awesome 6 Free"; font-weight: 900; color: var(--variant-muted); }
+    .variant-type-card.is-open .variant-type-head::after { transform: rotate(180deg); }
+    .variant-panel:first-child { max-width: 760px; }
+
+    .variant-values-list { display: grid; gap: 6px; }
 
     .variant-value-row {
         align-items: center;
-        border-bottom: 1px solid #f1f5f9;
+        border: 1px solid #edf0ee;
+        border-radius: 8px;
         display: grid;
-        grid-template-columns: 1fr 130px auto auto;
-        gap: 10px;
-        padding: 10px 0;
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+        padding: 9px 10px;
+        background: #fff;
     }
 
-    .variant-value-row:first-child {
-        padding-top: 0;
-    }
-
-    .variant-value-row:last-child {
-        border-bottom: 0;
-    }
+    .variant-value-name { color: var(--variant-text); font-weight: 750; }
+    .variant-value-edit-form { display: none; grid-column: 1 / -1; grid-template-columns: 1fr auto; gap: 8px; padding-top: 8px; border-top: 1px solid #edf0ee; }
+    .variant-value-row.is-editing .variant-value-edit-form { display: grid; }
+    .variant-value-row .variant-input { border: 0; background: transparent; padding: 2px; width: 92px; }
+    .variant-value-row .variant-btn-icon { height: 28px; width: 28px; }
 
     .variant-value-used {
         color: var(--variant-muted);
@@ -355,10 +365,11 @@
         }
 
         .variant-filter,
-        .variant-type-head,
-        .variant-value-row {
+        .variant-type-head {
             grid-template-columns: 1fr;
         }
+
+        .variant-type-list { grid-template-columns: 1fr; }
 
         .variant-actions {
             justify-content: flex-start;
@@ -504,19 +515,12 @@
                         </div>
 
                         <div class="variant-values">
+                            <div class="variant-values-list">
                             @forelse($variantType->values->sortBy('value') as $value)
                                 <div class="variant-value-row">
-                                    <form action="{{ route('admin.products.variants.values.update', $value) }}" method="POST" style="display: contents;">
-                                        @csrf
-                                        @method('PUT')
-                                        <input name="value" class="variant-input" value="{{ $value->value }}" required>
-                                        <span class="variant-value-used">
-                                            {{ $value->productVariants->count() }} SKU
-                                        </span>
-                                        <button type="submit" class="variant-btn variant-btn-soft variant-btn-icon" title="Lưu giá trị">
-                                            <i class="fa-solid fa-floppy-disk"></i>
-                                        </button>
-                                    </form>
+                                    <span class="variant-value-name">{{ $value->value }}</span>
+                                    <span class="variant-value-used">{{ $value->productVariants->count() }} SKU</span>
+                                    <button type="button" class="variant-btn variant-btn-soft variant-btn-icon js-toggle-value-edit" title="Sửa giá trị"><i class="fa-solid fa-pen"></i></button>
 
                                     <form action="{{ route('admin.products.variants.values.destroy', $value) }}" method="POST" onsubmit="return confirm('Xóa giá trị biến thể này?');">
                                         @csrf
@@ -525,10 +529,17 @@
                                             <i class="fa-solid fa-trash-can"></i>
                                         </button>
                                     </form>
+                                    <form action="{{ route('admin.products.variants.values.update', $value) }}" method="POST" class="variant-value-edit-form">
+                                        @csrf
+                                        @method('PUT')
+                                        <input name="value" class="variant-input" value="{{ $value->value }}" required>
+                                        <button type="submit" class="variant-btn variant-btn-primary">Lưu</button>
+                                    </form>
                                 </div>
                             @empty
                                 <div class="variant-empty">Chưa có giá trị cho thuộc tính này.</div>
                             @endforelse
+                            </div>
 
                             <form action="{{ route('admin.products.variants.values.store', $variantType) }}" method="POST" class="variant-add-value">
                                 @csrf
@@ -547,6 +558,23 @@
                 @endforelse
             </div>
 
+            <style>
+                .variant-type-list { display:none; }
+                .variant-table { width:100%; border-collapse:separate; border-spacing:0; background:#fff; border:1px solid var(--variant-border); border-radius:10px; overflow:hidden; }
+                .variant-table th,.variant-table td { padding:16px; border-bottom:1px solid #eef0ef; text-align:left; }
+                .variant-table th { background:#f6f8f7; color:var(--variant-muted); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; }
+                .js-variant-table-row { cursor:pointer; transition:background .15s; }.js-variant-table-row:hover{background:#fff7f2}.js-variant-table-row td:first-child{font-size:.95rem;color:var(--variant-text)}
+                .variant-drawer[hidden]{display:none}.variant-drawer td{background:#fffaf6;border-left:3px solid var(--variant-primary);padding:18px 22px}.variant-drawer-values{display:grid;gap:0;max-width:620px}
+                .variant-drawer-value{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f0e5dc}.variant-drawer-value span:last-child{font-size:.78rem;font-weight:800;color:var(--variant-primary);background:var(--variant-primary-light);padding:3px 8px;border-radius:999px}
+            </style>
+            <table class="variant-table"><thead><tr><th>Thuộc tính</th><th>Giá trị</th><th>Đang dùng</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody>
+            @foreach($variantTypes as $variantType)
+                @php($used = $variantType->values->sum(fn($value) => $value->productVariants->count()))
+                <tr class="js-variant-table-row" data-drawer="drawer-{{ $variantType->id }}"><td><strong>{{ $variantType->name }}</strong></td><td>{{ $variantType->values_count }}</td><td>{{ $used }} SKU</td><td>{{ $variantType->status === 'active' ? 'Đang dùng' : 'Ẩn' }}</td><td>Bấm để xem</td></tr>
+                <tr id="drawer-{{ $variantType->id }}" class="variant-drawer" hidden><td colspan="5"><div class="variant-drawer-values">@foreach($variantType->values as $value)<div class="variant-drawer-value"><span>{{ $value->value }}</span><span>{{ $value->productVariants->count() }} SKU</span></div>@endforeach</div><form action="{{ route('admin.products.variants.values.store', $variantType) }}" method="POST" class="variant-add-value">@csrf<input name="value" class="variant-input" placeholder="Thêm giá trị mới" required><button class="variant-btn variant-btn-primary">+ Thêm</button></form></td></tr>
+            @endforeach
+            </tbody></table>
+
             @if($variantTypes->hasPages())
                 <div class="variant-pagination">
                     <span class="variant-value-used">
@@ -561,4 +589,35 @@
             @endif
         </div>
     </div>
+@endsection
+
+@section('scripts')
+<script>
+document.querySelectorAll('.js-toggle-value-edit').forEach(button => {
+    button.addEventListener('click', () => {
+        const row = button.closest('.variant-value-row');
+        document.querySelectorAll('.variant-value-row.is-editing').forEach(item => {
+            if (item !== row) item.classList.remove('is-editing');
+        });
+        row.classList.toggle('is-editing');
+        row.querySelector('.variant-value-edit-form input')?.focus();
+    });
+});
+
+document.querySelectorAll('.variant-type-head').forEach(head => {
+    head.addEventListener('click', event => {
+        if (event.target.closest('input, select, button, form')) return;
+        const card = head.closest('.variant-type-card');
+        document.querySelectorAll('.variant-type-card.is-open').forEach(item => {
+            if (item !== card) item.classList.remove('is-open');
+        });
+        card.classList.toggle('is-open');
+    });
+});
+document.querySelectorAll('.js-variant-table-row').forEach(row => row.addEventListener('click', () => {
+    const drawer = document.getElementById(row.dataset.drawer);
+    document.querySelectorAll('.variant-drawer').forEach(item => { if (item !== drawer) item.hidden = true; });
+    drawer.hidden = !drawer.hidden;
+}));
+</script>
 @endsection

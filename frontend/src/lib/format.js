@@ -17,6 +17,7 @@ export function resolveBackendImage(path) {
   if (
     normalized.startsWith("storage/") ||
     normalized.startsWith("image/") ||
+    normalized.startsWith("products/") ||
     normalized.startsWith("uploads/")
   ) {
     // Trường hợp đặc biệt: Nếu trỏ tới storage/logo hoặc storage/avatars nhưng thực tế ở thư mục static /image

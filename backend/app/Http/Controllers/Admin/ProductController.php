@@ -629,7 +629,7 @@ class ProductController extends Controller
             return;
         }
 
-        $targetDir = public_path('image/products');
+        $targetDir = public_path('products');
 
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
@@ -647,8 +647,8 @@ class ProductController extends Controller
 
             ProductImage::create([
                 'product_id' => $product->id,
-                'image_url' => 'image/products/' . $filename,
-                'sort_order' => $product->images()->count(),
+                'image_url' => 'products/' . $filename,
+                'sort_order' => ((int) $product->images()->max('sort_order')) + 1,
                 'is_primary' => !$hasPrimary,
             ]);
 
@@ -751,7 +751,7 @@ class ProductController extends Controller
 
     private function syncImages(Product $product, array $changes): void
     {
-        $targetDir = public_path('image/products');
+        $targetDir = public_path('products');
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
         }
@@ -771,7 +771,7 @@ class ProductController extends Controller
                 $imageKey = $changes['newImageKeys']->get($index);
                 $createdImages->put($imageKey, new ProductImage([
                     'product_id' => $product->id,
-                    'image_url' => 'image/products/' . $filename,
+                    'image_url' => 'products/' . $filename,
                     'alt_text' => $this->cleanImageAltText($changes['newAltTexts']->get($imageKey)),
                     'is_primary' => false,
                 ]));
@@ -793,17 +793,21 @@ class ProductController extends Controller
 
                 $primary ??= $remaining->first();
 
+                $primaryId = $primary?->id;
                 $product->images()->update(['is_primary' => false]);
-                $primary?->update(['is_primary' => true]);
+                if ($primaryId) {
+                    $product->images()->whereKey($primaryId)->update(['is_primary' => true]);
+                }
 
                 $imagesByToken = $remaining
                     ->mapWithKeys(fn (ProductImage $image): array => ["existing:{$image->id}" => $image])
                     ->merge($createdImages->mapWithKeys(fn (ProductImage $image, string $key): array => ["new:{$key}" => $image]));
-                $primaryToken = $createdImages->contains($primary)
-                    ? 'new:'.$createdImages->search($primary)
-                    : "existing:{$primary?->id}";
-                $orderedTokens = $changes['imageOrder']->reject(fn (string $token): bool => $token === $primaryToken);
-                $orderedTokens->prepend($primaryToken)->values()->each(function (string $token, int $sortOrder) use ($imagesByToken, $changes): void {
+                $orderedTokens = $changes['imageOrder']
+                    ->filter(fn (string $token): bool => str_starts_with($token, 'existing:'))
+                    ->merge($changes['imageOrder']->filter(fn (string $token): bool => str_starts_with($token, 'new:')))
+                    ->values();
+
+                $orderedTokens->each(function (string $token, int $sortOrder) use ($imagesByToken, $changes): void {
                     $image = $imagesByToken->get($token);
                     if (! $image) {
                         return;
@@ -813,6 +817,17 @@ class ProductController extends Controller
                         ? $this->cleanImageAltText($changes['existingAltTexts']->get($image->id))
                         : $image->alt_text;
                     $image->update(['sort_order' => $sortOrder, 'alt_text' => $altText]);
+                });
+
+                $existingImageIds = $remaining
+                    ->reject(fn (ProductImage $image): bool => $createdImages->contains($image))
+                    ->pluck('id');
+                $nextSortOrder = ((int) $product->images()
+                    ->whereIn('id', $existingImageIds)
+                    ->max('sort_order')) + 1;
+
+                $createdImages->each(function (ProductImage $image) use (&$nextSortOrder): void {
+                    $image->update(['sort_order' => $nextSortOrder++]);
                 });
             });
         } catch (\Throwable $exception) {
@@ -846,12 +861,12 @@ class ProductController extends Controller
     {
         $relativePath = ltrim(str_replace('\\', '/', $imageUrl), '/');
 
-        if (!str_starts_with($relativePath, 'image/products/')) {
+        if (!str_starts_with($relativePath, 'image/products/') && !str_starts_with($relativePath, 'products/')) {
             return;
         }
 
         $path = public_path($relativePath);
-        $directory = realpath(public_path('image/products'));
+        $directory = realpath(public_path(dirname($relativePath)));
         $resolvedPath = realpath($path);
 
         if ($directory && $resolvedPath && str_starts_with($resolvedPath, $directory . DIRECTORY_SEPARATOR)) {
