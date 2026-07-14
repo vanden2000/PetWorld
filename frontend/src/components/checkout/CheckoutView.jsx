@@ -184,7 +184,9 @@ export default function CheckoutView() {
             }
           });
         } else {
-          setAppliedVoucher(null);
+          setTimeout(() => {
+            setAppliedVoucher(null);
+          }, 0);
         }
       } catch (e) {
         console.error("[CheckoutView] Lỗi đọc voucher:", e);
@@ -196,7 +198,9 @@ export default function CheckoutView() {
   useEffect(() => {
     if (appliedVoucher && subtotal < parseFloat(appliedVoucher.min_order_value)) {
       const oldVoucher = appliedVoucher;
-      setAppliedVoucher(null);
+      setTimeout(() => {
+        setAppliedVoucher(null);
+      }, 0);
       if (typeof window !== "undefined") {
         localStorage.removeItem(voucherKey);
       }
