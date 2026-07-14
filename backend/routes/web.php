@@ -154,8 +154,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/vouchers/{id}/edit', [VoucherController::class, 'edit'])->name('vouchers.edit');
     Route::put('/vouchers/{id}', [VoucherController::class, 'update'])->name('vouchers.update');
     Route::delete('/vouchers/{id}', [VoucherController::class, 'destroy'])->name('vouchers.destroy');
-upstream
-});
 
     // Reports/Statistics routes
     Route::prefix('reports')->name('reports.')->group(function () {
@@ -167,4 +165,3 @@ upstream
         Route::get('/latest-orders', [ReportController::class, 'latestOrders'])->name('latest-orders');
     });
 });
->>>>>>> Stashed changes
