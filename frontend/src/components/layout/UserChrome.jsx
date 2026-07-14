@@ -13,6 +13,7 @@ export default function UserChrome({ children }) {
   if (isCheckout) {
     return (
       <div className="user-layout checkout-layout">
+        <Header />
         {children}
         <Toaster />
       </div>
