@@ -10446,7 +10446,7 @@ body {
 }
 
 
-/* Checkout standalone header overrides */
+/* Checkout keeps the shared site header and uses this bar only for progress. */
 .checkout-layout {
   min-height: 100vh;
   background: #fffaf6;
@@ -10460,28 +10460,21 @@ body {
 }
 
 .checkout-header {
-  position: sticky;
-  top: 0;
-  z-index: 80;
   background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid #f0e8e2;
-  box-shadow: 0 8px 22px rgba(48, 39, 34, 0.04);
 }
 
 .checkout-header-inner {
-  width: min(1180px, calc(100% - 32px));
-  min-height: 62px;
+  width: min(760px, calc(100% - 32px));
+  min-height: 54px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) 130px;
+  display: flex;
   align-items: center;
-  gap: 18px;
+  justify-content: center;
 }
 
 .checkout-logo-link {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
+  display: none;
 }
 
 .checkout-logo-link img {
@@ -10547,18 +10540,39 @@ body {
 }
 
 .checkout-support {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 800;
+  display: none;
 }
 
 .checkout-support strong {
   color: var(--primary-orange);
   font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .checkout-header-inner {
+    width: min(100% - 24px, 460px);
+    min-height: 48px;
+  }
+
+  .checkout-step {
+    gap: 5px;
+    font-size: 10px;
+  }
+
+  .checkout-step i {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+
+  .checkout-step:not(:last-child) {
+    padding-right: 18px;
+  }
+
+  .checkout-step:not(:last-child)::after {
+    right: 6px;
+    width: 12px;
+  }
 }
 
 

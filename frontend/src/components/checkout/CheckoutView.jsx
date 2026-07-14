@@ -108,6 +108,13 @@ export default function CheckoutView() {
       setAddresses(list);
       setSelectedAddressId((prev) => prev ?? list.find((a) => a.is_default)?.id ?? list[0]?.id ?? null);
       setShowAddressForm(list.length === 0);
+      if (list.length === 0) {
+        setAddressForm((current) => ({
+          ...current,
+          recipient_name: current.recipient_name || user?.name || "",
+          recipient_phone: current.recipient_phone || user?.phone || "",
+        }));
+      }
     });
   };
 
