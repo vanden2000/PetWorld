@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\BlogCommentController;
 
 
 // Admin authentication routes
@@ -88,8 +89,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews');
     Route::patch('/reviews/{review}/status', [ReviewController::class, 'updateStatus'])->name('reviews.status.update');
 
-    Route::get('/posts', [PostController::class, 'index'])
-        ->name('posts');
+    Route::get('/blog-comments', [BlogCommentController::class, 'index'])->name('blog-comments');
+    Route::delete('/blog-comments/{comment}', [BlogCommentController::class, 'destroy'])->name('blog-comments.destroy');
+
+    Route::get('/posts', [PostController::class, 'index'])->name('posts');
+    Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
+    Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 
     Route::get('/products', [ProductController::class, 'index'])
         ->name('products');

@@ -132,6 +132,17 @@
                         <span>Voucher</span>
                     </a>
                 </li>
+                <li class="menu-item-dropdown {{ request()->routeIs('admin.posts*') || request()->routeIs('admin.blog-comments*') ? 'open' : '' }}">
+                    <a href="{{ route('admin.posts') }}" class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.posts*') || request()->routeIs('admin.blog-comments*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-newspaper"></i>
+                        <span>Bài Viết</span>
+                        <i class="fa-solid fa-chevron-down dropdown-arrow" style="margin-left: auto; font-size: 0.75rem; transition: var(--transition);"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li><a href="{{ route('admin.posts') }}" class="submenu-item-link {{ request()->routeIs('admin.posts') ? 'active' : '' }}"><i class="fa-solid fa-list-ul"></i><span>Danh sách bài viết</span></a></li>
+                        <li><a href="{{ route('admin.blog-comments') }}" class="submenu-item-link {{ request()->routeIs('admin.blog-comments*') ? 'active' : '' }}"><i class="fa-solid fa-comments"></i><span>Quản lý bình luận</span></a></li>
+                    </ul>
+                </li>
                 <li class="menu-item-dropdown {{ request()->routeIs('admin.reports*') ? 'open' : '' }}">
                     <a href="#" class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
                         <i class="fa-solid fa-chart-simple"></i>
