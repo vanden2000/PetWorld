@@ -16,6 +16,7 @@ use App\Support\ProductDescriptionSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
@@ -629,12 +630,6 @@ class ProductController extends Controller
             return;
         }
 
-        $targetDir = public_path('products');
-
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0755, true);
-        }
-
         $hasPrimary = $product->images()->where('is_primary', true)->exists();
 
         foreach ($request->file('images') as $image) {
@@ -643,7 +638,7 @@ class ProductController extends Controller
             }
 
             $filename = $this->imageFilename($product, $image->extension());
-            $image->move($targetDir, $filename);
+            Storage::disk('public')->putFileAs('products', $image, $filename);
 
             ProductImage::create([
                 'product_id' => $product->id,
@@ -751,11 +746,6 @@ class ProductController extends Controller
 
     private function syncImages(Product $product, array $changes): void
     {
-        $targetDir = public_path('products');
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0755, true);
-        }
-
         $createdFiles = [];
         $createdImages = collect();
 
@@ -766,12 +756,13 @@ class ProductController extends Controller
                 }
 
                 $filename = $this->imageFilename($product, $image->extension());
-                $image->move($targetDir, $filename);
-                $createdFiles[] = $targetDir . DIRECTORY_SEPARATOR . $filename;
+                $storagePath = 'products/'.$filename;
+                Storage::disk('public')->putFileAs('products', $image, $filename);
+                $createdFiles[] = $storagePath;
                 $imageKey = $changes['newImageKeys']->get($index);
                 $createdImages->put($imageKey, new ProductImage([
                     'product_id' => $product->id,
-                    'image_url' => 'products/' . $filename,
+                    'image_url' => $storagePath,
                     'alt_text' => $this->cleanImageAltText($changes['newAltTexts']->get($imageKey)),
                     'is_primary' => false,
                 ]));
@@ -831,11 +822,7 @@ class ProductController extends Controller
                 });
             });
         } catch (\Throwable $exception) {
-            foreach ($createdFiles as $path) {
-                if (is_file($path)) {
-                    unlink($path);
-                }
-            }
+            Storage::disk('public')->delete($createdFiles);
 
             throw $exception;
         }
@@ -861,16 +848,10 @@ class ProductController extends Controller
     {
         $relativePath = ltrim(str_replace('\\', '/', $imageUrl), '/');
 
-        if (!str_starts_with($relativePath, 'image/products/') && !str_starts_with($relativePath, 'products/')) {
+        if (!str_starts_with($relativePath, 'products/')) {
             return;
         }
 
-        $path = public_path($relativePath);
-        $directory = realpath(public_path(dirname($relativePath)));
-        $resolvedPath = realpath($path);
-
-        if ($directory && $resolvedPath && str_starts_with($resolvedPath, $directory . DIRECTORY_SEPARATOR)) {
-            unlink($resolvedPath);
-        }
+        Storage::disk('public')->delete($relativePath);
     }
 }

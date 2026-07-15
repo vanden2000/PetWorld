@@ -6,6 +6,7 @@ export const ROUTES = {
   shop: "/shop",
   shopDetail: (slug) => `/shop/${slug}`,
   services: "/services",
+  aboutUs: "/about-us",
   news: "/news",
   newsDetail: (slug) => `/news/${slug}`,
   contact: "/contact",
@@ -25,7 +26,7 @@ export const ROUTES = {
 export const MAIN_NAV = [
   { href: ROUTES.home, label: "Trang Chủ" },
   { href: ROUTES.shop, label: "Cửa Hàng" },
-  { href: ROUTES.services, label: "Dịch Vụ" },
+  { href: ROUTES.aboutUs, label: "Về Chúng Tôi" },
   { href: ROUTES.news, label: "Tin Tức" },
   { href: ROUTES.contact, label: "Liên hệ" },
 ];

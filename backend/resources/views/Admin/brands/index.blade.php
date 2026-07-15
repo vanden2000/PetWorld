@@ -128,7 +128,7 @@
                             <td>{{ $index + 1 }}</td>
                             <td>
                                 @if($brand->image)
-                                    <span class="brand-admin-logo"><img src="{{ asset($brand->image) }}" alt="{{ $brand->name }}"></span>
+                                    <span class="brand-admin-logo"><img src="{{ filter_var($brand->image, FILTER_VALIDATE_URL) ? $brand->image : (str_starts_with($brand->image, 'storage/') ? asset($brand->image) : asset('storage/' . $brand->image)) }}" alt="{{ $brand->name }}"></span>
                                 @else
                                     <span class="brand-admin-logo brand-admin-logo-fallback">{{ mb_substr($brand->name, 0, 1) }}</span>
                                 @endif

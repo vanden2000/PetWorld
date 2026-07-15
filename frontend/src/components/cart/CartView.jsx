@@ -73,7 +73,9 @@ export default function CartView() {
   // Xóa voucher nếu user đăng xuất
   useEffect(() => {
     if (!user) {
-      setAppliedVoucher(null);
+      setTimeout(() => {
+        setAppliedVoucher(null);
+      }, 0);
       if (typeof window !== "undefined") {
         localStorage.removeItem("petworld_cart_applied_voucher");
       }
@@ -84,7 +86,9 @@ export default function CartView() {
   useEffect(() => {
     if (appliedVoucher && subtotal < parseFloat(appliedVoucher.min_order_value)) {
       const oldVoucher = appliedVoucher;
-      setAppliedVoucher(null);
+      setTimeout(() => {
+        setAppliedVoucher(null);
+      }, 0);
       if (typeof window !== "undefined") {
         localStorage.removeItem("petworld_cart_applied_voucher");
       }

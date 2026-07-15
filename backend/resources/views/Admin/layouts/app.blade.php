@@ -40,11 +40,16 @@
                         <span>Thống Kê</span>
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('admin.orders')}}" class="menu-item-link {{ request()->routeIs('admin.orders') ? 'active' : '' }} ">
+                <li class="menu-item-dropdown {{ request()->routeIs('admin.orders*') || request()->routeIs('admin.reviews*') ? 'open' : '' }}">
+                    <a href="{{ route('admin.orders')}}" class="menu-item-link dropdown-toggle orders-dropdown-toggle {{ request()->routeIs('admin.orders') ? 'active' : '' }} ">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <span>Đơn Hàng</span>
+                        <i class="fa-solid fa-chevron-down dropdown-arrow" style="margin-left: auto; font-size: 0.75rem; transition: var(--transition);"></i>
                     </a>
+                    <ul class="submenu">
+                        <li><a href="{{ route('admin.orders') }}" class="submenu-item-link {{ request()->routeIs('admin.orders*') ? 'active' : '' }}"><i class="fa-solid fa-list-ul"></i><span>Danh sách đơn hàng</span></a></li>
+                        <li><a href="{{ route('admin.reviews') }}" class="submenu-item-link {{ request()->routeIs('admin.reviews*') ? 'active' : '' }}"><i class="fa-solid fa-star"></i><span>Đánh giá sản phẩm</span></a></li>
+                    </ul>
                 </li>
                 <li class="menu-item-dropdown {{ request()->routeIs('admin.categories*') ? 'open' : '' }}">
                     <a href="{{ route('admin.categories') }}" class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.categories*') ? 'active' : '' }}">
@@ -127,11 +132,61 @@
                         <span>Voucher</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="menu-item-link">
+                <li class="menu-item-dropdown {{ request()->routeIs('admin.posts*') || request()->routeIs('admin.blog-comments*') ? 'open' : '' }}">
+                    <a href="{{ route('admin.posts') }}" class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.posts*') || request()->routeIs('admin.blog-comments*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-newspaper"></i>
+                        <span>Bài Viết</span>
+                        <i class="fa-solid fa-chevron-down dropdown-arrow" style="margin-left: auto; font-size: 0.75rem; transition: var(--transition);"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li><a href="{{ route('admin.posts') }}" class="submenu-item-link {{ request()->routeIs('admin.posts') ? 'active' : '' }}"><i class="fa-solid fa-list-ul"></i><span>Danh sách bài viết</span></a></li>
+                        <li><a href="{{ route('admin.blog-comments') }}" class="submenu-item-link {{ request()->routeIs('admin.blog-comments*') ? 'active' : '' }}"><i class="fa-solid fa-comments"></i><span>Quản lý bình luận</span></a></li>
+                    </ul>
+                </li>
+                <li class="menu-item-dropdown {{ request()->routeIs('admin.reports*') ? 'open' : '' }}">
+                    <a href="#" class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
                         <i class="fa-solid fa-chart-simple"></i>
                         <span>Báo Cáo</span>
+                        <i class="fa-solid fa-chevron-down dropdown-arrow" style="margin-left: auto; font-size: 0.75rem; transition: var(--transition);"></i>
                     </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="{{ route('admin.reports.revenue') }}" class="submenu-item-link {{ request()->routeIs('admin.reports.revenue') ? 'active' : '' }}">
+                                <i class="fa-solid fa-wallet"></i>
+                                <span>Doanh Thu</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.reports.order-status') }}" class="submenu-item-link {{ request()->routeIs('admin.reports.order-status') ? 'active' : '' }}">
+                                <i class="fa-solid fa-chart-pie"></i>
+                                <span>Trạng Thái Đơn</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.reports.customers') }}" class="submenu-item-link {{ request()->routeIs('admin.reports.customers') ? 'active' : '' }}">
+                                <i class="fa-solid fa-users"></i>
+                                <span>Khách Hàng</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.reports.best-sellers') }}" class="submenu-item-link {{ request()->routeIs('admin.reports.best-sellers') ? 'active' : '' }}">
+                                <i class="fa-solid fa-fire"></i>
+                                <span>Sản Phẩm Bán Chạy</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.reports.low-stock') }}" class="submenu-item-link {{ request()->routeIs('admin.reports.low-stock') ? 'active' : '' }}">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span>Sắp Hết Hàng</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.reports.latest-orders') }}" class="submenu-item-link {{ request()->routeIs('admin.reports.latest-orders') ? 'active' : '' }}">
+                                <i class="fa-solid fa-clock"></i>
+                                <span>Đơn Hàng Mới Nhất</span>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 <li>
                     <a href="{{ route('admin.account.edit') }}" class="menu-item-link {{ request()->routeIs('admin.account.*') ? 'active' : '' }}">
@@ -161,7 +216,7 @@
             <div class="header-left">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" class="search-input" placeholder="Tìm kiếm hệ thống...">
+                    <input type="text" id="admin-global-search" name="admin_global_search" class="search-input" placeholder="Tìm kiếm hệ thống...">
                 </div>
             </div>
             
@@ -236,14 +291,16 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const dropdownArrows = document.querySelectorAll('.dropdown-toggle .dropdown-arrow');
-            dropdownArrows.forEach(arrow => {
-                arrow.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const parent = this.closest('.menu-item-dropdown');
-                    if (parent) {
-                        parent.classList.toggle('open');
+            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+            dropdownToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href === '#' || href === 'javascript:void(0);' || e.target.classList.contains('dropdown-arrow')) {
+                        e.preventDefault();
+                        const parent = this.closest('.menu-item-dropdown');
+                        if (parent) {
+                            parent.classList.toggle('open');
+                        }
                     }
                 });
             });

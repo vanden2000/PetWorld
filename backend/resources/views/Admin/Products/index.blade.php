@@ -888,7 +888,7 @@
                                 <td class="js-toggle-drawer" tabindex="0" role="button" aria-expanded="false" aria-controls="drawer-{{ $product->id }}">
                                     <div class="product-info-cell">
                                         @php
-                                            $fallbackImageUrl = 'https://placehold.co/80x80?text=PetWorld';
+                                            $fallbackImageUrl = asset('image/logo/logo.png');
                                             $imageUrl = $fallbackImageUrl;
                                             $image = $product->primaryImage ?? $product->images->first();
                                             $imageAlt = $image?->alt_text ?: $product->name;
@@ -898,8 +898,10 @@
 
                                                 if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
                                                     $imageUrl = $path;
-                                                } elseif (str_starts_with($path, 'image/') || str_starts_with($path, 'products/') || str_starts_with($path, 'storage/')) {
+                                                } elseif (str_starts_with($path, 'storage/') || str_starts_with($path, 'image/')) {
                                                     $imageUrl = asset($path);
+                                                } elseif (str_starts_with($path, 'products/')) {
+                                                    $imageUrl = asset('storage/'.$path);
                                                 } else {
                                                     // Compatibility for legacy product images stored without a directory prefix.
                                                     $imageUrl = asset('storage/'.$path);

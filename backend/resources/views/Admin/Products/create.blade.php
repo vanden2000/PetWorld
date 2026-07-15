@@ -1422,14 +1422,16 @@
                     <div class="thumbnails-wrap-row" id="upload-thumbnails-preview">
                         @foreach($product->images->sortByDesc('is_primary') as $img)
                             @php
-                                $fallbackImageUrl = 'https://placehold.co/86x86?text=PetWorld';
+                                $fallbackImageUrl = asset('image/logo/logo.png');
                                 $imgSrc = $fallbackImageUrl;
                                 $path = ltrim((string) $img->image_url, '/');
 
                                 if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
                                     $imgSrc = $path;
-                                } elseif (str_starts_with($path, 'image/') || str_starts_with($path, 'products/') || str_starts_with($path, 'storage/')) {
+                                } elseif (str_starts_with($path, 'storage/') || str_starts_with($path, 'image/')) {
                                     $imgSrc = asset($path);
+                                } elseif (str_starts_with($path, 'products/')) {
+                                    $imgSrc = asset('storage/'.$path);
                                 } elseif ($path !== '') {
                                     $imgSrc = asset('storage/'.$path);
                                 }

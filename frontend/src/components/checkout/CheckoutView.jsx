@@ -27,6 +27,7 @@ import {
 } from "@/lib/checkout";
 import AddressLocationFields from "@/components/auth/AddressLocationFields";
 import { toastError } from "@/lib/toast";
+import CheckoutSuccessView from "@/components/checkout/CheckoutSuccessView";
 import {
   clearBuyNow,
   getBuyNowSnapshot,
@@ -79,6 +80,7 @@ export default function CheckoutView() {
   const [submitting, setSubmitting] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
   const [orderPaid, setOrderPaid] = useState(false);
+  const [fullOrderDetails, setFullOrderDetails] = useState(null);
   const [qrSecondsLeft, setQrSecondsLeft] = useState(QR_TTL_SECONDS);
   // Hết hiệu lực khi đếm ngược về 0 (suy ra từ state, không cần state riêng).
   const qrExpired = qrSecondsLeft <= 0;
@@ -108,6 +110,13 @@ export default function CheckoutView() {
       setAddresses(list);
       setSelectedAddressId((prev) => prev ?? list.find((a) => a.is_default)?.id ?? list[0]?.id ?? null);
       setShowAddressForm(list.length === 0);
+      if (list.length === 0) {
+        setAddressForm((current) => ({
+          ...current,
+          recipient_name: current.recipient_name || user?.name || "",
+          recipient_phone: current.recipient_phone || user?.phone || "",
+        }));
+      }
     });
   };
 
@@ -136,6 +145,18 @@ export default function CheckoutView() {
     return () => clearInterval(timer);
   }, [placedOrder, orderPaid, qrExpired]);
 
+  // Tải chi tiết đơn hàng đầy đủ khi đặt hàng hoặc thanh toán thành công
+  useEffect(() => {
+    if (!placedOrder) return;
+    if (!placedOrder.is_bank || orderPaid) {
+      getOrder(placedOrder.id).then((data) => {
+        if (data) {
+          setFullOrderDetails(data);
+        }
+      });
+    }
+  }, [placedOrder, orderPaid]);
+
   const subtotal = items.reduce((sum, line) => sum + line.price * line.quantity, 0);
   const shippingMethod = options.shipping_methods.find((m) => m.id === shippingMethodId);
   const shipping = items.length ? shippingMethod?.shipping_fee ?? 0 : 0;
@@ -163,7 +184,9 @@ export default function CheckoutView() {
             }
           });
         } else {
-          setAppliedVoucher(null);
+          setTimeout(() => {
+            setAppliedVoucher(null);
+          }, 0);
         }
       } catch (e) {
         console.error("[CheckoutView] Lỗi đọc voucher:", e);
@@ -175,7 +198,9 @@ export default function CheckoutView() {
   useEffect(() => {
     if (appliedVoucher && subtotal < parseFloat(appliedVoucher.min_order_value)) {
       const oldVoucher = appliedVoucher;
-      setAppliedVoucher(null);
+      setTimeout(() => {
+        setAppliedVoucher(null);
+      }, 0);
       if (typeof window !== "undefined") {
         localStorage.removeItem(voucherKey);
       }
@@ -313,14 +338,9 @@ export default function CheckoutView() {
   // --- Các trạng thái màn hình ---
 
   if (placedOrder) {
-    // Đơn COD: chỉ cần báo thành công.
-    if (!placedOrder.is_bank) {
-      return (
-        <div className="cart-empty">
-          <p>🎉 Đặt hàng thành công! Mã đơn của bạn: <strong>{placedOrder.payment_code}</strong></p>
-          <Link href="/shop" className="cart-empty-btn">Tiếp tục mua sắm</Link>
-        </div>
-      );
+    // Đơn COD hoặc đơn chuyển khoản đã thanh toán thành công
+    if (!placedOrder.is_bank || orderPaid) {
+      return <CheckoutSuccessView order={fullOrderDetails || placedOrder} />;
     }
 
     // Đơn chuyển khoản: màn hướng dẫn thanh toán (QR + chuyển khoản thủ công) + tóm tắt đơn.

@@ -14,6 +14,9 @@ use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\LoginController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\BlogCommentController;
+
 
 Route::get('/', fn() => response('PetWorld API'));
 
@@ -85,8 +88,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
         ->name('orders.update-status');
 
-    Route::get('/posts', [PostController::class, 'index'])
-        ->name('posts');
+    Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews');
+    Route::patch('/reviews/{review}/status', [ReviewController::class, 'updateStatus'])->name('reviews.status.update');
+
+    Route::get('/blog-comments', [BlogCommentController::class, 'index'])->name('blog-comments');
+    Route::delete('/blog-comments/{comment}', [BlogCommentController::class, 'destroy'])->name('blog-comments.destroy');
+
+    Route::get('/posts', [PostController::class, 'index'])->name('posts');
+    Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
+    Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 
     Route::get('/products', [ProductController::class, 'index'])
         ->name('products');
@@ -151,4 +164,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/vouchers/{id}/edit', [VoucherController::class, 'edit'])->name('vouchers.edit');
     Route::put('/vouchers/{id}', [VoucherController::class, 'update'])->name('vouchers.update');
     Route::delete('/vouchers/{id}', [VoucherController::class, 'destroy'])->name('vouchers.destroy');
+
+    // Reports/Statistics routes
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/revenue', [ReportController::class, 'revenue'])->name('revenue');
+        Route::get('/order-status', [ReportController::class, 'orderStatus'])->name('order-status');
+        Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
+        Route::get('/best-sellers', [ReportController::class, 'bestSellers'])->name('best-sellers');
+        Route::get('/low-stock', [ReportController::class, 'lowStock'])->name('low-stock');
+        Route::get('/latest-orders', [ReportController::class, 'latestOrders'])->name('latest-orders');
+    });
 });

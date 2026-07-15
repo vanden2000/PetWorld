@@ -29,7 +29,12 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      const scrollY = window.scrollY;
+      if (scrollY > 120) {
+        setIsScrolled(true);
+      } else if (scrollY < 20) {
+        setIsScrolled(false);
+      }
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -48,10 +53,14 @@ export default function Header() {
   const userRaw = useSyncExternalStore(onAuthChange, getUserSnapshot, getServerUserSnapshot);
   const user = useMemo(() => parseUser(userRaw), [userRaw]);
 
+  // Mobile menu state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const handleSearch = (event) => {
     event.preventDefault();
     const query = keyword.trim();
     router.push(query ? `${ROUTES.shop}?search=${encodeURIComponent(query)}` : ROUTES.shop);
+    setMobileMenuOpen(false);
   };
 
   const handleLogout = async () => {
@@ -59,6 +68,8 @@ export default function Header() {
     router.push(ROUTES.home);
     router.refresh();
   };
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
     <header className={`header-wrapper ${isScrolled ? "scrolled" : ""}`}>
@@ -161,7 +172,7 @@ export default function Header() {
             <input
               type="text"
               className="search-input"
-              placeholder="Sen muốn tìm gì?...."
+              placeholder="Sen muốn tìm gì?..."
               aria-label="Tìm kiếm"
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
@@ -241,6 +252,21 @@ export default function Header() {
               </svg>
               <span className="action-badge">{cartCount}</span>
             </Link>
+
+            {/* Hamburger button - chỉ hiện trên mobile */}
+            <button
+              type="button"
+              className="hamburger-btn"
+              aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((v) => !v)}
+            >
+              <span className={`hamburger-icon ${mobileMenuOpen ? "open" : ""}`}>
+                <span />
+                <span />
+                <span />
+              </span>
+            </button>
           </div>
         </nav>
 
@@ -357,6 +383,14 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="mobile-menu-overlay" onClick={closeMobileMenu} aria-hidden="true" />
+      )}
+
+      {/* Mobile Menu Drawer */}
+     
     </header>
   );
 }
