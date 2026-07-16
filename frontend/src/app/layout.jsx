@@ -1,11 +1,22 @@
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display, Caveat } from "next/font/google";
 import "./globals.css";
 import { resolveBackendImage } from "@/lib/format";
 
-// Font Inter có subset tiếng Việt để hiển thị đầy đủ dấu.
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  variable: "--font-caveat",
   display: "swap",
 });
 
@@ -19,7 +30,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="vi" className={inter.variable}>
+    <html lang="vi" className={`${inter.variable} ${playfair.variable} ${caveat.variable}`}>
       <link rel="icon" type="image/x-icon" href={resolveBackendImage("logo/logo.png")} />
       <body>{children}</body>
     </html>

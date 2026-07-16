@@ -1,52 +1,50 @@
-/* ==========================================================================
-   PetWorld - About Us Page Professional Corporate Stylesheet
-   ========================================================================== */
-
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
-
 .about-wrapper {
-  max-width: 1140px;
+  max-width: 960px; /* Thắt chặt chiều ngang để đọc văn bản tự nhiên hơn */
   margin: 0 auto;
   padding: 0 24px;
 }
 
-/* Typography Overrides for Human-Coded Feel */
+/* Typography & Layout Spacing */
+.about-section {
+  margin-bottom: 100px;
+}
+
 .about-serif-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-playfair), Georgia, serif;
   font-weight: 700;
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   color: #1e1e24;
+  margin-bottom: 24px;
+}
+
+.about-p {
+  font-size: 1.05rem;
+  color: #5b5550;
+  line-height: 1.8;
   margin-bottom: 20px;
 }
 
-/* 1. Hero Section (Minimalist & Clean) */
+/* 1. Hero Section (Ultra Minimalist) */
 .about-hero-section {
   text-align: center;
-  padding: 60px 20px;
-  margin-bottom: 40px;
+  padding: 80px 0 40px 0;
 }
 
 .about-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 120, 45, 0.08);
-  border: 1px solid rgba(255, 120, 45, 0.15);
-  color: #ff782d;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 2px;
-  padding: 6px 16px;
-  border-radius: 50px;
-  margin-bottom: 20px;
+  color: #ff782d;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: block;
 }
 
 .about-main-title {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 3.2rem;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 3rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
   color: #1e1e24;
   margin-bottom: 20px;
 }
@@ -60,665 +58,290 @@
 .about-intro-text {
   font-size: 1.2rem;
   color: #5b5550;
-  max-width: 800px;
+  line-height: 1.75;
+  max-width: 720px;
   margin: 0 auto;
-  line-height: 1.7;
 }
 
-/* 2. Founder Letter Section (Overlapping Asymmetrical Grid) */
-.founder-letter-section {
+/* 2. Story / Founder Letter Section (No Cards, Just Typography) */
+.founder-story-grid {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
-  gap: 60px;
-  align-items: flex-start;
-  margin-bottom: 100px;
-  padding: 40px 0;
+  gap: 50px;
+  align-items: center;
 }
 
-.letter-content {
-  background: #ffffff;
-  border: 1px solid #ebdcd0;
-  border-radius: 28px;
-  padding: 50px;
-  box-shadow: 0 10px 30px rgba(91, 46, 17, 0.03);
-  position: relative;
-  z-index: 2;
-}
-
-.letter-body {
+.founder-letter-text {
   font-size: 1.05rem;
   color: #4a4540;
   line-height: 1.8;
 }
 
-.letter-body p {
+.founder-letter-text p {
   margin-bottom: 20px;
 }
 
-.letter-footer {
+.founder-signature-box {
   margin-top: 30px;
-  border-top: 1px dashed #ebdcd0;
-  padding-top: 20px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 20px;
 }
 
-.founder-info h5 {
-  font-size: 1.1rem;
-  font-weight: 800;
+.founder-signature-name {
+  font-size: 1.05rem;
+  font-weight: 700;
   color: #1e1e24;
-  margin-bottom: 4px;
 }
 
-.founder-info p {
-  font-size: 0.85rem;
+.founder-signature-role {
+  font-size: 0.88rem;
   color: #8c857e;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  margin-top: 2px;
 }
 
-.founder-signature {
-  font-family: 'Caveat', cursive;
-  font-size: 2.8rem;
+.founder-signature-img {
+  font-family: var(--font-caveat), cursive;
+  font-size: 2.5rem;
   color: #ff782d;
   user-select: none;
-  transform: rotate(-5deg);
-  margin-right: 20px;
+  transform: rotate(-3deg);
 }
 
-.founder-image-wrapper {
+.founder-photo-box {
   position: relative;
-  margin-top: 50px;
-  z-index: 1;
 }
 
-.founder-image-box {
-  border-radius: 28px;
-  overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-  aspect-ratio: 4 / 5;
-  border: 1px solid #ebdcd0;
-}
-
-.founder-image-box img {
+.founder-photo-img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Overlapping Decorative Badge */
-.founder-image-badge {
-  position: absolute;
-  bottom: -20px;
-  left: -20px;
-  background: #ff782d;
-  color: #ffffff;
-  padding: 16px 24px;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(255, 120, 45, 0.3);
-  font-size: 0.95rem;
-  font-weight: 700;
-  max-width: 220px;
-  z-index: 3;
-}
-
-/* 3. Vision & Mission Section (Dark Charcoal Premium Backdrop) */
-.vision-mission-section {
-  background-color: #1e1e24;
-  color: #ffffff;
-  border-radius: 40px;
-  padding: 80px 60px;
-  margin-bottom: 100px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
-}
-
-.vision-mission-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
-}
-
-.vision-mission-card {
-  position: relative;
-}
-
-.vision-mission-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 40px;
-  height: 4px;
-  background-color: #ff782d;
-  border-radius: 2px;
-}
-
-.vision-mission-card h3 {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 2.2rem;
-  color: #ffffff;
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-
-.vision-mission-card p {
-  font-size: 1.05rem;
-  color: #b5acaf;
-  line-height: 1.8;
-}
-
-.vision-mission-card ul {
-  list-style: none;
-  padding: 0;
-  margin: 20px 0 0 0;
-}
-
-.vision-mission-card li {
-  position: relative;
-  padding-left: 28px;
-  margin-bottom: 16px;
-  font-size: 1.02rem;
-  color: #ebdcd0;
-  line-height: 1.6;
-}
-
-.vision-mission-card li::before {
-  content: "✦";
-  position: absolute;
-  left: 0;
-  top: 0;
-  color: #ff782d;
-  font-size: 1.1rem;
-}
-
-/* 4. Left-Aligned Timeline Section */
-.timeline-section-container {
-  padding: 40px 0;
-  margin-bottom: 100px;
-}
-
-.timeline-layout {
-  display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  gap: 60px;
-}
-
-.timeline-intro {
-  position: sticky;
-  top: 120px;
-  height: fit-content;
-}
-
-.timeline-list {
-  position: relative;
-  padding-left: 32px;
-}
-
-/* Trục dọc timeline sát trái */
-.timeline-list::before {
-  content: "";
-  position: absolute;
-  top: 8px;
-  bottom: 8px;
-  left: 3px;
-  width: 2px;
-  background-color: #ebdcd0;
-}
-
-.timeline-node-item {
-  position: relative;
-  margin-bottom: 50px;
-}
-
-.timeline-node-item:last-child {
-  margin-bottom: 0;
-}
-
-/* Nút tròn định vị */
-.timeline-node-dot {
-  position: absolute;
-  left: -34px;
-  top: 6px;
-  width: 12px;
-  height: 12px;
-  background-color: #ffffff;
-  border: 3px solid #ff782d;
-  border-radius: 50%;
-  z-index: 2;
-  transition: transform 0.3s ease, background-color 0.3s ease;
-}
-
-.timeline-node-item:hover .timeline-node-dot {
-  transform: scale(1.3);
-  background-color: #ff782d;
-}
-
-.timeline-node-year {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #ff782d;
-  letter-spacing: 1.5px;
-  margin-bottom: 8px;
+  height: auto;
+  border-radius: 16px;
   display: block;
 }
 
-.timeline-node-title {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #1e1e24;
-  margin-bottom: 10px;
+.founder-photo-caption {
+  font-size: 0.85rem;
+  color: #8c857e;
+  margin-top: 12px;
+  text-align: center;
+  font-style: italic;
 }
 
-.timeline-node-desc {
-  font-size: 1rem;
+/* 3. Vision & Mission (Clean 2-Column Text) */
+.vision-mission-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+}
+
+.vision-mission-col h3 {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 1.8rem;
+  color: #1e1e24;
+  margin-bottom: 16px;
+}
+
+.vision-mission-col ul {
+  list-style: none;
+  padding: 0;
+}
+
+.vision-mission-col li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 12px;
+  font-size: 1.05rem;
   color: #5b5550;
   line-height: 1.7;
 }
 
-/* 5. Philosophy Section (Clean SVG Value Cards) */
-.philosophy-section-container {
-  padding: 80px 0;
-  border-top: 1px solid #ebdcd0;
-  margin-bottom: 100px;
-}
-
-.philosophy-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
-  margin-top: 40px;
-}
-
-.philosophy-card {
-  background: #ffffff;
-  border: 1px solid #ebdcd0;
-  border-radius: 28px;
-  padding: 40px 30px;
-  box-shadow: 0 6px 20px rgba(91, 46, 17, 0.01);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
-}
-
-.philosophy-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(91, 46, 17, 0.06);
-  border-color: rgba(255, 120, 45, 0.25);
-}
-
-.philosophy-icon-wrapper {
-  background: rgba(255, 120, 45, 0.08);
+.vision-mission-col li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
   color: #ff782d;
-  width: 60px;
-  height: 60px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-weight: bold;
 }
 
-.philosophy-card:hover .philosophy-icon-wrapper {
-  background: #ff782d;
-  color: #ffffff;
-}
-
-.philosophy-card h4 {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #1e1e24;
-  margin-bottom: 12px;
-}
-
-.philosophy-card p {
-  font-size: 0.98rem;
-  color: #5b5550;
-  line-height: 1.65;
-}
-
-/* 6. Partner Brands Trust Bar */
-.press-section {
-  text-align: center;
-  padding: 40px 0;
-  border-top: 1px solid #ebdcd0;
-  border-bottom: 1px solid #ebdcd0;
-  margin-bottom: 100px;
-}
-
-.press-title {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #8c857e;
-  font-weight: 700;
-  margin-bottom: 24px;
-}
-
-.press-logos {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 50px;
-  flex-wrap: wrap;
-}
-
-.brand-partner-logo {
-  height: 35px;
-  max-width: 110px;
-  object-fit: contain;
-  filter: grayscale(100%) opacity(40%);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.brand-partner-logo:hover {
-  filter: grayscale(0%) opacity(100%);
-  transform: scale(1.08);
-}
-
-/* 7. Expert Team Section (Credentials focus) */
-.team-container {
-  margin-bottom: 100px;
-}
-
-.team-header {
-  text-align: center;
-  max-width: 600px;
-  margin: 0 auto 50px auto;
-}
-
-.team-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
-}
-
-.team-member {
-  background: #ffffff;
-  border: 1px solid #ebdcd0;
-  border-radius: 28px;
-  padding: 30px;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
-  display: flex;
-  flex-direction: column;
-}
-
-.team-member:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(91, 46, 17, 0.06);
-  border-color: rgba(255, 120, 45, 0.2);
-}
-
-.team-member-img-wrapper {
-  border-radius: 20px;
-  overflow: hidden;
-  aspect-ratio: 1 / 1;
-  margin-bottom: 24px;
-  background-color: #ffebe0;
-  border: 1px solid #f3e9e2;
-}
-
-.team-member-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.team-member:hover .team-member-img {
-  transform: scale(1.05);
-}
-
-.team-member-name {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #1e1e24;
-  margin-bottom: 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.team-member-role {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  color: #ff782d;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  margin-bottom: 8px;
-}
-
-.team-member-education {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #8c857e;
-  margin-bottom: 14px;
-  border-left: 2px solid #ebdcd0;
-  padding-left: 8px;
-}
-
-.team-member-bio {
-  font-size: 0.95rem;
-  color: #5b5550;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  flex-grow: 1;
-}
-
-/* Subtle Pet Badge inside Team Member Cards (Easter Egg) */
-.team-member-pet-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #8c857e;
-  background-color: #faf8f6;
-  border: 1px solid #ebdcd0;
-  padding: 4px 12px;
-  border-radius: 30px;
-  width: fit-content;
-  margin-top: auto;
-}
-
-.team-member-pet-tag.dog:hover {
-  color: #ff782d;
-  border-color: rgba(255, 120, 45, 0.3);
-  background-color: rgba(255, 120, 45, 0.05);
-}
-
-.team-member-pet-tag.cat:hover {
-  color: #9b51e0;
-  border-color: rgba(155, 81, 224, 0.3);
-  background-color: rgba(155, 81, 224, 0.05);
-}
-
-/* 8. Certifications Section (Corporate standards validation) */
-.certifications-section {
-  background: #ffffff;
-  border: 1px solid #ebdcd0;
-  border-radius: 36px;
-  padding: 60px;
-  margin-bottom: 100px;
-  box-shadow: 0 10px 30px rgba(91, 46, 17, 0.02);
-}
-
-.cert-header {
-  text-align: center;
-  max-width: 600px;
-  margin: 0 auto 40px auto;
-}
-
-.cert-grid {
+/* 4. Core Values (Clean 3-Column Typography) */
+.values-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 40px;
 }
 
-.cert-card {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.value-col {
+  text-align: left;
 }
 
-.cert-badge-wrapper {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  border: 2px dashed #ff782d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.value-num {
+  font-size: 1.5rem;
+  font-weight: 700;
   color: #ff782d;
-  background-color: rgba(255, 120, 45, 0.03);
-  font-weight: 800;
-  font-size: 0.95rem;
-  margin-bottom: 20px;
-  box-shadow: inset 0 0 12px rgba(255, 120, 45, 0.05);
+  margin-bottom: 10px;
+  display: block;
 }
 
-.cert-card h4 {
+.value-title {
   font-size: 1.15rem;
   font-weight: 800;
   color: #1e1e24;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.cert-card p {
-  font-size: 0.9rem;
-  color: #8c857e;
-  line-height: 1.5;
-}
-
-/* 9. Modern CTA Box */
-.cta-box {
-  background-color: #1e1e24;
-  color: #ffffff;
-  border-radius: 36px;
-  padding: 80px 40px;
-  text-align: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.cta-box::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(255, 120, 45, 0.08) 0%, transparent 50%),
-              radial-gradient(circle at 20% 80%, rgba(255, 120, 45, 0.04) 0%, transparent 50%);
-  z-index: -1;
-  pointer-events: none;
-}
-
-.cta-title {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 2.6rem;
-  font-weight: 700;
-  margin-bottom: 20px;
-}
-
-.cta-desc {
-  font-size: 1.1rem;
-  max-width: 600px;
-  margin: 0 auto 35px auto;
-  opacity: 0.85;
+.value-desc {
+  font-size: 0.98rem;
+  color: #5b5550;
   line-height: 1.6;
 }
 
-.cta-button {
+/* 5. Minimalist Team Grid (Circular Avatars, Clean Text) */
+.team-list-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  text-align: center;
+}
+
+.team-avatar-box {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 20px auto;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #ffebe0;
+}
+
+.team-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.team-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #1e1e24;
+  margin-bottom: 4px;
+}
+
+.team-role {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #ff782d;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.team-desc {
+  font-size: 0.95rem;
+  color: #5b5550;
+  line-height: 1.6;
+}
+
+.team-pet-footnote {
+  font-size: 0.8rem;
+  color: #8c857e;
+  margin-top: 8px;
+  display: block;
+}
+
+/* 6. Partner Brands & Certifications (Combined Footer Info) */
+.footer-trust-section {
+  border-top: 1px solid #ebdcd0;
+  padding-top: 60px;
+  margin-top: 80px;
+}
+
+.trust-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 45px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.trust-logo-img {
+  height: 32px;
+  max-width: 100px;
+  object-fit: contain;
+  filter: grayscale(100%) opacity(35%);
+}
+
+.trust-cert-text {
+  text-align: center;
+  font-size: 0.88rem;
+  color: #8c857e;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* 7. Soft Minimalist CTA */
+.cta-box-minimal {
+  background-color: #fff3eb;
+  border-radius: 16px;
+  padding: 60px 40px;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.cta-title-minimal {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 2rem;
+  color: #1e1e24;
+  margin-bottom: 12px;
+}
+
+.cta-desc-minimal {
+  font-size: 1.05rem;
+  color: #5b5550;
+  max-width: 500px;
+  margin: 0 auto 24px auto;
+  line-height: 1.6;
+}
+
+.cta-btn-minimal {
   background-color: #ff782d;
   color: #ffffff;
-  padding: 16px 36px;
-  font-size: 1.05rem;
+  padding: 14px 30px;
+  font-size: 1rem;
   font-weight: 700;
-  border-radius: 30px;
+  border-radius: 8px;
   text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 6px 20px rgba(255, 120, 45, 0.3);
+  display: inline-block;
+  transition: background-color 0.2s ease;
 }
 
-.cta-button:hover {
+.cta-btn-minimal:hover {
   background-color: #e9661c;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(255, 120, 45, 0.4);
-}
-
-.cta-button svg {
-  transition: transform 0.3s ease;
-}
-
-.cta-button:hover svg {
-  transform: translateX(4px);
 }
 
 /* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
 
-@media (max-width: 1024px) {
-  .about-main-title {
-    font-size: 2.8rem;
-  }
-  .founder-letter-section, .timeline-layout, .vision-mission-grid {
+@media (max-width: 768px) {
+  .founder-story-grid, .vision-mission-grid, .values-grid, .team-list-grid {
     grid-template-columns: 1fr;
     gap: 40px;
   }
-  .founder-image-wrapper {
-    margin-top: 0;
-  }
-  .philosophy-grid, .team-grid, .cert-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .timeline-intro {
-    position: static;
-  }
-  .vision-mission-section {
-    padding: 60px 40px;
-  }
-}
-
-@media (max-width: 768px) {
+  
   .about-main-title {
-    font-size: 2.4rem;
+    font-size: 2.2rem;
   }
+  
   .about-serif-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
-  .philosophy-grid, .team-grid, .cert-grid {
-    grid-template-columns: 1fr;
-  }
-  .letter-content {
-    padding: 30px;
-  }
-  .vision-mission-section {
-    padding: 40px 20px;
-    border-radius: 28px;
-  }
-  .certifications-section {
-    padding: 40px 20px;
-    border-radius: 28px;
-  }
-}
 
-@media (max-width: 480px) {
-  .about-main-title {
-    font-size: 2rem;
+  .about-hero-section {
+    padding: 40px 0;
   }
-  .letter-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-  .founder-signature {
-    margin-top: 10px;
+  
+  .founder-photo-box {
+    order: -1; /* Đưa ảnh lên trước chữ trên giao diện mobile */
   }
 }
