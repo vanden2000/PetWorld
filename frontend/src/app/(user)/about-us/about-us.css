@@ -1,0 +1,770 @@
+/* ==========================================================================
+   PetWorld - About Us Page Custom Stylesheet (Premium DTC Style)
+   ========================================================================== */
+
+.about-wrapper {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* 1. Hero Section (Gradient & Badge) */
+.about-hero-section {
+  text-align: center;
+  padding: 90px 40px;
+  background: linear-gradient(180deg, rgba(255, 120, 45, 0.06) 0%, rgba(250, 248, 246, 0) 100%);
+  border: 1px solid rgba(255, 120, 45, 0.08);
+  border-radius: 32px;
+  margin-top: 20px;
+  margin-bottom: 70px;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-hero-section::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 120, 45, 0.03) 0%, transparent 60%);
+  pointer-events: none;
+  animation: slow-rotate 25s linear infinite;
+}
+
+@keyframes slow-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.about-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 120, 45, 0.2);
+  color: #ff782d;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 8px 18px;
+  border-radius: 50px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(255, 120, 45, 0.05);
+}
+
+.about-badge-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #ff782d;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+.about-main-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -1.5px;
+  color: #1e1e24;
+  margin-bottom: 24px;
+}
+
+.about-main-title span {
+  background: linear-gradient(135deg, #ff782d 0%, #ff5e00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.about-intro-text {
+  font-size: 1.25rem;
+  color: #5b5550;
+  max-width: 740px;
+  margin: 0 auto;
+  line-height: 1.65;
+  font-weight: 400;
+}
+
+/* 2. Stats Section (Counter & Visual Cards) */
+.about-stats-section {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 90px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #ebdcd0;
+  border-radius: 24px;
+  padding: 35px 24px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(91, 46, 17, 0.02);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ff782d, #ffb085);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 35px rgba(91, 46, 17, 0.08);
+  border-color: rgba(255, 120, 45, 0.2);
+}
+
+.stat-card:hover::after {
+  opacity: 1;
+}
+
+.stat-number {
+  font-size: 2.8rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #1e1e24;
+  margin-bottom: 8px;
+  letter-spacing: -1px;
+}
+
+.stat-card:nth-child(odd) .stat-number {
+  background: linear-gradient(135deg, #ff782d 0%, #e9661c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.stat-card:nth-child(even) .stat-number {
+  background: linear-gradient(135deg, #9b51e0 0%, #7d35c4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.stat-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e1e24;
+  margin-bottom: 6px;
+}
+
+.stat-desc {
+  font-size: 0.88rem;
+  color: #8c857e;
+  line-height: 1.4;
+}
+
+/* 3. Story Section (Asymmetry & Styled Quote) */
+.story-section {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 60px;
+  align-items: center;
+  margin-bottom: 100px;
+}
+
+.story-text-container {
+  padding-right: 10px;
+}
+
+.story-heading {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #1e1e24;
+  margin-bottom: 24px;
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  position: relative;
+}
+
+.story-paragraphs {
+  font-size: 1.05rem;
+  color: #5b5550;
+  line-height: 1.8;
+}
+
+.story-paragraphs p {
+  margin-bottom: 24px;
+}
+
+.story-quote-card {
+  background-color: #fff3eb;
+  border-radius: 24px;
+  padding: 30px 35px;
+  margin: 35px 0;
+  position: relative;
+  border-left: 5px solid #ff782d;
+  box-shadow: 0 10px 25px rgba(255, 120, 45, 0.04);
+}
+
+.quote-svg {
+  position: absolute;
+  top: 15px;
+  right: 25px;
+  color: rgba(255, 120, 45, 0.08);
+  pointer-events: none;
+}
+
+.story-quote-text {
+  font-size: 1.15rem;
+  font-style: italic;
+  color: #ff782d;
+  font-weight: 700;
+  line-height: 1.6;
+  position: relative;
+  z-index: 2;
+}
+
+.story-image-box {
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(91, 46, 17, 0.09);
+  background-color: #ffebe0;
+  border: 1px solid #ebdcd0;
+  aspect-ratio: 4 / 5;
+}
+
+.story-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.story-image-box:hover .story-img {
+  transform: scale(1.04);
+}
+
+/* 4. Development Timeline Section */
+.timeline-section-container {
+  padding: 80px 0;
+  border-top: 1px solid #ebdcd0;
+  margin-bottom: 80px;
+}
+
+.timeline-header {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 50px auto;
+}
+
+.timeline-vertical {
+  position: relative;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+/* Trục dọc timeline */
+.timeline-vertical::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  background: linear-gradient(180deg, #ebdcd0 0%, #ff782d 30%, #ff782d 70%, #ebdcd0 100%);
+  transform: translateX(-50%);
+  border-radius: 5px;
+}
+
+.timeline-item {
+  position: relative;
+  width: 50%;
+  padding: 20px 40px;
+  box-sizing: border-box;
+  opacity: 0.95;
+}
+
+/* Đổi bên so le */
+.timeline-item.left {
+  left: 0;
+  text-align: right;
+}
+
+.timeline-item.right {
+  left: 50%;
+  text-align: left;
+}
+
+/* Nút tròn ở giữa trục */
+.timeline-dot {
+  position: absolute;
+  top: 28px;
+  width: 18px;
+  height: 18px;
+  background-color: #ffffff;
+  border: 4px solid #ff782d;
+  border-radius: 50%;
+  z-index: 10;
+  box-shadow: 0 0 0 4px rgba(255, 120, 45, 0.2);
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.timeline-item.left .timeline-dot {
+  right: -9px;
+}
+
+.timeline-item.right .timeline-dot {
+  left: -9px;
+}
+
+.timeline-item:hover .timeline-dot {
+  transform: scale(1.3);
+  background-color: #ff782d;
+}
+
+/* Hộp nội dung timeline */
+.timeline-content-box {
+  background: #ffffff;
+  border: 1px solid #ebdcd0;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(91, 46, 17, 0.02);
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease;
+}
+
+.timeline-item:hover .timeline-content-box {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(91, 46, 17, 0.05);
+  border-color: rgba(255, 120, 45, 0.2);
+}
+
+.timeline-year {
+  display: inline-block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ff782d;
+  background: rgba(255, 120, 45, 0.08);
+  padding: 4px 14px;
+  border-radius: 30px;
+  margin-bottom: 12px;
+}
+
+.timeline-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e1e24;
+  margin-bottom: 10px;
+}
+
+.timeline-desc {
+  font-size: 0.95rem;
+  color: #5b5550;
+  line-height: 1.6;
+}
+
+/* 5. Philosophy Section (Grid & Beautiful Cards) */
+.philosophy-section-container {
+  border-top: 1px solid #ebdcd0;
+  padding: 80px 0;
+  margin-bottom: 80px;
+}
+
+.philosophy-layout {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.philosophy-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-top: 30px;
+}
+
+.philosophy-card {
+  display: flex;
+  gap: 20px;
+  background: #ffffff;
+  border: 1px solid #ebdcd0;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(91, 46, 17, 0.01);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease;
+}
+
+.philosophy-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 15px 30px rgba(91, 46, 17, 0.06);
+  border-color: rgba(255, 120, 45, 0.25);
+}
+
+.philosophy-icon-container {
+  background: rgba(255, 120, 45, 0.08);
+  color: #ff782d;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.philosophy-card:hover .philosophy-icon-container {
+  background: #ff782d;
+  color: #ffffff;
+}
+
+.philosophy-content h4 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #1e1e24;
+  margin-bottom: 8px;
+}
+
+.philosophy-content p {
+  font-size: 0.98rem;
+  color: #5b5550;
+  line-height: 1.6;
+}
+
+/* 6. Partner Brands Trust Bar */
+.press-section {
+  text-align: center;
+  padding: 50px 0;
+  border-top: 1px solid #ebdcd0;
+  border-bottom: 1px solid #ebdcd0;
+  margin-bottom: 100px;
+  background-color: rgba(255, 120, 45, 0.01);
+  border-radius: 24px;
+}
+
+.press-title {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  color: #8c857e;
+  font-weight: 800;
+  margin-bottom: 30px;
+}
+
+.press-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 50px;
+  flex-wrap: wrap;
+  padding: 0 20px;
+}
+
+.brand-partner-logo {
+  height: 40px;
+  max-width: 120px;
+  object-fit: contain;
+  filter: grayscale(100%) opacity(50%);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.brand-partner-logo:hover {
+  filter: grayscale(0%) opacity(100%);
+  transform: scale(1.1);
+}
+
+/* 7. Team Section (Structured Grid & Cute Pets) */
+.team-container {
+  text-align: center;
+  margin-bottom: 100px;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+  margin-top: 45px;
+}
+
+.team-member {
+  background: #ffffff;
+  border: 1px solid #ebdcd0;
+  border-radius: 24px;
+  padding: 24px;
+  text-align: left;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.team-member:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 45px rgba(91, 46, 17, 0.08);
+  border-color: rgba(255, 120, 45, 0.25);
+}
+
+.team-member-img-wrapper {
+  border-radius: 18px;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  margin-bottom: 20px;
+  background-color: #ffebe0;
+  border: 1px solid #ebdcd0;
+  position: relative;
+}
+
+.team-member-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.team-member:hover .team-member-img {
+  transform: scale(1.06);
+}
+
+.team-member-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #1e1e24;
+  margin-bottom: 4px;
+}
+
+.team-member-role {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #ff782d;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+}
+
+.team-member-bio {
+  font-size: 0.95rem;
+  color: #5b5550;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  flex-grow: 1;
+}
+
+/* Đồng hành Badge */
+.team-member-pet {
+  font-size: 0.82rem;
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  width: fit-content;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.team-member-pet:hover {
+  transform: scale(1.04);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.team-member-pet.dog {
+  background: rgba(255, 120, 45, 0.08);
+  color: #ff782d;
+  border: 1px solid rgba(255, 120, 45, 0.15);
+}
+
+.team-member-pet.cat {
+  background: rgba(155, 81, 224, 0.08);
+  color: #9b51e0;
+  border: 1px solid rgba(155, 81, 224, 0.15);
+}
+
+/* 8. Chief Pet Officers (Funny Cards) */
+.team-cpo-header {
+  margin-top: 60px;
+  border-top: 1px dashed #ebdcd0;
+  padding-top: 50px;
+}
+
+.cpo-badge {
+  background: linear-gradient(135deg, #ff782d 0%, #9b51e0 100%);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 30px;
+  display: inline-block;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* 9. Modern CTA Box */
+.cta-box {
+  background-color: #1e1e24;
+  color: #ffffff;
+  border-radius: 32px;
+  padding: 90px 40px;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(30, 30, 36, 0.15);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.cta-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(255, 120, 45, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 10% 80%, rgba(155, 81, 224, 0.08) 0%, transparent 50%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.cta-title {
+  font-size: 2.75rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+  line-height: 1.2;
+}
+
+.cta-desc {
+  font-size: 1.15rem;
+  max-width: 600px;
+  margin: 0 auto 40px auto;
+  opacity: 0.85;
+  line-height: 1.65;
+}
+
+.cta-button {
+  background-color: #ff782d;
+  color: #ffffff;
+  padding: 18px 40px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border-radius: 50px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+  box-shadow: 0 8px 25px rgba(255, 120, 45, 0.35);
+}
+
+.cta-button:hover {
+  background-color: #e9661c;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(255, 120, 45, 0.45);
+}
+
+.cta-button svg {
+  transition: transform 0.3s ease;
+}
+
+.cta-button:hover svg {
+  transform: translateX(4px);
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .about-main-title {
+    font-size: 3rem;
+  }
+  .about-stats-section {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 868px) {
+  .story-section, .philosophy-layout {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .story-image-box {
+    aspect-ratio: 16 / 10;
+    max-height: 400px;
+  }
+  .about-main-title {
+    font-size: 2.5rem;
+  }
+  .about-hero-section {
+    padding: 60px 20px;
+    margin-bottom: 50px;
+  }
+  .cta-box {
+    padding: 60px 20px;
+  }
+  .cta-title {
+    font-size: 2.2rem;
+  }
+
+  /* Timeline Responsive */
+  .timeline-vertical::before {
+    left: 20px;
+  }
+  .timeline-item {
+    width: 100%;
+    padding-left: 50px;
+    padding-right: 0;
+    text-align: left !important;
+  }
+  .timeline-item.right {
+    left: 0%;
+  }
+  .timeline-dot {
+    left: 11px !important;
+    right: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-main-title {
+    font-size: 2rem;
+    letter-spacing: -0.5px;
+  }
+  .about-intro-text {
+    font-size: 1.1rem;
+  }
+  .about-stats-section {
+    grid-template-columns: 1fr;
+  }
+  .stat-card {
+    padding: 25px 15px;
+  }
+  .timeline-vertical::before {
+    left: 15px;
+  }
+  .timeline-item {
+    padding-left: 35px;
+  }
+  .timeline-dot {
+    left: 6px !important;
+  }
+  .philosophy-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+}
