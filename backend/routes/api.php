@@ -39,6 +39,9 @@ Route::prefix('forgot-password')->group(function () {
     Route::post('/reset-password', [\App\Http\Controllers\Api\ForgotPasswordController::class, 'resetPassword']);
 });
 
+// Gửi yêu cầu hỗ trợ từ trang Liên hệ (/contact) — chỉ gửi email, không lưu DB.
+Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])->middleware('throttle:5,1');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
