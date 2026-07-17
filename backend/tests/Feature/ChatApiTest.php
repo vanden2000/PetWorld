@@ -137,4 +137,46 @@ class ChatApiTest extends TestCase
                 && data_get($messages, '3.tool_call_id') === 'call_123';
         });
     }
+
+    public function test_vietnamese_product_question_forces_catalog_tool_use(): void
+    {
+        Http::fake([
+            'chatbot.example.test/*' => Http::sequence()
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'role' => 'assistant',
+                            'content' => null,
+                            'tool_calls' => [[
+                                'id' => 'call_cat_food',
+                                'type' => 'function',
+                                'function' => [
+                                    'name' => 'search_products',
+                                    'arguments' => '{"query":"thức ăn mèo","max_price":200000,"in_stock":true}',
+                                ],
+                            ]],
+                        ],
+                    ]],
+                ])
+                ->push([
+                    'choices' => [[
+                        'message' => ['role' => 'assistant', 'content' => 'Mình đã tìm các lựa chọn phù hợp cho bé mèo.'],
+                    ]],
+                ]),
+        ]);
+
+        $response = $this->postJson('/api/chat', [
+            'visitor_id' => 'd9553d05-bd29-4f6f-9dcc-bb1fd7fb9307',
+            'message' => 'Tìm thức ăn cho mèo dưới 200 nghìn còn hàng',
+        ]);
+
+        $response->assertOk()->assertJsonPath('data.message', 'Mình đã tìm các lựa chọn phù hợp cho bé mèo.');
+
+        Http::assertSent(function (HttpRequest $request): bool {
+            return $request['tool_choice'] === [
+                'type' => 'function',
+                'function' => ['name' => 'search_products'],
+            ];
+        });
+    }
 }

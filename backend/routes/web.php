@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\BlogCommentController;
+use App\Http\Controllers\Admin\KnowledgeArticleController;
 
 
 // Admin authentication routes
@@ -103,6 +104,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
     Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+
+    Route::get('/knowledge', [KnowledgeArticleController::class, 'index'])->name('knowledge');
+    Route::get('/knowledge/create', [KnowledgeArticleController::class, 'create'])->name('knowledge.create');
+    Route::post('/knowledge', [KnowledgeArticleController::class, 'store'])->name('knowledge.store');
+    Route::get('/knowledge/{article}/edit', [KnowledgeArticleController::class, 'edit'])->name('knowledge.edit');
+    Route::put('/knowledge/{article}', [KnowledgeArticleController::class, 'update'])->name('knowledge.update');
 
     Route::get('/products', [ProductController::class, 'index'])
         ->name('products');

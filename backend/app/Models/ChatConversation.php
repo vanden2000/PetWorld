@@ -17,11 +17,13 @@ class ChatConversation extends Model
         'user_id',
         'session_id',
         'status',
+        'context',
         'last_message_at',
     ];
 
     protected $casts = [
         'last_message_at' => 'datetime',
+        'context' => 'array',
     ];
 
     public function user(): BelongsTo

@@ -23,6 +23,7 @@ class Product extends Model
         'slug',
         'description',
         'short_description',
+        'advice_attributes',
         'seo_title',
         'seo_description',
         'view_count',
@@ -31,6 +32,7 @@ class Product extends Model
 
     protected $casts = [
         'view_count' => 'integer',
+        'advice_attributes' => 'array',
         'deleted_at' => 'datetime',
     ];
 
