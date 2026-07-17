@@ -1,5 +1,7 @@
 <?php
 
+$chatbotProvider = strtolower((string) env('CHATBOT_PROVIDER', 'gemini'));
+
 return [
 
     /*
@@ -36,6 +38,46 @@ return [
     'sepay' => [
         // Khoá bí mật để xác thực webhook (header "Authorization: Apikey <key>").
         'webhook_api_key' => env('SEPAY_WEBHOOK_API_KEY'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google AI Studio / Gemini
+    |--------------------------------------------------------------------------
+    |
+    | Chatbot uses this configuration only on the Laravel backend. No API call
+    | is made at this stage, and the API key must never be exposed to frontend.
+    |
+    */
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL'),
+        'base_url' => rtrim((string) env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'), '/'),
+        'timeout' => (int) env('GEMINI_TIMEOUT', 30),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+        'base_url' => rtrim((string) env('OPENAI_BASE_URL', 'https://api.openai.com/v1'), '/'),
+        'timeout' => (int) env('OPENAI_TIMEOUT', 30),
+    ],
+
+    // Chatbot can use OpenAI directly or Gemini through its OpenAI-compatible API.
+    'chatbot' => [
+        'provider' => $chatbotProvider,
+        'api_key' => $chatbotProvider === 'gemini'
+            ? env('GEMINI_API_KEY')
+            : env('OPENAI_API_KEY'),
+        'model' => env('CHATBOT_MODEL', $chatbotProvider === 'gemini'
+            ? 'gemini-3.1-flash-lite'
+            : env('OPENAI_MODEL', 'gpt-4o-mini')),
+        'base_url' => rtrim((string) env('CHATBOT_BASE_URL', $chatbotProvider === 'gemini'
+            ? 'https://generativelanguage.googleapis.com/v1beta/openai'
+            : env('OPENAI_BASE_URL', 'https://api.openai.com/v1')), '/'),
+        'timeout' => (int) env('CHATBOT_TIMEOUT', $chatbotProvider === 'gemini'
+            ? env('GEMINI_TIMEOUT', 30)
+            : env('OPENAI_TIMEOUT', 30)),
     ],
 
 ];
