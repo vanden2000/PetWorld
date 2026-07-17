@@ -93,6 +93,17 @@ export const getOrder = (id) => accountRequest(`orders/${id}`);
 export const cancelOrder = (id) => accountRequest(`orders/${id}/cancel`, { method: "PATCH" });
 export const createReview = (payload) => accountRequest("reviews", { method: "POST", body: JSON.stringify(payload) });
 
+// Notifications API Client
+export const getNotifications = (params = {}) => {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => value !== undefined && value !== null && value !== "" && search.set(key, value));
+  const query = search.toString();
+  return accountRequest(`notifications${query ? `?${query}` : ""}`);
+};
+export const getUnreadNotificationsCount = () => accountRequest("notifications/unread-count");
+export const markNotificationAsRead = (id) => accountRequest(`notifications/${id}/read`, { method: "POST" });
+export const markAllNotificationsAsRead = () => accountRequest("notifications/read-all", { method: "POST" });
+
 export function clearAuth() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
