@@ -5,6 +5,9 @@ namespace App\Providers;
 use App\Models\BlogComment;
 use App\Models\Order;
 use App\Models\ProductVariant;
+use App\Models\Voucher;
+use App\Observers\OrderObserver;
+use App\Observers\VoucherObserver;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Order::observe(OrderObserver::class);
+        Voucher::observe(VoucherObserver::class);
+
         View::composer('admin.layouts.app', function ($view): void {
             $newCommentsCount = BlogComment::query()
                 ->where('created_at', '>=', now()->subDay())

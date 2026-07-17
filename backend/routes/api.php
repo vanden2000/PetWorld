@@ -61,6 +61,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy']);
     Route::get('/vouchers', [\App\Http\Controllers\Api\VoucherController::class, 'index']);
     Route::post('/blogs/{slug}/comments', [BlogController::class, 'storeComment']);
+
+    // Notifications API routes
+    Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
 });
 
 Route::get('/home', HomeController::class);

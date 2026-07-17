@@ -15,6 +15,10 @@ import {
   parseUser,
   onAuthChange,
   logout,
+  getNotifications,
+  getUnreadNotificationsCount,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
 } from "@/lib/auth";
 import { ROUTES, MAIN_NAV } from "@/lib/routes";
 import { resolveBackendImage } from "@/lib/format";
@@ -49,9 +53,72 @@ export default function Header() {
 
   // Số sản phẩm yêu thích cho badge.
 
-  // Trạng thái đăng nhập: icon tài khoản trỏ /account khi đã đăng nhập, ngược lại /login.
   const userRaw = useSyncExternalStore(onAuthChange, getUserSnapshot, getServerUserSnapshot);
   const user = useMemo(() => parseUser(userRaw), [userRaw]);
+
+  // Notifications State & Logic
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const timeAgo = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return "Vừa xong";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} phút trước`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} giờ trước`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days} ngày trước`;
+
+    return date.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const fetchNotifications = async () => {
+    if (!user) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+    const countRes = await getUnreadNotificationsCount();
+    if (countRes.ok) {
+      setUnreadCount(countRes.data.unread_count || 0);
+    }
+    const listRes = await getNotifications({ page: 1 });
+    if (listRes.ok) {
+      setNotifications(listRes.data.notifications || []);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const handleMarkAsRead = async (id, actionUrl) => {
+    await markNotificationAsRead(id);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+    if (actionUrl) {
+      router.push(actionUrl);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    const res = await markAllNotificationsAsRead();
+    if (res.ok) {
+      setNotifications(prev => prev.map(n => ({ ...n, read_at: new Date().toISOString() })));
+      setUnreadCount(0);
+    }
+  };
 
   // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -199,12 +266,59 @@ export default function Header() {
               </svg>
             </button>
 
-            <Link href={ROUTES.notifications} className="action-item desktop-only" id="notifications-btn" aria-label="Thông báo">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-                <path d="M10 21h4" />
-              </svg>
-            </Link>
+            <div className="notification-menu">
+              <div className="action-item desktop-only" id="notifications-btn" aria-label="Thông báo" style={{ cursor: "default" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                  <path d="M10 21h4" />
+                </svg>
+                {unreadCount > 0 && <span className="noti-badge">{unreadCount}</span>}
+              </div>
+
+              {user && (
+                <div className="notification-dropdown">
+                  <div className="noti-header">
+                    <h3>Thông báo mới nhận</h3>
+                    {unreadCount > 0 && (
+                      <button onClick={handleMarkAllAsRead} className="noti-mark-all-btn">
+                        Đọc tất cả
+                      </button>
+                    )}
+                  </div>
+                  <div className="noti-list">
+                    {notifications.length === 0 ? (
+                      <div className="noti-empty">
+                        <div className="noti-empty-icon">🔔</div>
+                        <p>Bạn không có thông báo mới nào</p>
+                      </div>
+                    ) : (
+                      notifications.map((noti) => (
+                        <div
+                          key={noti.id}
+                          className={`noti-item ${!noti.read_at ? "unread" : ""}`}
+                          onClick={() => handleMarkAsRead(noti.id, noti.action_url)}
+                        >
+                          <div className={`noti-icon-box ${noti.icon || "info"}`}>
+                            {noti.icon === "gift" && "🎁"}
+                            {noti.icon === "truck" && "🚚"}
+                            {noti.icon === "check-circle" && "✅"}
+                            {noti.icon === "x-circle" && "❌"}
+                            {noti.icon === "clock" && "🕒"}
+                            {noti.icon === "smile" && "😊"}
+                            {(!noti.icon || noti.icon === "info") && "ℹ️"}
+                          </div>
+                          <div className="noti-content">
+                            <div className="noti-title">{noti.title}</div>
+                            <div className="noti-message">{noti.message}</div>
+                            <div className="noti-time">{timeAgo(noti.created_at)}</div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="profile-menu">
               <Link

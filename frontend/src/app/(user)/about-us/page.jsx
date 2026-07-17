@@ -15,13 +15,12 @@ export default async function AboutUsPage() {
 
   return (
     <main className="main-content" style={{ minHeight: "100vh", backgroundColor: "#faf8f6", color: "#2d2926", paddingBottom: "80px" }}>
-      <div className="about-wrapper">
+      <div className="homepage-container">
         {/* Breadcrumb */}
-        <nav className="shop-breadcrumb" style={{ padding: "24px 0", marginBottom: "10px" }}>
-          <Link href="/">Trang chủ</Link> /
-          <span className="shop-breadcrumb-sep">
-            <span className="shop-breadcrumb-current" style={{ marginLeft: "6px" }}>Về chúng tôi</span>
-          </span>
+        <nav className="shop-breadcrumb">
+          <Link href="/">Trang chủ</Link>
+          <span className="shop-breadcrumb-sep">›</span>
+          <span className="shop-breadcrumb-current">Về chúng tôi</span>
         </nav>
 
         {/* Hero Section */}
@@ -41,7 +40,7 @@ export default async function AboutUsPage() {
             <h2 className="about-serif-title">Lời ngỏ từ nhà sáng lập</h2>
             <p>Kính gửi quý khách hàng,</p>
             <p>
-              Ý tưởng thành lập PetWorld xuất phát từ một trải nghiệm cá nhân của tôi vào năm 2024 khi Bơ - chú chó Golden Retriever của gia đình - bị dị ứng thức ăn nghiêm trọng. Nhìn Bơ rụng lông và ngứa ngáy liên tục do sử dụng các thức ăn chứa phụ gia nhân tạo không rõ nguồn gốc, tôi đã dành nhiều tháng tìm kiếm giải pháp và nhận ra sự thiếu hụt lớn của các sản phẩm thực sự sạch và lành tính tại thị trường trong nước.
+              Ý tưởng thành lập PetWorld xuất phát từ một trải nghiệm cá nhân của tôi vào năm 2024 khi Leo - chú chó Husky của gia đình - bị dị ứng thức ăn nghiêm trọng. Nhìn Leo rụng lông và ngứa ngáy liên tục do sử dụng các thức ăn chứa phụ gia nhân tạo không rõ nguồn gốc, tôi đã dành nhiều tháng tìm kiếm giải pháp và nhận ra sự thiếu hụt lớn của các sản phẩm thực sự sạch và lành tính tại thị trường trong nước.
             </p>
             <p>
               Tại PetWorld, chúng tôi không xem thú cưng là vật nuôi đơn thuần, chúng là gia đình. Đó là lý do tại sao chúng tôi đặt tính minh bạch của nguồn nguyên liệu lên hàng đầu. Mọi mặt hàng trước khi đưa ra thị trường đều phải trải qua quy trình kiểm soát chất lượng kỹ lưỡng bởi các chuyên gia dinh dưỡng và thú y.
@@ -52,16 +51,15 @@ export default async function AboutUsPage() {
             
             <div className="founder-signature-box">
               <div>
-                <div className="founder-signature-name">Trần Trung</div>
+                <div className="founder-signature-name">Công Trung</div>
                 <div className="founder-signature-role">Sáng lập & Giám đốc Điều hành</div>
               </div>
-              <div className="founder-signature-img">Tran Trung</div>
             </div>
           </div>
 
           <div className="founder-photo-box">
-            <img src="/founder_with_dog.png" alt="Trần Trung bên chú cún Bơ" className="founder-photo-img" />
-            <p className="founder-photo-caption">Trần Trung và chú cún Bơ tại văn phòng PetWorld (2024)</p>
+            <img src="/founder_with_dog.png" alt="Công Trung bên chú cún Leo" className="founder-photo-img" />
+            <p className="founder-photo-caption">Công Trung và chú cún Leo tại văn phòng PetWorld (2024)</p>
           </div>
         </section>
 
@@ -123,43 +121,52 @@ export default async function AboutUsPage() {
         <section className="about-section">
           <h2 className="about-serif-title" style={{ textAlign: "center", marginBottom: "45px" }}>Đội ngũ đồng hành</h2>
           <div className="team-list-grid">
-            {/* Founder */}
+            {/* CTO */}
             <div>
               <div className="team-avatar-box">
-                <img src="/team_trung.png" alt="Anh Trần Trung" className="team-avatar-img" />
+                <img src="/team_diem.png" alt="Anh Thế Điểm" className="team-avatar-img" />
               </div>
-              <h4 className="team-name">Trần Trung</h4>
-              <div className="team-role">Sáng lập & Điều hành</div>
+              <h4 className="team-name">Thế Điểm</h4>
+              <div className="team-role">Đồng Sáng lập & CTO</div>
               <p className="team-desc">
-                Cử nhân Khoa học Động vật (ĐH Nông Lâm TP.HCM). Anh phụ trách kiểm duyệt chất lượng nguyên liệu và nhập khẩu dinh dưỡng thú cưng.
+                Chịu trách nhiệm phát triển hệ thống thương mại điện tử và giải pháp trải nghiệm số tại PetWorld. Anh không ngừng nghiên cứu công nghệ mới để đem lại dịch vụ tối ưu nhất cho khách hàng.
               </p>
-              <span className="team-pet-footnote">🐕 Cún đồng hành: Bơ (Golden Retriever)</span>
             </div>
 
-            {/* Vet */}
+            {/* CEO */}
             <div>
               <div className="team-avatar-box">
-                <img src="/team_linh.png" alt="Chị Khánh Linh" className="team-avatar-img" />
+                <img src="/team_trung.png" alt="Anh Công Trung" className="team-avatar-img" />
               </div>
-              <h4 className="team-name">Dr. Khánh Linh</h4>
-              <div className="team-role">Cố vấn Dinh dưỡng</div>
+              <h4 className="team-name">Công Trung</h4>
+              <div className="team-role">Sáng lập & CEO</div>
               <p className="team-desc">
-                Bác sĩ Thú y (DVM) tốt nghiệp ĐH Chulalongkorn (Thái Lan). Chị đảm nhiệm việc kiểm định lâm sàng thực phẩm cho chó mèo dị ứng.
+                Cử nhân chuyên ngành Khoa học Động vật. Anh trực tiếp định hướng chiến lược thương hiệu, kiểm định nghiêm ngặt chất lượng nguồn thức ăn hữu cơ và mở rộng hợp tác toàn cầu.
               </p>
-              <span className="team-pet-footnote">🐈 Mèo đồng hành: Mèo Mun (Mèo mướp ta)</span>
             </div>
 
-            {/* Designer */}
+            {/* CPO */}
             <div>
               <div className="team-avatar-box">
-                <img src="/team_minh.png" alt="Anh Hoàng Minh" className="team-avatar-img" />
+                <img src="/team_minh.png" alt="Anh Văn Minh" className="team-avatar-img" />
               </div>
-              <h4 className="team-name">Hoàng Minh</h4>
-              <div className="team-role">Thiết kế Sản phẩm</div>
+              <h4 className="team-name">Văn Minh</h4>
+              <div className="team-role">Đồng Sáng lập & CPO</div>
               <p className="team-desc">
-                Thạc sĩ Thiết kế Công nghiệp (ĐH Kiến trúc TP.HCM). Anh nghiên cứu giải pháp công thái học để thiết kế các loại yếm dắt trợ lực.
+                Thạc sĩ Thiết kế Công nghiệp. Anh là người kiến tạo các dòng sản phẩm phụ kiện công thái học bảo vệ khớp xương cho thú cưng, đạt chuẩn thẩm mỹ và an toàn vượt trội.
               </p>
-              <span className="team-pet-footnote">🐕 Cún đồng hành: Bánh Bao (Corgi)</span>
+            </div>
+
+            {/* COO */}
+            <div>
+              <div className="team-avatar-box">
+                <img src="/team_phat.png" alt="Anh Trần Phát" className="team-avatar-img" />
+              </div>
+              <h4 className="team-name">Trần Phát</h4>
+              <div className="team-role">Đồng Sáng lập & COO</div>
+              <p className="team-desc">
+                Chuyên gia quản lý chuỗi cung ứng logistics. Anh phụ trách tối ưu khâu lưu kho, bảo quản sản phẩm và phân phối hàng hóa đến tay người nuôi một cách nhanh chóng nhất.
+              </p>
             </div>
           </div>
         </section>

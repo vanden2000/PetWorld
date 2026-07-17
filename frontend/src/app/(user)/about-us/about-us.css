@@ -27,7 +27,7 @@
 /* 1. Hero Section (Ultra Minimalist) */
 .about-hero-section {
   text-align: center;
-  padding: 80px 0 40px 0;
+  padding: 40px 0 40px 0;
 }
 
 .about-badge {
@@ -198,7 +198,7 @@
 /* 5. Minimalist Team Grid (Circular Avatars, Clean Text) */
 .team-list-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 40px;
   text-align: center;
 }
@@ -268,6 +268,12 @@
   max-width: 100px;
   object-fit: contain;
   filter: grayscale(100%) opacity(35%);
+  transition: all 0.3s ease;
+}
+
+.trust-logo-img:hover {
+  filter: grayscale(0%) opacity(100%);
+  transform: scale(1.08);
 }
 
 .trust-cert-text {
@@ -322,6 +328,15 @@
 /* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
+
+@media (max-width: 1024px) {
+  .team-list-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .values-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 
 @media (max-width: 768px) {
   .founder-story-grid, .vision-mission-grid, .values-grid, .team-list-grid {
