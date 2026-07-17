@@ -93,7 +93,7 @@ export default function Header() {
     }
     const listRes = await getNotifications({ page: 1 });
     if (listRes.ok) {
-      setNotifications((listRes.data.notifications || []).slice(0, 5));
+      setNotifications(listRes.data.notifications || []);
     }
   };
 
