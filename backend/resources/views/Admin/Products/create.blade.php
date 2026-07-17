@@ -1490,6 +1490,8 @@
                     </div>
                 </div>
 
+                @include('Admin.Products._advice_attributes')
+
                 <div class="form-card">
                     <div class="form-card-title" style="border: none; margin-bottom: 0;">
                         <i class="fa-solid fa-tags"></i>

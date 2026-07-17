@@ -149,6 +149,11 @@
                         <li><a href="{{ route('admin.blog-comments') }}" class="submenu-item-link {{ request()->routeIs('admin.blog-comments*') ? 'active' : '' }}"><i class="fa-solid fa-comments"></i><span>Quản lý bình luận</span></a></li>
                     </ul>
                 </li>
+                <li>
+                    <a href="{{ route('admin.knowledge') }}" class="menu-item-link {{ request()->routeIs('admin.knowledge*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-book-open"></i><span>Kiến thức chatbot</span>
+                    </a>
+                </li>
                 <li class="menu-item-dropdown {{ request()->routeIs('admin.reports*') ? 'open' : '' }}">
                     <a href="#" class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
                         <i class="fa-solid fa-chart-simple"></i>

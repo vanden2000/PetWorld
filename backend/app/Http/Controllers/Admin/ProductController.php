@@ -132,6 +132,7 @@ class ProductController extends Controller
                 'brand_id' => $validated['brand_id'],
                 'description' => $this->descriptionSanitizer->sanitize($validated['description'] ?? null),
                 'short_description' => $this->cleanSeoText($validated['short_description'] ?? null),
+                'advice_attributes' => $this->adviceAttributes($validated),
                 'seo_title' => $this->cleanSeoText($validated['seo_title'] ?? null),
                 'seo_description' => $this->cleanSeoText($validated['seo_description'] ?? null),
                 'status' => 'active',
@@ -335,6 +336,7 @@ class ProductController extends Controller
                 'brand_id' => $validated['brand_id'],
                 'description' => $this->descriptionSanitizer->sanitize($validated['description'] ?? null),
                 'short_description' => $this->cleanSeoText($validated['short_description'] ?? null),
+                'advice_attributes' => $this->adviceAttributes($validated),
                 'seo_title' => $this->cleanSeoText($validated['seo_title'] ?? null),
                 'seo_description' => $this->cleanSeoText($validated['seo_description'] ?? null),
             ]);
@@ -403,6 +405,14 @@ class ProductController extends Controller
             'short_description' => 'nullable|string|max:500',
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string|max:320',
+            'advice_pet_types' => 'nullable|array|max:2',
+            'advice_pet_types.*' => 'in:cat,dog',
+            'advice_life_stages' => 'nullable|array|max:5',
+            'advice_life_stages.*' => 'in:kitten,puppy,adult,senior,all_life_stages',
+            'advice_product_types' => 'nullable|array|max:6',
+            'advice_product_types.*' => 'in:dry_food,wet_food,treat,toy,litter,accessory',
+            'advice_needs' => 'nullable|array|max:6',
+            'advice_needs.*' => 'in:daily_nutrition,picky_eater,skin_coat,weight_control,dental,indoor',
             'variants' => 'nullable|array',
             'variants.*.id' => 'nullable|integer|exists:product_variants,id',
             'variants.*.sku' => 'nullable|string|max:255',
@@ -497,6 +507,16 @@ class ProductController extends Controller
         }
 
         return $validated;
+    }
+
+    private function adviceAttributes(array $validated): array
+    {
+        return array_filter([
+            'pet_types' => array_values($validated['advice_pet_types'] ?? []),
+            'life_stages' => array_values($validated['advice_life_stages'] ?? []),
+            'product_types' => array_values($validated['advice_product_types'] ?? []),
+            'needs' => array_values($validated['advice_needs'] ?? []),
+        ], fn (array $values) => $values !== []);
     }
 
     private function syncSubmittedVariants(Request $request, Product $product, array $fallback): void
