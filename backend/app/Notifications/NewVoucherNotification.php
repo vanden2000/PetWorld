@@ -34,7 +34,7 @@ class NewVoucherNotification extends Notification
         return [
             'title' => 'Mã giảm giá mới: ' . $this->voucher->code,
             'message' => 'Ưu đãi cực hot! Giảm ngay ' . $discountFormatted . ' cho đơn hàng từ ' . $minOrderFormatted . '. ' . $expiryText . '.',
-            'action_url' => '/shop',
+            'action_url' => null,
             'icon' => 'gift',
             'type' => 'new_voucher',
             'voucher_id' => $this->voucher->id,
