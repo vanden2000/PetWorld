@@ -292,7 +292,21 @@
 
                         {{-- Preview --}}
                         <div id="image-preview-wrapper" class="image-preview-wrapper" style="{{ $post->image ? 'display: block;' : 'display: none;' }}">
-                            <img id="image-preview" src="{{ $post->image ? (filter_var($post->image, FILTER_VALIDATE_URL) ? $post->image : (str_starts_with($post->image, 'storage/') ? asset($post->image) : asset('storage/' . $post->image))) : '#' }}" alt="Preview">
+                            @php
+                                $postImageUrl = '#';
+                                if ($post->image) {
+                                    if (filter_var($post->image, FILTER_VALIDATE_URL)) {
+                                        $postImageUrl = $post->image;
+                                    } elseif (str_starts_with($post->image, 'uploads/') || str_starts_with($post->image, 'image/')) {
+                                        $postImageUrl = asset($post->image);
+                                    } elseif (str_starts_with($post->image, 'storage/')) {
+                                        $postImageUrl = asset($post->image);
+                                    } else {
+                                        $postImageUrl = asset('storage/' . $post->image);
+                                    }
+                                }
+                            @endphp
+                            <img id="image-preview" src="{{ $postImageUrl }}" alt="Preview">
                             <button type="button" class="remove-preview-btn" onclick="event.stopPropagation(); removePreview();">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>

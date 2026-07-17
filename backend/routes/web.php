@@ -68,8 +68,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/brands/{id}', [BrandController::class, 'update'])
         ->name('brands.update');
 
-    Route::get('/banners', [BannerController::class, 'index'])
-        ->name('banners');
+    Route::get('/banners', [BannerController::class, 'index'])->name('banners');
+    Route::get('/banners/create', [BannerController::class, 'create'])->name('banners.create');
+    Route::post('/banners', [BannerController::class, 'store'])->name('banners.store');
+    Route::get('/banners/{id}/edit', [BannerController::class, 'edit'])->name('banners.edit');
+    Route::put('/banners/{id}', [BannerController::class, 'update'])->name('banners.update');
+    Route::delete('/banners/{id}', [BannerController::class, 'destroy'])->name('banners.destroy');
+    Route::patch('/banners/{id}/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggle-status');
 
     Route::get('/orders', [OrderController::class, 'index'])
         ->name('orders');

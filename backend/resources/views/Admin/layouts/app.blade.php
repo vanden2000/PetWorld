@@ -32,7 +32,7 @@
         </a>
 
         <!-- Menu items -->
-        <nav style="flex-grow: 1;">
+        <nav class="sidebar-nav">
             <ul class="menu-list">
                 <li>
                     <a href="{{ route('admin.dashboard') }}" class="menu-item-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -130,6 +130,12 @@
                     <a href="{{ route('admin.vouchers') }}" class="menu-item-link {{ request()->routeIs('admin.vouchers*') ? 'active' : '' }}">
                         <i class="fa-solid fa-ticket"></i>
                         <span>Voucher</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.banners') }}" class="menu-item-link {{ request()->routeIs('admin.banners*') ? 'active' : '' }}">
+                        <i class="fa-regular fa-image"></i>
+                        <span>Banner Trang Chủ</span>
                     </a>
                 </li>
                 <li class="menu-item-dropdown {{ request()->routeIs('admin.posts*') || request()->routeIs('admin.blog-comments*') ? 'open' : '' }}">

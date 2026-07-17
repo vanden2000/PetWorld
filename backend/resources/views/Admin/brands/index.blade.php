@@ -94,7 +94,19 @@
                             <td>{{ $index + 1 }}</td>
                             <td>
                                 @if($brand->image)
-                                    <span class="brand-admin-logo"><img src="{{ filter_var($brand->image, FILTER_VALIDATE_URL) ? $brand->image : (str_starts_with($brand->image, 'storage/') ? asset($brand->image) : asset('storage/' . $brand->image)) }}" alt="{{ $brand->name }}"></span>
+                                    @php
+                                        $brandImagePath = $brand->image;
+                                        if (filter_var($brandImagePath, FILTER_VALIDATE_URL)) {
+                                            $brandImageUrl = $brandImagePath;
+                                        } elseif (str_starts_with($brandImagePath, 'uploads/') || str_starts_with($brandImagePath, 'image/')) {
+                                            $brandImageUrl = asset($brandImagePath);
+                                        } elseif (str_starts_with($brandImagePath, 'storage/')) {
+                                            $brandImageUrl = asset($brandImagePath);
+                                        } else {
+                                            $brandImageUrl = asset('storage/' . $brandImagePath);
+                                        }
+                                    @endphp
+                                    <span class="brand-admin-logo"><img src="{{ $brandImageUrl }}" alt="{{ $brand->name }}"></span>
                                 @else
                                     <span class="brand-admin-logo brand-admin-logo-fallback">{{ mb_substr($brand->name, 0, 1) }}</span>
                                 @endif
