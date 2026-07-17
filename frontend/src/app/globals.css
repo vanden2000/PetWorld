@@ -11798,43 +11798,51 @@ body {
   }
 }
 
-/* Custom Homepage Full-Width (Edge-to-Edge) Hero Banner */
-.homepage-main {
-  padding-top: 0 !important;
+
+.slide-btn-overlay {
+  position: absolute;
+  left: 12.8%;
+  top: 50.2%;
+  width: 18.6%;
+  height: 10.8%;
+  background-color: #ff782d; /* Màu cam thương hiệu giống ảnh */
+  color: #ffffff !important; /* Chữ trắng đậm */
+  border-radius: 50px; /* Bo tròn viền dạng viên thuốc */
+  font-weight: 700;
+  font-size: 1.05vw; /* Cỡ chữ thanh mảnh thon gọn hơn */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none !important;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(255, 120, 45, 0.25);
+  transition: all 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+  letter-spacing: 0.2px;
+  cursor: pointer;
 }
 
-.homepage-main .homepage-container {
-  padding-top: 40px;
+.slide-btn-overlay:hover {
+  background-color: #e9661c; /* Đổi màu cam sậm hơn khi di chuột */
+  transform: scale(1.03); /* Phóng to nhẹ toàn nút */
+  box-shadow: 0 6px 20px rgba(255, 120, 45, 0.45); /* Hiệu ứng tỏa sáng cam */
 }
 
-.homepage-main .hero-slider-section {
-  margin-bottom: 0 !important;
-}
-
-.homepage-main .hero-slider {
-  border-radius: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
-  max-width: 100% !important;
-  width: 100% !important;
-  max-height: 550px !important;
-}
-
-@media (max-width: 1024px) {
-  .homepage-main .hero-slider {
-    border-radius: 0 !important;
+@media (max-width: 1200px) {
+  .slide-btn-overlay {
+    font-size: 1.15vw;
   }
 }
 
 @media (max-width: 768px) {
-  .homepage-main .hero-slider {
-    border-radius: 0 !important;
+  .slide-btn-overlay {
+    font-size: 1.3vw;
   }
 }
 
 @media (max-width: 480px) {
-  .homepage-main .hero-slider {
-    border-radius: 0 !important;
+  .slide-btn-overlay {
+    font-size: 2.0vw;
+    box-shadow: 0 2px 6px rgba(255, 120, 45, 0.2);
   }
 }
 
