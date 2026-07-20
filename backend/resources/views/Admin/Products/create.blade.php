@@ -1109,6 +1109,28 @@
         color: var(--theme-warning);
     }
 
+    .seo-counter-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .seo-limit-warning {
+        display: none;
+        color: #dc2626;
+        font-size: 0.75rem;
+        font-weight: 800;
+    }
+
+    .seo-limit-warning.is-visible {
+        display: inline;
+    }
+
+    .input-text-field.seo-limit-exceeded {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+    }
+
     .seo-description-field {
         resize: none;
         min-height: 88px;
@@ -1334,7 +1356,7 @@
                     <div class="form-control-group" style="margin-top: 14px;">
                         <div class="seo-field-heading">
                             <label for="short_description" class="form-field-label">Mô Tả Ngắn</label>
-                            <span id="short-description-count" class="seo-character-count">0/300</span>
+                            <span class="seo-counter-status"><span class="seo-limit-warning" data-limit-warning>Quá ký tự</span><span id="short-description-count" class="seo-character-count">0/300</span></span>
                         </div>
                         <textarea id="short_description" name="short_description" class="input-text-field short-description-field" maxlength="500"
                                   placeholder="Tóm tắt lợi ích và đặc điểm nổi bật của sản phẩm">{{ old('short_description', $product->short_description) }}</textarea>
@@ -1359,7 +1381,7 @@
                     <div class="form-control-group">
                         <div class="seo-field-heading">
                             <label for="seo_title" class="form-field-label">Tiêu đề SEO</label>
-                            <span id="seo-title-count" class="seo-character-count">0/60</span>
+                            <span class="seo-counter-status"><span class="seo-limit-warning" data-limit-warning>Quá ký tự</span><span id="seo-title-count" class="seo-character-count">0/60</span></span>
                         </div>
                         <input type="text" id="seo_title" name="seo_title" class="input-text-field" maxlength="255"
                                placeholder="Để trống để sử dụng tên sản phẩm"
@@ -1369,7 +1391,7 @@
                     <div class="form-control-group no-margin">
                         <div class="seo-field-heading">
                             <label for="seo_description" class="form-field-label">Mô tả SEO</label>
-                            <span id="seo-description-count" class="seo-character-count">0/160</span>
+                            <span class="seo-counter-status"><span class="seo-limit-warning" data-limit-warning>Quá ký tự</span><span id="seo-description-count" class="seo-character-count">0/160</span></span>
                         </div>
                         <textarea id="seo_description" name="seo_description" class="input-text-field seo-description-field" maxlength="320"
                                   placeholder="Để trống để sử dụng nội dung mô tả sản phẩm">{{ old('seo_description', $product->seo_description) }}</textarea>
@@ -1381,6 +1403,7 @@
                         <div id="seo-preview-url" class="seo-preview-url"></div>
                         <p id="seo-preview-description" class="seo-preview-description"></p>
                     </div>
+                    @include('Admin.Products._seo_score')
                 </div>
 
 
@@ -1416,6 +1439,7 @@
                     <div id="image-upload-error" class="image-upload-error {{ ($imageValidationError ?? null) ? 'visible' : '' }}" role="alert">{{ $imageValidationError ?? '' }}</div>
                     <div id="deleted-image-inputs"></div>
                     <div id="image-metadata-inputs"></div>
+                    <input type="hidden" id="image-alt-payload" name="image_alt_payload" value="[]">
                     <input type="hidden" id="primary-image-id" name="primary_image_id" value="{{ $product->primaryImage?->id }}">
                     <input type="hidden" id="primary-image-new-index" name="primary_image_new_index" value="">
 
@@ -1488,8 +1512,8 @@
                             @endforeach
                         </select>
                     </div>
+                    @include('Admin.Products._pet_species')
                 </div>
-
                 @include('Admin.Products._advice_attributes')
 
                 <div class="form-card">
@@ -1653,6 +1677,8 @@
         });
 
         btnConfirmProductSave.addEventListener('click', async function() {
+            updateImageState();
+
             if (isCreatingProduct) {
                 btnConfirmProductSave.disabled = true;
                 btnConfirmProductSave.textContent = 'Đang tạo...';
@@ -1773,6 +1799,14 @@
             shortDescriptionInput.style.height = `${shortDescriptionInput.scrollHeight}px`;
         }
 
+        function setCharacterWarning(input, count, limit) {
+            const exceeded = input.value.length > limit;
+            count.classList.toggle('warning', exceeded);
+            input.classList.toggle('seo-limit-exceeded', exceeded);
+            input.setAttribute('aria-invalid', exceeded ? 'true' : 'false');
+            input.closest('.form-control-group')?.querySelector('[data-limit-warning]')?.classList.toggle('is-visible', exceeded);
+        }
+
         function updateSeoPreview() {
             const title = seoTitleInput.value.trim() || `${productNameInput.value.trim() || 'Tên sản phẩm'} | PetWorld`;
             const description = seoDescriptionInput.value.trim()
@@ -1783,9 +1817,9 @@
             seoTitleCount.textContent = `${seoTitleInput.value.length}/60`;
             seoDescriptionCount.textContent = `${seoDescriptionInput.value.length}/160`;
             shortDescriptionCount.textContent = `${shortDescriptionInput.value.length}/300`;
-            seoTitleCount.classList.toggle('warning', seoTitleInput.value.length > 60);
-            seoDescriptionCount.classList.toggle('warning', seoDescriptionInput.value.length > 160);
-            shortDescriptionCount.classList.toggle('warning', shortDescriptionInput.value.length > 300);
+            setCharacterWarning(seoTitleInput, seoTitleCount, 60);
+            setCharacterWarning(seoDescriptionInput, seoDescriptionCount, 160);
+            setCharacterWarning(shortDescriptionInput, shortDescriptionCount, 300);
             seoPreviewTitle.textContent = truncate(title, 60);
             seoPreviewUrl.textContent = `PetWorld › shop › ${slugInput.value || 'slug-san-pham'}`;
             seoPreviewDescription.textContent = truncate(description, 160);
@@ -2232,6 +2266,7 @@
         const imageError = document.getElementById('image-upload-error');
         const deletedImageInputs = document.getElementById('deleted-image-inputs');
         const imageMetadataInputs = document.getElementById('image-metadata-inputs');
+        const imageAltPayloadInput = document.getElementById('image-alt-payload');
         const primaryImageIdInput = document.getElementById('primary-image-id');
         const primaryImageNewIndexInput = document.getElementById('primary-image-new-index');
         const imageAltInput = document.getElementById('image-alt-text');
@@ -2290,6 +2325,10 @@
                 selectedImages = newOrderKeys.map(key => imagesByKey.get(key)).filter(Boolean);
             }
             imageMetadataInputs.innerHTML = '';
+            imageAltPayloadInput.value = JSON.stringify(boxes.map(box => ({
+                token: imageToken(box),
+                alt_text: box.dataset.altText || '',
+            })));
 
             boxes.forEach(box => {
                 const order = document.createElement('input');
@@ -2475,6 +2514,9 @@
                 item.classList.toggle('is-selected', imageToken(item) === selectedImageToken);
             });
             imageAltInput.disabled = false;
+            imageAltInput.name = box.classList.contains('js-existing-image')
+                ? `image_alt_texts[${box.dataset.imageId}]`
+                : `new_image_alt_texts[${box.dataset.imageKey}]`;
             imageAltInput.value = box.dataset.altText || '';
             imageAltCount.textContent = imageAltInput.value.length;
         }
@@ -2493,6 +2535,10 @@
             if (!box) return;
 
             box.dataset.altText = this.value;
+            if (box.classList.contains('js-new-image')) {
+                const image = selectedImages.find(item => item.key === box.dataset.imageKey);
+                if (image) image.altText = this.value;
+            }
             imageAltCount.textContent = this.value.length;
             updateImageState();
         });

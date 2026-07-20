@@ -609,7 +609,7 @@
     }
 
     .tbl-products {
-        min-width: 1080px;
+        min-width: 1200px;
     }
 
     .tbl-products th {
@@ -745,6 +745,11 @@
     .variant-status-chip { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 8px; font-size: .75rem; font-weight: 700; }
     .variant-status-chip.active { color: var(--theme-success); background: rgba(34, 197, 94, .1); }
     .variant-status-chip.inactive { color: var(--theme-text-gray); background: var(--theme-gray-light); }
+    .advice-list-status { display: grid; gap: 5px; min-width: 150px; }
+    .advice-list-status strong { font-size: .78rem; }
+    .advice-list-status small { color: var(--theme-text-gray); font-size: .72rem; line-height: 1.35; }
+    .advice-list-status .status-ready { color: #237343; }
+    .advice-list-status .status-missing { color: #a45b14; }
     .btn-action-tool-hide { color: var(--theme-warning); }
     .btn-action-tool-show { color: var(--theme-success); }
     .confirm-modal[hidden] { display: none; }
@@ -854,6 +859,7 @@
                     <tr>
                         <th style="width: 48px;"></th>
                         <th>SẢN PHẨM</th>
+                        <th>Hồ sơ AI</th>
                         <th>SLUG</th>
                         <th>DANH MỤC</th>
                         <th>GIÁ</th>
@@ -864,7 +870,7 @@
                 <tbody>
                     @if($products->isEmpty())
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 32px; color: var(--theme-text-gray);">
+                            <td colspan="8" style="text-align: center; padding: 32px; color: var(--theme-text-gray);">
                                 <i class="fa-solid fa-box-open" style="font-size: 2rem; margin-bottom: 8px;"></i>
                                 <p>Không tìm thấy sản phẩm nào khớp với tìm kiếm.</p>
                             </td>
@@ -879,6 +885,22 @@
 
                                 $minPrice = count($prices) ? min($prices) : 0;
                                 $maxPrice = count($prices) ? max($prices) : 0;
+                                $advice = $product->advice_attributes ?? [];
+                                $hasSpecies = $product->petSpecies->isNotEmpty();
+                                $hasAdvice = !empty($advice['life_stages']) || !empty($advice['needs']);
+                                $adviceNames = [
+                                    'kitten' => 'Mèo con', 'puppy' => 'Chó con',
+                                    'adult' => 'Trưởng thành', 'senior' => 'Lớn tuổi', 'all_life_stages' => 'Mọi độ tuổi',
+                                    'skin_coat' => 'Da & lông', 'picky_eater' => 'Kén ăn', 'dental' => 'Răng miệng', 'weight_control' => 'Kiểm soát cân nặng', 'indoor' => 'Nuôi trong nhà', 'daily_nutrition' => 'Dinh dưỡng hằng ngày',
+                                ];
+                                $adviceSummary = $product->petSpecies->pluck('name')
+                                    ->merge(collect(['life_stages', 'needs'])
+                                    ->flatMap(fn ($key) => $advice[$key] ?? [])
+                                    ->map(fn ($value) => $adviceNames[$value] ?? null)
+                                    ->filter()
+                                    ->take(3))
+                                    ->take(4)
+                                    ->implode(' · ');
                             @endphp
                             <!-- Main Product Row -->
                             <tr class="product-main-row {{ $product->status === 'inactive' ? 'is-inactive' : '' }}" data-product-id="{{ $product->id }}">
@@ -916,6 +938,17 @@
                                         <span class="sku-badge-variants">+{{ $product->variants->count() - 1 }} biến thể</span>
                                               @endif
                                         </div>
+                                    </div>
+                                </td>
+                                 <td>
+                                    <div class="advice-list-status">
+                                        @if($hasSpecies && $hasAdvice)
+                                            <strong class="status-ready"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Đủ thông tin</strong>
+                                            <small>{{ $adviceSummary }}</small>
+                                        @else
+                                            <strong class="status-missing"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Cần bổ sung</strong>
+                                            <small>{{ !$hasSpecies ? 'Chưa chọn loài phù hợp' : 'Chưa chọn độ tuổi hoặc nhu cầu hỗ trợ' }}</small>
+                                        @endif
                                     </div>
                                 </td>
                                 <td>
@@ -978,7 +1011,7 @@
                             <!-- Variants Drawer Sub-Row -->
                             @if($product->variants->isNotEmpty())
                                 <tr class="variant-drawer-row" id="drawer-{{ $product->id }}">
-                                    <td colspan="7" style="padding: 0;">
+                                    <td colspan="8" style="padding: 0;">
                                         <div class="variant-drawer-inner">
                                             <div style="font-size: 0.8rem; font-weight: 700; color: var(--theme-text-gray); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em;">
                                                 Chi Tiết Các Biến Thể của Sản Phẩm ({{ $product->variants->count() }})

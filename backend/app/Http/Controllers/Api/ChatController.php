@@ -157,6 +157,45 @@ class ChatController extends Controller
         ]]);
     }
 
+    /** Return only the caller's own conversation so the widget can resume safely. */
+    public function history(Request $request, string $conversationId): JsonResponse
+    {
+        $data = $request->validate([
+            'visitor_id' => ['nullable', 'uuid'],
+        ]);
+        $user = $request->user('sanctum');
+
+        if (! $user && empty($data['visitor_id'])) {
+            throw ValidationException::withMessages([
+                'visitor_id' => ['Khách chưa đăng nhập cần có mã phiên chat hợp lệ.'],
+            ]);
+        }
+
+        $query = ChatConversation::query()->whereKey($conversationId);
+        $user
+            ? $query->where('user_id', $user->id)
+            : $query->whereNull('user_id')->where('session_id', $data['visitor_id']);
+        $conversation = $query->first();
+
+        if (! $conversation) {
+            throw (new ModelNotFoundException())->setModel(ChatConversation::class);
+        }
+
+        return response()->json(['data' => [
+            'conversation_id' => $conversation->id,
+            'messages' => $conversation->messages()->oldest('id')->limit(30)->get()
+                ->filter(fn (ChatMessage $message) => in_array($message->role, ['user', 'assistant'], true))
+                ->map(fn (ChatMessage $message) => [
+                    'id' => (string) $message->id,
+                    'sender' => $message->role === 'assistant' ? 'bot' : 'user',
+                    'text' => $message->content,
+                    'suggestions' => $message->metadata['suggestions'] ?? [],
+                    'sources' => $message->metadata['sources'] ?? [],
+                    'orders' => $message->metadata['orders'] ?? [],
+                ])->values(),
+        ]]);
+    }
+
     private function resolveConversation(array $data, ?int $userId): ChatConversation
     {
         if (empty($data['conversation_id'])) {
@@ -192,7 +231,6 @@ QUY TRÌNH TƯ VẤN SẢN PHẨM
 - Chuyển yêu cầu sang từ khóa ngắn, dễ tìm trong catalog; giữ lại ngân sách trong min_price/max_price và đặt in_stock=true nếu khách không yêu cầu hàng hết.
 - Nếu thiếu thông tin quan trọng (loài thú cưng, độ tuổi/kích cỡ, ngân sách), chỉ hỏi một câu làm rõ. Không hỏi lại thông tin khách đã nêu.
 - Khi đã có kết quả tool, chỉ gợi ý tối đa 3 sản phẩm trong phần chữ. Nêu ngắn gọn vì sao phù hợp; không lặp lại chi tiết giá hoặc tồn kho vì giao diện hiển thị thẻ sản phẩm.
-- Khi khách yêu cầu so sánh sản phẩm, bắt buộc gọi compare_products; chỉ so sánh dữ liệu tool trả về và nêu điểm khác biệt thực tế.
 - Nếu tool không có kết quả, nói rõ PetWorld chưa tìm được sản phẩm phù hợp và đề nghị khách đổi từ khóa hoặc nới ngân sách. Không tự bịa sản phẩm, giá, tồn kho hoặc khuyến mãi.
 
 GIỚI HẠN
@@ -232,9 +270,6 @@ PROMPT,
         if (! $hasToolResult && $this->isKnowledgeQuestion($messages)) {
             $payload['tool_choice'] = ['type' => 'function', 'function' => ['name' => 'search_knowledge_articles']];
         }
-        if (! $hasToolResult && $this->isComparisonQuestion($messages)) {
-            $payload['tool_choice'] = ['type' => 'function', 'function' => ['name' => 'compare_products']];
-        }
         if (! $hasToolResult && $this->isOrderQuestion($messages)) {
             $payload['tool_choice'] = ['type' => 'function', 'function' => ['name' => 'get_my_orders']];
         }
@@ -270,12 +305,6 @@ PROMPT,
             ->first(fn (array $message) => ($message['role'] ?? null) === 'user');
         $content = mb_strtolower((string) ($latestUserMessage['content'] ?? ''));
         return preg_match('/\b(giao hàng|vận chuyển|thanh toán|đổi trả|hoàn trả|voucher|mã giảm giá|liên hệ)\b/u', $content) === 1;
-    }
-
-    private function isComparisonQuestion(array $messages): bool
-    {
-        $latestUserMessage = collect($messages)->reverse()->first(fn (array $message) => ($message['role'] ?? null) === 'user');
-        return preg_match('/\b(so sánh|hay hơn|khác nhau|hay là|versus|vs\.? )\b/u', mb_strtolower((string) ($latestUserMessage['content'] ?? ''))) === 1;
     }
 
     private function isOrderQuestion(array $messages): bool
@@ -322,17 +351,6 @@ PROMPT,
         ], [
             'type' => 'function',
             'function' => [
-                'name' => 'compare_products',
-                'description' => 'So sánh 2 hoặc 3 sản phẩm PetWorld bằng dữ liệu catalog thật.',
-                'parameters' => [
-                    'type' => 'object',
-                    'properties' => ['product_names' => ['type' => 'array', 'items' => ['type' => 'string'], 'minItems' => 2, 'maxItems' => 3]],
-                    'required' => ['product_names'],
-                ],
-            ],
-        ], [
-            'type' => 'function',
-            'function' => [
                 'name' => 'get_my_orders',
                 'description' => 'Tra cứu các đơn hàng thuộc chính tài khoản hiện tại. Không nhận user_id.',
                 'parameters' => ['type' => 'object', 'properties' => ['order_code' => ['type' => 'string']]],
@@ -365,9 +383,6 @@ PROMPT,
             $articles = $name === 'search_knowledge_articles'
                 ? $this->knowledge->search($arguments)
                 : [];
-            $comparison = $name === 'compare_products'
-                ? $this->products->compare((array) ($arguments['product_names'] ?? []))
-                : [];
             $orderResult = $name === 'get_my_orders'
                 ? $this->orders->search($userId, $arguments['order_code'] ?? null)
                 : null;
@@ -377,7 +392,7 @@ PROMPT,
             $toolMessages[] = [
                 'role' => 'tool',
                 'tool_call_id' => $callId,
-                'content' => json_encode(['products' => $products, 'articles' => $articles, 'comparison' => $comparison, 'orders' => $orderResult], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'content' => json_encode(['products' => $products, 'articles' => $articles, 'orders' => $orderResult], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             ];
         }
 

@@ -7,12 +7,17 @@ import { formatPrice, resolveProductImage, useImageFallback } from "@/lib/format
 import AddToCartButton from "@/components/product/AddToCartButton";
 
 const QUICK_QUESTIONS = [
-  "Tìm thức ăn cho mèo",
-  "Tìm đồ chơi cho chó",
+  "Tìm thức ăn cho mèo dưới 200.000đ",
+  "Chính sách giao hàng",
   "Theo dõi đơn hàng của tôi",
 ];
 const VISITOR_ID_KEY = "petworld_chat_visitor_id";
 const CONVERSATION_ID_KEY = "petworld_chat_conversation_id";
+const WELCOME_MESSAGE = {
+  id: "welcome",
+  sender: "bot",
+  text: "Chào bạn! Mình là trợ lý PetWorld. Mình có thể giúp tìm sản phẩm, giải đáp chính sách hoặc tra đơn hàng.",
+};
 
 function getVisitorId() {
   const existingId = localStorage.getItem(VISITOR_ID_KEY);
@@ -44,14 +49,10 @@ export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [comparisonSelection, setComparisonSelection] = useState([]);
-  const [messages, setMessages] = useState([
-    {
-      id: "welcome",
-      sender: "bot",
-      text: "Xin chào! PetWorld có thể giúp gì cho bạn hôm nay?",
-    },
-  ]);
+  const [messages, setMessages] = useState([WELCOME_MESSAGE]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [lastFailedMessage, setLastFailedMessage] = useState("");
+  const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
 
@@ -67,17 +68,49 @@ export default function Chatbot() {
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen || hasLoadedHistory) return;
+
+    const conversationId = localStorage.getItem(CONVERSATION_ID_KEY);
+    if (!conversationId) {
+      setHasLoadedHistory(true);
+      return;
+    }
+
+    const loadHistory = async () => {
+      setIsLoadingHistory(true);
+      try {
+        const token = localStorage.getItem("petworld_token");
+        const response = await fetch(`${API_BASE_URL}/api/chat/${conversationId}?visitor_id=${encodeURIComponent(getVisitorId())}`, {
+          headers: { Accept: "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.message || "Không thể tải lại cuộc trò chuyện.");
+        const history = payload.data?.messages;
+        if (Array.isArray(history) && history.length) setMessages(history);
+      } catch {
+        // A stale browser ID must not prevent a customer from starting a new chat.
+        localStorage.removeItem(CONVERSATION_ID_KEY);
+      } finally {
+        setHasLoadedHistory(true);
+        setIsLoadingHistory(false);
+      }
+    };
+    loadHistory();
+  }, [hasLoadedHistory, isOpen]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, isSending]);
 
   const sendMessage = async (text) => {
     const content = text.trim();
-    if (!content || isSending) return;
+    if (!content || isSending || isLoadingHistory) return;
 
     const userMessage = { id: `user-${Date.now()}`, sender: "user", text: content };
     setMessages((current) => [...current, userMessage]);
     setMessage("");
     setIsSending(true);
+    setLastFailedMessage("");
 
     try {
       const token = localStorage.getItem("petworld_token");
@@ -119,6 +152,7 @@ export default function Chatbot() {
         },
       ]);
     } catch (error) {
+      setLastFailedMessage(content);
       setMessages((current) => [
         ...current,
         {
@@ -137,22 +171,13 @@ export default function Chatbot() {
     sendMessage(message);
   };
 
-  const selectForComparison = (product) => {
+  const startNewConversation = () => {
     if (isSending) return;
-
-    if (comparisonSelection.some((selected) => selected.id === product.id)) {
-      setComparisonSelection((current) => current.filter((selected) => selected.id !== product.id));
-      return;
-    }
-
-    if (comparisonSelection.length === 1) {
-      const [first] = comparisonSelection;
-      setComparisonSelection([]);
-      sendMessage(`So sánh ${first.name} và ${product.name}`);
-      return;
-    }
-
-    setComparisonSelection([product]);
+    localStorage.removeItem(CONVERSATION_ID_KEY);
+    setMessages([WELCOME_MESSAGE]);
+    setLastFailedMessage("");
+    setHasLoadedHistory(true);
+    inputRef.current?.focus();
   };
 
   return (
@@ -173,12 +198,14 @@ export default function Chatbot() {
               <span><i aria-hidden="true" /> Đang trực tuyến</span>
             </div>
           </div>
-          <button type="button" className="chatbot-close" onClick={() => setIsOpen(false)} aria-label="Đóng hộp chat">
-            <span aria-hidden="true" />
-          </button>
+          <div className="chatbot-header-actions">
+            <button type="button" className="chatbot-reset" onClick={startNewConversation} disabled={isSending} aria-label="Bắt đầu cuộc trò chuyện mới">Mới</button>
+            <button type="button" className="chatbot-close" onClick={() => setIsOpen(false)} aria-label="Đóng hộp chat"><span aria-hidden="true" /></button>
+          </div>
         </header>
 
         <div className="chatbot-messages" aria-live="polite">
+          {isLoadingHistory && <p className="chatbot-history-loading">Đang tải cuộc trò chuyện…</p>}
           {messages.map((item) => (
             <div className="chatbot-message-group" key={item.id}>
               <p className={`chatbot-message ${item.sender}`}>{cleanChatText(item.text)}</p>
@@ -196,14 +223,6 @@ export default function Chatbot() {
                         </span>
                       </Link>
                       <div className="chatbot-product-actions">
-                        <button
-                          type="button"
-                          className={`chatbot-compare-button ${comparisonSelection.some((selected) => selected.id === product.id) ? "selected" : ""}`}
-                          onClick={() => selectForComparison(product)}
-                          disabled={isSending}
-                        >
-                          {comparisonSelection.some((selected) => selected.id === product.id) ? "Đã chọn" : "So sánh"}
-                        </button>
                         <AddToCartButton product={product} />
                       </div>
                     </div>
@@ -230,19 +249,22 @@ export default function Chatbot() {
             </div>
           ))}
           {isSending && <p className="chatbot-message bot chatbot-typing">PetWorld đang trả lời…</p>}
+          {lastFailedMessage && !isSending && (
+            <button type="button" className="chatbot-retry" onClick={() => sendMessage(lastFailedMessage)}>Thử gửi lại</button>
+          )}
           <div ref={messagesEndRef} />
         </div>
 
         <div className="chatbot-quick-list" aria-label="Câu hỏi gợi ý">
           {QUICK_QUESTIONS.map((question) => (
-            <button type="button" key={question} onClick={() => sendMessage(question)} disabled={isSending}>{question}</button>
+            <button type="button" key={question} onClick={() => sendMessage(question)} disabled={isSending || isLoadingHistory}>{question}</button>
           ))}
         </div>
 
         <form className="chatbot-form" onSubmit={handleSubmit}>
           <label htmlFor="chatbot-message" className="sr-only">Nhập nội dung cần hỗ trợ</label>
-          <input ref={inputRef} id="chatbot-message" type="text" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Nhập câu hỏi..." autoComplete="off" maxLength="1000" disabled={isSending} />
-          <button type="submit" disabled={!message.trim() || isSending} aria-label="Gửi tin nhắn">Gửi</button>
+          <input ref={inputRef} id="chatbot-message" type="text" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ví dụ: thức ăn cho mèo 2 tuổi" autoComplete="off" maxLength="1000" disabled={isSending || isLoadingHistory} />
+          <button type="submit" disabled={!message.trim() || isSending || isLoadingHistory} aria-label="Gửi tin nhắn">Gửi</button>
         </form>
       </section>
 

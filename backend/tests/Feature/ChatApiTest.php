@@ -94,6 +94,24 @@ class ChatApiTest extends TestCase
         $this->assertSame(0, ChatMessage::query()->count());
     }
 
+    public function test_guest_can_only_load_its_own_chat_history(): void
+    {
+        $conversation = ChatConversation::create([
+            'id' => 'd9553d05-bd29-4f6f-9dcc-bb1fd7fb9307',
+            'session_id' => 'de4aaed1-715c-4904-b8d7-dca2ef026458',
+        ]);
+        ChatMessage::create(['conversation_id' => $conversation->id, 'role' => 'user', 'content' => 'Tôi cần thức ăn cho mèo.']);
+        ChatMessage::create(['conversation_id' => $conversation->id, 'role' => 'assistant', 'content' => 'Mình sẽ giúp bạn tìm.']);
+
+        $this->getJson('/api/chat/' . $conversation->id . '?visitor_id=de4aaed1-715c-4904-b8d7-dca2ef026458')
+            ->assertOk()
+            ->assertJsonPath('data.messages.0.text', 'Tôi cần thức ăn cho mèo.')
+            ->assertJsonPath('data.messages.1.sender', 'bot');
+
+        $this->getJson('/api/chat/' . $conversation->id . '?visitor_id=638ee0e9-a838-4d4f-88ce-0ef8914f6760')
+            ->assertNotFound();
+    }
+
     public function test_product_search_uses_catalog_fallback_when_second_provider_request_fails(): void
     {
         Http::fake([

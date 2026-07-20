@@ -34,26 +34,6 @@ class ChatbotProductService
             ->all();
     }
 
-    /** Compare only real, public catalog fields; never let the model invent them. */
-    public function compare(array $names): array
-    {
-        $names = collect($names)->filter(fn ($name) => is_string($name))->map(fn (string $name) => trim($name))->filter()->take(3)->all();
-        if (count($names) < 2) return [];
-
-        $products = $this->productsQuery(['in_stock' => false, 'min_price' => null, 'max_price' => null])
-            ->where(function (Builder $builder) use ($names): void {
-                foreach ($names as $name) $this->matchesCatalogText($builder, $name, 'or');
-            })->limit(3)->get();
-
-        return $this->format($products, [
-            'pet_type' => null, 'life_stage' => null, 'product_type' => null, 'needs' => [],
-        ])->map(fn (array $product) => [
-            'id' => $product['id'], 'name' => $product['name'], 'url' => $product['url'],
-            'price' => $product['price'], 'stock_quantity' => $product['stock_quantity'],
-            'short_description' => $product['short_description'], 'advice_reasons' => $product['match_reasons'],
-        ])->values()->all();
-    }
-
     private function find(array $filters, string $query): Collection
     {
         return $this->productsQuery($filters)
@@ -85,6 +65,7 @@ class ChatbotProductService
             ->with([
                 'brand:id,name,slug',
                 'category:id,name,slug',
+                'petSpecies:id,name,slug',
                 'primaryImage:id,product_id,image_url,alt_text',
                 'variants' => function (HasMany $relation) use ($filters): void {
                     $relation->where('status', 'active')
@@ -92,6 +73,9 @@ class ChatbotProductService
                 },
             ])
             ->where('status', 'active')
+            ->when($filters['pet_type'], function (Builder $builder, string $petType): void {
+                $builder->whereHas('petSpecies', fn (Builder $species) => $species->where('slug', $petType));
+            })
             ->whereHas('variants', function (Builder $builder) use ($filters): void {
                 $builder->where('status', 'active')
                     ->when($filters['in_stock'], fn (Builder $query) => $query->where('quantity', '>', 0));
@@ -148,6 +132,8 @@ class ChatbotProductService
                 'short_description' => Str::limit(trim(strip_tags((string) ($product->short_description ?: $product->description))), 280),
                 'category' => $product->category?->name,
                 'brand' => $product->brand?->name,
+                'pet_species' => $product->petSpecies->pluck('slug')->values()->all(),
+                'life_stages' => $product->advice_attributes['life_stages'] ?? [],
                 'price' => ['min' => $effectivePrices->min(), 'max' => $effectivePrices->max()],
                 'stock_quantity' => $variants->sum('quantity'),
                 'match_score' => $matchScore,
@@ -172,7 +158,10 @@ class ChatbotProductService
         foreach ($rules as $filter => [$attribute, $points, $terms, $label]) {
             $value = $filters[$filter];
             if (! $value) continue;
-            $matched = in_array($value, $attributes[$attribute] ?? [], true);
+            $matched = $filter === 'pet_type'
+                ? $product->petSpecies->contains('slug', $value) || in_array($value, $attributes[$attribute] ?? [], true)
+                : in_array($value, $attributes[$attribute] ?? [], true)
+                    || ($filter === 'life_stage' && in_array('all_life_stages', $attributes[$attribute] ?? [], true));
             $fallback = isset($terms[$value]) && str_contains($haystack, $terms[$value]);
             if ($matched || $fallback) {
                 $score += $points;

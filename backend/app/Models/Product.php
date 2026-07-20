@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
 
@@ -23,6 +24,7 @@ class Product extends Model
         'slug',
         'description',
         'short_description',
+        'focus_keyword',
         'advice_attributes',
         'seo_title',
         'seo_description',
@@ -68,6 +70,8 @@ class Product extends Model
     {
         return $this->hasMany(ProductSlugHistory::class);
     }
+
+    public function petSpecies(): BelongsToMany { return $this->belongsToMany(PetSpecies::class); }
 
     public function wishlists()
     {

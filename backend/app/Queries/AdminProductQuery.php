@@ -25,6 +25,7 @@ class AdminProductQuery
                 'variants.variantValues.variantType',
                 'images',
                 'primaryImage',
+                'petSpecies:id,name,slug',
             ])
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where(function (Builder $searchQuery) use ($search): void {

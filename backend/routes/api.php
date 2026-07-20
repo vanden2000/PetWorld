@@ -43,6 +43,7 @@ Route::prefix('forgot-password')->group(function () {
 // Gửi yêu cầu hỗ trợ từ trang Liên hệ (/contact) — chỉ gửi email, không lưu DB.
 Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])->middleware('throttle:5,1');
 Route::post('/chat', [ChatController::class, 'store'])->middleware('throttle:20,1');
+Route::get('/chat/{conversationId}', [ChatController::class, 'history'])->middleware('throttle:30,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
