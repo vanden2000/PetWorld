@@ -23,8 +23,8 @@ export default function HomeView({ initialData }) {
   const accessoryProducts = new_accessories;
 
   return <main className="main-content homepage-main">
+    <HeroSlider banners={banners} />
     <div className="homepage-container">
-      <HeroSlider banners={banners} />
       <CategorySection categories={categories} />
       <ProductSection title="Sản Phẩm Bán Chạy" products={featured_products} columns={5} limit={8} isSlider showSoldCount showSale={false} />
       <TrustBadges />
