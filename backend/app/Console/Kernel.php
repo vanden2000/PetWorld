@@ -13,6 +13,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // Mỗi phút quét đơn chuyển khoản quá hạn để tự hủy + hoàn kho.
+        $schedule->command('orders:check-sepay-payments')->everyMinute()->withoutOverlapping();
         $schedule->command('orders:expire-unpaid')->everyMinute()->withoutOverlapping();
     }
 

@@ -47,6 +47,10 @@ class SepayWebhookController extends Controller
                 ->where('payment_code', strtoupper($matches[0]))
                 ->where('payment_status', 'unpaid')
                 ->where('order_status', 'pending')
+                ->where(function ($query): void {
+                    $query->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', now());
+                })
                 ->first();
         }
 
