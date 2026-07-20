@@ -39,11 +39,14 @@ class SepayWebhookController extends Controller
         $content = (string) $request->input('content', '');
 
         // Chỉ tiền vào mới đối soát; tìm mã đơn dạng PW123 trong nội dung chuyển khoản.
+        // Chỉ khớp đơn còn 'pending': đơn đã hủy (hết hạn) coi như QR vô hiệu, kho đã hoàn
+        // nên không được xác nhận lại — nếu có tiền tới sẽ thành giao dịch mồ côi để đối soát tay.
         $order = null;
         if ($transferType === 'in' && preg_match('/PW\d+/i', $content, $matches)) {
             $order = Order::query()
                 ->where('payment_code', strtoupper($matches[0]))
                 ->where('payment_status', 'unpaid')
+                ->where('order_status', 'pending')
                 ->first();
         }
 

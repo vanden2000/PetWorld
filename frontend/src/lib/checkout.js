@@ -71,6 +71,14 @@ export async function getAvailableVouchers(subtotal) {
 }
 
 /**
+ * Gia hạn thời gian thanh toán (tạo lại QR) cho đơn chuyển khoản còn đang chờ.
+ * Giữ nguyên mã PW{id}, chỉ đẩy lại expires_at. Trả về { ok, data?, message? }.
+ */
+export async function renewPayment(id) {
+  return postJson(`/api/orders/${id}/renew-payment`, {});
+}
+
+/**
  * Lấy chi tiết một đơn của user (dùng để poll trạng thái thanh toán). Trả về data hoặc null.
  */
 export async function getOrder(id) {

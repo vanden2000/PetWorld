@@ -7577,7 +7577,13 @@ body {
   padding-bottom: 40px;
 }
 
+/* Trang liên hệ: nền trắng phẳng, bỏ vệt pha màu cam/xanh của các blob. */
+.main-content:has(.sp-support) {
+  background-color: #fff;
+}
+
 .sp-blob {
+  display: none;
   position: absolute;
   border-radius: 50%;
   filter: blur(60px);

@@ -22,6 +22,7 @@ import {
   createAddress,
   createOrder,
   getOrder,
+  renewPayment,
   buildSepayQrUrl,
   getAvailableVouchers,
 } from "@/lib/checkout";
@@ -38,6 +39,37 @@ import {
 
 // Mã QR hết hạn sau 15 phút, sau đó khách bấm tạo lại.
 const QR_TTL_SECONDS = 15 * 60;
+
+// Phiên thanh toán đang chờ được lưu localStorage để khôi phục khi rớt mạng / tải lại trang.
+const PENDING_PAYMENT_KEY = "petworld_pending_payment";
+
+function savePendingPayment(session) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(session));
+  } catch {
+    // localStorage đầy/không dùng được: bỏ qua, chỉ mất khả năng khôi phục.
+  }
+}
+
+function readPendingPayment() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(PENDING_PAYMENT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearPendingPayment() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(PENDING_PAYMENT_KEY);
+  } catch {
+    // bỏ qua
+  }
+}
 
 // Thông tin ngân hàng hiển thị (chuyển khoản thủ công) — cấu hình qua env.
 const BANK_INFO = {
@@ -81,9 +113,12 @@ export default function CheckoutView() {
   const [placedOrder, setPlacedOrder] = useState(null);
   const [orderPaid, setOrderPaid] = useState(false);
   const [fullOrderDetails, setFullOrderDetails] = useState(null);
-  const [qrSecondsLeft, setQrSecondsLeft] = useState(QR_TTL_SECONDS);
-  // Hết hiệu lực khi đếm ngược về 0 (suy ra từ state, không cần state riêng).
-  const qrExpired = qrSecondsLeft <= 0;
+  // Lưu MỐC hết hạn tuyệt đối (ms epoch) thay vì đếm giây, để sống sót khi tải lại/rớt mạng.
+  const [paymentExpiresAt, setPaymentExpiresAt] = useState(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const qrSecondsLeft = paymentExpiresAt ? Math.max(0, Math.round((paymentExpiresAt - nowMs) / 1000)) : 0;
+  // Chỉ coi là hết hiệu lực khi đã có mốc và đã qua mốc đó.
+  const qrExpired = paymentExpiresAt !== null && nowMs >= paymentExpiresAt;
 
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [vouchers, setVouchers] = useState([]);
@@ -136,14 +171,71 @@ export default function CheckoutView() {
     return () => clearInterval(timer);
   }, [placedOrder, orderPaid, qrExpired]);
 
-  // Đếm ngược hiệu lực mã QR; tự dừng khi về 0 (qrExpired = true).
+  // Nhịp đồng hồ mỗi giây để tính lại thời gian còn lại từ mốc hết hạn tuyệt đối.
   useEffect(() => {
     if (!placedOrder || !placedOrder.is_bank || orderPaid || qrExpired) return;
-    const timer = setInterval(() => {
-      setQrSecondsLeft((s) => Math.max(0, s - 1));
-    }, 1000);
+    const timer = setInterval(() => setNowMs(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [placedOrder, orderPaid, qrExpired]);
+
+  // Khi thanh toán thành công: lưu cờ paid vào localStorage để reload vẫn ra trang thành công.
+  useEffect(() => {
+    if (!orderPaid || !placedOrder?.is_bank) return;
+    const sess = readPendingPayment();
+    if (sess?.orderId === placedOrder.id) {
+      savePendingPayment({ ...sess, paid: true });
+    }
+  }, [orderPaid, placedOrder]);
+
+  // Khôi phục phiên thanh toán đang chờ khi vào lại trang (rớt mạng/tải lại) — chỉ chạy khi mount.
+  useEffect(() => {
+    const sess = readPendingPayment();
+    if (!sess?.orderId) return;
+    const exp = sess.expiresAt ?? 0;
+
+    // Đã ra ngoài cửa sổ hiệu lực QR: dọn phiên, đơn tra cứu ở /account/orders.
+    if (exp && Date.now() > exp) {
+      clearPendingPayment();
+      return;
+    }
+
+    let cancelled = false;
+
+    // Khôi phục ngay từ cache để hiển thị được cả khi đang offline.
+    if (sess.snapshot) {
+      setPlacedOrder(sess.snapshot);
+      setPaymentExpiresAt(exp || null);
+      setNowMs(Date.now());
+      if (sess.paid) setOrderPaid(true);
+    }
+
+    // Đối chiếu với server: paid -> trang thành công; cancelled -> dọn; còn chờ -> tiếp tục.
+    (async () => {
+      const fresh = await getOrder(sess.orderId);
+      if (cancelled || !fresh) return; // offline hoặc lỗi: giữ theo cache đã khôi phục
+      if (fresh.payment_status === "paid") {
+        setOrderPaid(true);
+        savePendingPayment({ ...sess, paid: true });
+        return;
+      }
+      if (fresh.status === "cancelled") {
+        clearPendingPayment();
+        setPlacedOrder(null);
+        setPaymentExpiresAt(null);
+        toastError("Đơn thanh toán trước đó đã hết hạn. Vui lòng đặt lại.");
+        return;
+      }
+      if (fresh.expires_at) {
+        setPaymentExpiresAt(Date.parse(fresh.expires_at));
+        setNowMs(Date.now());
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Tải chi tiết đơn hàng đầy đủ khi đặt hàng hoặc thanh toán thành công
   useEffect(() => {
@@ -317,13 +409,39 @@ export default function CheckoutView() {
       localStorage.removeItem(voucherKey);
     }
     setOrderPaid(false);
-    setQrSecondsLeft(QR_TTL_SECONDS);
-    setPlacedOrder({ ...result.data, is_bank: isBankTransfer, voucher: voucherSnapshot });
+    const snapshot = { ...result.data, is_bank: isBankTransfer, voucher: voucherSnapshot };
+    setPlacedOrder(snapshot);
+
+    if (isBankTransfer) {
+      // Ưu tiên hạn do server trả (đồng bộ với scheduler tự hủy), fallback 15 phút phía client.
+      const exp = result.data?.expires_at
+        ? Date.parse(result.data.expires_at)
+        : Date.now() + QR_TTL_SECONDS * 1000;
+      setPaymentExpiresAt(exp);
+      setNowMs(Date.now());
+      savePendingPayment({ orderId: result.data.id, snapshot, expiresAt: exp, paid: false });
+    } else {
+      setPaymentExpiresAt(null);
+    }
   };
 
-  // Tạo lại mã QR: cùng đơn/nội dung CK, chỉ làm mới thời hạn và tiếp tục poll.
-  const handleRegenerateQr = () => {
-    setQrSecondsLeft(QR_TTL_SECONDS);
+  // Tạo lại mã QR: giữ nguyên mã PW{id}, gọi API gia hạn expires_at ở server rồi poll tiếp.
+  const handleRegenerateQr = async () => {
+    if (!placedOrder) return;
+    const res = await renewPayment(placedOrder.id);
+    if (!res.ok) {
+      // Đơn đã bị hủy (hết hạn) không mở lại được -> dọn phiên, khách đặt đơn mới.
+      toastError(res.message ?? "Không thể tạo lại mã QR. Vui lòng đặt lại đơn.");
+      clearPendingPayment();
+      return;
+    }
+    const exp = res.data?.order?.expires_at
+      ? Date.parse(res.data.order.expires_at)
+      : Date.now() + QR_TTL_SECONDS * 1000;
+    setPaymentExpiresAt(exp);
+    setNowMs(Date.now());
+    const sess = readPendingPayment();
+    if (sess) savePendingPayment({ ...sess, expiresAt: exp });
   };
 
   const copyText = async (value) => {

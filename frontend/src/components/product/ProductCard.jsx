@@ -31,14 +31,19 @@ export default function ProductCard({
   const currentPrice = showSale
     ? priceRange.display ?? (hasSale ? priceRange.sale_min : priceRange.min)
     : priceRange.min;
-  const oldPrice = showSale
+  // Giá gạch ưu tiên `compare_at` (đã ghép đúng biến thể hiển thị). Chỉ hiển thị khi
+  // THỰC SỰ cao hơn giá bán — tránh trường hợp biến thể rẻ nhất không giảm mà vẫn bị
+  // gạch giá bằng chính nó (do có biến thể khác đang sale).
+  const rawOldPrice = showSale
     ? priceRange.compare_at ?? (hasSale ? priceRange.regular_min : null) ?? null
     : null;
+  const oldPrice =
+    rawOldPrice != null && Number(rawOldPrice) > Number(currentPrice) ? rawOldPrice : null;
   const ratingCount = product.rating_count ?? product.rating?.count ?? 0;
   const ratingValue = Math.round(product.rating_average ?? product.rating?.average ?? 0);
   const href = `/shop/${product.slug}`;
-  // Ưu tiên badge truyền vào, nếu không thì tự gắn "Sale" khi có giá khuyến mãi.
-  const badgeLabel = badge ?? (showSale && hasSale ? "Sale" : null);
+  // Badge "Sale" bám theo giá gạch thật của biến thể hiển thị, không theo has_sale chung.
+  const badgeLabel = badge ?? (showSale && oldPrice != null ? "Sale" : null);
   const soldQuantity = product.sold_quantity ?? product.soldQuantity ?? 0;
 
   return (

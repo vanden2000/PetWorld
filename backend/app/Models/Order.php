@@ -27,6 +27,7 @@ class Order extends Model
         'order_status',
         'total_amount',
         'payment_status',
+        'expires_at',
         'note',
     ];
 
@@ -34,7 +35,24 @@ class Order extends Model
         'shipping_fee' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'expires_at' => 'datetime',
     ];
+
+    /**
+     * Số phút hiệu lực của mã QR chuyển khoản. Khớp với đồng hồ đếm ngược ở frontend.
+     */
+    public const PAYMENT_WINDOW_MINUTES = 15;
+
+    /**
+     * Đơn thanh toán bằng chuyển khoản (mới cần webhook SePay + hạn thanh toán).
+     * Nhận diện qua tên phương thức giống hệt frontend ("chuyển khoản").
+     */
+    public function isBankTransfer(): bool
+    {
+        $name = mb_strtolower($this->paymentMethod?->name ?? '');
+
+        return str_contains($name, 'chuyển khoản');
+    }
 
     public function voucher(): BelongsTo
     {
@@ -69,5 +87,45 @@ class Order extends Model
     public function sepayTransactions(): HasMany
     {
         return $this->hasMany(SepayTransaction::class);
+    }
+
+    /**
+     * Hủy đơn và hoàn lại kho + voucher đã giữ chỗ lúc đặt hàng.
+     * PHẢI gọi bên trong DB::transaction và đơn đã được lockForUpdate,
+     * để tránh trừ/hoàn kho trùng khi nhiều tiến trình chạy song song.
+     * Dùng chung cho hủy tay (OrderController@cancel) và tự hủy hết hạn (command).
+     */
+    public function restockAndMarkCancelled(): void
+    {
+        $items = $this->items()->get();
+        $variantIds = $items->pluck('product_variant_id')->filter()->unique()->values();
+
+        $variants = ProductVariant::query()
+            ->whereIn('id', $variantIds)
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        foreach ($items as $item) {
+            $variants->get($item->product_variant_id)?->increment('quantity', $item->quantity);
+        }
+
+        $this->update(['order_status' => 'cancelled']);
+
+        // Mở lại voucher về 'active' nếu trước đó bị khóa 'expired' mà nay còn lượt dùng.
+        if ($this->voucher_id) {
+            $voucher = Voucher::query()
+                ->lockForUpdate()
+                ->find($this->voucher_id);
+            if ($voucher && $voucher->status === 'expired' && (int) $voucher->usage_limit > 0) {
+                $usedOrders = $voucher->orders()
+                    ->where('order_status', '<>', 'cancelled')
+                    ->whereKeyNot($this->id)
+                    ->count();
+                if ($usedOrders < (int) $voucher->usage_limit) {
+                    $voucher->update(['status' => 'active']);
+                }
+            }
+        }
     }
 }

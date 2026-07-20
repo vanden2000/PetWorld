@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\OrderConfirmationMail;
 use App\Models\Address;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
 use Illuminate\Http\JsonResponse;
@@ -91,6 +92,7 @@ class OrderController extends Controller
                     'payment_code' => $order->payment_code,
                     'status' => $order->order_status,
                     'payment_status' => $order->payment_status,
+                    'expires_at' => $order->expires_at?->toIso8601String(),
                     'created_at' => $order->created_at?->toIso8601String(),
                     'updated_at' => $order->updated_at?->toIso8601String(),
                     'recipient' => [
@@ -147,36 +149,8 @@ class OrderController extends Controller
                 abort(409, 'Đơn hàng đã thanh toán không thể tự hủy. Vui lòng liên hệ PetWorld.');
             }
 
-            $items = $lockedOrder->items()->get();
-            $variantIds = $items->pluck('product_variant_id')->filter()->unique()->values();
-
-            $variants = ProductVariant::query()
-                ->whereIn('id', $variantIds)
-                ->lockForUpdate()
-                ->get()
-                ->keyBy('id');
-
-            foreach ($items as $item) {
-                $variants->get($item->product_variant_id)?->increment('quantity', $item->quantity);
-            }
-
-            $lockedOrder->update(['order_status' => 'cancelled']);
-
-            // Nếu đơn hàng có voucher và voucher đang ở trạng thái 'expired', tự động mở lại thành 'active' nếu còn lượt dùng
-            if ($lockedOrder->voucher_id) {
-                $voucher = \App\Models\Voucher::query()
-                    ->lockForUpdate()
-                    ->find($lockedOrder->voucher_id);
-                if ($voucher && $voucher->status === 'expired' && (int) $voucher->usage_limit > 0) {
-                    $usedOrders = $voucher->orders()
-                        ->where('order_status', '<>', 'cancelled')
-                        ->whereKeyNot($lockedOrder->id)
-                        ->count();
-                    if ($usedOrders < (int) $voucher->usage_limit) {
-                        $voucher->update(['status' => 'active']);
-                    }
-                }
-            }
+            // Hoàn kho + mở lại voucher rồi đánh dấu hủy (logic dùng chung với command tự hủy hết hạn).
+            $lockedOrder->restockAndMarkCancelled();
 
             return $lockedOrder->refresh();
         });
@@ -196,6 +170,50 @@ class OrderController extends Controller
                     'id' => $cancelledOrder->id,
                     'status' => $cancelledOrder->order_status,
                     'updated_at' => $cancelledOrder->updated_at?->toIso8601String(),
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Tạo lại mã QR: gia hạn hiệu lực thanh toán cho đơn chuyển khoản còn đang chờ.
+     * Giữ nguyên mã PW{id} (khách vẫn chuyển đúng nội dung cũ), chỉ đẩy lại expires_at.
+     * Đơn đã bị hủy (hết hạn) không mở lại được — kho đã hoàn, khách cần đặt đơn mới.
+     */
+    public function renewPayment(Request $request, Order $order): JsonResponse
+    {
+        abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
+
+        $renewed = DB::transaction(function () use ($order): Order {
+            $lockedOrder = Order::query()
+                ->whereKey($order->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($lockedOrder->payment_status === 'paid') {
+                abort(409, 'Đơn hàng đã được thanh toán.');
+            }
+
+            if ($lockedOrder->order_status !== 'pending') {
+                abort(409, 'Đơn hàng đã hết hạn thanh toán. Vui lòng đặt lại đơn mới.');
+            }
+
+            $lockedOrder->update([
+                'expires_at' => now()->addMinutes(Order::PAYMENT_WINDOW_MINUTES),
+            ]);
+
+            return $lockedOrder->refresh();
+        });
+
+        return response()->json([
+            'message' => 'Đã gia hạn thời gian thanh toán.',
+            'data' => [
+                'order' => [
+                    'id' => $renewed->id,
+                    'payment_code' => $renewed->payment_code,
+                    'payment_status' => $renewed->payment_status,
+                    'status' => $renewed->order_status,
+                    'expires_at' => $renewed->expires_at?->toIso8601String(),
                 ],
             ],
         ]);
@@ -228,7 +246,11 @@ class OrderController extends Controller
             ->where('status', 'active')
             ->findOrFail($data['shipping_method_id']);
 
-        $order = DB::transaction(function () use ($request, $data, $address, $shippingMethod): Order {
+        // Đơn chuyển khoản cần hạn thanh toán (quá hạn sẽ bị command tự hủy + hoàn kho).
+        $paymentMethod = PaymentMethod::findOrFail($data['payment_method_id']);
+        $isBankTransfer = str_contains(mb_strtolower($paymentMethod->name), 'chuyển khoản');
+
+        $order = DB::transaction(function () use ($request, $data, $address, $shippingMethod, $isBankTransfer): Order {
             $quantities = [];
             foreach ($data['items'] as $item) {
                 // Gộp số lượng nếu client gửi trùng variant.
@@ -317,6 +339,7 @@ class OrderController extends Controller
                 'order_status' => 'pending',
                 'total_amount' => max(0.0, $subtotal + $shippingFee - $discountAmount),
                 'payment_status' => 'unpaid',
+                'expires_at' => $isBankTransfer ? now()->addMinutes(Order::PAYMENT_WINDOW_MINUTES) : null,
                 'note' => $data['note'] ?? null,
             ]);
 
@@ -377,6 +400,7 @@ class OrderController extends Controller
             'total_amount' => (float) $order->total_amount,
             'order_status' => $order->order_status,
             'payment_status' => $order->payment_status,
+            'expires_at' => $order->expires_at?->toIso8601String(),
             'note' => $order->note,
             'created_at' => $order->created_at?->toDateTimeString(),
             'items' => $order->items->map(fn($item): array => [
