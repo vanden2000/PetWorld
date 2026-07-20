@@ -48,7 +48,7 @@ export default function HeroSlider({ banners = [] }) {
   const activeIndex = Math.min(currentIndex, banners.length - 1);
 
   return (
-    <section className="homepage-section">
+    <section className="homepage-section hero-slider-section">
       <div
         className="hero-slider"
         onMouseEnter={() => setIsPaused(true)}
@@ -78,9 +78,18 @@ export default function HeroSlider({ banners = [] }) {
                   className="slide-img"
                   fill
                   priority={index === 0}
-                  sizes="(max-width: 1340px) calc(100vw - 40px), 1300px"
+                  sizes="100vw"
                 />
               </a>
+              {(slide.image.includes("petworld-hero") || slide.id === 1) && (
+                <a
+                  href="/shop?service=kiem-tra-suc-khoe"
+                  className="slide-btn-overlay"
+                  tabIndex={index === activeIndex ? 0 : -1}
+                >
+                  Đặt lịch kiểm tra
+                </a>
+              )}
             </div>
           ))}
         </div>

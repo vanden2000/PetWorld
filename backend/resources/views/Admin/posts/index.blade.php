@@ -56,7 +56,21 @@
                 @forelse($posts as $post)
                     <tr>
                         <td>
-                            <img src="{{ $post->image ? (filter_var($post->image, FILTER_VALIDATE_URL) ? $post->image : (str_starts_with($post->image, 'storage/') ? asset($post->image) : asset('storage/' . $post->image))) : asset('images/default-blog.jpg') }}" 
+                            @php
+                                $postImageUrl = asset('images/default-blog.jpg');
+                                if ($post->image) {
+                                    if (filter_var($post->image, FILTER_VALIDATE_URL)) {
+                                        $postImageUrl = $post->image;
+                                    } elseif (str_starts_with($post->image, 'uploads/') || str_starts_with($post->image, 'image/')) {
+                                        $postImageUrl = asset($post->image);
+                                    } elseif (str_starts_with($post->image, 'storage/')) {
+                                        $postImageUrl = asset($post->image);
+                                    } else {
+                                        $postImageUrl = asset('storage/' . $post->image);
+                                    }
+                                }
+                            @endphp
+                            <img src="{{ $postImageUrl }}" 
                                  alt="{{ $post->title }}" 
                                  style="width: 64px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #ebdcd0;">
                         </td>

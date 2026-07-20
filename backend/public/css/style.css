@@ -56,6 +56,39 @@
             z-index: 100;
         }
 
+        .sidebar-nav {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            /* Firefox scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+            transition: scrollbar-color 0.2s ease;
+        }
+
+        .sidebar-nav:hover {
+            scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+        }
+
+        /* Webkit scrollbar styling */
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .sidebar-nav:hover::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.25);
+        }
+
         .brand {
             display: flex;
             align-items: center;

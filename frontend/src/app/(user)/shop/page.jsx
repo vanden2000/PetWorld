@@ -10,10 +10,10 @@ export const metadata = {
 
 export default async function ShopPage({ searchParams }) {
   // Next 16: searchParams là promise, phải await trước khi đọc.
-  const { category = "", brand = "", search, sort = "newest", min_price = "", max_price = "", page } =
+  const { category = "", pet = "", brand = "", search, sort = "newest", min_price = "", max_price = "", page } =
     await searchParams;
 
-  const data = await getProducts({ category, brand, search, sort, min_price, max_price, page });
+  const data = await getProducts({ category, pet, brand, search, sort, min_price, max_price, page });
 
   const {
     title = "Tất cả sản phẩm",
@@ -32,6 +32,7 @@ export default async function ShopPage({ searchParams }) {
   const pageHref = (targetPage) => {
     const query = new URLSearchParams();
     if (category) query.set("category", category);
+    if (pet) query.set("pet", pet);
     if (brand) query.set("brand", brand);
     if (search) query.set("search", search);
     if (sort) query.set("sort", sort);
@@ -53,9 +54,11 @@ export default async function ShopPage({ searchParams }) {
         <div className="shop-layout">
           <ShopSidebar
             categories={filters.categories ?? []}
+            petSpecies={filters.pet_species ?? []}
             brands={filters.brands ?? []}
             priceMax={filters.price?.max ?? 2000000}
             selectedCategory={category}
+            selectedPet={pet}
             selectedBrands={selectedBrands}
             minPrice={min_price}
             maxPrice={max_price}
@@ -69,7 +72,7 @@ export default async function ShopPage({ searchParams }) {
               <ShopSort
                 options={sort_options}
                 value={sort}
-                query={{ category, brand, search, min_price, max_price }}
+                query={{ category, pet, brand, search, min_price, max_price }}
               />
             </div>
 

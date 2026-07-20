@@ -11,6 +11,7 @@ use App\Models\ProductImage;
 use App\Models\ProductSlugHistory;
 use App\Models\VariantType;
 use App\Models\VariantValue;
+use App\Models\PetSpecies;
 use App\Queries\AdminProductQuery;
 use App\Support\ProductDescriptionSanitizer;
 use Illuminate\Http\Request;
@@ -108,6 +109,7 @@ class ProductController extends Controller
         $product->setRelation('primaryImage', null);
         $productVariantRows = [];
         $isCreate = true;
+        $petSpecies = PetSpecies::where('is_active', true)->orderBy('name')->get();
 
         return view('admin.products.create', compact(
             'categories',
@@ -117,12 +119,14 @@ class ProductController extends Controller
             'product',
             'productVariantRows',
             'isCreate',
+            'petSpecies',
         ));
     }
 
     public function store(Request $request)
     {
         $validated = $this->validateProduct($request);
+        $this->validateSpeciesLifeStages($validated);
 
         $product = DB::transaction(function () use ($request, $validated) {
             $product = Product::create([
@@ -132,16 +136,20 @@ class ProductController extends Controller
                 'brand_id' => $validated['brand_id'],
                 'description' => $this->descriptionSanitizer->sanitize($validated['description'] ?? null),
                 'short_description' => $this->cleanSeoText($validated['short_description'] ?? null),
+                'focus_keyword' => $this->cleanSeoText($validated['focus_keyword'] ?? null),
+                'advice_attributes' => $this->adviceAttributes($validated),
                 'seo_title' => $this->cleanSeoText($validated['seo_title'] ?? null),
                 'seo_description' => $this->cleanSeoText($validated['seo_description'] ?? null),
                 'status' => 'active',
             ]);
 
             $this->syncSubmittedVariants($request, $product, $validated);
+            $product->petSpecies()->sync($validated['pet_species_ids'] ?? []);
 
-            // storeImages performs file system operations and creates image records.
-            // Keeping it inside the DB transaction ensures DB changes rollback on failure.
-            $this->storeImages($request, $product);
+            // Use the same metadata-aware image workflow as product updates so
+            // alt text, primary image and sort order are persisted on first create.
+            $imageChanges = $this->validateImageChanges($request, $product);
+            $this->syncImages($product, $imageChanges);
 
             return $product;
         });
@@ -304,7 +312,8 @@ class ProductController extends Controller
             'value_ids' => $variant->variantValues->pluck('id')->values()->all(),
         ])->all();
 
-        return view('admin.products.edit', compact('product', 'categories', 'brands', 'variantTypes', 'variantTypeOptions', 'productVariantRows'));
+        $petSpecies = PetSpecies::where('is_active', true)->orderBy('name')->get();
+        return view('admin.products.edit', compact('product', 'categories', 'brands', 'variantTypes', 'variantTypeOptions', 'productVariantRows', 'petSpecies'));
     }
 
     public function update(Request $request, $id)
@@ -312,6 +321,7 @@ class ProductController extends Controller
         $product = Product::with('variants')->findOrFail($id);
         $firstVariant = $product->variants->first();
         $validated = $this->validateProduct($request, $firstVariant?->id, $product);
+        $this->validateSpeciesLifeStages($validated);
         $imageChanges = $this->validateImageChanges($request, $product);
         $slug = $this->uniqueSlug($validated['slug'] ?? $validated['name'], $product->id);
 
@@ -335,9 +345,12 @@ class ProductController extends Controller
                 'brand_id' => $validated['brand_id'],
                 'description' => $this->descriptionSanitizer->sanitize($validated['description'] ?? null),
                 'short_description' => $this->cleanSeoText($validated['short_description'] ?? null),
+                'focus_keyword' => $this->cleanSeoText($validated['focus_keyword'] ?? null),
+                'advice_attributes' => $this->adviceAttributes($validated),
                 'seo_title' => $this->cleanSeoText($validated['seo_title'] ?? null),
                 'seo_description' => $this->cleanSeoText($validated['seo_description'] ?? null),
             ]);
+            $product->petSpecies()->sync($validated['pet_species_ids'] ?? []);
 
             if ($this->hasSubmittedVariants($request)) {
                 $this->syncSubmittedVariants($request, $product, $validated);
@@ -401,8 +414,19 @@ class ProductController extends Controller
             'quantity' => $baseRequirement . '|integer|min:0',
             'description' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
+            'focus_keyword' => 'nullable|string|max:120',
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string|max:320',
+            'advice_pet_types' => 'nullable|array|max:2',
+            'advice_pet_types.*' => 'in:cat,dog',
+            'advice_life_stages' => 'nullable|array|max:5',
+            'advice_life_stages.*' => 'in:kitten,puppy,adult,senior,all_life_stages',
+            'advice_product_types' => 'nullable|array|max:6',
+            'advice_product_types.*' => 'in:dry_food,wet_food,treat,toy,litter,accessory',
+            'advice_needs' => 'nullable|array|max:6',
+            'advice_needs.*' => 'in:daily_nutrition,picky_eater,skin_coat,weight_control,dental,indoor',
+            'pet_species_ids' => 'nullable|array|max:10',
+            'pet_species_ids.*' => 'integer|exists:pet_species,id',
             'variants' => 'nullable|array',
             'variants.*.id' => 'nullable|integer|exists:product_variants,id',
             'variants.*.sku' => 'nullable|string|max:255',
@@ -497,6 +521,39 @@ class ProductController extends Controller
         }
 
         return $validated;
+    }
+
+    private function adviceAttributes(array $validated): array
+    {
+        return array_filter([
+            'pet_types' => array_values($validated['advice_pet_types'] ?? []),
+            'life_stages' => array_values($validated['advice_life_stages'] ?? []),
+            'product_types' => array_values($validated['advice_product_types'] ?? []),
+            'needs' => array_values($validated['advice_needs'] ?? []),
+        ], fn (array $values) => $values !== []);
+    }
+
+    private function validateSpeciesLifeStages(array $validated): void
+    {
+        $speciesIds = $validated['pet_species_ids'] ?? [];
+        $lifeStages = $validated['advice_life_stages'] ?? [];
+
+        if ($speciesIds === [] || $lifeStages === []) {
+            return;
+        }
+
+        $slugs = PetSpecies::query()
+            ->whereIn('id', $speciesIds)
+            ->pluck('slug')
+            ->all();
+        $onlyCats = in_array('cat', $slugs, true) && !in_array('dog', $slugs, true);
+        $onlyDogs = in_array('dog', $slugs, true) && !in_array('cat', $slugs, true);
+
+        if (($onlyCats && in_array('puppy', $lifeStages, true)) || ($onlyDogs && in_array('kitten', $lifeStages, true))) {
+            throw ValidationException::withMessages([
+                'advice_life_stages' => 'Độ tuổi phù hợp chưa khớp với loài thú cưng đã chọn.',
+            ]);
+        }
     }
 
     private function syncSubmittedVariants(Request $request, Product $product, array $fallback): void
@@ -624,33 +681,6 @@ class ProductController extends Controller
             ->all();
     }
 
-    private function storeImages(Request $request, Product $product): void
-    {
-        if (!$request->hasFile('images')) {
-            return;
-        }
-
-        $hasPrimary = $product->images()->where('is_primary', true)->exists();
-
-        foreach ($request->file('images') as $image) {
-            if (!$image->isValid()) {
-                continue;
-            }
-
-            $filename = $this->imageFilename($product, $image->extension());
-            Storage::disk('public')->putFileAs('products', $image, $filename);
-
-            ProductImage::create([
-                'product_id' => $product->id,
-                'image_url' => 'products/' . $filename,
-                'sort_order' => ((int) $product->images()->max('sort_order')) + 1,
-                'is_primary' => !$hasPrimary,
-            ]);
-
-            $hasPrimary = true;
-        }
-    }
-
     private function validateImageChanges(Request $request, Product $product): array
     {
         $deletedIds = collect($request->input('deleted_image_ids', []))
@@ -732,6 +762,34 @@ class ProductController extends Controller
             ]);
         }
 
+        $altPayload = json_decode((string) $request->input('image_alt_payload', '[]'), true);
+        if (! is_array($altPayload)) {
+            throw ValidationException::withMessages([
+                'image_alt_payload' => 'Dữ liệu mô tả ảnh không hợp lệ.',
+            ]);
+        }
+
+        $payloadAltTexts = collect($altPayload)
+            ->filter(fn ($item): bool => is_array($item) && isset($item['token']))
+            ->mapWithKeys(fn (array $item): array => [(string) $item['token'] => $item['alt_text'] ?? null]);
+        $allowedTokens = $expectedOrder->flip();
+
+        if ($payloadAltTexts->keys()->diff($allowedTokens->keys())->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'image_alt_payload' => 'Dữ liệu mô tả ảnh không hợp lệ.',
+            ]);
+        }
+
+        $payloadAltTexts->each(function ($altText, string $token) use ($existingAltTexts, $newAltTexts): void {
+            if (str_starts_with($token, 'existing:')) {
+                $existingAltTexts->put((int) Str::after($token, 'existing:'), $altText);
+            }
+
+            if (str_starts_with($token, 'new:')) {
+                $newAltTexts->put(Str::after($token, 'new:'), $altText);
+            }
+        });
+
         return compact(
             'imagesToDelete',
             'newImages',
@@ -790,9 +848,13 @@ class ProductController extends Controller
                     $product->images()->whereKey($primaryId)->update(['is_primary' => true]);
                 }
 
+                // Do not use Collection::merge here: an empty collection can
+                // reindex the token map and make every image lookup fail.
                 $imagesByToken = $remaining
-                    ->mapWithKeys(fn (ProductImage $image): array => ["existing:{$image->id}" => $image])
-                    ->merge($createdImages->mapWithKeys(fn (ProductImage $image, string $key): array => ["new:{$key}" => $image]));
+                    ->mapWithKeys(fn (ProductImage $image): array => ["existing:{$image->id}" => $image]);
+                $createdImages->each(function (ProductImage $image, string $key) use ($imagesByToken): void {
+                    $imagesByToken->put("new:{$key}", $image);
+                });
                 $orderedTokens = $changes['imageOrder']
                     ->filter(fn (string $token): bool => str_starts_with($token, 'existing:'))
                     ->merge($changes['imageOrder']->filter(fn (string $token): bool => str_starts_with($token, 'new:')))

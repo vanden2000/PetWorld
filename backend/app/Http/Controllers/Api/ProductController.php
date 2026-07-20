@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductSlugHistory;
 use App\Models\ProductVariant;
+use App\Models\PetSpecies;
 use App\Models\Review;
 use App\Models\VariantValue;
 use Illuminate\Database\Eloquent\Builder;
@@ -173,6 +174,11 @@ class ProductController extends Controller
             $brandSlugs = $this->csvValues($request->query('brand'));
 
             $query->whereHas('brand', fn(Builder $brand) => $brand->whereIn('slug', $brandSlugs));
+        }
+
+        if ($request->filled('pet')) {
+            $speciesSlugs = $this->csvValues($request->query('pet'));
+            $query->whereHas('petSpecies', fn (Builder $species) => $species->whereIn('slug', $speciesSlugs));
         }
 
         if ($request->filled('min_price') || $request->filled('max_price')) {
@@ -389,6 +395,7 @@ class ProductController extends Controller
         $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
             'category' => ['nullable', $this->listQueryRule(maxItems: 20, maxItemLength: 100)],
+            'pet' => ['nullable', $this->listQueryRule(maxItems: 10, maxItemLength: 100)],
             'brand' => ['nullable', $this->listQueryRule(maxItems: 20, maxItemLength: 100)],
             'min_price' => ['nullable', 'numeric', 'min:0'],
             'max_price' => [
@@ -460,6 +467,7 @@ class ProductController extends Controller
     private function formatFilters(): array
     {
         return [
+            'pet_species' => PetSpecies::query()->where('is_active', true)->withCount(['products as product_count' => fn (Builder $products) => $this->onlyStorefrontProducts($products)])->orderBy('name')->get()->map(fn (PetSpecies $species) => ['id' => $species->id, 'name' => $species->name, 'slug' => $species->slug, 'product_count' => (int) $species->product_count])->all(),
             'categories' => Category::query()
                 ->withCount([
                     'products as product_count' => fn(Builder $products) => $this->onlyStorefrontProducts($products),

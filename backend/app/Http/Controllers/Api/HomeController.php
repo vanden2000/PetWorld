@@ -85,6 +85,7 @@ class HomeController extends Controller
     private function formatBanners(): array
     {
         return Banner::query()
+            ->where('status', 'active')
             ->latest('created_at')
             ->get(['id', 'image', 'link', 'description'])
             ->map(fn(Banner $banner): array => [

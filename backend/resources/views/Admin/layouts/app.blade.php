@@ -32,7 +32,7 @@
         </a>
 
         <!-- Menu items -->
-        <nav style="flex-grow: 1;">
+        <nav class="sidebar-nav">
             <ul class="menu-list">
                 <li>
                     <a href="{{ route('admin.dashboard') }}" class="menu-item-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -132,6 +132,12 @@
                         <span>Voucher</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('admin.banners') }}" class="menu-item-link {{ request()->routeIs('admin.banners*') ? 'active' : '' }}">
+                        <i class="fa-regular fa-image"></i>
+                        <span>Banner Trang Chủ</span>
+                    </a>
+                </li>
                 <li class="menu-item-dropdown {{ request()->routeIs('admin.posts*') || request()->routeIs('admin.blog-comments*') ? 'open' : '' }}">
                     <a href="{{ route('admin.posts') }}" class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.posts*') || request()->routeIs('admin.blog-comments*') ? 'active' : '' }}">
                         <i class="fa-solid fa-newspaper"></i>
@@ -142,6 +148,11 @@
                         <li><a href="{{ route('admin.posts') }}" class="submenu-item-link {{ request()->routeIs('admin.posts') ? 'active' : '' }}"><i class="fa-solid fa-list-ul"></i><span>Danh sách bài viết</span></a></li>
                         <li><a href="{{ route('admin.blog-comments') }}" class="submenu-item-link {{ request()->routeIs('admin.blog-comments*') ? 'active' : '' }}"><i class="fa-solid fa-comments"></i><span>Quản lý bình luận</span></a></li>
                     </ul>
+                </li>
+                <li>
+                    <a href="{{ route('admin.knowledge') }}" class="menu-item-link {{ request()->routeIs('admin.knowledge*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-book-open"></i><span>Kiến thức chatbot</span>
+                    </a>
                 </li>
                 <li class="menu-item-dropdown {{ request()->routeIs('admin.reports*') ? 'open' : '' }}">
                     <a href="#" class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">

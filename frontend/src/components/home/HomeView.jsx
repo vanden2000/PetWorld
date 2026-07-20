@@ -22,16 +22,18 @@ export default function HomeView({ initialData }) {
   // Không lấy sản phẩm danh mục khác làm fallback khi danh mục phụ kiện bị tắt.
   const accessoryProducts = new_accessories;
 
-  return <main className="main-content"><div className="homepage-container">
-    <HeroSlider banners={banners} />
-    <CategorySection categories={categories} />
-    <ProductSection title="Sản Phẩm Bán Chạy" products={featured_products} columns={5} limit={8} isSlider showSoldCount showSale={false} />
-    <TrustBadges />
-    <NewProductsSplit products={newProducts} />
-    <AccessoriesPromo products={accessoryProducts} />
-    <ShopCtaBanner />
-    <BestSellingTabs groups={products_by_categories} title="Sản Phẩm Khuyến Mãi" />
-    <BlogSection blogs={latest_blogs} />
-    <BrandSection brands={brands} />
-  </div></main>;
+  return <main className="main-content homepage-main">
+    <div className="homepage-container">
+      <HeroSlider banners={banners} />
+      <CategorySection categories={categories} />
+      <ProductSection title="Sản Phẩm Bán Chạy" products={featured_products} columns={5} limit={8} isSlider showSoldCount showSale={false} />
+      <TrustBadges />
+      <NewProductsSplit products={newProducts} />
+      <AccessoriesPromo products={accessoryProducts} />
+      <ShopCtaBanner />
+      <BestSellingTabs groups={products_by_categories} title="Sản Phẩm Khuyến Mãi" />
+      <BlogSection blogs={latest_blogs} />
+      <BrandSection brands={brands} />
+    </div>
+  </main>;
 }

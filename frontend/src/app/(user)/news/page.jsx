@@ -56,9 +56,9 @@ export default async function NewsPage({ searchParams }) {
       <div className="homepage-container">
         {/* Breadcrumb */}
         <nav className="shop-breadcrumb">
-          <Link href="/">Trang chủ</Link> /
-          <span className="shop-breadcrumb-sep">
-            <span className="shop-breadcrumb-current">Tin tức</span></span>
+          <Link href="/">Trang chủ</Link>
+          <span className="shop-breadcrumb-sep">›</span>
+          <span className="shop-breadcrumb-current">Tin tức</span>
         </nav>
 
         {/* Banner theo thiết kế Figma */}

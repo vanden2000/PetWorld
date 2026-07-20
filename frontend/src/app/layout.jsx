@@ -1,8 +1,24 @@
+import { Inter, Playfair_Display, Caveat } from "next/font/google";
 import "./globals.css";
 import { resolveBackendImage } from "@/lib/format";
 
-// Use a local/system font stack so dev and build do not depend on Google Fonts.
-const fontStack = '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+const inter = Inter({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  variable: "--font-caveat",
+  display: "swap",
+});
 
 export const metadata = {
   title: "PetWorld - Siêu Thị Thú Cưng Hàng Đầu | Thức Ăn & Phụ Kiện Chính Hãng",
@@ -14,7 +30,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="vi" style={{ "--font-inter": fontStack }}>
+    <html lang="vi" className={`${inter.variable} ${playfair.variable} ${caveat.variable}`}>
       <link rel="icon" type="image/x-icon" href={resolveBackendImage("logo/logo.png")} />
       <body>{children}</body>
     </html>

@@ -25,9 +25,11 @@ function CatIcon() {
  */
 export default function ShopSidebar({
   categories = [],
+  petSpecies = [],
   brands = [],
   priceMax = 2000000,
   selectedCategory = "",
+  selectedPet = "",
   selectedBrands = [],
   minPrice = "",
   maxPrice = "",
@@ -40,10 +42,12 @@ export default function ShopSidebar({
   const [isOpen, setIsOpen] = useState(false);
 
   // Dựng URL mới từ các lựa chọn rồi điều hướng (luôn về trang 1).
-  const navigate = ({ category, brandsValue, minValue, maxValue }) => {
+  const navigate = ({ category, pet, brandsValue, minValue, maxValue }) => {
     const query = new URLSearchParams();
     const cat = category !== undefined ? category : selectedCategory;
     if (cat) query.set("category", cat);
+    const petValue = pet !== undefined ? pet : selectedPet;
+    if (petValue) query.set("pet", petValue);
 
     const brandList = brandsValue !== undefined ? brandsValue : [...brandSet];
     if (brandList.length) query.set("brand", brandList.join(","));
@@ -84,6 +88,7 @@ export default function ShopSidebar({
       </button>
 
       <div className="shop-sidebar-content">
+        {petSpecies.length > 0 && <div className="shop-filter-group"><h3 className="shop-filter-label">Loài thú cưng</h3><ul className="shop-cat-list"><li><button type="button" className={`shop-cat-item ${!selectedPet ? "active" : ""}`} onClick={() => navigate({ pet: "" })}><CatIcon /><span>Tất cả loài</span></button></li>{petSpecies.map((species) => <li key={species.id}><button type="button" className={`shop-cat-item ${selectedPet === species.slug ? "active" : ""}`} onClick={() => navigate({ pet: species.slug })}><CatIcon /><span>{species.name}</span></button></li>)}</ul></div>}
         <div className="shop-sidebar-head">
           <h2 className="shop-sidebar-title">Bộ lọc tìm kiếm</h2>
           <p className="shop-sidebar-sub">Tối ưu lựa chọn cho Pet cưng</p>

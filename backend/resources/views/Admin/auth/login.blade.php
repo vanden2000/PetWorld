@@ -367,7 +367,7 @@
                     <div class="input-icon-wrapper">
                         <i class="fa-regular fa-envelope input-icon"></i>
                         <input type="email" id="email" name="email" class="input-field" 
-                               placeholder="admin@petworld.com" value="{{ old('email', 'admin@petworld.com') }}" required autofocus>
+                               placeholder="nguyenthediem2004@gmail.com" value="{{ old('email', 'nguyenthediem2004@gmail.com') }}" required autofocus>
                     </div>
                 </div>
 
@@ -378,7 +378,7 @@
                     <div class="input-icon-wrapper">
                         <i class="fa-solid fa-lock input-icon"></i>
                         <input type="password" id="password" name="password" class="input-field" 
-                               placeholder="••••••••" value="admin123" required style="padding-right: 40px;">
+                               placeholder="••••••••" value="123456" required style="padding-right: 40px;">
                         <button type="button" class="password-toggle" id="toggle-password" tabindex="-1">
                             <i class="fa-regular fa-eye-slash" id="eye-icon"></i>
                         </button>

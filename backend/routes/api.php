@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogController;
+use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CheckoutOptionController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
@@ -39,6 +40,8 @@ Route::prefix('forgot-password')->group(function () {
 
 // Gửi yêu cầu hỗ trợ từ trang Liên hệ (/contact) — chỉ gửi email, không lưu DB.
 Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])->middleware('throttle:5,1');
+Route::post('/chat', [ChatController::class, 'store'])->middleware('throttle:20,1');
+Route::get('/chat/{conversationId}', [ChatController::class, 'history'])->middleware('throttle:30,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -62,6 +65,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy']);
     Route::get('/vouchers', [\App\Http\Controllers\Api\VoucherController::class, 'index']);
     Route::post('/blogs/{slug}/comments', [BlogController::class, 'storeComment']);
+
+    // Notifications API routes
+    Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
 });
 
 Route::get('/home', HomeController::class);

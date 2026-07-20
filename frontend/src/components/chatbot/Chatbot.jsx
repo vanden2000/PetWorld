@@ -1,29 +1,64 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { API_BASE_URL } from "@/lib/api";
+import { formatPrice, resolveProductImage, useImageFallback } from "@/lib/format";
+import AddToCartButton from "@/components/product/AddToCartButton";
 
 const QUICK_QUESTIONS = [
-  "Tư vấn thức ăn",
-  "Kiểm tra đơn hàng",
-  "Chính sách đổi trả",
+  "Tìm thức ăn cho mèo dưới 200.000đ",
+  "Chính sách giao hàng",
+  "Theo dõi đơn hàng của tôi",
 ];
+const VISITOR_ID_KEY = "petworld_chat_visitor_id";
+const CONVERSATION_ID_KEY = "petworld_chat_conversation_id";
+const WELCOME_MESSAGE = {
+  id: "welcome",
+  sender: "bot",
+  text: "Chào bạn! Mình là trợ lý PetWorld. Mình có thể giúp tìm sản phẩm, giải đáp chính sách hoặc tra đơn hàng.",
+};
+
+function getVisitorId() {
+  const existingId = localStorage.getItem(VISITOR_ID_KEY);
+  if (existingId) return existingId;
+
+  const visitorId = crypto.randomUUID();
+  localStorage.setItem(VISITOR_ID_KEY, visitorId);
+  return visitorId;
+}
+
+function formatSuggestionPrice(price = {}) {
+  if (price.min === price.max || price.max === undefined || price.max === null) {
+    return formatPrice(price.min);
+  }
+
+  return `${formatPrice(price.min)} – ${formatPrice(price.max)}`;
+}
+
+function cleanChatText(text) {
+  // AI đôi khi trả Markdown nhưng hộp chat này hiển thị văn bản thuần.
+  return String(text || "")
+    .replace(/\*{1,3}/g, "")
+    .replace(/_{2}/g, "")
+    .replace(/^#{1,6}\s*/gm, "")
+    .trim();
+}
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([
-    {
-      id: "welcome",
-      sender: "bot",
-      text: "Xin chào! PetWorld có thể giúp gì cho bạn hôm nay?",
-    },
-  ]);
+  const [isSending, setIsSending] = useState(false);
+  const [messages, setMessages] = useState([WELCOME_MESSAGE]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [lastFailedMessage, setLastFailedMessage] = useState("");
+  const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const inputRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) inputRef.current?.focus();
 
-    // Cho phép đóng nhanh hộp chat bằng phím Escape.
     const handleEscape = (event) => {
       if (event.key === "Escape") setIsOpen(false);
     };
@@ -32,26 +67,117 @@ export default function Chatbot() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen]);
 
-  const sendMessage = (text) => {
-    const content = text.trim();
-    if (!content) return;
+  useEffect(() => {
+    if (!isOpen || hasLoadedHistory) return;
 
-    // Đây là phản hồi tạm thời ở frontend; có thể thay bằng API chatbot sau này.
-    setMessages((current) => [
-      ...current,
-      { id: `user-${Date.now()}`, sender: "user", text: content },
-      {
-        id: `bot-${Date.now()}`,
-        sender: "bot",
-        text: "Mình đã ghi nhận câu hỏi. Nhân viên PetWorld sẽ hỗ trợ bạn sớm nhất nhé!",
-      },
-    ]);
+    const conversationId = localStorage.getItem(CONVERSATION_ID_KEY);
+    if (!conversationId) {
+      setHasLoadedHistory(true);
+      return;
+    }
+
+    const loadHistory = async () => {
+      setIsLoadingHistory(true);
+      try {
+        const token = localStorage.getItem("petworld_token");
+        const response = await fetch(`${API_BASE_URL}/api/chat/${conversationId}?visitor_id=${encodeURIComponent(getVisitorId())}`, {
+          headers: { Accept: "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.message || "Không thể tải lại cuộc trò chuyện.");
+        const history = payload.data?.messages;
+        if (Array.isArray(history) && history.length) setMessages(history);
+      } catch {
+        // A stale browser ID must not prevent a customer from starting a new chat.
+        localStorage.removeItem(CONVERSATION_ID_KEY);
+      } finally {
+        setHasLoadedHistory(true);
+        setIsLoadingHistory(false);
+      }
+    };
+    loadHistory();
+  }, [hasLoadedHistory, isOpen]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, isSending]);
+
+  const sendMessage = async (text) => {
+    const content = text.trim();
+    if (!content || isSending || isLoadingHistory) return;
+
+    const userMessage = { id: `user-${Date.now()}`, sender: "user", text: content };
+    setMessages((current) => [...current, userMessage]);
     setMessage("");
+    setIsSending(true);
+    setLastFailedMessage("");
+
+    try {
+      const token = localStorage.getItem("petworld_token");
+      const conversationId = localStorage.getItem(CONVERSATION_ID_KEY);
+      const response = await fetch(`${API_BASE_URL}/api/chat`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          message: content,
+          visitor_id: getVisitorId(),
+          ...(conversationId ? { conversation_id: conversationId } : {}),
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.message || "PetWorld chưa thể phản hồi. Vui lòng thử lại sau.");
+      }
+
+      const data = payload.data;
+      if (!data?.message || !data?.conversation_id) {
+        throw new Error("PetWorld chưa nhận được phản hồi phù hợp. Vui lòng thử lại sau.");
+      }
+
+      localStorage.setItem(CONVERSATION_ID_KEY, data.conversation_id);
+      setMessages((current) => [
+        ...current,
+        {
+          id: `bot-${Date.now()}`,
+          sender: "bot",
+          text: data.message,
+          suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
+          orders: Array.isArray(data.orders) ? data.orders : [],
+          sources: Array.isArray(data.sources) ? data.sources : [],
+        },
+      ]);
+    } catch (error) {
+      setLastFailedMessage(content);
+      setMessages((current) => [
+        ...current,
+        {
+          id: `error-${Date.now()}`,
+          sender: "bot error",
+          text: error instanceof Error ? error.message : "Có lỗi xảy ra. Vui lòng thử lại sau.",
+        },
+      ]);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
     sendMessage(message);
+  };
+
+  const startNewConversation = () => {
+    if (isSending) return;
+    localStorage.removeItem(CONVERSATION_ID_KEY);
+    setMessages([WELCOME_MESSAGE]);
+    setLastFailedMessage("");
+    setHasLoadedHistory(true);
+    inputRef.current?.focus();
   };
 
   return (
@@ -72,57 +198,77 @@ export default function Chatbot() {
               <span><i aria-hidden="true" /> Đang trực tuyến</span>
             </div>
           </div>
-          <button
-            type="button"
-            className="chatbot-close"
-            onClick={() => setIsOpen(false)}
-            aria-label="Đóng hộp chat"
-          >
-            <span aria-hidden="true" />
-          </button>
+          <div className="chatbot-header-actions">
+            <button type="button" className="chatbot-reset" onClick={startNewConversation} disabled={isSending} aria-label="Bắt đầu cuộc trò chuyện mới">Mới</button>
+            <button type="button" className="chatbot-close" onClick={() => setIsOpen(false)} aria-label="Đóng hộp chat"><span aria-hidden="true" /></button>
+          </div>
         </header>
 
         <div className="chatbot-messages" aria-live="polite">
+          {isLoadingHistory && <p className="chatbot-history-loading">Đang tải cuộc trò chuyện…</p>}
           {messages.map((item) => (
-            <p className={`chatbot-message ${item.sender}`} key={item.id}>
-              {item.text}
-            </p>
+            <div className="chatbot-message-group" key={item.id}>
+              <p className={`chatbot-message ${item.sender}`}>{cleanChatText(item.text)}</p>
+              {item.suggestions?.length > 0 && (
+                <div className="chatbot-suggestions" aria-label="Sản phẩm gợi ý">
+                  {item.suggestions.map((product) => (
+                    <div className="chatbot-product-wrap" key={product.id}>
+                      <Link className="chatbot-product" href={product.url || `/shop/${product.slug}`}>
+                        <img src={resolveProductImage(product.image)} alt={product.image_alt || product.name} onError={useImageFallback} />
+                        <span>
+                          <strong>{product.name}</strong>
+                          <small>{formatSuggestionPrice(product.price)}</small>
+                          {product.match_reasons?.[0] && <em className="chatbot-product-match">{product.match_reasons[0]}</em>}
+                          <em>{product.stock_quantity > 0 ? `Còn ${product.stock_quantity} sản phẩm` : "Tạm hết hàng"}</em>
+                        </span>
+                      </Link>
+                      <div className="chatbot-product-actions">
+                        <AddToCartButton product={product} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {item.orders?.length > 0 && (
+                <div className="chatbot-orders" aria-label="Đơn hàng của bạn">
+                  {item.orders.map((order) => (
+                    <Link className="chatbot-order" href={order.url} key={order.id}>
+                      <strong>#{order.code}</strong>
+                      <span>{order.status} · {formatPrice(order.total_amount)}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+              {item.sources?.length > 0 && (
+                <div className="chatbot-sources" aria-label="Nguồn thông tin">
+                  {item.sources.map((source) => (
+                    <span className="chatbot-source" key={source.id}>Nguồn: {source.title}</span>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
+          {isSending && <p className="chatbot-message bot chatbot-typing">PetWorld đang trả lời…</p>}
+          {lastFailedMessage && !isSending && (
+            <button type="button" className="chatbot-retry" onClick={() => sendMessage(lastFailedMessage)}>Thử gửi lại</button>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         <div className="chatbot-quick-list" aria-label="Câu hỏi gợi ý">
           {QUICK_QUESTIONS.map((question) => (
-            <button type="button" key={question} onClick={() => sendMessage(question)}>
-              {question}
-            </button>
+            <button type="button" key={question} onClick={() => sendMessage(question)} disabled={isSending || isLoadingHistory}>{question}</button>
           ))}
         </div>
 
         <form className="chatbot-form" onSubmit={handleSubmit}>
           <label htmlFor="chatbot-message" className="sr-only">Nhập nội dung cần hỗ trợ</label>
-          <input
-            ref={inputRef}
-            id="chatbot-message"
-            type="text"
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-            placeholder="Nhập câu hỏi..."
-            autoComplete="off"
-          />
-          <button type="submit" disabled={!message.trim()} aria-label="Gửi tin nhắn">
-            Gửi
-          </button>
+          <input ref={inputRef} id="chatbot-message" type="text" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ví dụ: thức ăn cho mèo 2 tuổi" autoComplete="off" maxLength="1000" disabled={isSending || isLoadingHistory} />
+          <button type="submit" disabled={!message.trim() || isSending || isLoadingHistory} aria-label="Gửi tin nhắn">Gửi</button>
         </form>
       </section>
 
-      <button
-        type="button"
-        className="chatbot-toggle"
-        onClick={() => setIsOpen((current) => !current)}
-        aria-expanded={isOpen}
-        aria-controls="petworld-chatbot-panel"
-        aria-label={isOpen ? "Đóng hộp chat" : "Mở hộp chat hỗ trợ"}
-      >
+      <button type="button" className="chatbot-toggle" onClick={() => setIsOpen((current) => !current)} aria-expanded={isOpen} aria-controls="petworld-chatbot-panel" aria-label={isOpen ? "Đóng hộp chat" : "Mở hộp chat hỗ trợ"}>
         <span className="chatbot-bubble-icon" aria-hidden="true" />
         {!isOpen && <span className="chatbot-notification" aria-hidden="true">1</span>}
       </button>

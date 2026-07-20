@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\BlogCommentController;
+use App\Http\Controllers\Admin\KnowledgeArticleController;
 
 
 Route::get('/', fn() => response('PetWorld API'));
@@ -70,8 +71,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/brands/{id}', [BrandController::class, 'update'])
         ->name('brands.update');
 
-    Route::get('/banners', [BannerController::class, 'index'])
-        ->name('banners');
+    Route::get('/banners', [BannerController::class, 'index'])->name('banners');
+    Route::get('/banners/create', [BannerController::class, 'create'])->name('banners.create');
+    Route::post('/banners', [BannerController::class, 'store'])->name('banners.store');
+    Route::get('/banners/{id}/edit', [BannerController::class, 'edit'])->name('banners.edit');
+    Route::put('/banners/{id}', [BannerController::class, 'update'])->name('banners.update');
+    Route::delete('/banners/{id}', [BannerController::class, 'destroy'])->name('banners.destroy');
+    Route::patch('/banners/{id}/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggle-status');
 
     Route::get('/orders', [OrderController::class, 'index'])
         ->name('orders');
@@ -100,6 +106,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
     Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+
+    Route::get('/knowledge', [KnowledgeArticleController::class, 'index'])->name('knowledge');
+    Route::get('/knowledge/create', [KnowledgeArticleController::class, 'create'])->name('knowledge.create');
+    Route::post('/knowledge', [KnowledgeArticleController::class, 'store'])->name('knowledge.store');
+    Route::get('/knowledge/{article}/edit', [KnowledgeArticleController::class, 'edit'])->name('knowledge.edit');
+    Route::put('/knowledge/{article}', [KnowledgeArticleController::class, 'update'])->name('knowledge.update');
 
     Route::get('/products', [ProductController::class, 'index'])
         ->name('products');

@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isEmpty = quill.getText().trim() === '';
         descriptionInput.value = isEmpty ? '' : quill.getSemanticHTML();
         descriptionInput.dispatchEvent(new Event('input', { bubbles: true }));
+        window.dispatchEvent(new Event('petworld:seo-update'));
     };
 
     quill.on('text-change', syncDescription);
