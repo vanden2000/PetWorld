@@ -397,8 +397,16 @@ class OrderController extends Controller
             'paymentMethod:id,name',
         ]);
         try {
+            // Gửi email xác nhận đơn hàng cho khách hàng
             Mail::to($request->user()->email)
                 ->send(new OrderConfirmationMail($order));
+
+            // Gửi email thông báo đơn hàng mới cho admin/chủ cửa hàng qua env
+            $adminEmail = env('ADMIN_EMAIL', env('MAIL_FROM_ADDRESS'));
+            if ($adminEmail) {
+                Mail::to($adminEmail)
+                    ->send(new OrderConfirmationMail($order));
+            }
         } catch (Throwable $exception) {
             report($exception);
         }

@@ -8,7 +8,7 @@ const PAW_PATH =
 const PAW_CLASSES = ["paw-1", "paw-2", "paw-3", "paw-4", "paw-5", "paw-6", "paw-7", "paw-8"];
 
 const CUSTOMER_CARE_LINKS = [
-  "Chính sách trả",
+  "Chính sách đổi trả",
   "Hướng dẫn mua hàng",
   "Điều khoản bảo mật",
   "Tra cứu đơn hàng",
@@ -109,8 +109,8 @@ export default function Footer() {
           <h3 className="footer-title">Liên hệ với chúng tôi</h3>
           <ul className="footer-contact-list">
             <li>137 Bình Long, Bình Trị Đông, Hồ Chí Minh 70000, Việt Nam</li>
-            <li>+0982 561 41 24</li>
-            <li>contact@Swoopers.com</li>
+            <li>0332 477 689</li>
+            <li>petworldshopvv@gmail.com</li>
           </ul>
         </div>
 
