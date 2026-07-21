@@ -19,7 +19,7 @@ use App\Http\Controllers\Admin\BlogCommentController;
 use App\Http\Controllers\Admin\KnowledgeArticleController;
 
 
-Route::get('/', fn() => response('PetWorld API'));
+Route::get('/', fn() => response('XIn chào'));
 
 // Admin authentication routes
 Route::prefix('admin')->name('admin.')->group(function () {

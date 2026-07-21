@@ -6430,7 +6430,6 @@ body {
 /* Khối chi tiết + tại sao chọn */
 .pd-detail-row {
   display: grid;
-  grid-template-columns: 1.8fr 1fr;
   gap: 30px;
   margin-bottom: 30px;
 }
