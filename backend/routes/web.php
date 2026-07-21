@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\PetSpeciesController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
@@ -19,7 +20,7 @@ use App\Http\Controllers\Admin\BlogCommentController;
 use App\Http\Controllers\Admin\KnowledgeArticleController;
 
 
-Route::get('/', fn() => response('PetWorld API'));
+Route::get('/', fn() => response('XIn chào'));
 
 // Admin authentication routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -55,6 +56,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::put('/categories/{slug}', [CategoryController::class, 'update'])
         ->name('categories.update');
+
+    Route::get('/pet-species', [PetSpeciesController::class, 'index'])->name('pet-species');
+    Route::get('/pet-species/create', [PetSpeciesController::class, 'create'])->name('pet-species.create');
+    Route::post('/pet-species', [PetSpeciesController::class, 'store'])->name('pet-species.store');
+    Route::get('/pet-species/{petSpecies}/edit', [PetSpeciesController::class, 'edit'])->name('pet-species.edit');
+    Route::put('/pet-species/{petSpecies}', [PetSpeciesController::class, 'update'])->name('pet-species.update');
 
     Route::get('/brands', [BrandController::class, 'index'])
         ->name('brands');

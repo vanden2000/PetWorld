@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/format";
 const PRICE_STEP = 50000;
 
 // Icon đơn giản đứng trước mỗi danh mục cho giống mockup.
-function CatIcon() {
+function PawIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="4" r="2" />
@@ -88,11 +88,30 @@ export default function ShopSidebar({
       </button>
 
       <div className="shop-sidebar-content">
-        {petSpecies.length > 0 && <div className="shop-filter-group"><h3 className="shop-filter-label">Loài thú cưng</h3><ul className="shop-cat-list"><li><button type="button" className={`shop-cat-item ${!selectedPet ? "active" : ""}`} onClick={() => navigate({ pet: "" })}><CatIcon /><span>Tất cả loài</span></button></li>{petSpecies.map((species) => <li key={species.id}><button type="button" className={`shop-cat-item ${selectedPet === species.slug ? "active" : ""}`} onClick={() => navigate({ pet: species.slug })}><CatIcon /><span>{species.name}</span></button></li>)}</ul></div>}
         <div className="shop-sidebar-head">
           <h2 className="shop-sidebar-title">Bộ lọc tìm kiếm</h2>
           <p className="shop-sidebar-sub">Tối ưu lựa chọn cho Pet cưng</p>
         </div>
+
+        {petSpecies.length > 0 && (
+          <div className="shop-filter-group shop-species-filter">
+            <h3 className="shop-filter-label">Loài thú cưng</h3>
+            <ul className="shop-cat-list">
+              <li>
+                <button type="button" className={`shop-cat-item ${!selectedPet ? "active" : ""}`} onClick={() => navigate({ pet: "" })} aria-pressed={!selectedPet}>
+                  <PawIcon /><span>Tất cả loài</span>
+                </button>
+              </li>
+              {petSpecies.map((species) => (
+                <li key={species.id}>
+                  <button type="button" className={`shop-cat-item ${selectedPet === species.slug ? "active" : ""}`} onClick={() => navigate({ pet: species.slug })} aria-pressed={selectedPet === species.slug}>
+                    <PawIcon /><span>{species.name}</span><small className="shop-filter-count">{species.product_count}</small>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="shop-filter-group">
           <h3 className="shop-filter-label">Danh mục</h3>
@@ -103,7 +122,7 @@ export default function ShopSidebar({
                 className={`shop-cat-item ${selectedCategory ? "" : "active"}`}
                 onClick={() => navigate({ category: "" })}
               >
-                <CatIcon />
+                <PawIcon />
                 <span>Tất cả sản phẩm</span>
               </button>
             </li>
@@ -114,7 +133,7 @@ export default function ShopSidebar({
                   className={`shop-cat-item ${selectedCategory === category.slug ? "active" : ""}`}
                   onClick={() => navigate({ category: category.slug })}
                 >
-                  <CatIcon />
+                  <PawIcon />
                   <span>{category.name}</span>
                 </button>
               </li>

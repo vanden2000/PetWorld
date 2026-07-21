@@ -195,7 +195,6 @@
         }
 
         .category-table td {
-            padding: 16px 24px;
             font-size: 0.9rem;
             color: var(--text-main);
             border-bottom: 1px solid var(--border-color);
@@ -607,7 +606,7 @@
                 <select id="statusFilter" class="status-filter-select">
                     <option value="all">Tất cả trạng thái</option>
                     <option value="active">Đang hoạt động</option>
-                    <option value="draft">Đang ẩn (Draft)</option>
+                    <option value="draft">Đang ẩn</option>
                 </select>
             </div>
         </div>
@@ -645,9 +644,8 @@
                             <th style="width: 60px; text-align: center;">STT</th>
                             <th style="width: 80px; text-align: center;">Ảnh</th>
                             <th>Tên danh mục</th>
-                            <th>Danh mục cha</th>
                             <th>Slug</th>
-                            <th style="text-align: center; width: 110px;">Sản phẩm</th>
+                            <th style="text-align: center;">Sản phẩm</th>
                             <th style="width: 130px;">Trạng thái</th>
                             <th style="text-align: right; width: 120px;">Hành động</th>
                         </tr>
@@ -683,34 +681,25 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div style="display: flex; align-items: center;">
+                                    <div 
                                         @if($category->parent_id)
                                             <span class="indent-line" title="Danh mục con"><i class="fa-solid fa-turn-up fa-rotate-90"></i></span>
                                         @endif
                                         <strong style="color: var(--text-main); font-weight: 600;">{{ $category->name }}</strong>
                                     </div>
                                 </td>
-                                <td>
-                                    @if($category->parent)
-                                        <span class="badge-count" style="background-color: var(--primary-light); color: var(--primary); font-size: 0.75rem;">
-                                            <i class="fa-solid fa-folder" style="margin-right: 4px; font-size: 0.7rem;"></i>{{ $category->parent->name }}
-                                        </span>
-                                    @else
-                                        <span style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">Danh mục gốc</span>
-                                    @endif
-                                </td>
-                                <td><span style="font-family: monospace; font-size: 0.8rem; background-color: var(--bg-color); padding: 4px 8px; border-radius: 4px; color: var(--text-muted);">{{ $category->slug }}</span></td>
+                                <td style="font-family: monospace; font-size: 0.8rem; background-color: var(--bg-color); color: var(--text-muted);">{{ $category->slug }}</td>
                                 <td style="text-align: center;">
                                     <span class="badge-count">{{ $category->products ? $category->products->count() : 0 }}</span>
                                 </td>
                                 <td>
                                     @if($category->status == 'active')
                                         <span class="badge-status active">
-                                            <span class="dot"></span> Hoạt động
+                                             Hoạt động
                                         </span>
                                     @else
                                         <span class="badge-status draft">
-                                            <span class="dot"></span> Đang ẩn
+                                             Đang ẩn
                                         </span>
                                     @endif
                                 </td>

@@ -9,13 +9,11 @@ use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
-use App\Services\SepayPaymentReconciler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use RuntimeException;
 use Throwable;
 use App\Mail\OrderStatusMail;
 
@@ -196,11 +194,6 @@ class OrderController extends Controller
                 abort(409, 'Đơn hàng đã được thanh toán.');
             }
 
-            if ($lockedOrder->expires_at !== null && $lockedOrder->expires_at->isPast()) {
-                $lockedOrder->restockAndMarkCancelled();
-                abort(409, 'Đơn hàng đã hết hạn thanh toán và đã được hủy.');
-            }
-
             if ($lockedOrder->order_status !== 'pending') {
                 abort(409, 'Đơn hàng đã hết hạn thanh toán. Vui lòng đặt lại đơn mới.');
             }
@@ -221,30 +214,6 @@ class OrderController extends Controller
                     'payment_status' => $renewed->payment_status,
                     'status' => $renewed->order_status,
                     'expires_at' => $renewed->expires_at?->toIso8601String(),
-                ],
-            ],
-        ]);
-    }
-
-    public function checkSepayPayment(Request $request, Order $order, SepayPaymentReconciler $reconciler): JsonResponse
-    {
-        abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
-
-        try {
-            $checkedOrder = $reconciler->reconcile($order, requireConfigured: true);
-        } catch (RuntimeException $exception) {
-            abort($reconciler->hasApiCredentials() ? 502 : 422, $exception->getMessage());
-        }
-
-        return response()->json([
-            'data' => [
-                'order' => [
-                    'id' => $checkedOrder->id,
-                    'payment_code' => $checkedOrder->payment_code,
-                    'payment_status' => $checkedOrder->payment_status,
-                    'status' => $checkedOrder->order_status,
-                    'expires_at' => $checkedOrder->expires_at?->toIso8601String(),
-                    'updated_at' => $checkedOrder->updated_at?->toIso8601String(),
                 ],
             ],
         ]);
@@ -451,5 +420,4 @@ class OrderController extends Controller
             ])->all(),
         ];
     }
-
 }

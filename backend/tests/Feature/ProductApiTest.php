@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentMethod;
+use App\Models\PetSpecies;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
@@ -76,6 +77,9 @@ class ProductApiTest extends TestCase
             'status' => 'active',
         ], [$variantType->id => '1kg']);
 
+        $dog = PetSpecies::query()->where('slug', 'dog')->firstOrFail();
+        $product->petSpecies()->attach($dog);
+
         $unavailableProduct = Product::create([
             'category_id' => $category->id,
             'brand_id' => $brand->id,
@@ -127,7 +131,7 @@ class ProductApiTest extends TestCase
             'product_id' => $product->id,
         ]);
 
-        $url = '/api/products?search=royal&category=thuc-an-hat&brand=royal-canin&min_price=0&max_price=500000&sort=price_asc';
+        $url = '/api/products?search=royal&category=thuc-an-hat&brand=royal-canin&pet=dog&min_price=0&max_price=500000&sort=price_asc';
 
         // user_id trên URL không được phép giả mạo trạng thái wishlist của người khác.
         $this->getJson($url.'&user_id='.$user->id)
@@ -152,6 +156,7 @@ class ProductApiTest extends TestCase
             ->assertJsonPath('data.filters.categories.0.product_count', 1)
             ->assertJsonPath('data.filters.brands.0.slug', 'royal-canin')
             ->assertJsonPath('data.filters.brands.0.product_count', 1)
+            ->assertJsonFragment(['slug' => 'dog', 'product_count' => 1])
             ->assertJsonPath('data.filters.price.max', 250000)
             ->assertJsonPath('data.pagination.current_page', 1);
     }

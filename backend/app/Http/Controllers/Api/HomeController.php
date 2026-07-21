@@ -7,6 +7,7 @@ use App\Models\Banner;
 use App\Models\Blog;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\PetSpecies;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Builder;
@@ -62,6 +63,8 @@ class HomeController extends Controller
                 'categories' => $this->formatCategories(),
                 // Brand strip data comes from formatBrands().
                 'brands' => $this->formatBrands(),
+                // The homepage shows no more than two featured pet species.
+                'pet_species' => $this->formatFeaturedPetSpecies(),
                 // Các phần sản phẩm bên dưới đều sử dụng lại định dạng Product().
                 'featured_products' => $this->formatProducts($featuredProducts),
                 'sale_products' => $this->formatProducts($saleProducts),
@@ -101,12 +104,14 @@ class HomeController extends Controller
     {
         return Category::query()
             ->orderBy('id')
-            ->get(['id', 'name', 'slug', 'image'])
+            ->where('status', 'active')
+            ->get(['id', 'name', 'slug', 'image', 'status'])
             ->map(fn(Category $category): array => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'slug' => $category->slug,
                 'image' => $category->image,
+                'status' => $category->status,
             ])
             ->all();
     }
@@ -115,12 +120,34 @@ class HomeController extends Controller
     {
         return Brand::query()
             ->orderBy('id')
+            ->where('status', 'active')
             ->get(['id', 'name', 'slug', 'image'])
             ->map(fn(Brand $brand): array => [
                 'id' => $brand->id,
                 'name' => $brand->name,
                 'slug' => $brand->slug,
                 'image' => $brand->image,
+            ])
+            ->all();
+    }
+
+    private function formatFeaturedPetSpecies(): array
+    {
+        return PetSpecies::query()
+            ->where('is_active', true)
+            ->where('show_on_home', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->limit(2)
+            ->get(['id', 'name', 'slug', 'image', 'background_color', 'sort_order'])
+            ->map(fn(PetSpecies $species): array => [
+                'id' => $species->id,
+                'name' => $species->name,
+                'slug' => $species->slug,
+                'image' => $species->image,
+                'background_color' => $species->background_color,
+                'sort_order' => $species->sort_order,
+                'show_on_home' => true,
             ])
             ->all();
     }
