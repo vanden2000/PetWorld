@@ -544,7 +544,7 @@ class ProductController extends Controller
 
     private function perPage(Request $request): int
     {
-        return min(max($request->integer('per_page', 8), 1), 24);
+        return min(max($request->integer('per_page', 12 ), 1), 24);
     }
 
     private function csvValues(mixed $value): array

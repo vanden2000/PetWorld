@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CheckoutOptionController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PetSpeciesController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SepayWebhookController;
@@ -79,6 +80,7 @@ Route::post('/webhooks/sepay', SepayWebhookController::class);
 Route::get('/blogs', [BlogController::class, 'index']);
 Route::get('/blogs/{slug}', [BlogController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
+Route::get('/pet-species', [PetSpeciesController::class, 'index']);
 // đã xem gần đây
 Route::get('/products/recent', [ProductController::class, 'recent']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);

@@ -99,8 +99,16 @@ export default function Chatbot() {
   }, [hasLoadedHistory, isOpen]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, isSending]);
+    if (!isOpen) return;
+
+    const messagesContainer = messagesEndRef.current?.parentElement;
+    if (!messagesContainer) return;
+
+    messagesContainer.scrollTo({
+      top: messagesContainer.scrollHeight,
+      behavior: isSending ? "smooth" : "auto",
+    });
+  }, [isOpen, messages, isSending]);
 
   const sendMessage = async (text) => {
     const content = text.trim();

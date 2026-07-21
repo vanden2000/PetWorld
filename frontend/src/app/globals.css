@@ -5739,6 +5739,128 @@ body {
   margin-bottom: 26px;
 }
 
+/* Homepage pet-species selector: two stable cards, controlled by Admin data. */
+
+
+.pet-species-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.pet-species-card {
+  position: relative;
+  display: flex;
+  min-height: 168px;
+  overflow: hidden;
+  border: 1px solid #ede7e1;
+  border-radius: 14px;
+  background: #fffdfb;
+  color: #3e271a;
+  text-decoration: none;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.pet-species-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: var(--primary-orange);
+}
+
+.pet-species-card:hover {
+  color: #3e271a;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(92, 61, 40, 0.1);
+}
+
+.pet-species-card:focus-visible {
+  outline: 3px solid var(--primary-orange);
+  outline-offset: 3px;
+}
+
+.pet-species-media {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: 38%;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.pet-species-image {
+  object-fit: cover;
+  object-position: right center;
+}
+
+.pet-species-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 168px;
+  max-width: 60%;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 28px;
+}
+
+.pet-species-label {
+  color: #725e51;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pet-species-content strong {
+  margin-top: 4px;
+  font-size: clamp(27px, 2.6vw, 36px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.pet-species-link {
+  margin-top: 13px;
+  color: var(--primary-orange);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  .pet-species-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .pet-species-card,
+  .pet-species-content {
+    min-height: 156px;
+  }
+
+  .pet-species-content {
+    padding: 22px 24px;
+  }
+
+  .pet-species-media {
+    width: 42%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-species-card {
+    transition: none;
+  }
+}
+
+.shop-species-filter {
+  padding-bottom: 22px;
+  border-bottom: 1px solid #f0e7df;
+}
+
 .shop-filter-label {
   font-size: 14px;
   font-weight: 800;
@@ -5797,6 +5919,22 @@ body {
   border-radius: 10px;
   transition: var(--transition-default);
   user-select: none;
+}
+
+.shop-filter-count {
+  min-width: 22px;
+  margin-left: auto;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: inherit;
+  background: rgba(62, 39, 26, 0.08);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.shop-cat-item.active .shop-filter-count {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .shop-brand-item:hover {

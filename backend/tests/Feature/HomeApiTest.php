@@ -154,6 +154,9 @@ class HomeApiTest extends TestCase
             ->assertJsonPath('data.categories.0.slug', 'food')
             ->assertJsonPath('data.categories.0.active', true)
             ->assertJsonPath('data.brands.0.slug', 'petworld')
+            ->assertJsonPath('data.pet_species.0.slug', 'cat')
+            ->assertJsonPath('data.pet_species.0.show_on_home', true)
+            ->assertJsonPath('data.pet_species.1.slug', 'dog')
             ->assertJsonPath('data.featured_products.0.slug', 'sample-food')
             ->assertJsonPath('data.featured_products.0.category.active', true)
             ->assertJsonPath('data.featured_products.0.image', 'products/sample-food.jpg')
@@ -179,6 +182,15 @@ class HomeApiTest extends TestCase
             ->assertJsonPath('data.latest_blogs.0.slug', 'blog-4')
             ->assertJsonMissingPath('data.latest_blogs.0.content')
             ->assertJsonCount(3, 'data.latest_blogs');
+    }
+
+    public function test_pet_species_api_returns_active_species_in_display_order(): void
+    {
+        $this->getJson('/api/pet-species')
+            ->assertOk()
+            ->assertJsonPath('data.0.slug', 'cat')
+            ->assertJsonPath('data.0.show_on_home', true)
+            ->assertJsonPath('data.1.slug', 'dog');
     }
 
     public function test_inactive_home_section_returns_no_data(): void

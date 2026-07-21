@@ -13,7 +13,7 @@ export default function CategorySection({ categories = [] }) {
 
       {categories.length > 0 ? (
         <div className="categories-grid-6">
-          {categories.map((category) => (
+          {categories.slice(0, 6).map((category) => (
             <Link
               href={`/shop?category=${category.slug}`}
               className="category-card-figma"
