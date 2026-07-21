@@ -4,13 +4,21 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatPrice } from "@/lib/format";
 
-// Bước nhảy của thanh trượt giá (đồng bộ với UI cũ).
 const PRICE_STEP = 50000;
 
-// Icon đơn giản đứng trước mỗi danh mục cho giống mockup.
-function PawIcon() {
+// Icon bàn tay mèo đồng bộ cho toàn bộ bộ lọc
+function CatIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="filter-icon">
+      <circle cx="11" cy="4" r="2" />
+      <circle cx="18" cy="8" r="2" />
+      <circle cx="20" cy="16" r="2" />
+      <path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z" />
+    </svg>
+  );
+}
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="filter-icon">
       <circle cx="11" cy="4" r="2" />
       <circle cx="18" cy="8" r="2" />
       <circle cx="20" cy="16" r="2" />
@@ -21,7 +29,6 @@ function PawIcon() {
 
 /**
  * Sidebar bộ lọc của trang Cửa Hàng.
- * Đẩy lựa chọn lên URL (?category=&brand=&min_price=&max_price=) để trang server fetch lại.
  */
 export default function ShopSidebar({
   categories = [],
@@ -35,17 +42,20 @@ export default function ShopSidebar({
   maxPrice = "",
 }) {
   const router = useRouter();
+  const initialCategorySlugs = selectedCategory
+    ? selectedCategory.split(",").map((s) => s.trim()).filter(Boolean)
+    : [];
+  const [categorySet, setCategorySet] = useState(new Set(initialCategorySlugs));
   const [brandSet, setBrandSet] = useState(new Set(selectedBrands));
-  // Giá là số để hai tay kéo min/max hoạt động: mặc định min = 0, max = trần giá.
   const [min, setMin] = useState(minPrice ? Number(minPrice) : 0);
   const [max, setMax] = useState(maxPrice ? Number(maxPrice) : priceMax);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Dựng URL mới từ các lựa chọn rồi điều hướng (luôn về trang 1).
-  const navigate = ({ category, pet, brandsValue, minValue, maxValue }) => {
+  const navigate = ({ categoryValues, pet, brandsValue, minValue, maxValue }) => {
     const query = new URLSearchParams();
-    const cat = category !== undefined ? category : selectedCategory;
-    if (cat) query.set("category", cat);
+    const catList = categoryValues !== undefined ? categoryValues : [...categorySet];
+    if (catList.length) query.set("category", catList.join(","));
+
     const petValue = pet !== undefined ? pet : selectedPet;
     if (petValue) query.set("pet", petValue);
 
@@ -54,7 +64,6 @@ export default function ShopSidebar({
 
     const minV = minValue !== undefined ? minValue : min;
     const maxV = maxValue !== undefined ? maxValue : max;
-    // Chỉ đẩy lên URL khi thực sự thu hẹp khoảng (min > 0, max < trần giá).
     if (minV > 0) query.set("min_price", String(minV));
     if (maxV < priceMax) query.set("max_price", String(maxV));
 
@@ -63,10 +72,22 @@ export default function ShopSidebar({
     setIsOpen(false);
   };
 
+  const toggleCategory = (slug) => {
+    const next = new Set(categorySet);
+    next.has(slug) ? next.delete(slug) : next.add(slug);
+    setCategorySet(next);
+    navigate({ categoryValues: [...next] });
+  };
+
   const toggleBrand = (slug) => {
     const next = new Set(brandSet);
     next.has(slug) ? next.delete(slug) : next.add(slug);
     setBrandSet(next);
+    navigate({ brandsValue: [...next] });
+  };
+
+  const handlePriceRelease = () => {
+    navigate({ minValue: min, maxValue: max });
   };
 
   return (
@@ -79,33 +100,40 @@ export default function ShopSidebar({
         aria-expanded={isOpen}
       >
         <span className="shop-sidebar-toggle-text">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 8 }}>
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-          </svg>
+          <CatIcon />
           {isOpen ? "Ẩn bộ lọc tìm kiếm" : "Bộ lọc & Tìm kiếm"}
         </span>
         <span className="shop-sidebar-toggle-arrow">{isOpen ? "▲" : "▼"}</span>
       </button>
 
       <div className="shop-sidebar-content">
-        <div className="shop-sidebar-head">
-          <h2 className="shop-sidebar-title">Bộ lọc tìm kiếm</h2>
-          <p className="shop-sidebar-sub">Tối ưu lựa chọn cho Pet cưng</p>
-        </div>
-
+        {/* LOÀI THÚ CƯNG */}
         {petSpecies.length > 0 && (
-          <div className="shop-filter-group shop-species-filter">
+          <div className="shop-filter-group">
             <h3 className="shop-filter-label">Loài thú cưng</h3>
             <ul className="shop-cat-list">
               <li>
-                <button type="button" className={`shop-cat-item ${!selectedPet ? "active" : ""}`} onClick={() => navigate({ pet: "" })} aria-pressed={!selectedPet}>
-                  <PawIcon /><span>Tất cả loài</span>
+                <button
+                  type="button"
+                  className={`shop-cat-item ${!selectedPet ? "active" : ""}`}
+                  onClick={() => navigate({ pet: "" })}
+                >
+                  <CatIcon />
+                  <span>Tất cả loài</span>
                 </button>
               </li>
               {petSpecies.map((species) => (
                 <li key={species.id}>
-                  <button type="button" className={`shop-cat-item ${selectedPet === species.slug ? "active" : ""}`} onClick={() => navigate({ pet: species.slug })} aria-pressed={selectedPet === species.slug}>
-                    <PawIcon /><span>{species.name}</span><small className="shop-filter-count">{species.product_count}</small>
+                  <button
+                    type="button"
+                    className={`shop-cat-item ${selectedPet === species.slug ? "active" : ""}`}
+                    onClick={() => navigate({ pet: species.slug })}
+                  >
+                    <CatIcon />
+                    <span>{species.name}</span>
+                    {species.product_count !== undefined && (
+                      <small className="shop-filter-count">{species.product_count}</small>
+                    )}
                   </button>
                 </li>
               ))}
@@ -113,54 +141,71 @@ export default function ShopSidebar({
           </div>
         )}
 
+        <div className="shop-sidebar-head">
+          <h2 className="shop-sidebar-title">Bộ lọc tìm kiếm</h2>
+          <p className="shop-sidebar-sub">Tối ưu lựa chọn cho Pet cưng</p>
+        </div>
+
+        {/* DANH MỤC */}
         <div className="shop-filter-group">
           <h3 className="shop-filter-label">Danh mục</h3>
           <ul className="shop-cat-list">
             <li>
               <button
                 type="button"
-                className={`shop-cat-item ${selectedCategory ? "" : "active"}`}
-                onClick={() => navigate({ category: "" })}
+                className={`shop-cat-item ${categorySet.size === 0 ? "active" : ""}`}
+                onClick={() => {
+                  setCategorySet(new Set());
+                  navigate({ categoryValues: [] });
+                }}
               >
-                <PawIcon />
+                <CatIcon />
                 <span>Tất cả sản phẩm</span>
               </button>
             </li>
-            {categories.map((category) => (
-              <li key={category.id}>
-                <button
-                  type="button"
-                  className={`shop-cat-item ${selectedCategory === category.slug ? "active" : ""}`}
-                  onClick={() => navigate({ category: category.slug })}
-                >
-                  <PawIcon />
-                  <span>{category.name}</span>
-                </button>
-              </li>
-            ))}
+            {categories.map((category) => {
+              const isSelected = categorySet.has(category.slug);
+              return (
+                <li key={category.id}>
+                  <button
+                    type="button"
+                    className={`shop-cat-item ${isSelected ? "active" : ""}`}
+                    onClick={() => toggleCategory(category.slug)}
+                  >
+                    <CatIcon />
+                    <span>{category.name}</span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
+        {/* THƯƠNG HIỆU */}
         {brands.length > 0 && (
           <div className="shop-filter-group">
             <h3 className="shop-filter-label">Thương hiệu</h3>
-            <ul className="shop-brand-list">
-              {brands.map((brand) => (
-                <li key={brand.id}>
-                  <label className="shop-brand-item">
-                    <input
-                      type="checkbox"
-                      checked={brandSet.has(brand.slug)}
-                      onChange={() => toggleBrand(brand.slug)}
-                    />
-                    <span>{brand.name}</span>
-                  </label>
-                </li>
-              ))}
+            <ul className="shop-cat-list">
+              {brands.map((brand) => {
+                const isSelected = brandSet.has(brand.slug);
+                return (
+                  <li key={brand.id}>
+                    <button
+                      type="button"
+                      className={`shop-cat-item ${isSelected ? "active" : ""}`}
+                      onClick={() => toggleBrand(brand.slug)}
+                    >
+                      <CatIcon />
+                      <span>{brand.name}</span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
 
+        {/* KHOẢNG GIÁ */}
         <div className="shop-filter-group">
           <h3 className="shop-filter-label">Khoảng giá (VNĐ)</h3>
           <div className="shop-price-row">
@@ -176,7 +221,6 @@ export default function ShopSidebar({
                 right: `${100 - (max / priceMax) * 100}%`,
               }}
             />
-            {/* Tay kéo giá tối thiểu: không vượt quá (max - 1 bước) */}
             <input
               type="range"
               className="shop-price-thumb"
@@ -186,8 +230,9 @@ export default function ShopSidebar({
               value={min}
               aria-label="Giá tối thiểu"
               onChange={(event) => setMin(Math.min(Number(event.target.value), max - PRICE_STEP))}
+              onMouseUp={handlePriceRelease}
+              onTouchEnd={handlePriceRelease}
             />
-            {/* Tay kéo giá tối đa: không nhỏ hơn (min + 1 bước) */}
             <input
               type="range"
               className="shop-price-thumb"
@@ -197,10 +242,13 @@ export default function ShopSidebar({
               value={max}
               aria-label="Giá tối đa"
               onChange={(event) => setMax(Math.max(Number(event.target.value), min + PRICE_STEP))}
+              onMouseUp={handlePriceRelease}
+              onTouchEnd={handlePriceRelease}
             />
           </div>
         </div>
 
+        {/* NÚT ÁP DỤNG BỘ LỌC */}
         <button type="button" className="shop-apply-btn" onClick={() => navigate({})}>
           Áp dụng bộ lọc
         </button>
@@ -208,3 +256,5 @@ export default function ShopSidebar({
     </aside>
   );
 }
+
+
