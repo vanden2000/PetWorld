@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState, useSyncExternalStore, useEffect } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore, useEffect } from "react";
 import {
   getCartSnapshot,
   getServerCartSnapshot,
@@ -81,7 +81,7 @@ export default function Header() {
     });
   };
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) {
       setNotifications([]);
       setUnreadCount(0);
@@ -95,13 +95,19 @@ export default function Header() {
     if (listRes.ok) {
       setNotifications(listRes.data.notifications || []);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    fetchNotifications();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) fetchNotifications();
+    });
     const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [fetchNotifications]);
 
   const handleMarkAsRead = async (id, actionUrl) => {
     await markNotificationAsRead(id);

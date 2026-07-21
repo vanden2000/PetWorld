@@ -203,10 +203,13 @@ export default function CheckoutView() {
 
     // Khôi phục ngay từ cache để hiển thị được cả khi đang offline.
     if (sess.snapshot) {
-      setPlacedOrder(sess.snapshot);
-      setPaymentExpiresAt(exp || null);
-      setNowMs(Date.now());
-      if (sess.paid) setOrderPaid(true);
+      queueMicrotask(() => {
+        if (cancelled) return;
+        setPlacedOrder(sess.snapshot);
+        setPaymentExpiresAt(exp || null);
+        setNowMs(Date.now());
+        if (sess.paid) setOrderPaid(true);
+      });
     }
 
     // Đối chiếu với server: paid -> trang thành công; cancelled -> dọn; còn chờ -> tiếp tục.
