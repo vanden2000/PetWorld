@@ -203,4 +203,88 @@ return [
             'Đóng chặt nắp và bảo quản nơi mát, tránh ánh nắng. Nếu thú cưng ngứa, đỏ da hoặc có biểu hiện bất thường, ngừng dùng và liên hệ bác sĩ thú y.',
         ),
     ],
+    [
+        'name' => 'Vòng cổ chuông Trixie',
+        'slug' => 'vong-co-chuong-trixie',
+        'category_slug' => 'phu-kien',
+        'brand_slug' => 'good-boy',
+        'description' => $article(
+            'Vòng cổ xinh xắn kèm chuông nhỏ cho thú cưng',
+            'Vòng cổ chuông Trixie thiết kế êm ái, màu sắc nổi bật cùng chuông kêu leng keng giúp dễ dàng nhận biết vị trí của bé yêu.',
+            ['Chất liệu dây mềm mại, không gây cấn cổ.', 'Khóa gài an toàn, dễ điều chỉnh kích thước.', 'Chuông nhỏ tiếng vang thanh thoát.'],
+            'Phù hợp với mèo và chó vóc nhỏ.',
+            'Điều chỉnh chừa khoảng trống 2 ngón tay khi đeo.',
+            'Bảo quản nơi khô ráo.'
+        ),
+    ],
+    [
+        'name' => 'Túi vận chuyển phi hành gia',
+        'slug' => 'tui-van-chuyen-phi-hanh-gia',
+        'category_slug' => 'phu-kien',
+        'brand_slug' => 'good-boy',
+        'description' => $article(
+            'Balo di chuyển thông thoáng hình phi hành gia',
+            'Túi vận chuyển phi hành gia mặt trong suốt giúp bé cưng ngắm nhìn xung quanh, lỗ thông khí lớn giữ nhiệt độ dễ chịu.',
+            ['Cửa sổ trong suốt hiện đại.', 'Lỗ thông khí xung quanh đảm bảo thoáng mát.', 'Quai đeo êm ái hỗ trợ vai.'],
+            'Dành cho thú cưng dưới 7kg.',
+            'Lót tấm đệm sạch trước khi cho bé vào.',
+            'Lau chùi bằng khăn ẩm sau khi di chuyển.'
+        ),
+    ],
+    [
+        'name' => 'Lược chải lông tự động Trixie',
+        'slug' => 'luoc-chai-long-tu-dong-trixie',
+        'category_slug' => 'phu-kien',
+        'brand_slug' => 'good-boy',
+        'description' => $article(
+            'Lược chải lông gỡ rối và tự lấy lông thừa',
+            'Lược chải lông Trixie có nút bấm tự đẩy lông rụng ra ngoài chỉ với 1 nhấn vô cùng tiện lợi.',
+            ['Răng lược bọc đầu tròn bảo vệ da.', 'Nút bấm gạt lông thừa cực nhanh.', 'Tay cầm cao su chống trượt.'],
+            'Thích hợp cho cả chó và mèo lông ngắn lẫn lông dài.',
+            'Chải nhẹ nhàng theo chiều lông mọc.',
+            'Nhấn nút loại bỏ lông sau khi dùng.'
+        ),
+    ],
+    [
+        'name' => 'Cần câu lông vũ cho mèo',
+        'slug' => 'can-cau-long-vu-meo',
+        'category_slug' => 'do-choi',
+        'brand_slug' => 'good-boy',
+        'description' => $article(
+            'Đồ chơi tương tác kích thích bản năng săn mồi',
+            'Cần câu lông vũ có dây đàn hồi và chuông nhỏ giúp mèo thỏa sức nhảy nhót vờn bắt.',
+            ['Cần dẻo dai khó gãy.', 'Lông vũ tự nhiên nhuộm màu an toàn.', 'Chuông leng keng lôi cuốn.'],
+            'Dành cho mèo mọi lứa tuổi.',
+            'Vẩy nhẹ cần câu tạo chuyển động linh hoạt.',
+            'Cất gọn khi không có người giám sát.'
+        ),
+    ],
+    [
+        'name' => 'Xương gặm cao su đúc Trixie',
+        'slug' => 'xuong-gam-cao-su-trixie',
+        'category_slug' => 'do-choi',
+        'brand_slug' => 'good-boy',
+        'description' => $article(
+            'Đồ chơi cao su tự nhiên siêu bền cho cún',
+            'Xương gặm cao su đúc Trixie giúp thỏa mãn cơn ngứa răng, giảm stress hiệu quả.',
+            ['Cao su tự nhiên dẻo dai.', 'Gai nhỏ trên bề mặt massage nướu.', 'Mùi thơm hấp dẫn chú cún.'],
+            'Phù hợp với chó đang mọc răng hoặc thích gặm đồ.',
+            'Cho cún chơi dưới sự quan sát.',
+            'Rửa sạch với nước sau khi chơi.'
+        ),
+    ],
+    [
+        'name' => 'Chuột đồ chơi lên cót',
+        'slug' => 'chuot-do-choi-len-cot',
+        'category_slug' => 'do-choi',
+        'brand_slug' => 'good-boy',
+        'description' => $article(
+            'Mô hình chuột chạy tự động kích thích mèo vận động',
+            'Chuột đồ chơi chạy bằng cót cơ học, không dùng pin, di chuyển linh hoạt tạo niềm vui cho mèo.',
+            ['Cơ chế vặn cót đơn giản.', 'Bọc nỉ mềm mịn dễ thương.', 'Tạo sự hiếu kỳ cho thú cưng.'],
+            'Phù hợp cho mèo nhà lười vận động.',
+            'Vặn cót vừa tay và thả trên nền phẳng.',
+            'Bảo quản nơi khô ráo.'
+        ),
+    ],
 ];

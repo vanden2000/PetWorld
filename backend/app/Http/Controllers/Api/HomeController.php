@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\PetSpecies;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\Review;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -51,9 +52,9 @@ class HomeController extends Controller
                 ->get();
 
             $newAccessories = $this->productCardQuery()
-                ->whereHas('category', fn($query) => $query->where('slug', 'phu-kien'))
+                ->whereHas('category', fn($query) => $query->whereIn('slug', ['phu-kien', 'do-choi']))
                 ->orderByDesc('id')
-                ->limit(8)
+                ->limit(20)
                 ->get();
 
             return [
@@ -74,6 +75,8 @@ class HomeController extends Controller
                 'products_by_categories' => $this->productsByCategories(),
                 // Blog cards are built in latestBlogs().
                 'latest_blogs' => $this->latestBlogs(),
+                // Đánh giá tốt từ khách hàng đã mua sản phẩm.
+                'top_reviews' => $this->featuredReviews(),
             ];
         });
 
@@ -169,7 +172,12 @@ class HomeController extends Controller
                     ->map(fn(string $price): float => (float) $price);
 
                 $displayVariant = $activeVariants
-                    ->sortBy(fn(ProductVariant $variant): float => $variant->effectivePrice())
+                    ->sortBy(function (ProductVariant $variant): array {
+                        return [
+                            $variant->hasValidSalePrice() ? 0 : 1,
+                            $variant->effectivePrice(),
+                        ];
+                    })
                     ->first();
                 $displayPrice = $displayVariant
                     ? $displayVariant->effectivePrice()
@@ -217,15 +225,33 @@ class HomeController extends Controller
     {
         return Category::query()
             ->orderBy('id')
+            ->where('status', 'active')
             ->get(['id', 'name', 'slug', 'image'])
             ->map(function (Category $category): array {
-                $products = $this->productCardQuery()
+                // Ưu tiên lấy các sản phẩm đang có giá khuyến mãi hợp lệ trong danh mục này.
+                $saleProducts = $this->productCardQuery()
                     ->where('category_id', $category->id)
+                    ->whereHas('variants', function (Builder $query): void {
+                        $query->where('status', 'active')
+                            ->where('sale_price', '>', 0)
+                            ->whereColumn('sale_price', '<', 'price');
+                    })
                     ->orderByDesc('sold_quantity')
                     ->orderByDesc('view_count')
                     ->orderByDesc('id')
-                    ->limit(5)
+                    ->limit(8)
                     ->get();
+
+                // Nếu danh mục có sản phẩm khuyến mãi thì dùng saleProducts; nếu không có sản phẩm khuyến mãi thì dùng sản phẩm bán chạy của danh mục.
+                $products = $saleProducts->isNotEmpty()
+                    ? $saleProducts
+                    : $this->productCardQuery()
+                        ->where('category_id', $category->id)
+                        ->orderByDesc('sold_quantity')
+                        ->orderByDesc('view_count')
+                        ->orderByDesc('id')
+                        ->limit(8)
+                        ->get();
 
                 return [
                     'category' => [
@@ -237,6 +263,8 @@ class HomeController extends Controller
                     'products' => $this->formatProducts($products),
                 ];
             })
+            ->filter(fn(array $group): bool => count($group['products']) > 0)
+            ->values()
             ->all();
     }
 
@@ -276,6 +304,7 @@ class HomeController extends Controller
                 'variants' => fn($query) => $query->where('status', 'active'),
             ])
             ->where('products.status', 'active')
+            ->whereHas('category', fn(Builder $query) => $query->where('status', 'active'))
             ->whereHas('variants', fn(Builder $query) => $query->where('status', 'active'));
     }
 
@@ -384,6 +413,43 @@ class HomeController extends Controller
                     'name' => $blog->author->name,
                 ] : null,
             ])
+            ->all();
+    }
+
+    private function featuredReviews(): array
+    {
+        return Review::query()
+            ->with([
+                'user:id,name,email',
+                'orderItem.productVariant.product:id,name,slug',
+                'orderItem.productVariant.product.primaryImage',
+            ])
+            ->where('status', 'approved')
+            ->where('rating', '>=', 4)
+            ->whereHas('orderItem.order', function (Builder $query): void {
+                $query->where('order_status', 'completed');
+            })
+            ->latest('id')
+            ->limit(6)
+            ->get()
+            ->map(function (Review $review): array {
+                $product = $review->orderItem?->productVariant?->product;
+
+                return [
+                    'id' => $review->id,
+                    'user_name' => $review->user?->name ?: 'Khách hàng PetWorld',
+                    'rating' => (int) $review->rating,
+                    'comment' => $review->comment,
+                    'verified_purchase' => true,
+                    'created_at' => $review->created_at?->format('d/m/Y'),
+                    'product' => $product ? [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'slug' => $product->slug,
+                        'image' => $product->primaryImage?->image_url,
+                    ] : null,
+                ];
+            })
             ->all();
     }
 }

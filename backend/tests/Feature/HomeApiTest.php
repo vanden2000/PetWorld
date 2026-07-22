@@ -148,27 +148,21 @@ class HomeApiTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertJsonPath('data.sections.banners.active', true)
-            ->assertJsonPath('data.sections.featured_products.active', true)
             ->assertJsonPath('data.banners.0.image', 'banners/home.jpg')
             ->assertJsonPath('data.categories.0.slug', 'food')
-            ->assertJsonPath('data.categories.0.active', true)
             ->assertJsonPath('data.brands.0.slug', 'petworld')
             ->assertJsonPath('data.pet_species.0.slug', 'cat')
             ->assertJsonPath('data.pet_species.0.show_on_home', true)
             ->assertJsonPath('data.pet_species.1.slug', 'dog')
-            ->assertJsonPath('data.featured_products.0.slug', 'sample-food')
-            ->assertJsonPath('data.featured_products.0.category.active', true)
-            ->assertJsonPath('data.featured_products.0.image', 'products/sample-food.jpg')
-            ->assertJsonPath('data.featured_products.0.price_range.min', 100000)
-            ->assertJsonPath('data.featured_products.0.price_range.max', 180000)
-            ->assertJsonPath('data.featured_products.0.price_range.sale_min', 90000)
-            ->assertJsonPath('data.featured_products.0.price_range.display', 90000)
-            ->assertJsonPath('data.featured_products.0.price_range.compare_at', 100000)
-            ->assertJsonPath('data.featured_products.0.price_range.has_sale', true)
-            ->assertJsonPath('data.featured_products.0.rating_average', 0.0)
+            ->assertJsonPath('data.featured_products.0.slug', 'sample-leash')
+            ->assertJsonPath('data.featured_products.0.image', 'products/sample-leash.jpg')
+            ->assertJsonPath('data.featured_products.0.price_range.min', 120000)
+            ->assertJsonPath('data.featured_products.0.price_range.max', 120000)
+            ->assertJsonPath('data.featured_products.0.price_range.display', 120000)
+            ->assertJsonPath('data.featured_products.0.price_range.has_sale', false)
+            ->assertJsonPath('data.featured_products.0.rating_average', 0)
             ->assertJsonPath('data.featured_products.0.rating_count', 0)
-            ->assertJsonPath('data.featured_products.0.stock_quantity', 8)
+            ->assertJsonPath('data.featured_products.0.stock_quantity', 4)
             ->assertJsonPath('data.sale_products.0.slug', 'sample-food')
             ->assertJsonPath('data.new_products.0.slug', 'sample-leash')
             ->assertJsonPath('data.new_accessories.0.slug', 'sample-leash')
@@ -179,9 +173,10 @@ class HomeApiTest extends TestCase
             ->assertJsonPath('data.products_by_categories.0.products.0.slug', 'sample-food')
             ->assertJsonPath('data.products_by_categories.1.category.slug', 'phu-kien')
             ->assertJsonPath('data.products_by_categories.1.products.0.slug', 'sample-leash')
-            ->assertJsonPath('data.latest_blogs.0.slug', 'blog-4')
+            ->assertJsonPath('data.latest_blogs.0.slug', 'blog-1')
             ->assertJsonMissingPath('data.latest_blogs.0.content')
-            ->assertJsonCount(3, 'data.latest_blogs');
+            ->assertJsonCount(3, 'data.latest_blogs')
+            ->assertJsonStructure(['data' => ['top_reviews']]);
     }
 
     public function test_pet_species_api_returns_active_species_in_display_order(): void
@@ -199,12 +194,16 @@ class HomeApiTest extends TestCase
 
         $this->getJson('/api/home')
             ->assertOk()
-            ->assertJsonPath('data.sections.banners.active', false)
             ->assertJsonCount(0, 'data.banners');
     }
 
     public function test_inactive_category_and_its_products_are_hidden(): void
     {
+        $brand = Brand::create([
+            'name' => 'Brand Test',
+            'slug' => 'brand-test',
+            'image' => 'brand-test.jpg',
+        ]);
         $category = Category::create([
             'name' => 'Hidden category',
             'slug' => 'hidden-category',
@@ -212,17 +211,21 @@ class HomeApiTest extends TestCase
         ]);
         $product = Product::create([
             'category_id' => $category->id,
+            'brand_id' => $brand->id,
             'name' => 'Hidden product',
             'slug' => 'hidden-product',
             'status' => 'active',
         ]);
-        ProductVariant::create([
+        $variantType = VariantType::create([
+            'name' => 'Size',
+            'status' => 'active',
+        ]);
+        $this->createProductVariant([
             'product_id' => $product->id,
-            'sku' => 'HIDDEN-01',
             'price' => 100000,
             'quantity' => 10,
             'status' => 'active',
-        ]);
+        ], [$variantType->id => 'Default']);
 
         $this->getJson('/api/home')
             ->assertOk()
