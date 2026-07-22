@@ -83,6 +83,24 @@ class ProductImageSeeder extends Seeder
                 'sua-tam-bioline-3.jpg',
                 'sua-tam-bioline-4.jpg',
             ],
+            'vong-co-chuong-trixie' => [
+                'day-dat-trixie-premium.jpg',
+            ],
+            'tui-van-chuyen-phi-hanh-gia' => [
+                'bat-an-inox-trixie-2.jpg',
+            ],
+            'luoc-chai-long-tu-dong-trixie' => [
+                'bat-an-inox-trixie.jpg',
+            ],
+            'can-cau-long-vu-meo' => [
+                'bong-trixie-denta-fun.jpg',
+            ],
+            'xuong-gam-cao-su-trixie' => [
+                'kong-classic.jpg',
+            ],
+            'chuot-do-choi-len-cot' => [
+                'kong-classic-2.jpg',
+            ],
         ];
 
         foreach ($images as $productSlug => $imageUrls) {

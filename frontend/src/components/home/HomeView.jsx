@@ -10,6 +10,7 @@ import NewProductsSplit from "@/components/home/NewProductsSplit";
 import AccessoriesPromo from "@/components/home/AccessoriesPromo";
 import ShopCtaBanner from "@/components/home/ShopCtaBanner";
 import BestSellingTabs from "@/components/home/BestSellingTabs";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
 import BlogSection from "@/components/home/BlogSection";
 import BrandSection from "@/components/home/BrandSection";
 
@@ -18,6 +19,7 @@ export default function HomeView({ initialData }) {
   const {
     banners = [], categories = [], featured_products = [], new_products = [],
     new_accessories = [], products_by_categories = [], latest_blogs = [], brands = [], pet_species = [],
+    top_reviews = [],
   } = data || {};
   const newProducts = new_products.length ? new_products : featured_products;
   // Không lấy sản phẩm danh mục khác làm fallback khi danh mục phụ kiện bị tắt.
@@ -34,6 +36,7 @@ export default function HomeView({ initialData }) {
       <AccessoriesPromo products={accessoryProducts} />
       <ShopCtaBanner />
       <BestSellingTabs groups={products_by_categories} title="Sản Phẩm Khuyến Mãi" />
+      <TestimonialsSection reviews={top_reviews} />
       <BlogSection blogs={latest_blogs} />
       <BrandSection brands={brands} />
     </div>

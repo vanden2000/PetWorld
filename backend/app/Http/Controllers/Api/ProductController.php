@@ -225,7 +225,12 @@ class ProductController extends Controller
                 // Biến thể rẻ nhất theo giá hiệu lực = giá hiển thị; giá gạch chỉ có
                 // khi chính biến thể đó đang giảm (ghép đúng cặp, tránh lệch giá gốc/giá sale).
                 $displayVariant = $activeVariants
-                    ->sortBy(fn(ProductVariant $variant): float => $variant->effectivePrice())
+                    ->sortBy(function (ProductVariant $variant): array {
+                        return [
+                            $variant->hasValidSalePrice() ? 0 : 1,
+                            $variant->effectivePrice(),
+                        ];
+                    })
                     ->first();
                 $displayPrice = $displayVariant?->effectivePrice();
                 $compareAtPrice = $displayVariant?->hasValidSalePrice()
