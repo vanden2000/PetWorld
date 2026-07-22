@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}', [OrderController::class, 'show']);
     Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     Route::post('/orders/{order}/renew-payment', [OrderController::class, 'renewPayment']);
+    Route::post('/orders/{order}/check-sepay-payment', [OrderController::class, 'checkSepayPayment']);
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::get('/wishlist', [WishlistController::class, 'index']);
     Route::post('/wishlist/{product}', [WishlistController::class, 'store']);
