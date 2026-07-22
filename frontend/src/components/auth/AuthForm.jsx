@@ -6,6 +6,7 @@ import { useState } from "react";
 import { login, register } from "@/lib/auth";
 import { toastSuccess } from "@/lib/toast";
 import { resolveBackendImage } from "@/lib/format";
+import { ROUTES } from "@/lib/routes";
 
 const EMPTY_LOGIN = { email: "", password: "" };
 const EMPTY_REGISTER = { name: "", email: "", phone: "", password: "", password_confirmation: "" };
@@ -384,7 +385,7 @@ export default function AuthForm({ mode = "login" }) {
                 onChange={(e) => setAgree(e.target.checked)}
               />
               <span>
-                Tôi đồng ý với các <Link href="/terms">Điều khoản dịch vụ</Link> và <Link href="/privacy">Chính sách bảo mật</Link> của Petworld.
+                Tôi đồng ý với các <Link href={ROUTES.terms}>Điều khoản dịch vụ</Link> và <Link href={ROUTES.privacy}>Chính sách bảo mật</Link> của Petworld.
               </span>
             </label>
             {errors.agree && <span className="auth-error-msg">{errors.agree[0]}</span>}

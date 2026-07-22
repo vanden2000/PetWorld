@@ -38,6 +38,17 @@
     .order-export-cancel { background: var(--bg-color); color: var(--text-main); }
     .order-export-submit { background: var(--primary); color: #fff; }
     .order-export-submit:disabled { cursor: wait; opacity: .7; }
+
+    /* Nút "Xuất Dữ liệu Excel" ở header dùng màu chủ đạo (cam).
+       Bộ lọc, bảng và badge trạng thái đã dùng chung trong css/style.css. */
+    #open-order-export-modal.btn-dark-slate {
+        background-color: var(--primary);
+        box-shadow: 0 2px 6px rgba(255, 120, 45, 0.22);
+    }
+    #open-order-export-modal.btn-dark-slate:hover {
+        background-color: var(--primary-hover);
+        box-shadow: 0 4px 12px rgba(255, 120, 45, 0.28);
+    }
 </style>
 @endsection
 
@@ -73,11 +84,11 @@
         <label class="filter-label">Tìm kiếm</label>
         <div class="filter-input-wrapper">
             <i class="fa-solid fa-magnifying-glass filter-input-icon"></i>
-            <input type="text" name="search" class="filter-input" placeholder="Mã đơn, tên, SĐT, email..." value="{{ $filters['search'] ?? '' }}">
+            <input type="text" name="search" class="filter-input" placeholder="Mã đơn, mã giao dịch, tên, SĐT, email..." value="{{ $filters['search'] ?? '' }}">
         </div>
     </div>
     <div class="filter-col">
-        <label class="filter-label">Thanh Toán</label>
+        <label class="filter-label">Thanh ToÃ¡n</label>
         <select name="payment_status" class="filter-select">
             <option value="">Tất Cả</option>
             @foreach($paymentStatuses as $value => $label)
@@ -109,6 +120,7 @@
             <thead>
                 <tr>
                     <th>Mã đơn hàng</th>
+                    <th>Mã giao dịch</th>
                     <th>Khách hàng</th>
                     <th>Ngày đặt</th>
                     <th>Tổng tiền</th>
@@ -139,6 +151,8 @@
                         }
 
                         $orderCode = $order->payment_code ?: 'PW' . $order->id;
+                        $latestTransaction = $order->sepayTransactions->first();
+                        $transactionCode = $latestTransaction?->sepay_id;
                     @endphp
                     <tr @class(['order-row-cancelled' => $isCancelled])>
                         <td>
@@ -148,13 +162,20 @@
                                     <span>{{ $order->shippingMethod?->name ?? 'Chưa rõ vận chuyển' }}</span>
                             </div>
                         </td>
+                        <td>
+                            @if($transactionCode)
+                                <span class="sku-text">{{ $transactionCode }}</span>
+                            @else
+                                <span class="orders-customer-sub">Chưa có</span>
+                            @endif
+                        </td>
                         <td class="col-customer">
                             {{ $order->recipient_name }}
                             <div class="orders-customer-sub">{{ $order->recipient_phone }}</div>
                         </td>
                         <td style="color: var(--text-muted);">{{ $order->created_at?->format('d/m/Y H:i') }}</td>
                         <td class="col-total">{{ number_format((float) $order->total_amount, 0, ',', '.') }} đ</td>
-                        <td>
+                        <td class="col-status">
                             <div class="quick-status-wrapper">
                                 <span class="quick-status-trigger badge-payment {{ $paymentStatusClasses[$order->payment_status] ?? 'pending' }}" aria-disabled="{{ $nextPaymentStatuses === [] ? 'true' : 'false' }}">
                                     <span>{{ $paymentStatuses[$order->payment_status] ?? $order->payment_status }}</span>
@@ -177,7 +198,7 @@
                             </div>
                             <div class="orders-method">{{ $order->paymentMethod?->name ?? 'Chưa xác định' }}</div>
                         </td>
-                        <td>
+                        <td class="col-status">
                             <div class="quick-status-wrapper">
                                 <span class="quick-status-trigger badge-fulfillment {{ $orderStatusClasses[$order->order_status] ?? 'pending' }}" aria-disabled="{{ $nextOrderStatuses === [] ? 'true' : 'false' }}">
                                     <span>{{ $orderStatuses[$order->order_status] ?? $order->order_status }}</span>
@@ -213,7 +234,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">
+                        <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 32px;">
                             chưa có đơn hàng phù hợp với bộ lọc này.
                         </td>
                     </tr>

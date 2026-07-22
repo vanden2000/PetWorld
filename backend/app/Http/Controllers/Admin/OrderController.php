@@ -60,7 +60,12 @@ class OrderController extends Controller
         ]);
 
         $orders = Order::query()
-            ->with(['user:id,name,email', 'paymentMethod:id,name', 'shippingMethod:id,name'])
+            ->with([
+                'user:id,name,email',
+                'paymentMethod:id,name',
+                'shippingMethod:id,name',
+                'sepayTransactions' => fn ($query) => $query->latest(),
+            ])
             ->withCount('items')
             ->when($filters['search'] ?? null, function ($query, string $search): void {
                 $numericId = preg_replace('/\D/', '', $search);
@@ -74,7 +79,15 @@ class OrderController extends Controller
                         ->orWhere('recipient_phone', 'like', "%{$search}%")
                         ->orWhereHas('user', fn ($userQuery) => $userQuery
                             ->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%"));
+                            ->orWhere('email', 'like', "%{$search}%"))
+                        ->orWhereHas('sepayTransactions', function ($transactionQuery) use ($search, $numericId): void {
+                            $transactionQuery->where('reference_code', 'like', "%{$search}%")
+                                ->orWhere('content', 'like', "%{$search}%");
+
+                            if ($numericId !== '') {
+                                $transactionQuery->orWhere('sepay_id', (int) $numericId);
+                            }
+                        });
                 });
             })
             ->when($filters['payment_status'] ?? null, fn ($query, string $status) => $query->where('payment_status', $status))
@@ -270,7 +283,15 @@ class OrderController extends Controller
                         ->orWhere('recipient_phone', 'like', "%{$search}%")
                         ->orWhereHas('user', fn (Builder $userQuery) => $userQuery
                             ->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%"));
+                            ->orWhere('email', 'like', "%{$search}%"))
+                        ->orWhereHas('sepayTransactions', function (Builder $transactionQuery) use ($search, $numericId): void {
+                            $transactionQuery->where('reference_code', 'like', "%{$search}%")
+                                ->orWhere('content', 'like', "%{$search}%");
+
+                            if ($numericId !== '') {
+                                $transactionQuery->orWhere('sepay_id', (int) $numericId);
+                            }
+                        });
                 });
             })
             ->when($filters['payment_status'] ?? null, fn (Builder $query, string $status) => $query->where('payment_status', $status))

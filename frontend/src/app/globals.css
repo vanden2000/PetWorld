@@ -1847,10 +1847,23 @@ body {
   color: #26734b;
   background: #e7f5ed;
 }
-.order-status.shipping,
 .order-status.confirmed {
   color: #2e63c7;
   background: #e9f0ff;
+}
+.order-status.shipping {
+  color: #7c3aed;
+  background: #f3ebff;
+}
+.order-status.shipping i {
+  animation: order-status-pulse 1.4s ease-in-out infinite;
+}
+@keyframes order-status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.5); }
+  50% { box-shadow: 0 0 0 4px rgba(124, 58, 237, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .order-status.shipping i { animation: none; }
 }
 .order-status.cancelled {
   color: #bc3f3b;

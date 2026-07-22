@@ -211,7 +211,7 @@ export default function CheckoutSuccessView({ order }) {
                         src={resolveProductImage(item.image)} 
                         alt={item.name} 
                         className="product-img" 
-                      />
+                           />
                     ) : (
                       <div className="product-img-fallback">🐾</div>
                     )}

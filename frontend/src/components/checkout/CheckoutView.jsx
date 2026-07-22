@@ -22,6 +22,7 @@ import {
   createAddress,
   createOrder,
   getOrder,
+  checkSepayPayment,
   buildSepayQrUrl,
   getAvailableVouchers,
 } from "@/lib/checkout";
@@ -162,7 +163,7 @@ export default function CheckoutView() {
   useEffect(() => {
     if (!placedOrder || !placedOrder.is_bank || orderPaid || qrExpired) return;
     const timer = setInterval(async () => {
-      const fresh = await getOrder(placedOrder.id);
+      const fresh = await checkSepayPayment(placedOrder.id);
       if (fresh?.payment_status === "paid") {
         setOrderPaid(true);
       } else if (fresh?.status === "cancelled") {
@@ -184,16 +185,17 @@ export default function CheckoutView() {
   // Khi thanh toán thành công: lưu cờ paid vào localStorage để reload vẫn ra trang thành công.
   useEffect(() => {
     if (!orderPaid || !placedOrder?.is_bank) return;
-    const sess = readPendingPayment();
-    if (sess?.orderId === placedOrder.id) {
-      savePendingPayment({ ...sess, paid: true });
-    }
+    clearPendingPayment();
   }, [orderPaid, placedOrder]);
 
   // Khôi phục phiên thanh toán đang chờ khi vào lại trang (rớt mạng/tải lại) — chỉ chạy khi mount.
   useEffect(() => {
     const sess = readPendingPayment();
     if (!sess?.orderId) return;
+    if (sess.paid) {
+      clearPendingPayment();
+      return;
+    }
     const exp = sess.expiresAt ?? 0;
 
     // Đã ra ngoài cửa sổ hiệu lực QR: dọn phiên, đơn tra cứu ở /account/orders.
@@ -211,17 +213,15 @@ export default function CheckoutView() {
         setPlacedOrder(sess.snapshot);
         setPaymentExpiresAt(exp || null);
         setNowMs(Date.now());
-        if (sess.paid) setOrderPaid(true);
       });
     }
 
     // Đối chiếu với server: paid -> trang thành công; cancelled -> dọn; còn chờ -> tiếp tục.
     (async () => {
-      const fresh = await getOrder(sess.orderId);
+      const fresh = await checkSepayPayment(sess.orderId);
       if (cancelled || !fresh) return; // offline hoặc lỗi: giữ theo cache đã khôi phục
       if (fresh.payment_status === "paid") {
         setOrderPaid(true);
-        savePendingPayment({ ...sess, paid: true });
         return;
       }
       if (fresh.status === "cancelled") {

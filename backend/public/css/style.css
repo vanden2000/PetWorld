@@ -1960,6 +1960,8 @@
     }
 
     .status-panel button {
+        font-family: var(--font-main);
+        font-synthesis: none;
         border: 1px solid #ffd5bb;
         border-radius: 8px;
         padding: 9px 11px;
@@ -2900,3 +2902,61 @@
             gap: 20px;
         }
     }
+
+/* ============================================================
+   Đồng bộ bộ lọc + bảng + badge trạng thái (dùng chung mọi trang admin)
+   ============================================================ */
+
+/* --- Bộ lọc: thon gọn, nút dùng màu chủ đạo (cam #ff782d) --- */
+.orders-filter-card { padding: 12px 16px; gap: 12px; border-radius: 10px; margin-bottom: 18px; }
+.orders-filter-card .filter-col { gap: 5px; }
+.orders-filter-card .filter-label { font-size: 0.66rem; }
+.orders-filter-card .filter-input,
+.orders-filter-card .filter-select { padding: 8px 12px; font-size: 0.82rem; border-radius: 7px; }
+.orders-filter-card .filter-input { padding-left: 34px; }
+.orders-filter-card .filter-input-icon { left: 12px; font-size: 0.8rem; }
+
+.orders-filter-actions .btn-dark-slate {
+    background-color: var(--primary);
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    border-radius: 7px;
+    box-shadow: 0 2px 6px rgba(255, 120, 45, 0.22);
+}
+.orders-filter-actions .btn-dark-slate:hover {
+    background-color: var(--primary-hover);
+    box-shadow: 0 4px 12px rgba(255, 120, 45, 0.28);
+}
+.orders-filter-actions .btn-dark-slate,
+.orders-filter-actions .btn-clear-filters { height: 38px; }
+.orders-filter-actions .btn-clear-filters {
+    padding: 0 16px;
+    font-size: 0.78rem;
+    border-color: var(--primary);
+    color: var(--primary);
+    text-decoration: none;
+}
+.orders-filter-actions .btn-clear-filters:hover {
+    background-color: rgba(255, 120, 45, 0.08);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* --- Bảng: căn trái đồng nhất tiêu đề và nội dung --- */
+.orders-table th,
+.orders-table td { padding-left: 12px; padding-right: 12px; text-align: left; }
+.orders-table th:last-child,
+.orders-table td:last-child { text-align: right; }
+.orders-table td.col-status { vertical-align: top; }
+
+/* --- Badge trạng thái: căn trái + phân màu theo ngữ nghĩa --- */
+.badge-payment, .badge-fulfillment { justify-content: flex-start; }
+.badge-payment.pending,
+.badge-fulfillment.pending { background-color: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+.badge-fulfillment.processing { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.badge-fulfillment.shipping { background-color: #f0fdfa; color: #0d9488; border-color: #99f6e4; }
+.badge-payment.paid,
+.badge-fulfillment.delivered { background-color: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+.badge-payment.failed { background-color: #fef2f2; color: #dc2626; border-color: #fecaca; }
+.badge-payment.refunded { background-color: #faf5ff; color: #9333ea; border-color: #e9d5ff; }
+.badge-fulfillment.cancelled { background-color: #f1f5f9; color: #64748b; border-color: #e2e8f0; }

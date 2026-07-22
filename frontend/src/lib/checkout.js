@@ -78,6 +78,11 @@ export async function renewPayment(id) {
   return postJson(`/api/orders/${id}/renew-payment`, {});
 }
 
+export async function checkSepayPayment(id) {
+  const res = await postJson(`/api/orders/${id}/check-sepay-payment`, {});
+  return res.ok ? res.data?.order ?? null : null;
+}
+
 /**
  * Lấy chi tiết một đơn của user (dùng để poll trạng thái thanh toán). Trả về data hoặc null.
  */
