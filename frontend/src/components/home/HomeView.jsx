@@ -3,6 +3,7 @@
 import { useHomeData } from "@/lib/swr";
 import HeroSlider from "@/components/home/HeroSlider";
 import CategorySection from "@/components/home/CategorySection";
+import PetSpeciesSection from "@/components/home/PetSpeciesSection";
 import TrustBadges from "@/components/home/TrustBadges";
 import ProductSection from "@/components/product/ProductSection";
 import NewProductsSplit from "@/components/home/NewProductsSplit";
@@ -16,7 +17,7 @@ export default function HomeView({ initialData }) {
   const { data = initialData } = useHomeData(initialData);
   const {
     banners = [], categories = [], featured_products = [], new_products = [],
-    new_accessories = [], products_by_categories = [], latest_blogs = [], brands = [],
+    new_accessories = [], products_by_categories = [], latest_blogs = [], brands = [], pet_species = [],
   } = data || {};
   const newProducts = new_products.length ? new_products : featured_products;
   // Không lấy sản phẩm danh mục khác làm fallback khi danh mục phụ kiện bị tắt.
@@ -28,6 +29,7 @@ export default function HomeView({ initialData }) {
       <CategorySection categories={categories} />
       <ProductSection title="Sản Phẩm Bán Chạy" products={featured_products} columns={5} limit={8} isSlider showSoldCount showSale={false} />
       <TrustBadges />
+      <PetSpeciesSection species={pet_species} />
       <NewProductsSplit products={newProducts} />
       <AccessoriesPromo products={accessoryProducts} />
       <ShopCtaBanner />

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState, useSyncExternalStore, useEffect } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore, useEffect } from "react";
 import {
   getCartSnapshot,
   getServerCartSnapshot,
@@ -81,7 +81,7 @@ export default function Header() {
     });
   };
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) {
       setNotifications([]);
       setUnreadCount(0);
@@ -95,13 +95,19 @@ export default function Header() {
     if (listRes.ok) {
       setNotifications(listRes.data.notifications || []);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    fetchNotifications();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) fetchNotifications();
+    });
     const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [fetchNotifications]);
 
   const handleMarkAsRead = async (id, actionUrl) => {
     await markNotificationAsRead(id);
@@ -143,13 +149,13 @@ export default function Header() {
       {/* Top Header Bar */}
       <div className="top-bar">
         <div className="top-bar-left">
-          <a href="tel:+0332477689" className="top-bar-item">
+          <a href="tel:0332477689" className="top-bar-item">
             <span className="top-bar-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
               </svg>
             </span>
-            +033 2477 689
+            0332 477 689
           </a>
           <a href="mailto:petworldshopvv@gmail.com" className="top-bar-item">
             <span className="top-bar-icon">

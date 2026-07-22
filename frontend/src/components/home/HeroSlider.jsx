@@ -81,15 +81,6 @@ export default function HeroSlider({ banners = [] }) {
                   sizes="100vw"
                 />
               </a>
-              {(slide.image.includes("petworld-hero") || slide.id === 1) && (
-                <a
-                  href="/shop?service=kiem-tra-suc-khoe"
-                  className="slide-btn-overlay"
-                  tabIndex={index === activeIndex ? 0 : -1}
-                >
-                  Đặt lịch kiểm tra
-                </a>
-              )}
             </div>
           ))}
         </div>

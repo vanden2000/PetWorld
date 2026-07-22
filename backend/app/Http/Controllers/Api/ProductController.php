@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -176,7 +177,7 @@ class ProductController extends Controller
             $query->whereHas('brand', fn(Builder $brand) => $brand->whereIn('slug', $brandSlugs));
         }
 
-        if ($request->filled('pet')) {
+        if ($request->filled('pet') && Schema::hasTable('pet_species')) {
             $speciesSlugs = $this->csvValues($request->query('pet'));
             $query->whereHas('petSpecies', fn (Builder $species) => $species->whereIn('slug', $speciesSlugs));
         }
@@ -467,7 +468,9 @@ class ProductController extends Controller
     private function formatFilters(): array
     {
         return [
-            'pet_species' => PetSpecies::query()->where('is_active', true)->withCount(['products as product_count' => fn (Builder $products) => $this->onlyStorefrontProducts($products)])->orderBy('name')->get()->map(fn (PetSpecies $species) => ['id' => $species->id, 'name' => $species->name, 'slug' => $species->slug, 'product_count' => (int) $species->product_count])->all(),
+            'pet_species' => Schema::hasTable('pet_species')
+                ? PetSpecies::query()->where('is_active', true)->withCount(['products as product_count' => fn (Builder $products) => $this->onlyStorefrontProducts($products)])->orderBy('name')->get()->map(fn (PetSpecies $species) => ['id' => $species->id, 'name' => $species->name, 'slug' => $species->slug, 'product_count' => (int) $species->product_count])->all()
+                : [],
             'categories' => Category::query()
                 ->withCount([
                     'products as product_count' => fn(Builder $products) => $this->onlyStorefrontProducts($products),
@@ -544,7 +547,7 @@ class ProductController extends Controller
 
     private function perPage(Request $request): int
     {
-        return min(max($request->integer('per_page', 8), 1), 24);
+        return min(max($request->integer('per_page', 12 ), 1), 24);
     }
 
     private function csvValues(mixed $value): array

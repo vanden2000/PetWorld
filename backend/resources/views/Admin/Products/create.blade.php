@@ -1635,6 +1635,8 @@
         let productIsSaving = false;
         let toastTimeout;
 
+        productEditForm.noValidate = true;
+
         function confirmImageDelete(box) { pendingImageDeleteBox = box; imageDeleteModal.hidden = false; }
         document.getElementById('btn-cancel-image-delete').addEventListener('click', () => { pendingImageDeleteBox = null; imageDeleteModal.hidden = true; });
         document.getElementById('btn-confirm-image-delete').addEventListener('click', () => {
@@ -1654,6 +1656,41 @@
             toastTimeout = setTimeout(() => { productSaveToast.hidden = true; }, 5000);
         }
 
+        function productFieldLabel(field) {
+            const explicitLabel = field.id ? productEditForm.querySelector(`label[for="${CSS.escape(field.id)}"]`) : null;
+            const nearbyLabel = field.closest('.form-control-group, .variant-card-field')?.querySelector('label');
+            const label = explicitLabel || nearbyLabel;
+            const fallback = field.placeholder || field.name || 'trường bắt buộc';
+
+            return (label?.textContent || fallback).replace('*', '').replace(/\s+/g, ' ').trim();
+        }
+
+        function invalidProductFields() {
+            return [...productEditForm.querySelectorAll('input, select, textarea')]
+                .filter(field => field.willValidate && !field.checkValidity());
+        }
+
+        function showMissingFieldsToast(invalidFields) {
+            const fields = [...new Set(invalidFields.map(productFieldLabel))].slice(0, 3);
+            const remaining = invalidFields.length > 3 ? ` và ${invalidFields.length - 3} trường khác` : '';
+            showProductSaveToast(`Vui lòng nhập đủ thông tin bắt buộc: ${fields.join(', ')}${remaining}.`, true);
+
+            const firstInvalid = invalidFields[0];
+            const variantCard = firstInvalid.closest('.variant-editor-card');
+            if (variantCard) setVariantCardOpen(variantCard, true);
+
+            firstInvalid.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            setTimeout(() => firstInvalid.focus({ preventScroll: true }), 250);
+        }
+
+        function productFormHasMissingFields() {
+            const invalidFields = invalidProductFields();
+            if (!invalidFields.length) return false;
+
+            showMissingFieldsToast(invalidFields);
+            return true;
+        }
+
         function closeProductSaveModal() {
             productSaveModal.hidden = true;
             btnConfirmProductSave.disabled = false;
@@ -1662,7 +1699,7 @@
 
         productEditForm.addEventListener('submit', function(event) {
             event.preventDefault();
-            if (productIsSaving || !productEditForm.reportValidity()) return;
+            if (productIsSaving || productFormHasMissingFields()) return;
             productSaveModal.hidden = false;
             btnConfirmProductSave.focus();
         });
@@ -1678,6 +1715,10 @@
 
         btnConfirmProductSave.addEventListener('click', async function() {
             updateImageState();
+            if (productFormHasMissingFields()) {
+                closeProductSaveModal();
+                return;
+            }
 
             if (isCreatingProduct) {
                 btnConfirmProductSave.disabled = true;

@@ -23,6 +23,7 @@ import {
   createOrder,
   getOrder,
   checkSepayPayment,
+  renewPayment,
   buildSepayQrUrl,
   getAvailableVouchers,
 } from "@/lib/checkout";
@@ -166,10 +167,6 @@ export default function CheckoutView() {
       const fresh = await checkSepayPayment(placedOrder.id);
       if (fresh?.payment_status === "paid") {
         setOrderPaid(true);
-      } else if (fresh?.status === "cancelled") {
-        clearPendingPayment();
-        setPlacedOrder(null);
-        setPaymentExpiresAt(null);
       }
     }, 4000);
     return () => clearInterval(timer);
@@ -240,6 +237,7 @@ export default function CheckoutView() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Tải chi tiết đơn hàng đầy đủ khi đặt hàng hoặc thanh toán thành công
@@ -430,6 +428,25 @@ export default function CheckoutView() {
     }
   };
 
+  // Tạo lại mã QR: giữ nguyên mã PW{id}, gọi API gia hạn expires_at ở server rồi poll tiếp.
+  const handleRegenerateQr = async () => {
+    if (!placedOrder) return;
+    const res = await renewPayment(placedOrder.id);
+    if (!res.ok) {
+      // Đơn đã bị hủy (hết hạn) không mở lại được -> dọn phiên, khách đặt đơn mới.
+      toastError(res.message ?? "Không thể tạo lại mã QR. Vui lòng đặt lại đơn.");
+      clearPendingPayment();
+      return;
+    }
+    const exp = res.data?.order?.expires_at
+      ? Date.parse(res.data.order.expires_at)
+      : Date.now() + QR_TTL_SECONDS * 1000;
+    setPaymentExpiresAt(exp);
+    setNowMs(Date.now());
+    const sess = readPendingPayment();
+    if (sess) savePendingPayment({ ...sess, expiresAt: exp });
+  };
+
   const copyText = async (value) => {
     if (!value || typeof navigator === "undefined" || !navigator.clipboard) return;
     try {
@@ -500,10 +517,10 @@ export default function CheckoutView() {
                     <div className="co-pay-paid">✓ Đã thanh toán</div>
                   ) : qrExpired ? (
                     <div className="co-qr-expired">
-                      <p>Mã QR đã hết hạn sau 15 phút. Đơn hàng sẽ được hủy và hoàn lại tồn kho/voucher.</p>
-                      <Link href="/shop" className="co-btn-solid">
-                        Đặt lại đơn mới
-                      </Link>
+                      <p>Mã QR đã hết hạn sau 15 phút.</p>
+                      <button type="button" className="co-btn-solid" onClick={handleRegenerateQr}>
+                        Tạo lại mã QR
+                      </button>
                     </div>
                   ) : (
                     <div className="co-qr-panel">

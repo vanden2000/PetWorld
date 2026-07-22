@@ -11,9 +11,12 @@ use Illuminate\Support\Facades\Mail;
 class ContactController extends Controller
 {
     /**
-     * Hòm thư nhận yêu cầu hỗ trợ từ trang Liên hệ (/contact).
+     * Lấy hòm thư nhận yêu cầu hỗ trợ từ cấu hình env.
      */
-    private const SUPPORT_INBOX = 'thegioipetworld@gmail.com';
+    private function getSupportInbox(): string
+    {
+        return env('ADMIN_EMAIL', env('MAIL_FROM_ADDRESS', 'thegioipetworld@gmail.com'));
+    }
 
     /**
      * Nhận form hỗ trợ từ trang Liên hệ và gửi về email hỗ trợ.
@@ -42,7 +45,7 @@ class ContactController extends Controller
             'message.required' => 'Vui lòng mô tả vấn đề bạn gặp phải.',
         ]);
 
-        Mail::to(self::SUPPORT_INBOX)->send(new SupportRequestMail($data));
+        Mail::to($this->getSupportInbox())->send(new SupportRequestMail($data));
 
         return response()->json([
             'data' => [

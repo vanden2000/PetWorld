@@ -116,7 +116,6 @@
                         <th>Logo</th>
                         <th>Tên thương hiệu</th>
                         <th>SLUG</th>
-                        <th>Website</th>
                         <th>Sản phẩm</th>
                         <th>Trạng thái</th>
                         <th>Hành động</th>
@@ -152,19 +151,12 @@
                                 </div>
                             </td>
                             <td><span class="slug-text">{{ $brand->slug }}</span></td>
-                            <td>
-                                @if($brand->website)
-                                    <a href="{{ $brand->website }}" target="_blank" rel="noopener" style="color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 600;">{{ parse_url($brand->website, PHP_URL_HOST) ?: $brand->website }}</a>
-                                @else
-                                    <span style="color: var(--text-muted); font-size: 0.85rem;">—</span>
-                                @endif
-                            </td>
                             <td><span class="badge-count">{{ $brand->products_count ?? 0 }}</span></td>
                             <td>
                                 @if($brand->status === 'active')
-                                    <span class="badge-status active"><span style="font-size: 0.9rem; line-height: 1;">•</span> Active</span>
+                                    <span class="badge-status active"><span style="font-size: 0.9rem; line-height: 1;"></span> Đang hoạt động</span>
                                 @else
-                                    <span class="badge-status draft"><span style="font-size: 0.9rem; line-height: 1;">•</span> Inactive</span>
+                                    <span class="badge-status draft"><span style="font-size: 0.9rem; line-height: 1;"></span> Đang ẩn</span>
                                 @endif
                             </td>
                             <td>

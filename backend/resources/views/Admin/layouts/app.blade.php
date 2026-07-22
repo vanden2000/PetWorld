@@ -72,6 +72,12 @@
                         </li>
                     </ul>
                 </li>
+                <li>
+                    <a href="{{ route('admin.pet-species') }}" class="menu-item-link {{ request()->routeIs('admin.pet-species*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-paw"></i>
+                        <span>Loài thú cưng</span>
+                    </a>
+                </li>
                 <li class="menu-item-dropdown {{ request()->routeIs('admin.brands*') ? 'open' : '' }}">
                     <a href="{{ route('admin.brands') }}" class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.brands*') ? 'active' : '' }}">
                         <i class="fa-solid fa-trademark"></i>

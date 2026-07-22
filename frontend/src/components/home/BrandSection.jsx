@@ -10,7 +10,7 @@ export default function BrandSection({ brands = [] }) {
 
       <div className="brands-row">
         {brands.length > 0 ? (
-          brands.map((brand) => (
+          brands.slice(0, 6).map((brand) => (
             <Link
               href={`/shop?brand=${brand.slug}`}
               className="brand-card-figma"

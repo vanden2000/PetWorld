@@ -38,9 +38,6 @@ return [
     'sepay' => [
         // Khoá bí mật để xác thực webhook (header "Authorization: Apikey <key>").
         'webhook_api_key' => env('SEPAY_WEBHOOK_API_KEY'),
-        // Token Bearer để backend chủ động gọi SePay API khi chạy local không dùng webhook/ngrok.
-        'api_token' => env('SEPAY_API_TOKEN'),
-        'api_base_url' => rtrim((string) env('SEPAY_API_BASE_URL', 'https://userapi.sepay.vn/v2'), '/'),
     ],
 
     /*

@@ -1,30 +1,20 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { API_BASE_URL } from "@/lib/api";
-import { resolveBackendImage } from "@/lib/format";
 
 const REQUEST_TYPES = [
-  "Hỗ trợ đơn hàng",
-  "Tư vấn sản phẩm",
+  "Tư vấn sản phẩm & dinh dưỡng",
+  "Hỗ trợ đơn hàng & vận chuyển",
   "Bảo hành & đổi trả",
-  "Tài khoản & thanh toán",
+  "Góp ý & phản hồi dịch vụ",
   "Khác",
 ];
-
-const PRIORITIES = ["Thấp", "Trung bình", "Khẩn cấp"];
-
-// Dấu chân thú cưng — dùng lại đúng hoa văn ở Footer để trang trí panel đội ngũ.
-const PAW_PATH =
-  "M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5zM100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3zM69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5l0 1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C34.9 480 14 459.1 14 433.3l0-1.6c0-10.4 1.6-20.8 5.2-30.5zM421.8 282.7c-24.5-14-29.1-51.7-10.2-84.1s54-47.3 78.5-33.3s29.1 51.7 10.2 84.1s-54 47.3-78.5 33.3zM310.1 189.7c-32.3-10.6-46.9-53.9-32.6-96.8s52.1-69.1 84.4-58.5s46.9 53.9 32.6 96.8s-52.1 69.1-84.4 58.5z";
 
 const INITIAL_FORM = {
   name: "",
   email: "",
-  order_code: "",
   type: REQUEST_TYPES[0],
-  priority: "Trung bình",
   message: "",
 };
 
@@ -56,7 +46,6 @@ export default function ContactClient() {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        // Lấy thông báo lỗi validate đầu tiên nếu có.
         const firstError = json?.errors
           ? Object.values(json.errors)[0]?.[0]
           : null;
@@ -66,7 +55,7 @@ export default function ContactClient() {
       setStatus("success");
       setFeedback(
         json?.data?.message ||
-          "Đã gửi yêu cầu hỗ trợ. PetWorld sẽ phản hồi bạn sớm nhất!"
+          "Đã gửi liên hệ thành công. PetWorld sẽ phản hồi bạn qua email/SĐT sớm nhất!"
       );
       setForm(INITIAL_FORM);
     } catch (error) {
@@ -78,143 +67,129 @@ export default function ContactClient() {
   return (
     <main className="main-content">
       <div className="homepage-container sp-support">
+        {/* Background decorations */}
         <div className="sp-blob sp-blob-1" />
         <div className="sp-blob sp-blob-2" />
 
-        {/* HERO */}
-        <div className="sp-eyebrow">Trung tâm hỗ trợ</div>
-        <h1 className="sp-title">
-          Chúng tôi luôn sẵn sàng <span className="sp-hi">giải đáp</span>
-        </h1>
-        <p className="sp-sub">
-          Dù bạn cần hỗ trợ đơn hàng, tư vấn sản phẩm hay xử lý sự cố — đội ngũ
-          PetWorld đồng hành cùng bạn mọi lúc.
-        </p>
-
-        {/* QUICK CHANNELS */}
-        <div className="sp-channels">
-          <div className="sp-chan-card">
-            <div className="sp-chan-ic orange">
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-              </svg>
-            </div>
-            <p className="sp-chan-ttl">Gọi hotline</p>
-            <p className="sp-chan-dd">+84 123 456 789 · 08:00 đến 21:00</p>
-          </div>
-
-          <div className="sp-chan-card">
-            <span className="sp-live-dot">Online</span>
-            <div className="sp-chan-ic green">
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-            </div>
-            <p className="sp-chan-ttl">Chat trực tuyến</p>
-            <p className="sp-chan-dd">Trung bình phản hồi dưới 2 phút</p>
-          </div>
-
-          <div className="sp-chan-card">
-            <span className="sp-note-dot">Phản hồi 24h</span>
-            <div className="sp-chan-ic blue">
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 6l-10 7L2 6" />
-                <rect x="2" y="4" width="20" height="16" rx="2" />
-              </svg>
-            </div>
-            <p className="sp-chan-ttl">Email hỗ trợ</p>
-            <p className="sp-chan-dd">thegioipetworld@gmail.com</p>
-          </div>
-
-          <div className="sp-chan-card">
-            <div className="sp-chan-ic ink">
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4" />
-                <path d="M12 17h.01" />
-              </svg>
-            </div>
-            <p className="sp-chan-ttl">Câu hỏi thường gặp</p>
-            <p className="sp-chan-dd">Tự tra cứu hơn 80 chủ đề hỗ trợ</p>
-          </div>
+        {/* HERO TITLE */}
+        <div className="sp-hero-section">
+          <div className="sp-eyebrow">Liên hệ với chúng tôi</div>
+          <h1 className="sp-title">
+            Chúng tôi luôn lắng nghe <span className="sp-hi">bạn</span>
+          </h1>
+          <p className="sp-sub">
+            Quý khách hàng có thể liên hệ trực tiếp qua hotline, email hoặc điền vào form bên dưới để gửi phản hồi đến PetWorld.
+          </p>
         </div>
 
-        {/* STAGE */}
+        {/* MAIN STAGE */}
         <div className="sp-stage">
-          {/* LEFT: BRAND PANEL */}
-          <div className="sp-brand-panel">
-            <span className="sp-paw sp-paw-1" aria-hidden="true">
-              <svg viewBox="0 0 512 512" fill="currentColor">
-                <path d={PAW_PATH} />
-              </svg>
-            </span>
-            <span className="sp-paw sp-paw-2" aria-hidden="true">
-              <svg viewBox="0 0 512 512" fill="currentColor">
-                <path d={PAW_PATH} />
-              </svg>
-            </span>
+          {/* LEFT: BRAND PANEL (CONTACT INFO) */}
+          <div className="sp-brand-panel" style={{ justifyContent: "space-between" }}>
+            <div>
+              <h2 style={{ fontSize: "24px", fontWeight: "800", marginBottom: "16px" }}>Thông tin liên hệ</h2>
+              <p className="sp-desc" style={{ color: "rgba(255, 255, 255, 0.7)", marginBottom: "32px", fontSize: "14px", lineHeight: "1.6" }}>
+                Nếu bạn có bất kỳ thắc mắc nào về sản phẩm, dịch vụ hoặc đơn hàng, hãy kết nối với chúng tôi qua các kênh sau.
+              </p>
 
-            <div className="sp-avatars">
-              <div className="sp-av o">TĐ</div>
-              <div className="sp-av b">VM</div>
-              <div className="sp-av g">CT</div>
-              <div className="sp-av g">TP</div>
-            </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                {/* Phone */}
+                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "10px",
+                    background: "rgba(255, 120, 45, 0.15)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0
+                  }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ff782d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: "18px", height: "18px" }}>
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Hotline</h4>
+                    <p style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: "700" }}>
+                      <a href="tel:0332477689" style={{ color: "#fff", textDecoration: "none" }}>0332 477 689</a>
+                    </p>
+                  </div>
+                </div>
 
-            <h2>Đội ngũ tư vấn luôn sẵn sàng</h2>
-            <p className="sp-desc">
-              4 chuyên viên hỗ trợ am hiểu sản phẩm và dinh dưỡng về codex, claude code, antigravity sẵn
-              sàng đồng hành cùng bạn từ lúc đặt hàng đến khi nhận sản phẩm.
-            </p>
+                {/* Email */}
+                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "10px",
+                    background: "rgba(47, 111, 237, 0.15)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0
+                  }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#2f6fed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: "18px", height: "18px" }}>
+                      <path d="M22 6l-10 7L2 6" />
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email hỗ trợ</h4>
+                    <p style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: "700" }}>
+                      <a href="mailto:petworldshopvv@gmail.com" style={{ color: "#fff", textDecoration: "none" }}>petworldshopvv@gmail.com</a>
+                    </p>
+                  </div>
+                </div>
 
-            <div className="sp-stat-grid">
-              <div className="sp-stat">
-                <div className="sp-num">4.9/5</div>
-                <div className="sp-lab">Hài lòng sau hỗ trợ</div>
+                {/* Address */}
+                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "10px",
+                    background: "rgba(255,255,255,0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0
+                  }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: "18px", height: "18px" }}>
+                      <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Địa chỉ shop</h4>
+                    <p style={{ margin: "4px 0 0", fontSize: "14px", fontWeight: "700", lineHeight: "1.5" }}>
+                      137 Bình Long, Phường Bình Trị Đông,<br />Quận Bình Tân, TP. Hồ Chí Minh
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="sp-stat">
-                <div className="sp-num">&lt;2h</div>
-                <div className="sp-lab">Thời gian phản hồi trung bình</div>
-              </div>
             </div>
 
-            <p className="sp-cat-title">Chủ đề hỗ trợ phổ biến</p>
-            <div className="sp-cat-list">
-              <span className="sp-cat-chip">Đơn hàng &amp; vận chuyển</span>
-              <span className="sp-cat-chip">Sản phẩm &amp; dinh dưỡng</span>
-              <span className="sp-cat-chip">Bảo hành &amp; đổi trả</span>
-              <span className="sp-cat-chip">Tài khoản &amp; thanh toán</span>
-            </div>
-
-            <div className="sp-sla-box">
-              <div className="sp-sla-ic">
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 11l3 3L22 4" />
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            <div className="sp-sla-box" style={{ marginTop: "40px" }}>
+              <div className="sp-sla-ic" style={{ background: "rgba(47, 174, 115, 0.2)" }}>
+                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
               <div>
-                <p className="sp-sla-tt">Cam kết hỗ trợ</p>
-                <p className="sp-sla-vv">Phản hồi mọi yêu cầu trong 24 giờ</p>
+                <p className="sp-sla-tt" style={{ color: "rgba(255,255,255,0.5)" }}>Cam kết phản hồi</p>
+                <p className="sp-sla-vv" style={{ color: "rgba(255,255,255,0.9)", fontSize: "13px" }}>Chúng tôi sẽ kiểm tra thư và liên hệ lại với bạn trong vòng 24 giờ làm việc.</p>
               </div>
             </div>
           </div>
 
-          {/* RIGHT: TICKET FORM */}
+          {/* RIGHT: FORM PANEL */}
           <div className="sp-form-panel">
             <div className="sp-form-head">
               <div>
-                <h3>Tạo yêu cầu hỗ trợ</h3>
+                <h3>Gửi lời nhắn cho cửa hàng</h3>
                 <p>
-                  Mô tả vấn đề bạn gặp phải, chuyên viên phù hợp sẽ liên hệ lại
-                  trong thời gian sớm nhất.
+                  Hãy điền đầy đủ các thông tin dưới đây, chúng tôi sẽ nhận được qua email và phản hồi bạn sớm nhất có thể.
                 </p>
-              </div>
-              <div className="sp-response-pill">
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
-                </svg>
-                Phản hồi nhanh
               </div>
             </div>
 
@@ -222,12 +197,12 @@ export default function ContactClient() {
               <div className="sp-field-row">
                 <div className="sp-field">
                   <label htmlFor="sp-name">
-                    Họ và tên <span className="sp-req">*</span>
+                    Họ và tên của bạn <span className="sp-req">*</span>
                   </label>
                   <input
                     id="sp-name"
                     type="text"
-                    placeholder="Nguyễn Văn A"
+                    placeholder="Ví dụ: Nguyễn Văn A"
                     value={form.name}
                     onChange={update("name")}
                     required
@@ -235,13 +210,12 @@ export default function ContactClient() {
                 </div>
                 <div className="sp-field">
                   <label htmlFor="sp-email">
-                    Email hoặc SĐT <span className="sp-req">*</span>
+                    Số điện thoại hoặc Email <span className="sp-req">*</span>
                   </label>
                   <input
                     id="sp-email"
                     type="text"
-                    inputMode="text"
-                    placeholder="ban@email.com hoặc 0901234567"
+                    placeholder="Ví dụ: 0901234567 hoặc mail@cua-ban.com"
                     value={form.email}
                     onChange={update("email")}
                     required
@@ -249,54 +223,24 @@ export default function ContactClient() {
                 </div>
               </div>
 
-              <div className="sp-field-row">
-                <div className="sp-field">
-                  <label htmlFor="sp-order">
-                    Mã đơn hàng <span className="sp-opt">(nếu có)</span>
-                  </label>
-                  <input
-                    id="sp-order"
-                    type="text"
-                    placeholder="PW-2026-00123"
-                    value={form.order_code}
-                    onChange={update("order_code")}
-                  />
-                </div>
-                <div className="sp-field">
-                  <label htmlFor="sp-type">
-                    Loại yêu cầu <span className="sp-req">*</span>
-                  </label>
-                  <select id="sp-type" value={form.type} onChange={update("type")}>
-                    {REQUEST_TYPES.map((t) => (
-                      <option key={t}>{t}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="sp-field">
-                <label>Mức độ ưu tiên</label>
-                <div className="sp-priority-row">
-                  {PRIORITIES.map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      className={`sp-prio${form.priority === p ? " active" : ""}`}
-                      onClick={() => setForm((prev) => ({ ...prev, priority: p }))}
-                    >
-                      {p}
-                    </button>
+              <div className="sp-field" style={{ marginBottom: "20px" }}>
+                <label htmlFor="sp-type">
+                  Bạn cần hỗ trợ về chủ đề nào? <span className="sp-req">*</span>
+                </label>
+                <select id="sp-type" value={form.type} onChange={update("type")}>
+                  {REQUEST_TYPES.map((t) => (
+                    <option key={t}>{t}</option>
                   ))}
-                </div>
+                </select>
               </div>
 
-              <div className="sp-field">
+              <div className="sp-field" style={{ marginBottom: "20px" }}>
                 <label htmlFor="sp-message">
-                  Mô tả chi tiết <span className="sp-req">*</span>
+                  Nội dung chi tiết câu hỏi <span className="sp-req">*</span>
                 </label>
                 <textarea
                   id="sp-message"
-                  placeholder="Mô tả vấn đề bạn đang gặp phải, PetWorld sẽ hỗ trợ nhanh nhất..."
+                  placeholder="Mô tả thắc mắc, phản hồi hoặc thông báo của bạn..."
                   value={form.message}
                   onChange={update("message")}
                   required
@@ -312,45 +256,38 @@ export default function ContactClient() {
                 className="sp-submit-btn"
                 disabled={status === "sending"}
               >
-                {status === "sending" ? "Đang gửi..." : "Gửi yêu cầu hỗ trợ"}
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M13 6l6 6-6 6" />
+                {status === "sending" ? "Đang gửi đi..." : "Gửi lời nhắn ngay"}
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
                 </svg>
               </button>
-
-              <div className="sp-trust-row">
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-                <span>Thông tin của bạn được bảo mật tuyệt đối</span>
-              </div>
             </form>
           </div>
         </div>
 
-        {/* LOCATION */}
+        {/* LOCATION SECTION */}
         <div className="sp-location">
           <div className="sp-loc-info">
-            <div className="sp-tag">Hỗ trợ trực tiếp</div>
-            <h3>Đến văn phòng hỗ trợ PetWorld</h3>
+            <div className="sp-tag">Địa chỉ cửa hàng</div>
+            <h3>Ghé thăm cửa hàng PetWorld</h3>
             <p className="sp-loc-desc">
-              Nếu vấn đề cần xử lý trực tiếp, đội ngũ hỗ trợ tại văn phòng luôn
-              sẵn sàng tiếp đón bạn.
+              Bạn có thể đến trực tiếp cửa hàng để nhận tư vấn trực tiếp từ các bạn chăm sóc thú cưng cũng như trải nghiệm các dịch vụ chất lượng tại đây.
             </p>
 
             <div className="sp-loc-item">
               <div className="sp-loc-ic orange">
                 <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
+                  <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
                   <circle cx="12" cy="10" r="3" />
                 </svg>
               </div>
               <div>
                 <p className="sp-loc-tt">Địa chỉ</p>
                 <p className="sp-loc-vv">
-                  137 Bình Long, Bình Trị Đông,
+                  137 Bình Long, Phường Bình Trị Đông,
                   <br />
-                  Bình Tân, TP.HCM 70000
+                  Quận Bình Tân, TP. Hồ Chí Minh
                 </p>
               </div>
             </div>
@@ -359,12 +296,12 @@ export default function ContactClient() {
               <div className="sp-loc-ic blue">
                 <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />
-                  <path d="M12 6v6l4 2" />
+                  <polyline points="12 6 12 12 16 14" />
                 </svg>
               </div>
               <div>
-                <p className="sp-loc-tt">Giờ đón tiếp</p>
-                <p className="sp-loc-vv">08:00 – 21:00, tất cả các ngày</p>
+                <p className="sp-loc-tt">Thời gian mở cửa</p>
+                <p className="sp-loc-vv">08:00 – 21:00 (Mở cửa tất cả các ngày trong tuần)</p>
               </div>
             </div>
 
@@ -374,76 +311,29 @@ export default function ContactClient() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M7 17 17 7M8 7h9v9" />
+              <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="3 11 22 2 13 21 11 13 3 11" />
               </svg>
-              Chỉ đường trên Google Maps
+              Xem đường đi trên Google Maps
             </a>
           </div>
 
           <div className="sp-map">
-            <Image
-              src={resolveBackendImage("contact/store.jpg")}
-              alt="Không gian cửa hàng PetWorld"
-              fill
-              sizes="(max-width: 900px) 100vw, 55vw"
-              style={{ objectFit: "cover" }}
-            />
-          </div>
-        </div>
-
-        {/* FAQ */}
-        <div className="sp-faq">
-          <div className="sp-faq-top">
-            <div>
-              <div className="sp-tag">Trước khi gửi yêu cầu</div>
-              <h3>Câu hỏi thường gặp</h3>
-            </div>
-          </div>
-          <div className="sp-faq-grid">
-            <div className="sp-faq-item">
-              <div className="sp-faq-qic">1</div>
-              <div>
-                <p className="sp-faq-qt">Làm sao để theo dõi đơn hàng?</p>
-                <p className="sp-faq-qa">
-                  Vào mục &quot;Đơn hàng của tôi&quot; trong tài khoản, hoặc dùng
-                  mã đơn hàng để tra cứu trực tiếp.
-                </p>
-              </div>
-            </div>
-            <div className="sp-faq-item">
-              <div className="sp-faq-qic">2</div>
-              <div>
-                <p className="sp-faq-qt">Chính sách đổi trả như thế nào?</p>
-                <p className="sp-faq-qa">
-                  Đổi trả miễn phí trong 7 ngày với sản phẩm còn nguyên bao bì,
-                  chưa qua sử dụng.
-                </p>
-              </div>
-            </div>
-            <div className="sp-faq-item">
-              <div className="sp-faq-qic">3</div>
-              <div>
-                <p className="sp-faq-qt">Thời gian giao hàng bao lâu?</p>
-                <p className="sp-faq-qa">
-                  2 đến 4 ngày làm việc trong nội thành, 4 đến 7 ngày với khu vực
-                  tỉnh xa.
-                </p>
-              </div>
-            </div>
-            <div className="sp-faq-item">
-              <div className="sp-faq-qic">4</div>
-              <div>
-                <p className="sp-faq-qt">Có tư vấn dinh dưỡng theo bé không?</p>
-                <p className="sp-faq-qa">
-                  Có, chọn &quot;Tư vấn sản phẩm&quot; trong form và mô tả giống
-                  loài, cân nặng để được hỗ trợ chính xác.
-                </p>
-              </div>
-            </div>
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.6917763138865!2d106.60467777598816!3d10.758218189352222!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752dd49d68d18b%3A0xe961ad1591f48651!2s137%20B%C3%ACnh%20Long%2C%20B%C3%ACnh%20Tr%E1%BB%8B%20%C4%90%C3%B4ng%20A%2C%20B%C3%ACnh%20T%C3%A2n%2C%20H%E1%BB%93%20Ch%C3%AD%20Minh%2C%20Vietnam!5e0!3m2!1sen!2s!4v1710000000000!5m2!1sen!2s"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Vị trí cửa hàng PetWorld"
+            ></iframe>
           </div>
         </div>
       </div>
     </main>
   );
 }
+
+
