@@ -791,6 +791,47 @@
 
     .js-remove-variant { color: #b42318; }
 
+    .variant-delete-dialog {
+        align-items: center;
+        background: rgba(16, 24, 40, 0.52);
+        display: flex;
+        inset: 0;
+        justify-content: center;
+        padding: 20px;
+        position: fixed;
+        z-index: 1100;
+    }
+
+    .variant-delete-dialog[hidden] { display: none; }
+
+    .variant-delete-dialog-card {
+        background: #ffffff;
+        border-radius: 14px;
+        box-shadow: 0 20px 48px rgba(16, 24, 40, 0.22);
+        max-width: 440px;
+        padding: 24px;
+        width: 100%;
+    }
+
+    .variant-delete-dialog-icon {
+        align-items: center;
+        background: #fef3f2;
+        border-radius: 50%;
+        color: #d92d20;
+        display: inline-flex;
+        height: 42px;
+        justify-content: center;
+        width: 42px;
+    }
+
+    .variant-delete-dialog-card h3 { margin: 14px 0 8px; }
+    .variant-delete-dialog-card p { color: var(--theme-text-gray); line-height: 1.55; margin: 0; }
+    .variant-delete-dialog-sku { color: var(--theme-text-main); font-weight: 800; }
+    .variant-delete-dialog-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+    .variant-delete-dialog-actions button { border-radius: 7px; cursor: pointer; font-weight: 800; padding: 10px 14px; }
+    .btn-keep-variant { background: #ffffff; border: 1px solid var(--theme-border); color: var(--theme-text-main); }
+    .btn-confirm-delete-variant { background: #d92d20; border: 1px solid #d92d20; color: #ffffff; }
+
     .variant-summary-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1609,6 +1650,18 @@
         </div>
     </form>
 
+    <div id="variant-delete-dialog" class="variant-delete-dialog" role="alertdialog" aria-modal="true" aria-labelledby="variant-delete-dialog-title" hidden>
+        <div class="variant-delete-dialog-card">
+            <span class="variant-delete-dialog-icon" aria-hidden="true"><i class="fa-solid fa-trash-can"></i></span>
+            <h3 id="variant-delete-dialog-title">Xóa biến thể?</h3>
+            <p>Bạn sắp xóa <span id="variant-delete-dialog-sku" class="variant-delete-dialog-sku"></span>. Thao tác được thực hiện khi lưu sản phẩm và không thể hoàn tác.</p>
+            <div class="variant-delete-dialog-actions">
+                <button type="button" id="btn-cancel-variant-delete" class="btn-keep-variant">Giữ lại</button>
+                <button type="button" id="btn-confirm-variant-delete" class="btn-confirm-delete-variant">Xóa biến thể</button>
+            </div>
+        </div>
+    </div>
+
     <div id="product-save-modal" class="product-save-modal" hidden role="dialog" aria-modal="true" aria-labelledby="product-save-modal-title">
         <div class="product-save-modal-card">
             <div class="product-save-modal-icon"><i class="fa-solid fa-floppy-disk"></i></div>
@@ -1888,6 +1941,10 @@
         const variantAddMenuList = document.getElementById('variant-add-menu-list');
         const variantsCardList = document.getElementById('variants-card-list');
         const deletedVariantInputs = document.getElementById('deleted-variant-inputs');
+        const variantDeleteDialog = document.getElementById('variant-delete-dialog');
+        const variantDeleteDialogSku = document.getElementById('variant-delete-dialog-sku');
+        const btnCancelVariantDelete = document.getElementById('btn-cancel-variant-delete');
+        const btnConfirmVariantDelete = document.getElementById('btn-confirm-variant-delete');
         const variantsEmptyState = document.getElementById('variants-empty-state');
         const productAttributeGroups = document.getElementById('product-attribute-groups');
         const productAttributesNote = document.getElementById('product-attributes-note');
@@ -1903,6 +1960,28 @@
         });
 
         let variantIndex = 0;
+        let pendingVariantDelete = null;
+
+        function closeVariantDeleteDialog() {
+            pendingVariantDelete = null;
+            variantDeleteDialog.hidden = true;
+        }
+
+        function removeVariantRow(row) {
+            const variantId = row.querySelector('input[name$="[id]"]')?.value;
+            if (variantId) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'deleted_variant_ids[]';
+                input.value = variantId;
+                deletedVariantInputs.appendChild(input);
+            }
+            row.remove();
+            updateVariantsEmptyState();
+            updateVariantSummary();
+            updateProductAttributesOverview();
+            validateVariantSkus();
+        }
 
         function updateVariantsEmptyState() {
             const hasRows = variantsCardList.querySelectorAll('article[data-index]').length > 0;
@@ -2270,21 +2349,23 @@
             }
 
             if (event.target.closest('.js-remove-variant')) {
-                if (!window.confirm('Xóa biến thể này? Thao tác không thể hoàn tác sau khi lưu sản phẩm.')) return;
-                const variantId = row.querySelector('input[name$="[id]"]')?.value;
-                if (variantId) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'deleted_variant_ids[]';
-                    input.value = variantId;
-                    deletedVariantInputs.appendChild(input);
-                }
-                row.remove();
-                updateVariantsEmptyState();
-                updateVariantSummary();
-                updateProductAttributesOverview();
-                validateVariantSkus();
+                pendingVariantDelete = row;
+                variantDeleteDialogSku.textContent = row.querySelector('.js-variant-sku')?.value?.trim() || 'biến thể này';
+                variantDeleteDialog.hidden = false;
+                btnConfirmVariantDelete.focus();
             }
+        });
+
+        btnCancelVariantDelete.addEventListener('click', closeVariantDeleteDialog);
+        btnConfirmVariantDelete.addEventListener('click', () => {
+            if (pendingVariantDelete) removeVariantRow(pendingVariantDelete);
+            closeVariantDeleteDialog();
+        });
+        variantDeleteDialog.addEventListener('click', event => {
+            if (event.target === variantDeleteDialog) closeVariantDeleteDialog();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !variantDeleteDialog.hidden) closeVariantDeleteDialog();
         });
 
         variantsCardList.addEventListener('input', function(event) {
