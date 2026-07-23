@@ -90,12 +90,20 @@ export default function ProductDetail({ product }) {
     }));
   }, [variants]);
 
-  const optionIsAvailable = (typeId, value) => variants.some((variant) =>
-    variant.quantity > 0
-    && variant.options?.some((option) =>
-      Number(option.type_id) === Number(typeId) && option.value === value,
-    ),
-  );
+  const optionIsAvailable = (typeId, value) => variants.some((variant) => {
+    if (variant.quantity <= 0) return false;
+
+    const options = Object.fromEntries(
+      (variant.options ?? []).map((option) => [option.type_id, option.value]),
+    );
+
+    if (options[typeId] !== value) return false;
+
+    return Object.entries(selectedOptions).every(([selectedTypeId, selectedValue]) =>
+      Number(selectedTypeId) === Number(typeId)
+      || options[selectedTypeId] === selectedValue,
+    );
+  });
 
   const selectOption = (typeId, value) => {
     setSelectedOptions((current) => {
@@ -257,6 +265,11 @@ export default function ProductDetail({ product }) {
                 </button>
               ))}
             </div>
+            {group.values.some((value) => !optionIsAvailable(group.id, value)) && (
+              <p className="pd-variant-unavailable-hint">
+                Một số lựa chọn không có ở phân loại đang chọn.
+              </p>
+            )}
           </div>
         ))}
 

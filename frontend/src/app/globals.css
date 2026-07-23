@@ -7098,6 +7098,13 @@ body {
   text-decoration: line-through;
 }
 
+.pd-variant-unavailable-hint {
+  color: #8a6d3b;
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin: 8px 0 0;
+}
+
 .pd-actions {
   display: flex;
   align-items: stretch;
