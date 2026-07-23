@@ -13,11 +13,39 @@ import { resolveBackendImage } from "@/lib/format";
 export default function AccessoriesPromo({ products = [] }) {
   const sliderRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
   const dragStart = useRef({ x: 0, scrollLeft: 0 });
   const activePointerId = useRef(null);
   const didDrag = useRef(false);
 
   if (products.length === 0) return null;
+
+  const filteredProducts = products
+    .filter((product) => {
+      if (activeTab === "phu-kien") return product.category?.slug === "phu-kien";
+      if (activeTab === "do-choi") return product.category?.slug === "do-choi";
+      return true;
+    })
+    .slice(0, 10);
+
+  const handleTabChange = (tabSlug) => {
+    setActiveTab(tabSlug);
+    if (sliderRef.current) {
+      sliderRef.current.scrollLeft = 0;
+    }
+  };
+
+  const scrollLeft = () => {
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: -320, behavior: "smooth" });
+    }
+  };
+
+  const scrollRight = () => {
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: 320, behavior: "smooth" });
+    }
+  };
 
   const handlePointerDown = (event) => {
     const slider = sliderRef.current;
@@ -65,37 +93,97 @@ export default function AccessoriesPromo({ products = [] }) {
     event.stopPropagation();
   };
 
+  const currentCategorySlug = activeTab === "do-choi" ? "do-choi" : "phu-kien";
+
   return (
     <section className="promo-split-section">
       <div className="promo-card">
         <div className="promo-card-content">
-          <span className="promo-tag">🔥 Phụ Kiện Cho Pet</span>
+          <span className="promo-tag">🔥 Phụ Kiện & Đồ Chơi</span>
           <h3 className="promo-title">Mua ngay, kẻo lỡ</h3>
-          <Link href="/shop?category=phu-kien" className="promo-btn">
+          <Link href={`/shop?category=${currentCategorySlug}`} className="promo-btn">
             Ghé Shop Ngay
           </Link>
         </div>
-        <img src={resolveBackendImage("storage/promo/accessories.png")} alt="Phụ kiện cho pet" className="promo-img" />
+        <img src={resolveBackendImage("storage/promo/accessories.png")} alt="Phụ kiện & đồ chơi cho pet" className="promo-img" />
       </div>
 
       <div className="promo-right">
-        <div
-          ref={sliderRef}
-          className={`new-products-slider${isDragging ? " is-dragging" : ""}`}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          onClickCapture={preventClickWhileDragging}
-        >
-          <div className="new-products-slider-track">
-            {products.map((product) => (
-              <div className="new-products-slider-item" key={product.id}>
-                <ProductCard product={product} />
-              </div>
-            ))}
+        <div className="accessories-promo-header">
+          <div className="accessories-promo-tabs">
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === "all" ? "active" : ""}`}
+              onClick={() => handleTabChange("all")}
+            >
+              Tất cả
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === "phu-kien" ? "active" : ""}`}
+              onClick={() => handleTabChange("phu-kien")}
+            >
+              Phụ kiện
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === "do-choi" ? "active" : ""}`}
+              onClick={() => handleTabChange("do-choi")}
+            >
+              Đồ chơi
+            </button>
           </div>
+          <Link href={`/shop?category=${currentCategorySlug}`} className="accessories-view-all-link">
+            Xem tất cả <span className="arrow">&rarr;</span>
+          </Link>
         </div>
+
+        <div className="accessories-slider-container">
+          {filteredProducts.length > 4 && (
+            <button
+              type="button"
+              className="slider-nav-btn slider-nav-prev"
+              onClick={scrollLeft}
+              aria-label="Lướt sang trái"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+
+          <div
+            ref={sliderRef}
+            className={`new-products-slider${isDragging ? " is-dragging" : ""}`}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            onClickCapture={preventClickWhileDragging}
+          >
+            <div className="new-products-slider-track">
+              {filteredProducts.map((product) => (
+                <div className="new-products-slider-item" key={product.id}>
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {filteredProducts.length > 4 && (
+            <button
+              type="button"
+              className="slider-nav-btn slider-nav-next"
+              onClick={scrollRight}
+              aria-label="Lướt sang phải"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M9 5l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+        </div>
+
         <RecentlyViewed />
       </div>
     </section>

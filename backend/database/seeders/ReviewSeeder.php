@@ -14,10 +14,12 @@ class ReviewSeeder extends Seeder
     public function run(): void
     {
         $comments = [
-            ['rating' => 5, 'comment' => 'Sản phẩm đóng gói kỹ, đúng mô tả và thú cưng nhà mình rất thích.'],
-            ['rating' => 5, 'comment' => 'Giao hàng nhanh, chất lượng tốt, sẽ tiếp tục ủng hộ PetWorld.'],
-            ['rating' => 4, 'comment' => 'Giá hợp lý, sản phẩm ổn. Nếu có thêm ảnh hướng dẫn thì sẽ tốt hơn.'],
-            ['rating' => 5, 'comment' => 'Bé nhà mình dùng hợp, bao bì còn mới và hạn sử dụng xa.'],
+            ['rating' => 5, 'comment' => 'Sản phẩm đóng gói kỹ, đúng mô tả và cún nhà mình cực kỳ thích luôn!'],
+            ['rating' => 5, 'comment' => 'Giao hàng siêu nhanh, hàng chính hãng chất lượng 10/10, sẽ tiếp tục ủng hộ PetWorld dài lâu.'],
+            ['rating' => 5, 'comment' => 'Dùng bé mèo rất hợp vị, ăn ngon miệng hẳn ra. Rất hài lòng về cách chăm sóc khách hàng.'],
+            ['rating' => 5, 'comment' => 'Bé cún nhà mình mê tít món này, hạt thơm tho và HSD xa. Giao nhanh trong 2h!'],
+            ['rating' => 4, 'comment' => 'Chất liệu cứng cáp, phối màu đẹp đúng chuẩn ảnh mẫu. Đáng tiền lắm nha mọi người.'],
+            ['rating' => 5, 'comment' => 'Hàng xịn sò chuẩn Trixie, dây dắt chắc chắn êm tay lắm. Rất đáng trải nghiệm.'],
         ];
 
         $completedItems = OrderItem::query()

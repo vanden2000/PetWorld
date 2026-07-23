@@ -45,6 +45,14 @@ class ProductVariantSeeder extends Seeder
             ['product_slug' => 'xit-khu-mui-bioline', 'type' => 'Quy cách đóng gói', 'name' => 'Chai 500ml', 'price' => 165000, 'sale_price' => null, 'quantity' => 20],
             ['product_slug' => 'sua-tam-bioline', 'type' => 'Quy cách đóng gói', 'name' => 'Chai 300ml', 'price' => 135000, 'sale_price' => 119000, 'quantity' => 30],
             ['product_slug' => 'sua-tam-bioline', 'type' => 'Quy cách đóng gói', 'name' => 'Chai 500ml', 'price' => 195000, 'sale_price' => 179000, 'quantity' => 20],
+            ['product_slug' => 'vong-co-chuong-trixie', 'type' => 'Màu sắc', 'name' => 'Hồng', 'price' => 65000, 'sale_price' => 55000, 'quantity' => 40],
+            ['product_slug' => 'vong-co-chuong-trixie', 'type' => 'Màu sắc', 'name' => 'Xanh', 'price' => 65000, 'sale_price' => null, 'quantity' => 30],
+            ['product_slug' => 'tui-van-chuyen-phi-hanh-gia', 'type' => 'Màu sắc', 'name' => 'Vàng', 'price' => 350000, 'sale_price' => 299000, 'quantity' => 15],
+            ['product_slug' => 'tui-van-chuyen-phi-hanh-gia', 'type' => 'Màu sắc', 'name' => 'Xám', 'price' => 350000, 'sale_price' => null, 'quantity' => 20],
+            ['product_slug' => 'luoc-chai-long-tu-dong-trixie', 'type' => 'Kích thước', 'name' => 'Tiêu chuẩn', 'price' => 120000, 'sale_price' => 99000, 'quantity' => 35],
+            ['product_slug' => 'can-cau-long-vu-meo', 'type' => 'Màu sắc', 'name' => 'Đa sắc', 'price' => 45000, 'sale_price' => 39000, 'quantity' => 50],
+            ['product_slug' => 'xuong-gam-cao-su-trixie', 'type' => 'Kích thước', 'name' => 'M', 'price' => 110000, 'sale_price' => 89000, 'quantity' => 25],
+            ['product_slug' => 'chuot-do-choi-len-cot', 'type' => 'Màu sắc', 'name' => 'Xám', 'price' => 35000, 'sale_price' => 29000, 'quantity' => 45],
         ];
 
         foreach ($variants as $variant) {
