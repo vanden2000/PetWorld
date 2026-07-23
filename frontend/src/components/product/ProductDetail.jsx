@@ -39,7 +39,11 @@ export default function ProductDetail({ product }) {
   const variants = useMemo(() => product.variants ?? [], [product.variants]);
   // Mặc định chọn biến thể có giá hiệu lực thấp nhất (đồng nhất với cách card hiển thị giá).
   const defaultVariant = useMemo(
-    () => [...variants].sort((a, b) => a.effective_price - b.effective_price)[0] ?? null,
+    () => [...variants]
+      .filter((variant) => variant.quantity > 0)
+      .sort((a, b) => a.effective_price - b.effective_price)[0]
+      ?? [...variants].sort((a, b) => a.effective_price - b.effective_price)[0]
+      ?? null,
     [variants],
   );
 
@@ -86,23 +90,33 @@ export default function ProductDetail({ product }) {
     }));
   }, [variants]);
 
-  const optionIsAvailable = (typeId, value) => variants.some((variant) => {
-    if (variant.quantity <= 0) return false;
-
-    const options = Object.fromEntries(
-      (variant.options ?? []).map((option) => [option.type_id, option.value]),
-    );
-
-    if (options[typeId] !== value) return false;
-
-    return Object.entries(selectedOptions).every(([selectedTypeId, selectedValue]) =>
-      Number(selectedTypeId) === Number(typeId)
-      || options[selectedTypeId] === selectedValue,
-    );
-  });
+  const optionIsAvailable = (typeId, value) => variants.some((variant) =>
+    variant.quantity > 0
+    && variant.options?.some((option) =>
+      Number(option.type_id) === Number(typeId) && option.value === value,
+    ),
+  );
 
   const selectOption = (typeId, value) => {
-    setSelectedOptions((current) => ({ ...current, [typeId]: value }));
+    setSelectedOptions((current) => {
+      const matchingVariants = variants.filter((variant) =>
+        variant.quantity > 0
+        && variant.options?.some((option) =>
+          Number(option.type_id) === Number(typeId) && option.value === value,
+        ),
+      );
+
+      const nextVariant = matchingVariants.find((variant) =>
+        variant.options?.every((option) =>
+          Number(option.type_id) === Number(typeId)
+          || current[option.type_id] === option.value,
+        ),
+      ) ?? matchingVariants[0];
+
+      return Object.fromEntries(
+        (nextVariant?.options ?? []).map((option) => [option.type_id, option.value]),
+      );
+    });
     setQuantity(1);
   };
 
