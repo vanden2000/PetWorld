@@ -240,6 +240,15 @@
     .be-chart svg { width: 100%; height: 200px; overflow: visible; }
     .be-chart-x { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 6px; border-top: 1px solid var(--border-color); }
     .be-chart-x span { color: var(--text-muted); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; }
+    /* Biểu đồ cột doanh thu theo tháng (1 chuỗi — màu chủ đạo cam) */
+    .be-bars { display: flex; align-items: flex-end; gap: 10px; height: 212px; padding-top: 14px; overflow-x: auto; }
+    .be-bar-col { flex: 1 1 0; min-width: 34px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; cursor: default; }
+    .be-bar-val { font-size: 0.6rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; white-space: nowrap; opacity: 0; transition: opacity .15s ease; }
+    .be-bar-col:hover .be-bar-val { opacity: 1; }
+    .be-bar-fill { width: 100%; max-width: 30px; background: var(--primary); border-radius: 4px 4px 0 0; min-height: 3px; transition: height .35s ease, background-color .2s ease; }
+    .be-bar-col:hover .be-bar-fill { background: var(--primary-hover); }
+    .be-bar-label { margin-top: 8px; font-size: 0.6rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+    .be-bars-empty { margin: auto; color: var(--text-muted); font-size: 0.85rem; }
     .be-hide { display: none !important; }
 
     /* Product filter bar */
@@ -381,17 +390,6 @@
                             <a href="#" id="logoRemove" style="color: var(--danger); font-weight: 700;">Xóa logo</a>
                         </p>
                     </div>
-                    <div>
-                        <label class="be-label">Ảnh bìa (Cover Image)</label>
-                        <div class="be-cover" id="coverBox">
-                            <div class="be-cover-img" id="coverPreview"></div>
-                            <button type="button" class="be-cover-btn">
-                                <i class="fa-solid fa-upload"></i> Tải ảnh lên
-                            </button>
-                        </div>
-                        <input type="file" id="cover_image" style="display: none;" accept="image/*">
-                        <p class="be-hint">Tỷ lệ khuyên dùng 16:9. Ảnh sẽ hiển thị tại trang chi tiết thương hiệu trên Storefront.</p>
-                    </div>
                 </div>
             </div>
 
@@ -526,16 +524,6 @@
                 </div>
 
                 <div class="be-field">
-                    <label class="be-label" for="main_category">Danh mục chính</label>
-                    <select class="form-control" id="main_category">
-                        @php $cats = ['Thức ăn cho Mèo', 'Thức ăn cho Chó', 'Phụ kiện', 'Chăm sóc sức khỏe']; @endphp
-                        @foreach($cats as $cat)
-                            <option>{{ $cat }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="be-field">
                     <label class="be-label">Trạng thái</label>
                     <input type="hidden" name="status" id="statusInput" value="{{ $statusVal }}">
                     <div class="be-segment">
@@ -551,14 +539,6 @@
                     </div>
                 </div>
 
-                <div class="be-field">
-                    <label class="be-label">Phân hạng (Tiers)</label>
-                    <div class="be-tags" id="tierTags">
-                        <span class="be-tag">Premium <button type="button" title="Xóa"><i class="fa-solid fa-xmark"></i></button></span>
-                        <span class="be-tag">Gourmet <button type="button" title="Xóa"><i class="fa-solid fa-xmark"></i></button></span>
-                        <button type="button" class="be-tag-add" id="tierAdd"><i class="fa-solid fa-plus"></i> Thêm tag</button>
-                    </div>
-                </div>
             </div>
 
             <!-- Display config -->
@@ -574,25 +554,6 @@
                         <span>Khách hàng có thể thấy thương hiệu này</span>
                     </div>
                     <button type="button" class="be-switch {{ $statusVal === 'active' ? 'is-on' : '' }}" id="toggleStorefront" aria-label="Hiển thị trên Storefront"></button>
-                </div>
-                <div class="be-toggle-row">
-                    <div>
-                        <strong>Thương hiệu nổi bật</strong>
-                        <span>Ghim ở trang chủ và menu nhanh</span>
-                    </div>
-                    <button type="button" class="be-switch" id="toggleFeatured" aria-label="Thương hiệu nổi bật"></button>
-                </div>
-
-                <div style="padding-top: 18px;">
-                    <div class="be-slider-head">
-                        <label class="be-label" style="margin-bottom: 0;">Thứ tự ưu tiên</label>
-                        <span class="be-slider-value" id="priorityValue">12</span>
-                    </div>
-                    <input type="range" class="be-slider" id="prioritySlider" min="1" max="100" value="12">
-                    <div class="be-slider-scale">
-                        <span>Thấp (1)</span>
-                        <span>Cao (100)</span>
-                    </div>
                 </div>
             </div>
 
@@ -616,6 +577,8 @@
         const slugInput = document.getElementById('slug');
         if (nameInput && slugInput) {
             nameInput.addEventListener('input', function () {
+                // Slug là URL công khai của thương hiệu — giữ ổn định khi sửa, chỉ tự điền nếu đang trống.
+                if (slugInput.value.trim() !== '') return;
                 let slug = nameInput.value.toLowerCase()
                     .normalize('NFD').replace(/[̀-ͯ]/g, '')
                     .replace(/[đĐ]/g, 'd')
@@ -682,33 +645,6 @@
             });
         });
 
-        // ---- Priority slider ----
-        const slider = document.getElementById('prioritySlider');
-        const sliderVal = document.getElementById('priorityValue');
-        if (slider && sliderVal) {
-            slider.addEventListener('input', function () { sliderVal.textContent = slider.value; });
-        }
-
-        // ---- Tier tags ----
-        const tierTags = document.getElementById('tierTags');
-        const tierAdd = document.getElementById('tierAdd');
-        if (tierTags) {
-            tierTags.addEventListener('click', function (e) {
-                const rm = e.target.closest('.be-tag button');
-                if (rm) rm.closest('.be-tag').remove();
-            });
-        }
-        if (tierAdd) {
-            tierAdd.addEventListener('click', function () {
-                const name = (prompt('Tên phân hạng mới:') || '').trim();
-                if (!name) return;
-                const tag = document.createElement('span');
-                tag.className = 'be-tag';
-                tag.innerHTML = name + ' <button type="button" title="Xóa"><i class="fa-solid fa-xmark"></i></button>';
-                tierTags.insertBefore(tag, tierAdd);
-            });
-        }
-
         // ---- Rich text toolbar (wraps selection in the textarea) ----
         const descArea = document.getElementById('description');
         function wrapSelection(before, after) {
@@ -772,20 +708,6 @@
                     span.textContent = logoBox ? (logoBox.dataset.initial || '?') : '?';
                     logoPreview.replaceWith(span);
                 }
-            });
-        }
-
-        // ---- Cover image (visual preview only, not persisted) ----
-        const coverBox = document.getElementById('coverBox');
-        const coverInput = document.getElementById('cover_image');
-        const coverPreview = document.getElementById('coverPreview');
-        if (coverBox && coverInput) {
-            coverBox.addEventListener('click', () => coverInput.click());
-            coverInput.addEventListener('change', function () {
-                if (!coverInput.files || !coverInput.files[0]) return;
-                const reader = new FileReader();
-                reader.onload = e => { coverPreview.style.backgroundImage = `url('${e.target.result}')`; };
-                reader.readAsDataURL(coverInput.files[0]);
             });
         }
 
