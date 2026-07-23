@@ -60,7 +60,12 @@ class ProductController extends Controller
     {
         $userId = $this->authenticatedUserId($request);
         $product = $this->baseProductQuery($userId)
-            ->with(['images', 'variants.variantValues.variantType'])
+            ->with([
+                'images',
+                'variants' => fn ($variants) => $variants
+                    ->where('status', 'active')
+                    ->with('variantValues.variantType'),
+            ])
             ->where('slug', $slug)
             ->first();
         $redirectSlug = null;
@@ -72,7 +77,12 @@ class ProductController extends Controller
 
             if ($productId) {
                 $product = $this->baseProductQuery($userId)
-                    ->with(['images', 'variants.variantValues.variantType'])
+                    ->with([
+                        'images',
+                        'variants' => fn ($variants) => $variants
+                            ->where('status', 'active')
+                            ->with('variantValues.variantType'),
+                    ])
                     ->whereKey($productId)
                     ->first();
                 $redirectSlug = $product?->slug;
@@ -136,7 +146,12 @@ class ProductController extends Controller
             ->selectSub($this->saleVariantCountSubquery(), 'sale_variant_count')
             ->selectSub($this->ratingAverageSubquery(), 'rating_average')
             ->selectSub($this->ratingCountSubquery(), 'rating_count')
-            ->with(['brand', 'category', 'primaryImage', 'variants'])
+            ->with([
+                'brand',
+                'category',
+                'primaryImage',
+                'variants' => fn ($variants) => $variants->where('status', 'active'),
+            ])
             ->withCount('wishlists')
             ->where('status', 'active')
             ->whereHas('variants', fn(Builder $query) => $query->where('status', 'active'));
