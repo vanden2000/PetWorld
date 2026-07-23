@@ -65,7 +65,7 @@ export default function BlogComments({ blogSlug, initialComments = [] }) {
   };
 
   return (
-    <div className="blog-comments-section" style={{ marginTop: 40, borderTop: "1px solid #eef1f5", paddingTop: 30 }}>
+    <div id="blog-comments-section" className="blog-comments-section" style={{ marginTop: 40, borderTop: "1px solid #eef1f5", paddingTop: 30 }}>
       <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 20 }}>
         Bình luận ({comments.length})
       </h3>
