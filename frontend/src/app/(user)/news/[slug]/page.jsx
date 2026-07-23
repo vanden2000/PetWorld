@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getBlogDetail, getBlogs } from "@/lib/api";
 import { resolveBlogImage } from "@/lib/format";
 import BlogComments from "@/components/blog/BlogComments";
+import TableOfContents from "@/components/blog/TableOfContents";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -40,7 +41,12 @@ export default async function BlogDetailPage({ params }) {
         </nav>
 
         <div className="news-detail-layout">
-          {/* Nội dung bài viết */}
+          {/* Cột 1: Mục lục (Sticky trên máy tính) */}
+          <aside className="news-toc-sidebar">
+            <TableOfContents />
+          </aside>
+
+          {/* Cột 2: Nội dung bài viết */}
           <article className="news-article">
             {/* Category badge + meta */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
@@ -75,18 +81,10 @@ export default async function BlogDetailPage({ params }) {
               </div>
             </div>
 
-            {/* Ảnh bìa thu gọn - max-height 360px */}
-            {blog.image && (
-              <img
-                src={resolveBlogImage(blog.image)}
-                alt={blog.title}
-                className="news-article-cover"
-              />
-            )}
-
             {/* Mô tả ngắn nổi bật */}
             {blog.description && (
               <p
+                id="news-intro"
                 className="news-article-lead"
                 style={{
                   background: "#fff8f3",
@@ -112,7 +110,7 @@ export default async function BlogDetailPage({ params }) {
             <BlogComments blogSlug={slug} initialComments={blog.comments ?? []} />
           </article>
 
-          {/* Sidebar */}
+          {/* Cột 3: Sidebar bài viết mới & danh mục */}
           <aside className="news-sidebar">
             <div className="news-widget">
               <h3 className="news-widget-title">Bài viết mới nhất</h3>
@@ -145,6 +143,7 @@ export default async function BlogDetailPage({ params }) {
         {/* Bài viết liên quan */}
         {related_blogs.length > 0 && (
           <section
+            id="bai-viet-lien-quan"
             className="homepage-section"
             style={{ marginTop: 48, paddingTop: 36, borderTop: "1px solid #eef1f5" }}
           >
