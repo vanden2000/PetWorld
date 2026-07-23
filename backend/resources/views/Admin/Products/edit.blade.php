@@ -777,14 +777,19 @@
     }
 
     .btn-variant-mini {
+        align-items: center;
         border: 1px solid var(--theme-border);
         background: #ffffff;
         border-radius: 4px;
         cursor: pointer;
         color: var(--theme-text-main);
+        display: inline-flex;
+        gap: 5px;
         height: 34px;
-        min-width: 34px;
+        padding: 0 10px;
     }
+
+    .js-remove-variant { color: #b42318; }
 
     .variant-summary-grid {
         display: grid;
@@ -1588,6 +1593,7 @@
                             Chưa có biến thể. Bấm <strong>Thêm biến thể</strong> để tạo SKU đầu tiên.
                         </div>
                     </div>
+                    <div id="deleted-variant-inputs"></div>
                 </div>
 
         <!-- Fixed Bottom Drawer Action Bar -->
@@ -1881,6 +1887,7 @@
         const btnToggleVariantAddMenu = document.getElementById('btn-toggle-variant-add-menu');
         const variantAddMenuList = document.getElementById('variant-add-menu-list');
         const variantsCardList = document.getElementById('variants-card-list');
+        const deletedVariantInputs = document.getElementById('deleted-variant-inputs');
         const variantsEmptyState = document.getElementById('variants-empty-state');
         const productAttributeGroups = document.getElementById('product-attribute-groups');
         const productAttributesNote = document.getElementById('product-attributes-note');
@@ -1890,6 +1897,10 @@
         const basePriceInput = document.getElementById('price');
         const baseSalePriceInput = document.getElementById('sale_price');
         const baseQtyInput = document.getElementById('quantity');
+
+        [basePriceInput, baseSalePriceInput].forEach(input => {
+            input?.addEventListener('input', updateVariantSummary);
+        });
 
         let variantIndex = 0;
 
@@ -2047,14 +2058,30 @@
             return `${new Intl.NumberFormat('vi-VN').format(value)}đ`;
         }
 
+        function validateSalePrice(priceInput, salePriceInput) {
+            if (!priceInput || !salePriceInput) return;
+
+            const price = Number(priceInput.value);
+            const salePrice = salePriceInput.value === '' ? null : Number(salePriceInput.value);
+            const invalid = salePrice !== null && Number.isFinite(price) && salePrice >= price;
+            salePriceInput.setCustomValidity(invalid ? 'Giá giảm phải nhỏ hơn giá bán.' : '');
+            salePriceInput.classList.toggle('is-invalid', invalid);
+        }
+
         function updateVariantSummary() {
             const cards = [...variantsCardList.querySelectorAll('article[data-index]')];
+            validateSalePrice(basePriceInput, baseSalePriceInput);
             const activeCards = cards.filter(card => card.querySelector('.js-variant-visible')?.checked);
             const stock = cards.reduce((total, card) => total + (Number(card.querySelector('.js-variant-quantity')?.value) || 0), 0);
             const prices = cards
                 .map(card => {
                     const price = Number(card.querySelector('.js-variant-price')?.value);
                     const salePrice = Number(card.querySelector('.js-variant-sale-price')?.value);
+
+                    validateSalePrice(
+                        card.querySelector('.js-variant-price'),
+                        card.querySelector('.js-variant-sale-price'),
+                    );
 
                     return salePrice > 0 && salePrice < price ? salePrice : price;
                 })
@@ -2117,7 +2144,7 @@
                     <div class="variant-option-picker">
                         <select class="cell-input-small js-variant-type">${typeOptions()}</select>
                         <select class="cell-input-small js-variant-value">${valueOptions(firstTypeId)}</select>
-                        <button type="button" class="btn-variant-mini js-add-option" title="Thêm tùy chọn"><i class="fa-solid fa-plus"></i></button>
+                        <button type="button" class="btn-variant-mini js-add-option" title="Thêm thuộc tính">Thêm thuộc tính</button>
                     </div>
                     <div class="variant-option-chips"></div>
                     <div class="variant-hidden-values"></div>
@@ -2134,7 +2161,7 @@
                 </div>
                 <div class="variant-card-footer">
                     <label class="variant-visibility-toggle"><input type="checkbox" class="js-variant-visible" name="variants[${index}][visible]" value="1" ${active ? 'checked' : ''}> Hiển thị cho khách</label>
-                    <button type="button" class="btn-variant-mini js-remove-variant" title="${initial.id ? 'Biến thể đã lưu sẽ được quản lý ở bước bỏ/ẩn biến thể' : 'Bỏ biến thể mới'}" ${initial.id ? 'disabled' : ''}><i class="fa-solid fa-trash-can"></i></button>
+                    <button type="button" class="btn-variant-mini js-remove-variant" title="Xóa biến thể"><i class="fa-solid fa-trash-can"></i><span>Xóa</span></button>
                 </div>
                 </div>
             `;
@@ -2243,6 +2270,15 @@
             }
 
             if (event.target.closest('.js-remove-variant')) {
+                if (!window.confirm('Xóa biến thể này? Thao tác không thể hoàn tác sau khi lưu sản phẩm.')) return;
+                const variantId = row.querySelector('input[name$="[id]"]')?.value;
+                if (variantId) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'deleted_variant_ids[]';
+                    input.value = variantId;
+                    deletedVariantInputs.appendChild(input);
+                }
                 row.remove();
                 updateVariantsEmptyState();
                 updateVariantSummary();
