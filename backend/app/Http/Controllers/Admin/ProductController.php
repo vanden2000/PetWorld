@@ -352,8 +352,6 @@ class ProductController extends Controller
             ]);
             $product->petSpecies()->sync($validated['pet_species_ids'] ?? []);
 
-            $this->deleteSubmittedVariants($request, $product);
-
             if ($this->hasSubmittedVariants($request)) {
                 $this->syncSubmittedVariants($request, $product, $validated);
             } else {
@@ -439,8 +437,6 @@ class ProductController extends Controller
             'variants.*.visible' => 'nullable|in:1',
             'variants.*.value_ids' => 'nullable|array',
             'variants.*.value_ids.*' => 'integer|exists:variant_values,id',
-            'deleted_variant_ids' => 'nullable|array',
-            'deleted_variant_ids.*' => 'integer|exists:product_variants,id',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'images' => 'nullable|array|max:8',
             'deleted_image_ids' => 'nullable|array',
@@ -510,24 +506,6 @@ class ProductController extends Controller
             if ($ownedVariantCount !== count($variantIds)) {
                 throw ValidationException::withMessages([
                     'variants' => 'Có biến thể không thuộc sản phẩm này.',
-                ]);
-            }
-        }
-
-        $deletedVariantIds = collect($request->input('deleted_variant_ids', []))
-            ->map(fn ($id): int => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
-
-        if ($product && $deletedVariantIds !== []) {
-            $ownedDeletedVariantCount = $product->variants()
-                ->whereIn('id', $deletedVariantIds)
-                ->count();
-
-            if ($ownedDeletedVariantCount !== count($deletedVariantIds)) {
-                throw ValidationException::withMessages([
-                    'deleted_variant_ids' => 'Có biến thể cần xóa không thuộc sản phẩm này.',
                 ]);
             }
         }
@@ -625,45 +603,6 @@ class ProductController extends Controller
             $variant = $product->variants()->create($data);
             $variant->syncVariantValues($this->cleanVariantValueIds($variantInput['value_ids'] ?? []));
         }
-    }
-
-    private function deleteSubmittedVariants(Request $request, Product $product): void
-    {
-        $variantIds = collect($request->input('deleted_variant_ids', []))
-            ->map(fn ($id): int => (int) $id)
-            ->unique()
-            ->values();
-
-        if ($variantIds->isEmpty()) {
-            return;
-        }
-
-        $newVariantCount = collect($request->input('variants', []))
-            ->filter(fn (array $variant): bool => empty($variant['id']) && !empty($variant['sku']))
-            ->count();
-        $remainingVariantCount = $product->variants()
-            ->whereNotIn('id', $variantIds->all())
-            ->count();
-
-        if ($remainingVariantCount + $newVariantCount === 0) {
-            throw ValidationException::withMessages([
-                'deleted_variant_ids' => 'Sản phẩm phải còn ít nhất một biến thể. Hãy thêm biến thể mới trước khi xóa biến thể cuối cùng.',
-            ]);
-        }
-
-        $variants = $product->variants()
-            ->whereIn('id', $variantIds->all())
-            ->withCount('orderItems')
-            ->get();
-
-        $usedVariant = $variants->firstWhere('order_items_count', '>', 0);
-        if ($usedVariant) {
-            throw ValidationException::withMessages([
-                'deleted_variant_ids' => "Không thể xóa SKU {$usedVariant->sku} vì đã có trong đơn hàng. Hãy ẩn biến thể này thay vì xóa.",
-            ]);
-        }
-
-        $variants->each->delete();
     }
 
     private function hasSubmittedVariants(Request $request): bool

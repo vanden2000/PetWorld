@@ -789,7 +789,7 @@
         padding: 0 10px;
     }
 
-    .js-remove-variant { color: #b42318; }
+    .js-toggle-variant-visibility { color: #9a6700; }
 
     .variant-summary-grid {
         display: grid;
@@ -1593,7 +1593,6 @@
                             Chưa có biến thể. Bấm <strong>Thêm biến thể</strong> để tạo SKU đầu tiên.
                         </div>
                     </div>
-                    <div id="deleted-variant-inputs"></div>
                 </div>
 
         <!-- Fixed Bottom Drawer Action Bar -->
@@ -1887,7 +1886,6 @@
         const btnToggleVariantAddMenu = document.getElementById('btn-toggle-variant-add-menu');
         const variantAddMenuList = document.getElementById('variant-add-menu-list');
         const variantsCardList = document.getElementById('variants-card-list');
-        const deletedVariantInputs = document.getElementById('deleted-variant-inputs');
         const variantsEmptyState = document.getElementById('variants-empty-state');
         const productAttributeGroups = document.getElementById('product-attribute-groups');
         const productAttributesNote = document.getElementById('product-attributes-note');
@@ -2052,6 +2050,14 @@
                 status.classList.toggle('active', isVisible);
                 status.classList.toggle('inactive', !isVisible);
             }
+
+            const visibilityButton = row.querySelector('.js-toggle-variant-visibility');
+            if (visibilityButton) {
+                visibilityButton.innerHTML = isVisible
+                    ? '<i class="fa-solid fa-eye-slash"></i><span>Ẩn</span>'
+                    : '<i class="fa-solid fa-eye"></i><span>Hiện</span>';
+                visibilityButton.title = isVisible ? 'Ẩn biến thể khỏi khách hàng' : 'Hiện biến thể cho khách hàng';
+            }
         }
 
         function formatVariantPrice(value) {
@@ -2161,7 +2167,7 @@
                 </div>
                 <div class="variant-card-footer">
                     <label class="variant-visibility-toggle"><input type="checkbox" class="js-variant-visible" name="variants[${index}][visible]" value="1" ${active ? 'checked' : ''}> Hiển thị cho khách</label>
-                    <button type="button" class="btn-variant-mini js-remove-variant" title="Xóa biến thể"><i class="fa-solid fa-trash-can"></i><span>Xóa</span></button>
+                    <button type="button" class="btn-variant-mini js-toggle-variant-visibility" title="Ẩn biến thể khỏi khách hàng"><i class="fa-solid fa-eye-slash"></i><span>Ẩn</span></button>
                 </div>
                 </div>
             `;
@@ -2269,21 +2275,12 @@
                 renderChips(row, ids);
             }
 
-            if (event.target.closest('.js-remove-variant')) {
-                if (!window.confirm('Xóa biến thể này? Thao tác không thể hoàn tác sau khi lưu sản phẩm.')) return;
-                const variantId = row.querySelector('input[name$="[id]"]')?.value;
-                if (variantId) {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'deleted_variant_ids[]';
-                    input.value = variantId;
-                    deletedVariantInputs.appendChild(input);
-                }
-                row.remove();
-                updateVariantsEmptyState();
+            if (event.target.closest('.js-toggle-variant-visibility')) {
+                const visibleInput = row.querySelector('.js-variant-visible');
+                if (!visibleInput) return;
+                visibleInput.checked = !visibleInput.checked;
+                updateVariantCard(row);
                 updateVariantSummary();
-                updateProductAttributesOverview();
-                validateVariantSkus();
             }
         });
 
