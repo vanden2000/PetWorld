@@ -12,6 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Mỗi phút quét SePay API để tự xác nhận đơn chuyển khoản đã trả (không cần webhook/ngrok).
+        $schedule->command('orders:check-sepay-payments')->everyMinute()->withoutOverlapping();
         // Mỗi phút quét đơn chuyển khoản quá hạn để tự hủy + hoàn kho.
         $schedule->command('orders:expire-unpaid')->everyMinute()->withoutOverlapping();
     }

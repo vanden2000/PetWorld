@@ -52,6 +52,15 @@
             grid-template-columns: 1fr;
         }
     }
+
+    /* Biểu đồ cột doanh thu theo thời gian — 1 chuỗi, dùng màu chủ đạo (cam) */
+    .rvbar { display: flex; align-items: flex-end; gap: 14px; min-height: 262px; padding: 20px 4px 0; overflow-x: auto; }
+    .rvbar-col { flex: 1 1 0; min-width: 56px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; cursor: default; }
+    .rvbar-value { font-size: 0.72rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; white-space: nowrap; }
+    .rvbar-fill { width: 100%; max-width: 48px; background: var(--primary); border-radius: 5px 5px 0 0; min-height: 4px; transition: height .35s ease, background-color .2s ease; }
+    .rvbar-col:hover .rvbar-fill { background: var(--primary-hover); }
+    .rvbar-label { margin-top: 10px; font-size: 0.7rem; color: var(--text-muted); text-align: center; white-space: nowrap; }
+    .rvbar-empty { margin: auto; color: var(--text-muted); font-size: 0.9rem; padding: 40px 0; }
 </style>
 @endsection
 
@@ -136,8 +145,8 @@
                 <span>+1.5%</span>
             </div>
         </div>
-        <div class="stat-label">Tỷ suất lợi nhuận TB</div>
-        <div class="stat-value" id="margin-val">35.4%</div>
+        <div class="stat-label">Tỷ lệ giảm giá TB</div>
+        <div class="stat-value" id="margin-val">0%</div>
     </div>
 </div>
 
@@ -145,23 +154,10 @@
     <!-- Revenue Table -->
     <div class="dashboard-card" style="margin-top: 0;">
         <div class="card-header-styled">
-            <span class="card-title-styled">Chi tiết doanh thu theo thời gian</span>
+            <span class="card-title-styled">Doanh thu theo thời gian</span>
         </div>
-        <div class="table-container">
-            <table class="orders-table">
-                <thead>
-                    <tr>
-                        <th>THỜI GIAN</th>
-                        <th>SỐ ĐƠN HÀNG</th>
-                        <th>DOANH THU THÔ</th>
-                        <th>CHIẾT KHẤU / GIẢM GIÁ</th>
-                        <th>DOANH THU THỰC TẾ</th>
-                    </tr>
-                </thead>
-                <tbody id="revenue-table-body">
-                    <!-- Loaded dynamically via js -->
-                </tbody>
-            </table>
+        <div class="rvbar" id="revenue-bar-chart">
+            <!-- Cột doanh thu được vẽ động qua JS -->
         </div>
     </div>
 
@@ -198,101 +194,51 @@
             filterMenu.style.display = 'none';
         });
 
-        // Mock data dictionary
-        const mockData = {
-            today: {
-                revenue: "38.200.000đ",
-                revenueTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+14.2%</span>",
-                orders: "95 đơn",
-                ordersTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+6.5%</span>",
-                aov: "402.000đ",
-                aovTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+2.1%</span>",
-                margin: "36.8%",
-                marginTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+0.8%</span>",
-                categories: [
-                    { name: "Dry Food", percentage: "48%", val: "18.336.000đ", class: "color-dry-food", color: "#ff782d" },
-                    { name: "Wet Food", percentage: "24%", val: "9.168.000đ", class: "color-wet-food", color: "#4b6b60" },
-                    { name: "Accessories", percentage: "18%", val: "6.876.000đ", class: "color-accessories", color: "#825736" },
-                    { name: "Toys", percentage: "10%", val: "3.820.000đ", class: "color-toys", color: "#bdc7c2" }
-                ],
-                table: [
-                    { time: "08:00 - 10:00", count: 18, gross: "7.500.000đ", discount: "320.000đ", net: "7.180.000đ" },
-                    { time: "10:00 - 12:00", count: 28, gross: "11.200.000đ", discount: "540.000đ", net: "10.660.000đ" },
-                    { time: "12:00 - 14:00", count: 14, gross: "5.600.000đ", discount: "180.000đ", net: "5.420.000đ" },
-                    { time: "14:00 - 16:00", count: 22, gross: "8.900.000đ", discount: "410.000đ", net: "8.490.000đ" },
-                    { time: "16:00 - 18:00", count: 13, gross: "6.800.000đ", discount: "350.000đ", net: "6.450.000đ" }
-                ]
-            },
-            "7days": {
-                revenue: "268.400.000đ",
-                revenueTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+9.8%</span>",
-                orders: "680 đơn",
-                ordersTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+7.2%</span>",
-                aov: "394.000đ",
-                aovTrend: "<i class='fa-solid fa-arrow-trend-down'></i> <span>-1.2%</span>",
-                margin: "35.9%",
-                marginTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+1.1%</span>",
-                categories: [
-                    { name: "Dry Food", percentage: "46%", val: "123.464.000đ", class: "color-dry-food", color: "#ff782d" },
-                    { name: "Wet Food", percentage: "25%", val: "67.100.000đ", class: "color-wet-food", color: "#4b6b60" },
-                    { name: "Accessories", percentage: "19%", val: "50.996.000đ", class: "color-accessories", color: "#825736" },
-                    { name: "Toys", percentage: "10%", val: "26.840.000đ", class: "color-toys", color: "#bdc7c2" }
-                ],
-                table: [
-                    { time: "Hôm qua", count: 90, gross: "36.500.000đ", discount: "1.450.000đ", net: "35.050.000đ" },
-                    { time: "2 ngày trước", count: 102, gross: "41.200.000đ", discount: "2.100.000đ", net: "39.100.000đ" },
-                    { time: "3 ngày trước", count: 96, gross: "38.700.000đ", discount: "1.800.000đ", net: "36.900.000đ" },
-                    { time: "4 ngày trước", count: 110, gross: "44.100.000đ", discount: "2.500.000đ", net: "41.600.000đ" },
-                    { time: "5 ngày trước", count: 94, gross: "37.800.000đ", discount: "1.650.000đ", net: "36.150.000đ" },
-                    { time: "6 ngày trước", count: 88, gross: "35.200.000đ", discount: "1.300.000đ", net: "33.900.000đ" }
-                ]
-            },
-            "30days": {
-                revenue: "1.284.000.000đ",
-                revenueTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+12.5%</span>",
-                orders: "3,120 đơn",
-                ordersTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+8.2%</span>",
-                aov: "372.000đ",
-                aovTrend: "<i class='fa-solid fa-arrow-trend-down'></i> <span>-2.4%</span>",
-                margin: "35.4%",
-                marginTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+1.5%</span>",
-                categories: [
-                    { name: "Dry Food", percentage: "45%", val: "577.800.000đ", class: "color-dry-food", color: "#ff782d" },
-                    { name: "Wet Food", percentage: "25%", val: "321.000.000đ", class: "color-wet-food", color: "#4b6b60" },
-                    { name: "Accessories", percentage: "20%", val: "256.800.000đ", class: "color-accessories", color: "#825736" },
-                    { name: "Toys", percentage: "10%", val: "128.400.000đ", class: "color-toys", color: "#bdc7c2" }
-                ],
-                table: [
-                    { time: "Tuần 1", count: 680, gross: "275.000.000đ", discount: "11.200.000đ", net: "263.800.000đ" },
-                    { time: "Tuần 2", count: 742, gross: "305.000.000đ", discount: "14.500.000đ", net: "290.500.000đ" },
-                    { time: "Tuần 3", count: 815, gross: "348.000.000đ", discount: "15.800.000đ", net: "332.200.000đ" },
-                    { time: "Tuần 4", count: 883, gross: "385.000.000đ", discount: "17.500.000đ", net: "367.500.000đ" }
-                ]
-            }
-        };
+        // Dữ liệu thật do ReportController tính sẵn cho 3 mốc thời gian.
+        const periodData = @json($periods);
+
+        function trendHtml(t) {
+            const icon = t.up ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+            return `<i class="fa-solid ${icon}"></i> <span>${t.pct}</span>`;
+        }
+        function setTrend(id, t) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('trend-up', 'trend-down');
+            el.classList.add(t.up ? 'trend-up' : 'trend-down');
+            el.innerHTML = trendHtml(t);
+        }
+
+        function formatMoney(n) {
+            return Number(n || 0).toLocaleString('vi-VN') + 'đ';
+        }
 
         // Render function
         function updatePage(filter) {
-            const data = mockData[filter];
+            const data = periodData[filter];
+            if (!data) return;
             
             // Update stats
             document.getElementById('revenue-val').innerText = data.revenue;
-            document.getElementById('revenue-trend').innerHTML = data.revenueTrend;
             document.getElementById('orders-val').innerText = data.orders;
-            document.getElementById('orders-trend').innerHTML = data.ordersTrend;
             document.getElementById('aov-val').innerText = data.aov;
-            document.getElementById('aov-trend').innerHTML = data.aovTrend;
-            document.getElementById('margin-val').innerText = data.margin;
-            document.getElementById('margin-trend').innerHTML = data.marginTrend;
+            document.getElementById('margin-val').innerText = data.discountRate;
+            setTrend('revenue-trend', data.trends.revenue);
+            setTrend('orders-trend', data.trends.orders);
+            setTrend('aov-trend', data.trends.aov);
+            setTrend('margin-trend', data.trends.discount);
 
             // Render categories list
             const categoryList = document.getElementById('category-list');
             categoryList.innerHTML = '';
+            if (!data.categories.length) {
+                categoryList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Chưa có doanh thu theo danh mục trong kỳ này.</div>';
+            }
             data.categories.forEach(cat => {
                 categoryList.innerHTML += `
                     <div class="legend-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
                         <div class="legend-row-left" style="display: flex; align-items: center; gap: 10px;">
-                            <span class="legend-color-indicator ${cat.class}" style="width: 12px; height: 12px; border-radius: 50%; background-color: ${cat.color}; display: inline-block;"></span>
+                            <span class="legend-color-indicator" style="width: 12px; height: 12px; border-radius: 50%; background-color: ${cat.color}; display: inline-block;"></span>
                             <span style="font-weight: 600;">${cat.name} (${cat.percentage})</span>
                         </div>
                         <span class="legend-value-percentage" style="font-weight: 700; color: var(--primary);">${cat.val}</span>
@@ -300,20 +246,24 @@
                 `;
             });
 
-            // Render table
-            const tableBody = document.getElementById('revenue-table-body');
-            tableBody.innerHTML = '';
-            data.table.forEach(row => {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td style="font-weight: 700;">${row.time}</td>
-                        <td>${row.count}</td>
-                        <td>${row.gross}</td>
-                        <td style="color: var(--danger); font-weight: 500;">-${row.discount}</td>
-                        <td class="col-total" style="font-weight: 700; color: var(--success);">${row.net}</td>
-                    </tr>
-                `;
-            });
+            // Render bar chart (doanh thu thực tế theo thời gian)
+            const barChart = document.getElementById('revenue-bar-chart');
+            barChart.innerHTML = '';
+            if (!data.chart.length) {
+                barChart.innerHTML = '<div class="rvbar-empty">Chưa có đơn đã thanh toán trong khoảng thời gian này.</div>';
+            } else {
+                const maxVal = Math.max(...data.chart.map(d => d.value), 1);
+                data.chart.forEach(d => {
+                    const h = Math.max(4, Math.round(d.value / maxVal * 190));
+                    barChart.innerHTML += `
+                        <div class="rvbar-col" title="${d.label}: ${formatMoney(d.value)}">
+                            <div class="rvbar-value">${formatMoney(d.value)}</div>
+                            <div class="rvbar-fill" style="height: ${h}px;"></div>
+                            <div class="rvbar-label">${d.label}</div>
+                        </div>
+                    `;
+                });
+            }
         }
 
         // Handle Filter Option click

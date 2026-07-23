@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class BrandController extends Controller
 {
@@ -81,7 +83,48 @@ class BrandController extends Controller
             ->withCount('products')
             ->findOrFail($id);
 
-        return view('admin.brands.edit', compact('brand'));
+        $revenueSeries = $this->brandRevenueSeries($brand);
+
+        return view('admin.brands.edit', compact('brand', 'revenueSeries'));
+    }
+
+    /**
+     * Doanh thu thật của thương hiệu theo tháng (đơn đã thanh toán, chưa hủy).
+     * Trả về 2 chuỗi cho biểu đồ cột: 'year' (12 tháng năm nay) và '6m' (6 tháng gần nhất).
+     */
+    private function brandRevenueSeries(Brand $brand): array
+    {
+        $monthly = function (Carbon $start, Carbon $end) use ($brand) {
+            return DB::table('order_items as oi')
+                ->join('orders as o', 'o.id', '=', 'oi.order_id')
+                ->join('product_variants as pv', 'pv.id', '=', 'oi.product_variant_id')
+                ->join('products as p', 'p.id', '=', 'pv.product_id')
+                ->where('p.brand_id', $brand->id)
+                ->where('o.payment_status', 'paid')
+                ->where('o.order_status', '!=', 'cancelled')
+                ->whereBetween('o.created_at', [$start, $end])
+                ->selectRaw("DATE_FORMAT(o.created_at, '%Y-%m') as ym, SUM(oi.price * oi.quantity) as revenue")
+                ->groupByRaw("DATE_FORMAT(o.created_at, '%Y-%m')")
+                ->pluck('revenue', 'ym');
+        };
+
+        $now = Carbon::now();
+
+        $yearMap = $monthly($now->copy()->startOfYear(), $now->copy()->endOfYear());
+        $year = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $key = sprintf('%04d-%02d', $now->year, $m);
+            $year[] = ['label' => 'Th.' . $m, 'value' => (float) ($yearMap[$key] ?? 0)];
+        }
+
+        $sixMap = $monthly($now->copy()->startOfMonth()->subMonths(5), $now->copy()->endOfMonth());
+        $six = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = $now->copy()->subMonths($i);
+            $six[] = ['label' => 'Th.' . $month->month, 'value' => (float) ($sixMap[$month->format('Y-m')] ?? 0)];
+        }
+
+        return ['year' => $year, '6m' => $six];
     }
 
     public function update(Request $request, $id)
