@@ -613,7 +613,6 @@
     }
 
     .tbl-products th {
-        padding: 12px 14px;
         white-space: nowrap;
     }
 
