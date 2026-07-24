@@ -455,8 +455,8 @@
                                     <span class="badge-status status-pending" style="white-space: nowrap;">SẮP HẾT</span>
                                 @endif
                             </td>
-                            <td style="text-align: right;">
-                                <button class="btn-action-stock" onclick="alert('Đã gửi yêu cầu nhập thêm hàng SKU: {{ $variant->sku }}')">Nhập hàng</button>
+                            <td style="text-align: right; white-space: nowrap;">
+                                <a href="{{ $variant->product_id ? route('admin.products.edit', $variant->product_id) : route('admin.products') }}" class="btn-action-stock" style="text-decoration: none; display: inline-block;">Nhập hàng</a>
                             </td>
                         </tr>
                     @empty
@@ -469,8 +469,8 @@
                             </td>
                             <td style="font-weight: 700; color: var(--danger);">0 SP</td>
                             <td><span class="badge-status status-cancelled">HẾT HÀNG</span></td>
-                            <td style="text-align: right;">
-                                <button class="btn-action-stock" onclick="alert('Đã gửi yêu cầu nhập thêm hàng')">Nhập hàng</button>
+                            <td style="text-align: right; white-space: nowrap;">
+                                <a href="{{ route('admin.products') }}" class="btn-action-stock" style="text-decoration: none; display: inline-block;">Nhập hàng</a>
                             </td>
                         </tr>
                         <tr>
@@ -482,8 +482,8 @@
                             </td>
                             <td style="font-weight: 700; color: var(--warning);">1 SP</td>
                             <td><span class="badge-status status-pending">SẮP HẾT</span></td>
-                            <td style="text-align: right;">
-                                <button class="btn-action-stock" onclick="alert('Đã gửi yêu cầu nhập thêm hàng')">Nhập hàng</button>
+                            <td style="text-align: right; white-space: nowrap;">
+                                <a href="{{ route('admin.products') }}" class="btn-action-stock" style="text-decoration: none; display: inline-block;">Nhập hàng</a>
                             </td>
                         </tr>
                     @endforelse
