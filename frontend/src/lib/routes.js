@@ -25,7 +25,7 @@ export const ROUTES = {
 export const MAIN_NAV = [
   { href: ROUTES.home, label: "Trang Chủ" },
   { href: ROUTES.shop, label: "Cửa Hàng" },
-  { href: ROUTES.aboutUs, label: "Về Chúng Tôi" },
   { href: ROUTES.news, label: "Tin Tức" },
+  { href: ROUTES.aboutUs, label: "Về Chúng Tôi" },
   { href: ROUTES.contact, label: "Liên hệ" },
 ];

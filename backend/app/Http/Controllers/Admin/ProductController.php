@@ -363,8 +363,9 @@ class ProductController extends Controller
                     'status' => 'active',
                 ];
 
-                $firstVariant
-                    ? $firstVariant->update($variantData)
+                $currentVariant = $product->variants()->first();
+                $currentVariant
+                    ? $currentVariant->update($variantData)
                     : $product->variants()->create($variantData);
             }
         });

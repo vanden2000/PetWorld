@@ -777,14 +777,19 @@
     }
 
     .btn-variant-mini {
+        align-items: center;
         border: 1px solid var(--theme-border);
-        background: #ffffff;
+        background: var(--theme-primary);
         border-radius: 4px;
         cursor: pointer;
-        color: var(--theme-text-main);
+        color: #ffffff;
+        display: inline-flex;
+        gap: 5px;
         height: 34px;
-        min-width: 34px;
+        padding: 0 10px;
     }
+
+    .js-toggle-variant-visibility { color: #9a6700; }
 
     .variant-summary-grid {
         display: grid;
@@ -929,13 +934,13 @@
 
     .variant-card-status {
         border-radius: 999px;
-        padding: 5px 9px;
+        padding: 10px 10px;
         font-size: .72rem;
         font-weight: 800;
     }
 
-    .variant-card-status.active { color: var(--theme-success); background: rgba(34, 197, 94, .1); }
-    .variant-card-status.inactive { color: var(--theme-text-gray); background: var(--theme-gray-light); }
+    .variant-card-status.active { color: var(--theme-success); background: rgba(11, 228, 91, 0.72); }
+    .variant-card-status.inactive { color: var(--theme-text-gray); background: rgba(128, 128, 128, 0.72); }
 
     .variant-price-grid {
         display: grid;
@@ -1231,7 +1236,6 @@
     }
 
     .variant-option-picker {
-        grid-template-columns: minmax(120px, 1fr) minmax(130px, 1fr) 36px;
         gap: 6px;
     }
 
@@ -1891,6 +1895,10 @@
         const baseSalePriceInput = document.getElementById('sale_price');
         const baseQtyInput = document.getElementById('quantity');
 
+        [basePriceInput, baseSalePriceInput].forEach(input => {
+            input?.addEventListener('input', updateVariantSummary);
+        });
+
         let variantIndex = 0;
 
         function updateVariantsEmptyState() {
@@ -2041,20 +2049,44 @@
                 status.classList.toggle('active', isVisible);
                 status.classList.toggle('inactive', !isVisible);
             }
+
+            const visibilityButton = row.querySelector('.js-toggle-variant-visibility');
+            if (visibilityButton) {
+                visibilityButton.innerHTML = isVisible
+                    ? '<i class="fa-solid fa-eye-slash"></i><span>Ẩn</span>'
+                    : '<i class="fa-solid fa-eye"></i><span>Hiện</span>';
+                visibilityButton.title = isVisible ? 'Ẩn biến thể khỏi khách hàng' : 'Hiện biến thể cho khách hàng';
+            }
         }
 
         function formatVariantPrice(value) {
             return `${new Intl.NumberFormat('vi-VN').format(value)}đ`;
         }
 
+        function validateSalePrice(priceInput, salePriceInput) {
+            if (!priceInput || !salePriceInput) return;
+
+            const price = Number(priceInput.value);
+            const salePrice = salePriceInput.value === '' ? null : Number(salePriceInput.value);
+            const invalid = salePrice !== null && Number.isFinite(price) && salePrice >= price;
+            salePriceInput.setCustomValidity(invalid ? 'Giá giảm phải nhỏ hơn giá bán.' : '');
+            salePriceInput.classList.toggle('is-invalid', invalid);
+        }
+
         function updateVariantSummary() {
             const cards = [...variantsCardList.querySelectorAll('article[data-index]')];
+            validateSalePrice(basePriceInput, baseSalePriceInput);
             const activeCards = cards.filter(card => card.querySelector('.js-variant-visible')?.checked);
             const stock = cards.reduce((total, card) => total + (Number(card.querySelector('.js-variant-quantity')?.value) || 0), 0);
             const prices = cards
                 .map(card => {
                     const price = Number(card.querySelector('.js-variant-price')?.value);
                     const salePrice = Number(card.querySelector('.js-variant-sale-price')?.value);
+
+                    validateSalePrice(
+                        card.querySelector('.js-variant-price'),
+                        card.querySelector('.js-variant-sale-price'),
+                    );
 
                     return salePrice > 0 && salePrice < price ? salePrice : price;
                 })
@@ -2117,7 +2149,7 @@
                     <div class="variant-option-picker">
                         <select class="cell-input-small js-variant-type">${typeOptions()}</select>
                         <select class="cell-input-small js-variant-value">${valueOptions(firstTypeId)}</select>
-                        <button type="button" class="btn-variant-mini js-add-option" title="Thêm tùy chọn"><i class="fa-solid fa-plus"></i></button>
+                        <button type="button" class="btn-variant-mini js-add-option" title="Thêm thuộc tính">Thêm thuộc tính</button>
                     </div>
                     <div class="variant-option-chips"></div>
                     <div class="variant-hidden-values"></div>
@@ -2134,7 +2166,7 @@
                 </div>
                 <div class="variant-card-footer">
                     <label class="variant-visibility-toggle"><input type="checkbox" class="js-variant-visible" name="variants[${index}][visible]" value="1" ${active ? 'checked' : ''}> Hiển thị cho khách</label>
-                    <button type="button" class="btn-variant-mini js-remove-variant" title="${initial.id ? 'Biến thể đã lưu sẽ được quản lý ở bước bỏ/ẩn biến thể' : 'Bỏ biến thể mới'}" ${initial.id ? 'disabled' : ''}><i class="fa-solid fa-trash-can"></i></button>
+                    <button type="button" class="btn-variant-mini js-toggle-variant-visibility" title="Ẩn biến thể khỏi khách hàng"><i class="fa-solid fa-eye-slash"></i><span>Ẩn</span></button>
                 </div>
                 </div>
             `;
@@ -2242,12 +2274,12 @@
                 renderChips(row, ids);
             }
 
-            if (event.target.closest('.js-remove-variant')) {
-                row.remove();
-                updateVariantsEmptyState();
+            if (event.target.closest('.js-toggle-variant-visibility')) {
+                const visibleInput = row.querySelector('.js-variant-visible');
+                if (!visibleInput) return;
+                visibleInput.checked = !visibleInput.checked;
+                updateVariantCard(row);
                 updateVariantSummary();
-                updateProductAttributesOverview();
-                validateVariantSkus();
             }
         });
 

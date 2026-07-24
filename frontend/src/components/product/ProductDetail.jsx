@@ -39,7 +39,11 @@ export default function ProductDetail({ product }) {
   const variants = useMemo(() => product.variants ?? [], [product.variants]);
   // Mặc định chọn biến thể có giá hiệu lực thấp nhất (đồng nhất với cách card hiển thị giá).
   const defaultVariant = useMemo(
-    () => [...variants].sort((a, b) => a.effective_price - b.effective_price)[0] ?? null,
+    () => [...variants]
+      .filter((variant) => variant.quantity > 0)
+      .sort((a, b) => a.effective_price - b.effective_price)[0]
+      ?? [...variants].sort((a, b) => a.effective_price - b.effective_price)[0]
+      ?? null,
     [variants],
   );
 
@@ -86,23 +90,47 @@ export default function ProductDetail({ product }) {
     }));
   }, [variants]);
 
-  const optionIsAvailable = (typeId, value) => variants.some((variant) => {
-    if (variant.quantity <= 0) return false;
+  // Chỉ hiện giá trị hợp lệ theo các thuộc tính đã chọn ở phía trước.
+  // Ví dụ: đã chọn 1.2kg thì nhóm Kích thước chỉ còn các size của 1.2kg.
+  const visibleValuesForGroup = (group, groupIndex) => {
+    const precedingTypeIds = variantGroups
+      .slice(0, groupIndex)
+      .map((precedingGroup) => precedingGroup.id);
 
-    const options = Object.fromEntries(
-      (variant.options ?? []).map((option) => [option.type_id, option.value]),
-    );
+    return group.values.filter((value) => variants.some((variant) => {
+      if (variant.quantity <= 0) return false;
 
-    if (options[typeId] !== value) return false;
+      const options = Object.fromEntries(
+        (variant.options ?? []).map((option) => [option.type_id, option.value]),
+      );
 
-    return Object.entries(selectedOptions).every(([selectedTypeId, selectedValue]) =>
-      Number(selectedTypeId) === Number(typeId)
-      || options[selectedTypeId] === selectedValue,
-    );
-  });
+      return options[group.id] === value
+        && precedingTypeIds.every((typeId) =>
+          !selectedOptions[typeId] || options[typeId] === selectedOptions[typeId],
+        );
+    }));
+  };
 
   const selectOption = (typeId, value) => {
-    setSelectedOptions((current) => ({ ...current, [typeId]: value }));
+    setSelectedOptions((current) => {
+      const matchingVariants = variants.filter((variant) =>
+        variant.quantity > 0
+        && variant.options?.some((option) =>
+          Number(option.type_id) === Number(typeId) && option.value === value,
+        ),
+      );
+
+      const nextVariant = matchingVariants.find((variant) =>
+        variant.options?.every((option) =>
+          Number(option.type_id) === Number(typeId)
+          || current[option.type_id] === option.value,
+        ),
+      ) ?? matchingVariants[0];
+
+      return Object.fromEntries(
+        (nextVariant?.options ?? []).map((option) => [option.type_id, option.value]),
+      );
+    });
     setQuantity(1);
   };
 
@@ -227,24 +255,32 @@ export default function ProductDetail({ product }) {
           )}
         </div>
 
-        {variantGroups.map((group) => (
+        {variantGroups.map((group, groupIndex) => {
+          const visibleValues = visibleValuesForGroup(group, groupIndex);
+
+          return (
           <div className="pd-variant-group" key={group.id}>
             <span className="pd-variant-label">{group.name}:</span>
             <div className="pd-variant-options">
-              {group.values.map((value) => (
+              {visibleValues.map((value) => (
                 <button
                   key={value}
                   type="button"
                   className={`pd-variant-btn ${selectedOptions[group.id] === value ? "active" : ""}`}
                   onClick={() => selectOption(group.id, value)}
-                  disabled={!optionIsAvailable(group.id, value)}
                 >
                   {value}
                 </button>
               ))}
             </div>
+            {false && (
+              <p className="pd-variant-unavailable-hint">
+                Một số lựa chọn không có ở phân loại đang chọn.
+              </p>
+            )}
           </div>
-        ))}
+          );
+        })}
 
         <div className="pd-actions">
           <div className="pd-qty">

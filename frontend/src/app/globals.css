@@ -7236,6 +7236,9 @@ body {
 }
 
 .pd-card {
+  width: 100%;
+  max-width: 1300px;
+  margin-inline: auto;
   background-color: #ffffff;
   border: 1px solid #eef1f5;
   border-radius: 18px;
@@ -7263,10 +7266,14 @@ body {
 }
 
 .pd-description {
+  min-width: 0;
+  max-width: 100%;
   color: var(--text-muted);
   font-size: 15px;
   line-height: 1.75;
   margin-bottom: 22px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* description là HTML (h2/h3/p/ul) do backend dựng sẵn */
@@ -7285,6 +7292,7 @@ body {
 }
 
 .pd-description p {
+  max-width: 100%;
   margin-bottom: 12px;
 }
 
