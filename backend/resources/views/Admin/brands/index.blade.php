@@ -257,7 +257,7 @@
             <label class="filter-label">Tìm kiếm thương hiệu</label>
             <div class="filter-input-wrapper">
                 <i class="fa-solid fa-magnifying-glass filter-input-icon"></i>
-                <input class="filter-input" name="search" value="{{ request('search') }}" placeholder="Tên hoặc mô tả...">
+                <input class="filter-input" id="brandSearchInput" name="search" value="{{ request('search') }}" placeholder="Tên hoặc mô tả..." autocomplete="off">
             </div>
         </div>
 
@@ -326,7 +326,7 @@
                 </thead>
                 <tbody>
                     @forelse($brands as $index => $brand)
-                        <tr>
+                        <tr class="brand-table-row">
                             <td>{{ $index + 1 }}</td>
                             <td>
                                 @if($brand->image)
@@ -349,8 +349,8 @@
                             </td>
                             <td>
                                 <div class="brand-admin-name">
-                                    <strong>{{ $brand->name }}</strong>
-                                    <span>{{ \Illuminate\Support\Str::limit(strip_tags($brand->description ?: 'Chưa có mô tả chi tiết'), 54) }}</span>
+                                    <strong class="brand-name-text">{{ $brand->name }}</strong>
+                                    <span class="brand-desc-text">{{ \Illuminate\Support\Str::limit(strip_tags($brand->description ?: 'Chưa có mô tả chi tiết'), 54) }}</span>
                                 </div>
                             </td>
                             <td><span class="slug-text">{{ $brand->slug }}</span></td>
@@ -451,6 +451,48 @@
         document.addEventListener('click', function() {
             dropdowns.forEach(dropdown => dropdown.classList.remove('open'));
         });
+
+        // ---- Client-side instant filter on search input ----
+        const brandSearchInput = document.getElementById('brandSearchInput');
+        const tableBody = document.querySelector('.category-table tbody');
+        const brandRows = document.querySelectorAll('.brand-table-row');
+
+        if (brandSearchInput && tableBody) {
+            brandSearchInput.addEventListener('input', function() {
+                const q = brandSearchInput.value.toLowerCase().trim();
+                let visibleCount = 0;
+
+                brandRows.forEach(row => {
+                    const nameEl = row.querySelector('.brand-name-text');
+                    const descEl = row.querySelector('.brand-desc-text');
+
+                    const nameText = nameEl ? nameEl.textContent.toLowerCase() : '';
+                    const descText = descEl ? descEl.textContent.toLowerCase() : '';
+
+                    if (nameText.includes(q) || descText.includes(q)) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Show/hide no results row
+                let noResultsRow = document.getElementById('no-results-row');
+                if (!noResultsRow) {
+                    noResultsRow = document.createElement('tr');
+                    noResultsRow.id = 'no-results-row';
+                    noResultsRow.innerHTML = `<td colspan="7" style="text-align: center; color: var(--text-muted); padding: 34px;">Không tìm thấy thương hiệu phù hợp.</td>`;
+                    tableBody.appendChild(noResultsRow);
+                }
+
+                if (visibleCount === 0 && brandRows.length > 0) {
+                    noResultsRow.style.display = '';
+                } else {
+                    noResultsRow.style.display = 'none';
+                }
+            });
+        }
     });
 </script>
 @endsection
