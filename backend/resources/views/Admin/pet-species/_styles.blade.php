@@ -10,51 +10,42 @@
   .species-metric { padding:17px 18px; border:1px solid var(--border-color); border-radius:13px; background:var(--surface-color); }
   .species-metric span { display:block; color:var(--text-muted); font-size:.8rem; font-weight:600; }
   .species-metric strong { display:block; color:var(--text-main); font-size:1.55rem; line-height:1.15; margin-top:6px; }
-  /* Grid layout for species cards */
-  .species-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 24px;
-      margin-bottom: 30px;
-  }
+  .species-table-card { background:var(--surface-color); border:1px solid var(--border-color); border-radius:14px; overflow:hidden; }
+  .species-table { width:100%; border-collapse:collapse; }
+  .species-table th { padding:14px 18px; color:var(--text-muted); background:#fafbfc; text-align:left; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; }
+  .species-table td { padding:14px 18px; border-top:1px solid var(--border-color); color:var(--text-main); vertical-align:middle; }
+  .species-table tr:hover td { background:#fffdfb; }
 
-  .species-card {
-      background: var(--surface-color);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 24px;
-      position: relative;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      box-shadow: var(--shadow-subtle);
-      overflow: hidden;
+  /* Alignments and column widths for Species Table */
+  .species-table th:nth-child(1), .species-table td:nth-child(1) {
+      text-align: left;
   }
-
-  .species-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--primary);
-      box-shadow: 0 12px 24px rgba(255, 120, 45, 0.08), var(--shadow-medium);
+  .species-table th:nth-child(2), .species-table td:nth-child(2) {
+      text-align: left;
+      width: 140px;
   }
-
-  /* Badge row */
-  .species-card-badges {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-bottom: 16px;
+  .species-table th:nth-child(3), .species-table td:nth-child(3) {
+      text-align: center;
+      width: 120px;
   }
-
-  .species-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border-radius: 999px;
-      padding: 6px 9px;
-      font-size: .76rem;
-      font-weight: 700;
+  .species-table th:nth-child(4), .species-table td:nth-child(4) {
+      text-align: center;
+      width: 240px;
   }
-
+  .species-table th:nth-child(5), .species-table td:nth-child(5) {
+      text-align: center;
+      width: 100px;
+  }
+  .species-table th:nth-child(6), .species-table td:nth-child(6) {
+      text-align: right;
+      width: 120px;
+      padding-right: 24px;
+  }
+  .species-identity { display:flex; align-items:center; gap:12px; font-weight:700; }
+  .species-avatar { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; overflow:hidden; color:#7a4f35; flex:0 0 auto; }
+  .species-avatar img { width:100%; height:100%; object-fit:cover; }
+  .species-slug { color:var(--text-muted); font:600 .78rem ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .species-badge { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:6px 9px; font-size:.76rem; font-weight:700; }
   .species-badge--home { color:#a34b13; background:#fff0e6; }
   .species-badge--active { color:#16734a; background:#e9f8ef; }
   .species-badge--hidden { color:#667085; background:#f1f3f5; }
