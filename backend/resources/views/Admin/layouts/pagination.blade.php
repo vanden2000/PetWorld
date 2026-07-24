@@ -1,13 +1,15 @@
 @if ($paginator->hasPages())
-    <div class="pagination-container" style="border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background-color: var(--surface-color);">
+    <div class="pagination-container"
+        style="border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background-color: var(--surface-color);">
         {{-- Pagination Info --}}
-        <div class="pagination-info" style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); padding: 0 10px;">
-            Hiển thị 
-            <strong style="font-weight: 700; color: var(--text-main);">{{ $paginator->firstItem() }}</strong> 
-            đến 
-            <strong style="font-weight: 700; color: var(--text-main);">{{ $paginator->lastItem() }}</strong> 
-            trong số 
-            <strong style="font-weight: 700; color: var(--text-main);">{{ $paginator->total() }}</strong> 
+        <div class="pagination-info"
+            style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); padding: 0 10px;">
+            Hiển thị
+            <strong style="font-weight: 700; color: var(--text-main);">{{ $paginator->firstItem() }}</strong>
+            đến
+            <strong style="font-weight: 700; color: var(--text-main);">{{ $paginator->lastItem() }}</strong>
+            trong số
+            <strong style="font-weight: 700; color: var(--text-main);">{{ $paginator->total() }}</strong>
             kết quả
         </div>
 

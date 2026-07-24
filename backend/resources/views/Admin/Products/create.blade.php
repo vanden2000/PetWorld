@@ -780,10 +780,10 @@
     .btn-variant-mini {
         align-items: center;
         border: 1px solid var(--theme-border);
-        background: #ffffff;
+        background: var(--theme-primary);
         border-radius: 4px;
         cursor: pointer;
-        color: var(--theme-text-main);
+        color: #ffffff;
         display: inline-flex;
         gap: 5px;
         height: 34px;
@@ -940,7 +940,7 @@
         font-weight: 800;
     }
 
-    .variant-card-status.active { color: var(--theme-success); background: rgba(34, 197, 94, .1); }
+    .variant-card-status.active { color: var(--theme-success); background: rgba(19, 178, 77, 0.77); }
     .variant-card-status.inactive { color: var(--theme-text-gray); background: var(--theme-gray-light); }
 
     .variant-price-grid {
@@ -1237,7 +1237,6 @@
     }
 
     .variant-option-picker {
-        grid-template-columns: minmax(120px, 1fr) minmax(130px, 1fr) 36px;
         gap: 6px;
     }
 
