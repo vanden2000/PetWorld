@@ -366,10 +366,7 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="website">Website URL</label>
-                    <input type="url" class="form-control" id="website" name="website" value="{{ old('website', $brand->website) }}" placeholder="https://example.com">
-                </div>
+
 
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>Mô tả chi tiết</label>

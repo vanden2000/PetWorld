@@ -62,10 +62,7 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="website">Địa chỉ Website</label>
-            <input type="url" class="form-control" id="website" name="website" value="{{ old('website') }}" placeholder="https://example.com">
-        </div>
+
 
         <div class="form-group" style="margin-bottom: 0;">
             <label>Mô tả chi tiết</label>
