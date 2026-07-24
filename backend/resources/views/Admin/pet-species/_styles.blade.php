@@ -15,6 +15,32 @@
   .species-table th { padding:14px 18px; color:var(--text-muted); background:#fafbfc; text-align:left; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; }
   .species-table td { padding:14px 18px; border-top:1px solid var(--border-color); color:var(--text-main); vertical-align:middle; }
   .species-table tr:hover td { background:#fffdfb; }
+
+  /* Alignments and column widths for Species Table */
+  .species-table th:nth-child(1), .species-table td:nth-child(1) {
+      text-align: left;
+  }
+  .species-table th:nth-child(2), .species-table td:nth-child(2) {
+      text-align: left;
+      width: 140px;
+  }
+  .species-table th:nth-child(3), .species-table td:nth-child(3) {
+      text-align: center;
+      width: 120px;
+  }
+  .species-table th:nth-child(4), .species-table td:nth-child(4) {
+      text-align: center;
+      width: 240px;
+  }
+  .species-table th:nth-child(5), .species-table td:nth-child(5) {
+      text-align: center;
+      width: 100px;
+  }
+  .species-table th:nth-child(6), .species-table td:nth-child(6) {
+      text-align: right;
+      width: 120px;
+      padding-right: 24px;
+  }
   .species-identity { display:flex; align-items:center; gap:12px; font-weight:700; }
   .species-avatar { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; overflow:hidden; color:#7a4f35; flex:0 0 auto; }
   .species-avatar img { width:100%; height:100%; object-fit:cover; }
