@@ -301,6 +301,20 @@
     $statusVal = old('status', $brand->status ?? 'active');
     $hasImage = !empty($brand->image);
     $slugValue = old('slug', $brand->slug);
+
+    $brandImageUrl = '';
+    if ($hasImage) {
+        $brandImagePath = $brand->image;
+        if (filter_var($brandImagePath, FILTER_VALIDATE_URL)) {
+            $brandImageUrl = $brandImagePath;
+        } elseif (str_starts_with($brandImagePath, 'uploads/') || str_starts_with($brandImagePath, 'image/')) {
+            $brandImageUrl = asset($brandImagePath);
+        } elseif (str_starts_with($brandImagePath, 'storage/')) {
+            $brandImageUrl = asset($brandImagePath);
+        } else {
+            $brandImageUrl = asset('storage/' . $brandImagePath);
+        }
+    }
 @endphp
 
 @if($errors->any())
@@ -420,7 +434,7 @@
                 <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
                     <div class="be-logo-box" id="logoBox" data-initial="{{ mb_substr($brand->name, 0, 1) }}" style="margin-bottom: 12px;">
                         @if($hasImage)
-                            <img src="{{ asset($brand->image) }}" alt="{{ $brand->name }}" id="logoPreview">
+                            <img src="{{ $brandImageUrl }}" alt="{{ $brand->name }}" id="logoPreview">
                         @else
                             <span class="be-logo-placeholder" id="logoPreview">{{ mb_substr($brand->name, 0, 1) }}</span>
                         @endif
