@@ -21,7 +21,7 @@
             <th style="text-align: center;">Sản phẩm</th>
             <th style="text-align: center;">Hiển thị</th>
             <th style="text-align: center;">Thứ tự</th>
-            <th style="text-align: right; padding-right: 24px;">Thao tác</th>
+            <th style="text-align: center; width: 100px;">Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -58,7 +58,7 @@
               <td style="text-align: center;">
                 <span class="species-sort-order">#{{ $species->sort_order }}</span>
               </td>
-              <td style="text-align: right; padding-right: 24px;">
+              <td style="text-align: center;">
                 <a href="{{ route('admin.pet-species.edit', $species) }}" class="species-table-action-btn" title="Chỉnh sửa">
                   <i class="fa-solid fa-pen"></i>
                 </a>
