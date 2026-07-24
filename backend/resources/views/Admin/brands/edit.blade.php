@@ -268,6 +268,31 @@
     .brand-alert { margin-bottom: 20px; padding: 12px 16px; border-radius: 8px; display: flex; align-items: flex-start; gap: 10px; font-size: 0.9rem; font-weight: 700; }
     .brand-alert-error { background: #fff1f1; border: 1px solid #ffd1d1; color: var(--danger); }
     .brand-alert ul { margin: 4px 0 0; padding-left: 18px; font-weight: 600; }
+
+    /* Button remove logo */
+    .btn-remove-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        margin-top: 14px;
+        padding: 9px 16px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--danger);
+        background-color: #fff1f1;
+        border: 1px solid #ffd1d1;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    .btn-remove-logo:hover {
+        background-color: var(--danger);
+        color: #ffffff;
+        border-color: var(--danger);
+    }
 </style>
 @endsection
 
@@ -414,11 +439,13 @@
                     @if($hasImage)
                         <input type="hidden" name="image_prefilled" value="yes" id="imagePrefilled">
                     @endif
-                    <p class="be-hint" style="margin-top: 0; text-align: center; line-height: 1.5;">Định dạng: PNG, JPG (Max 5MB).
+                    <p class="be-hint" style="margin-top: 0; text-align: center; line-height: 1.5; margin-bottom: 0;">Định dạng: PNG, JPG (Max 5MB).
                         <br>Khuyên dùng: 200x200px.
-                        <br>
-                        <a href="#" id="logoRemove" style="color: var(--danger); font-weight: 700; display: inline-block; margin-top: 6px;">Xóa logo</a>
                     </p>
+                    <a href="#" id="logoRemove" class="btn-remove-logo">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>Xóa logo</span>
+                    </a>
                 </div>
             </div>
         </aside>
