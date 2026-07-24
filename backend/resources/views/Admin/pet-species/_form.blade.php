@@ -6,6 +6,23 @@
     <div class="species-field"><label for="image">Ảnh đại diện</label><div class="species-upload"><span class="species-upload-preview" style="background:{{ $petSpecies->background_color ?: '#f6e7db' }}">@if($petSpecies->image)<img src="{{ asset('storage/'.$petSpecies->image) }}" alt="Ảnh hiện tại">@else<i class="fa-solid fa-image"></i>@endif</span><input id="image" name="image" type="file" accept="image/png,image/jpeg,image/webp" class="species-file"></div><p class="species-help">PNG, JPG hoặc WEBP, tối đa 5 MB. Nếu chưa có ảnh, card sẽ dùng màu nền và biểu tượng chân thú.</p>@error('image')<p class="species-error">{{ $message }}</p>@enderror</div>
     <div class="species-form-grid"><div class="species-field"><label for="background_color">Màu nền card</label><div class="species-color-row"><input id="background_color" name="background_color" type="color" class="species-color" value="{{ old('background_color', $petSpecies->background_color ?: '#FFF2E8') }}"><span class="species-help" style="margin:0">Màu dự phòng khi chưa có ảnh.</span></div>@error('background_color')<p class="species-error">{{ $message }}</p>@enderror</div><div class="species-field"><label for="sort_order">Thứ tự hiển thị *</label><input id="sort_order" name="sort_order" type="number" min="0" required value="{{ old('sort_order', $petSpecies->sort_order ?? 0) }}">@error('sort_order')<p class="species-error">{{ $message }}</p>@enderror</div></div>
   </section>
-  <aside class="species-panel"><h2 class="species-panel-title"><i class="fa-solid fa-sliders"></i> Hiển thị</h2><input type="hidden" name="is_active" value="0"><label class="species-switch"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $petSpecies->exists ? $petSpecies->is_active : true))><span><strong>Đang hoạt động</strong><span>Cho phép gán loài này khi tạo hoặc sửa sản phẩm.</span></span></label><input type="hidden" name="show_on_home" value="0"><label class="species-switch"><input type="checkbox" name="show_on_home" value="1" @checked(old('show_on_home', $petSpecies->show_on_home))><span><strong>Hiển thị tại trang chủ</strong><span>Chỉ có tối đa 2 loài đang hoạt động được chọn.</span></span></label>@error('show_on_home')<p class="species-error">{{ $message }}</p>@enderror</aside>
+  <aside class="species-panel">
+    <h2 class="species-panel-title"><i class="fa-solid fa-sliders"></i> Hiển thị</h2>
+    <input type="hidden" name="is_active" value="0">
+    <label class="species-switch">
+      <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $petSpecies->exists ? $petSpecies->is_active : true))>
+      <span><strong>Đang hoạt động</strong><span>Cho phép gán loài này khi tạo hoặc sửa sản phẩm.</span></span>
+    </label>
+    <input type="hidden" name="show_on_home" value="0">
+    <label class="species-switch">
+      <input type="checkbox" name="show_on_home" value="1" @checked(old('show_on_home', $petSpecies->show_on_home))>
+      <span><strong>Hiển thị tại trang chủ</strong><span>Chỉ có tối đa 2 loài đang hoạt động được chọn.</span></span>
+    </label>
+    @error('show_on_home')<p class="species-error">{{ $message }}</p>@enderror
+
+    <div class="species-form-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; justify-content: flex-end;">
+      <a href="{{ route('admin.pet-species') }}" class="species-cancel">Hủy</a>
+      <button type="submit" class="species-save"><i class="fa-solid fa-floppy-disk"></i> Lưu loài</button>
+    </div>
+  </aside>
 </div>
-<div class="species-form-actions"><a href="{{ route('admin.pet-species') }}" class="species-cancel">Hủy</a><button type="submit" class="species-save"><i class="fa-solid fa-floppy-disk"></i> Lưu loài</button></div>
