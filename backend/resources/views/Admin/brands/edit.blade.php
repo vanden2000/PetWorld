@@ -360,36 +360,7 @@
                 </div>
             </div>
 
-            <!-- Images -->
-            <div class="form-card">
-                <div class="form-card-title">
-                    <i class="fa-solid fa-image"></i>
-                    <span>Hình ảnh thương hiệu</span>
-                </div>
-                <div class="be-images">
-                    <div>
-                        <label class="be-label">Logo thương hiệu</label>
-                        <div class="be-logo-box" id="logoBox" data-initial="{{ mb_substr($brand->name, 0, 1) }}">
-                            @if($hasImage)
-                                <img src="{{ asset($brand->image) }}" alt="{{ $brand->name }}" id="logoPreview">
-                            @else
-                                <span class="be-logo-placeholder" id="logoPreview">{{ mb_substr($brand->name, 0, 1) }}</span>
-                            @endif
-                            <div class="be-logo-overlay">
-                                <i class="fa-solid fa-pen" style="font-size: 1rem;"></i>
-                                <span>THAY ĐỔI</span>
-                            </div>
-                        </div>
-                        <input type="file" id="brand_logo" name="image" style="display: none;" accept="image/*">
-                        @if($hasImage)
-                            <input type="hidden" name="image_prefilled" value="yes" id="imagePrefilled">
-                        @endif
-                        <p class="be-hint">Định dạng: PNG, JPG (Max 5MB). Khuyên dùng: 200x200px.
-                            <a href="#" id="logoRemove" style="color: var(--danger); font-weight: 700;">Xóa logo</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
+
 
 
 
@@ -421,9 +392,35 @@
                     </div>
                 </div>
 
+            <!-- Images -->
+            <div class="form-card">
+                <div class="be-card-head">
+                    <i class="fa-solid fa-image"></i>
+                    <span>Logo thương hiệu</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                    <div class="be-logo-box" id="logoBox" data-initial="{{ mb_substr($brand->name, 0, 1) }}" style="margin-bottom: 12px;">
+                        @if($hasImage)
+                            <img src="{{ asset($brand->image) }}" alt="{{ $brand->name }}" id="logoPreview">
+                        @else
+                            <span class="be-logo-placeholder" id="logoPreview">{{ mb_substr($brand->name, 0, 1) }}</span>
+                        @endif
+                        <div class="be-logo-overlay">
+                            <i class="fa-solid fa-pen" style="font-size: 1rem;"></i>
+                            <span>THAY ĐỔI</span>
+                        </div>
+                    </div>
+                    <input type="file" id="brand_logo" name="image" style="display: none;" accept="image/*">
+                    @if($hasImage)
+                        <input type="hidden" name="image_prefilled" value="yes" id="imagePrefilled">
+                    @endif
+                    <p class="be-hint" style="margin-top: 0; text-align: center; line-height: 1.5;">Định dạng: PNG, JPG (Max 5MB).
+                        <br>Khuyên dùng: 200x200px.
+                        <br>
+                        <a href="#" id="logoRemove" style="color: var(--danger); font-weight: 700; display: inline-block; margin-top: 6px;">Xóa logo</a>
+                    </p>
+                </div>
             </div>
-
-
         </aside>
     </div>
 </form>
