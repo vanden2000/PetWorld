@@ -273,11 +273,9 @@
 
 @section('content')
 @php
-    $products = $brand->products ?? collect();
     $statusVal = old('status', $brand->status ?? 'active');
     $hasImage = !empty($brand->image);
     $slugValue = old('slug', $brand->slug);
-    $productCategories = $products->map(fn ($p) => optional($p->category)->name)->filter()->unique()->values();
 @endphp
 
 @if($errors->any())
@@ -395,87 +393,7 @@
 
 
 
-            <!-- Products (real data) -->
-            <div class="form-card">
-                <div class="be-products-head">
-                    <div>
-                        <h3>Danh sách sản phẩm</h3>
-                        <p>Các sản phẩm đang gắn với thương hiệu này.</p>
-                    </div>
-                    <button class="btn-filter-action" type="button" id="prodFilterToggle" title="Ẩn/hiện bộ lọc"><i class="fa-solid fa-filter"></i></button>
-                </div>
 
-                <div class="be-filter-bar" id="prodFilterBar">
-                    <div class="be-filter-search">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="prodSearch" placeholder="Tìm tên sản phẩm hoặc SKU...">
-                    </div>
-                    <select class="form-control" id="prodCategory">
-                        <option value="">Tất cả danh mục</option>
-                        @foreach($productCategories as $cat)
-                            <option value="{{ $cat }}">{{ $cat }}</option>
-                        @endforeach
-                    </select>
-                    <select class="form-control" id="prodStatus">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="active">Đang bán</option>
-                        <option value="draft">Tạm dừng</option>
-                    </select>
-                </div>
-
-                <div class="table-container">
-                    <table class="be-product-table">
-                        <thead>
-                            <tr>
-                                <th>Sản phẩm</th>
-                                <th>Danh mục</th>
-                                <th>Giá bán</th>
-                                <th>Trạng thái</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($products as $product)
-                                @php
-                                    $variant = $product->variants->first();
-                                    $price = $variant ? number_format((float) $variant->effectivePrice(), 0, ',', '.') . ' đ' : '—';
-                                @endphp
-                                <tr class="be-prow"
-                                    data-name="{{ strtolower($product->name.' '.($product->sku ?? 'sp-'.$product->id)) }}"
-                                    data-category="{{ optional($product->category)->name ?: '' }}"
-                                    data-status="{{ $product->status === 'active' ? 'active' : 'draft' }}">
-                                    <td>
-                                        <div class="be-product-name">
-                                            @if($product->primaryImage)
-                                                <img class="be-product-thumb" src="{{ asset($product->primaryImage->image_url) }}" alt="{{ $product->name }}">
-                                            @else
-                                                <span class="be-product-thumb"><i class="fa-solid fa-box-open"></i></span>
-                                            @endif
-                                            <div>
-                                                <strong>{{ $product->name }}</strong>
-                                                <small>SKU: {{ $product->sku ?? 'SP-'.$product->id }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge-count">{{ optional($product->category)->name ?: '—' }}</span></td>
-                                    <td><strong>{{ $price }}</strong></td>
-                                    <td><span class="badge-status {{ $product->status === 'active' ? 'active' : 'draft' }}">{{ $product->status === 'active' ? 'In Stock' : 'Low Stock' }}</span></td>
-                                    <td style="text-align: right;">
-                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="btn-filter-action brand-admin-action" title="Chỉnh sửa" style="text-decoration: none;"><i class="fa-solid fa-pen" style="font-size: 0.78rem;"></i></a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 28px;">Chưa có sản phẩm thuộc thương hiệu này.</td>
-                                </tr>
-                            @endforelse
-                            <tr id="prodNoResult" style="display: none;">
-                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 28px;">Không tìm thấy sản phẩm phù hợp với bộ lọc.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
 
         <!-- RIGHT COLUMN -->
@@ -639,39 +557,7 @@
 
 
 
-        // ---- Product table filters (search + category + status) ----
-        const prodSearch = document.getElementById('prodSearch');
-        const prodCategory = document.getElementById('prodCategory');
-        const prodStatus = document.getElementById('prodStatus');
-        const prodRows = document.querySelectorAll('.be-prow');
-        const prodNoResult = document.getElementById('prodNoResult');
-        function applyProductFilters() {
-            const q = (prodSearch ? prodSearch.value : '').trim().toLowerCase();
-            const cat = prodCategory ? prodCategory.value : '';
-            const st = prodStatus ? prodStatus.value : '';
-            let visible = 0;
-            prodRows.forEach(function (row) {
-                const matchName = !q || (row.dataset.name || '').indexOf(q) !== -1;
-                const matchCat = !cat || row.dataset.category === cat;
-                const matchStatus = !st || row.dataset.status === st;
-                const show = matchName && matchCat && matchStatus;
-                row.style.display = show ? '' : 'none';
-                if (show) visible++;
-            });
-            if (prodNoResult) prodNoResult.style.display = (prodRows.length && visible === 0) ? '' : 'none';
-        }
-        if (prodSearch) prodSearch.addEventListener('input', applyProductFilters);
-        if (prodCategory) prodCategory.addEventListener('change', applyProductFilters);
-        if (prodStatus) prodStatus.addEventListener('change', applyProductFilters);
 
-        // ---- Toggle filter bar visibility ----
-        const prodFilterToggle = document.getElementById('prodFilterToggle');
-        const prodFilterBar = document.getElementById('prodFilterBar');
-        if (prodFilterToggle && prodFilterBar) {
-            prodFilterToggle.addEventListener('click', function () {
-                prodFilterBar.classList.toggle('be-hide');
-            });
-        }
 
         // ---- Save button feedback ----
         const form = document.getElementById('brandEditForm');
