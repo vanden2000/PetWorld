@@ -8,11 +8,17 @@ use App\Models\BlogCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
+use App\Models\User;
+
 class PostController extends Controller
 {
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $categoryId = $request->input('category_id');
+        $authorId = $request->input('author_id');
+        $status = $request->input('status');
+        $sort = $request->input('sort', 'newest');
 
         $posts = Blog::query()
             ->with(['category:id,name,slug', 'author:id,name'])
@@ -20,15 +26,34 @@ class PostController extends Controller
             ->when($search, function ($query, string $search) {
                 $query->where(function ($nested) use ($search) {
                     $nested->where('title', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhereHas('category', fn ($cat) => $cat->where('name', 'like', "%{$search}%"));
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             })
-            ->latest()
+            ->when($categoryId, function ($query, $categoryId) {
+                $query->where('blog_category_id', $categoryId);
+            })
+            ->when($authorId, function ($query, $authorId) {
+                $query->where('user_id', $authorId);
+            })
+            ->when($status, function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when($sort === 'oldest', function ($query) {
+                $query->oldest();
+            })
+            ->when($sort === 'popular', function ($query) {
+                $query->orderBy('view_count', 'desc');
+            })
+            ->when($sort === 'newest' || !$sort, function ($query) {
+                $query->latest();
+            })
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.posts.index', compact('posts', 'search'));
+        $categories = BlogCategory::all();
+        $authors = User::select('id', 'name')->get();
+
+        return view('admin.posts.index', compact('posts', 'search', 'categoryId', 'authorId', 'status', 'sort', 'categories', 'authors'));
     }
 
     public function create()
