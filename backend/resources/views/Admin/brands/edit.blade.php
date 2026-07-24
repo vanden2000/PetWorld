@@ -393,43 +393,7 @@
                 </div>
             </div>
 
-            <!-- Revenue chart -->
-            <div class="form-card">
-                <div class="be-chart-head">
-                    <div>
-                        <h3>Phân tích doanh thu</h3>
-                        <p>Theo dõi biến động doanh thu của thương hiệu theo thời gian.</p>
-                    </div>
-                    <div class="be-period" id="chartPeriod">
-                        <button type="button" class="is-active" data-period="year">Năm nay</button>
-                        <button type="button" data-period="6m">6 tháng qua</button>
-                    </div>
-                </div>
-                <div class="be-chart">
-                    <svg viewBox="0 0 720 190" preserveAspectRatio="none">
-                        <defs>
-                            <linearGradient id="brandChartFill" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#ff782d" stop-opacity="0.28" />
-                                <stop offset="100%" stop-color="#ff782d" stop-opacity="0" />
-                            </linearGradient>
-                        </defs>
-                        <g class="be-chart-series" data-series="year">
-                            <path d="M0 154 L60 136 L120 145 L180 118 L240 126 L300 91 L360 98 L420 62 L480 74 L540 48 L600 58 L660 30 L720 42 L720 190 L0 190 Z" fill="url(#brandChartFill)" />
-                            <path d="M0 154 L60 136 L120 145 L180 118 L240 126 L300 91 L360 98 L420 62 L480 74 L540 48 L600 58 L660 30 L720 42" fill="none" stroke="#ff782d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-                        </g>
-                        <g class="be-chart-series be-hide" data-series="6m">
-                            <path d="M0 120 L144 96 L288 132 L432 70 L576 88 L720 44 L720 190 L0 190 Z" fill="url(#brandChartFill)" />
-                            <path d="M0 120 L144 96 L288 132 L432 70 L576 88 L720 44" fill="none" stroke="#ff782d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-                        </g>
-                    </svg>
-                    <div class="be-chart-x" data-labels="year">
-                        <span>Th.1</span><span>Th.2</span><span>Th.3</span><span>Th.4</span><span>Th.5</span><span>Th.6</span><span>Th.7</span><span>Th.8</span><span>Th.9</span><span>Th.10</span><span>Th.11</span><span>Th.12</span>
-                    </div>
-                    <div class="be-chart-x be-hide" data-labels="6m">
-                        <span>Th.2</span><span>Th.3</span><span>Th.4</span><span>Th.5</span><span>Th.6</span><span>Th.7</span>
-                    </div>
-                </div>
-            </div>
+
 
             <!-- Products (real data) -->
             <div class="form-card">
@@ -541,29 +505,7 @@
 
             </div>
 
-            <!-- Display config -->
-            <div class="form-card">
-                <div class="be-card-head">
-                    <i class="fa-solid fa-sliders"></i>
-                    <span>Cấu hình hiển thị</span>
-                </div>
 
-                <div class="be-toggle-row">
-                    <div>
-                        <strong>Hiển thị trên Storefront</strong>
-                        <span>Khách hàng có thể thấy thương hiệu này</span>
-                    </div>
-                    <button type="button" class="be-switch {{ $statusVal === 'active' ? 'is-on' : '' }}" id="toggleStorefront" aria-label="Hiển thị trên Storefront"></button>
-                </div>
-            </div>
-
-            <!-- Tip -->
-            <div class="be-tip">
-                <i class="fa-solid fa-bolt be-tip-bg"></i>
-                <h4>Mẹo quản trị</h4>
-                <p>Thương hiệu có hình ảnh sắc nét và mô tả trên 300 từ thường có tỷ lệ chuyển đổi cao hơn 25%.</p>
-                <a href="#"><span>Xem hướng dẫn quản trị</span> <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-            </div>
         </aside>
     </div>
 </form>
@@ -589,10 +531,9 @@
             });
         }
 
-        // ---- Status segmented control + storefront toggle sync ----
+        // ---- Status segmented control ----
         const statusInput = document.getElementById('statusInput');
         const segBtns = document.querySelectorAll('.be-seg-btn');
-        const toggleStorefront = document.getElementById('toggleStorefront');
         const statusNotice = document.getElementById('brandStatusNotice');
         const statusToast = document.getElementById('brandStatusToast');
         let statusToastTimeout;
@@ -626,22 +567,7 @@
                 statusInput.value = value;
                 segBtns.forEach(b => b.classList.remove('is-active'));
                 btn.classList.add('is-active');
-                if (toggleStorefront) toggleStorefront.classList.toggle('is-on', value === 'active');
                 updateStatusNotice(value);
-            });
-        });
-
-        // ---- Generic switch toggles ----
-        document.querySelectorAll('.be-switch').forEach(function (sw) {
-            sw.addEventListener('click', function () {
-                sw.classList.toggle('is-on');
-                // Storefront toggle also drives status for consistency
-                if (sw.id === 'toggleStorefront' && statusInput) {
-                    const on = sw.classList.contains('is-on');
-                    statusInput.value = on ? 'active' : 'draft';
-                    segBtns.forEach(b => b.classList.toggle('is-active', b.dataset.status === statusInput.value));
-                    updateStatusNotice(statusInput.value);
-                }
             });
         });
 
@@ -711,18 +637,7 @@
             });
         }
 
-        // ---- Revenue chart period toggle ----
-        const chartPeriod = document.getElementById('chartPeriod');
-        if (chartPeriod) {
-            chartPeriod.querySelectorAll('button').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const period = btn.dataset.period;
-                    chartPeriod.querySelectorAll('button').forEach(b => b.classList.toggle('is-active', b === btn));
-                    document.querySelectorAll('.be-chart-series').forEach(g => g.classList.toggle('be-hide', g.dataset.series !== period));
-                    document.querySelectorAll('.be-chart-x').forEach(x => x.classList.toggle('be-hide', x.dataset.labels !== period));
-                });
-            });
-        }
+
 
         // ---- Product table filters (search + category + status) ----
         const prodSearch = document.getElementById('prodSearch');
