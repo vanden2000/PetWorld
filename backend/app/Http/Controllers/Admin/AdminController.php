@@ -260,6 +260,14 @@ class AdminController extends Controller
             'cancelled' => 'status-cancelled',
         ];
 
+        $nextOrderStatusesMap = [
+            'pending' => ['confirmed', 'cancelled'],
+            'confirmed' => ['shipping', 'cancelled'],
+            'shipping' => ['completed'],
+            'completed' => [],
+            'cancelled' => [],
+        ];
+
         return view('admin.dashboard.index', compact(
             'period',
             'chartLabels',
@@ -280,7 +288,8 @@ class AdminController extends Controller
             'topCustomers',
             'categoryShare',
             'orderStatusLabels',
-            'orderStatusClasses'
+            'orderStatusClasses',
+            'nextOrderStatusesMap'
         ));
     }
 }
