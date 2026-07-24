@@ -440,6 +440,9 @@
                 </thead>
                 <tbody>
                     @forelse($lowStockProducts as $variant)
+                        @php
+                            $targetProdId = $variant->product_id ?? $variant->product?->id ?? 1;
+                        @endphp
                         <tr>
                             <td>
                                 <div>
@@ -456,10 +459,13 @@
                                 @endif
                             </td>
                             <td style="text-align: right; white-space: nowrap;">
-                                <a href="{{ $variant->product_id ? route('admin.products.edit', $variant->product_id) : route('admin.products') }}" class="btn-action-stock" style="text-decoration: none; display: inline-block;">Nhập hàng</a>
+                                <a href="{{ route('admin.products.edit', $targetProdId) }}" class="btn-action-stock" style="text-decoration: none; display: inline-block;">Nhập hàng</a>
                             </td>
                         </tr>
                     @empty
+                        @php
+                            $firstProductId = \App\Models\Product::first()?->id ?? 1;
+                        @endphp
                         <tr>
                             <td>
                                 <div>
@@ -470,20 +476,7 @@
                             <td style="font-weight: 700; color: var(--danger);">0 SP</td>
                             <td><span class="badge-status status-cancelled">HẾT HÀNG</span></td>
                             <td style="text-align: right; white-space: nowrap;">
-                                <a href="{{ route('admin.products') }}" class="btn-action-stock" style="text-decoration: none; display: inline-block;">Nhập hàng</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div>
-                                    <strong>Royal Canin Mini Adult</strong>
-                                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Bao 3kg</span>
-                                </div>
-                            </td>
-                            <td style="font-weight: 700; color: var(--warning);">1 SP</td>
-                            <td><span class="badge-status status-pending">SẮP HẾT</span></td>
-                            <td style="text-align: right; white-space: nowrap;">
-                                <a href="{{ route('admin.products') }}" class="btn-action-stock" style="text-decoration: none; display: inline-block;">Nhập hàng</a>
+                                <a href="{{ route('admin.products.edit', $firstProductId) }}" class="btn-action-stock" style="text-decoration: none; display: inline-block;">Nhập hàng</a>
                             </td>
                         </tr>
                     @endforelse
