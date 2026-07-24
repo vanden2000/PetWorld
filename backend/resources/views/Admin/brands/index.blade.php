@@ -97,6 +97,12 @@
         display: inline-flex;
     }
 
+    .brand-admin-table-card .badge-count {
+        background-color: rgba(255, 120, 45, 0.08) !important;
+        color: var(--primary) !important;
+        font-weight: 700;
+    }
+
     /* Custom Select Dropdowns in Admin Filters */
     .custom-admin-select-container {
         position: relative;
