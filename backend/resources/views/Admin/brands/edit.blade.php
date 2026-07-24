@@ -268,16 +268,39 @@
     .brand-alert { margin-bottom: 20px; padding: 12px 16px; border-radius: 8px; display: flex; align-items: flex-start; gap: 10px; font-size: 0.9rem; font-weight: 700; }
     .brand-alert-error { background: #fff1f1; border: 1px solid #ffd1d1; color: var(--danger); }
     .brand-alert ul { margin: 4px 0 0; padding-left: 18px; font-weight: 600; }
+
+    /* Button remove logo */
+    .btn-remove-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        margin-top: 14px;
+        padding: 9px 16px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--danger);
+        background-color: #fff1f1;
+        border: 1px solid #ffd1d1;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    .btn-remove-logo:hover {
+        background-color: var(--danger);
+        color: #ffffff;
+        border-color: var(--danger);
+    }
 </style>
 @endsection
 
 @section('content')
 @php
-    $products = $brand->products ?? collect();
     $statusVal = old('status', $brand->status ?? 'active');
     $hasImage = !empty($brand->image);
     $slugValue = old('slug', $brand->slug);
-    $productCategories = $products->map(fn ($p) => optional($p->category)->name)->filter()->unique()->values();
 @endphp
 
 @if($errors->any())
@@ -336,17 +359,11 @@
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="slug">Slug</label>
-                        <div class="be-slug">
-                            <span class="be-slug-prefix">petworld.com/brand/</span>
-                            <input type="text" class="form-control" id="slug" name="slug" value="{{ $slugValue }}" placeholder="brand-slug">
-                        </div>
+                        <input type="text" class="form-control" id="slug" name="slug" value="{{ $slugValue }}" placeholder="brand-slug">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="website">Website URL</label>
-                    <input type="url" class="form-control" id="website" name="website" value="{{ old('website', $brand->website) }}" placeholder="https://example.com">
-                </div>
+
 
                 <div class="form-group" style="margin-bottom: 0;">
                     <label>Mô tả chi tiết</label>
@@ -362,156 +379,11 @@
                 </div>
             </div>
 
-            <!-- Images -->
-            <div class="form-card">
-                <div class="form-card-title">
-                    <i class="fa-solid fa-image"></i>
-                    <span>Hình ảnh thương hiệu</span>
-                </div>
-                <div class="be-images">
-                    <div>
-                        <label class="be-label">Logo thương hiệu</label>
-                        <div class="be-logo-box" id="logoBox" data-initial="{{ mb_substr($brand->name, 0, 1) }}">
-                            @if($hasImage)
-                                <img src="{{ asset($brand->image) }}" alt="{{ $brand->name }}" id="logoPreview">
-                            @else
-                                <span class="be-logo-placeholder" id="logoPreview">{{ mb_substr($brand->name, 0, 1) }}</span>
-                            @endif
-                            <div class="be-logo-overlay">
-                                <i class="fa-solid fa-pen" style="font-size: 1rem;"></i>
-                                <span>THAY ĐỔI</span>
-                            </div>
-                        </div>
-                        <input type="file" id="brand_logo" name="image" style="display: none;" accept="image/*">
-                        @if($hasImage)
-                            <input type="hidden" name="image_prefilled" value="yes" id="imagePrefilled">
-                        @endif
-                        <p class="be-hint">Định dạng: PNG, JPG (Max 5MB). Khuyên dùng: 200x200px.
-                            <a href="#" id="logoRemove" style="color: var(--danger); font-weight: 700;">Xóa logo</a>
-                        </p>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Revenue chart -->
-            <div class="form-card">
-                <div class="be-chart-head">
-                    <div>
-                        <h3>Phân tích doanh thu</h3>
-                        <p>Theo dõi biến động doanh thu của thương hiệu theo thời gian.</p>
-                    </div>
-                    <div class="be-period" id="chartPeriod">
-                        <button type="button" class="is-active" data-period="year">Năm nay</button>
-                        <button type="button" data-period="6m">6 tháng qua</button>
-                    </div>
-                </div>
-                <div class="be-chart">
-                    <svg viewBox="0 0 720 190" preserveAspectRatio="none">
-                        <defs>
-                            <linearGradient id="brandChartFill" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#ff782d" stop-opacity="0.28" />
-                                <stop offset="100%" stop-color="#ff782d" stop-opacity="0" />
-                            </linearGradient>
-                        </defs>
-                        <g class="be-chart-series" data-series="year">
-                            <path d="M0 154 L60 136 L120 145 L180 118 L240 126 L300 91 L360 98 L420 62 L480 74 L540 48 L600 58 L660 30 L720 42 L720 190 L0 190 Z" fill="url(#brandChartFill)" />
-                            <path d="M0 154 L60 136 L120 145 L180 118 L240 126 L300 91 L360 98 L420 62 L480 74 L540 48 L600 58 L660 30 L720 42" fill="none" stroke="#ff782d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-                        </g>
-                        <g class="be-chart-series be-hide" data-series="6m">
-                            <path d="M0 120 L144 96 L288 132 L432 70 L576 88 L720 44 L720 190 L0 190 Z" fill="url(#brandChartFill)" />
-                            <path d="M0 120 L144 96 L288 132 L432 70 L576 88 L720 44" fill="none" stroke="#ff782d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
-                        </g>
-                    </svg>
-                    <div class="be-chart-x" data-labels="year">
-                        <span>Th.1</span><span>Th.2</span><span>Th.3</span><span>Th.4</span><span>Th.5</span><span>Th.6</span><span>Th.7</span><span>Th.8</span><span>Th.9</span><span>Th.10</span><span>Th.11</span><span>Th.12</span>
-                    </div>
-                    <div class="be-chart-x be-hide" data-labels="6m">
-                        <span>Th.2</span><span>Th.3</span><span>Th.4</span><span>Th.5</span><span>Th.6</span><span>Th.7</span>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Products (real data) -->
-            <div class="form-card">
-                <div class="be-products-head">
-                    <div>
-                        <h3>Danh sách sản phẩm</h3>
-                        <p>Các sản phẩm đang gắn với thương hiệu này.</p>
-                    </div>
-                    <button class="btn-filter-action" type="button" id="prodFilterToggle" title="Ẩn/hiện bộ lọc"><i class="fa-solid fa-filter"></i></button>
-                </div>
 
-                <div class="be-filter-bar" id="prodFilterBar">
-                    <div class="be-filter-search">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="prodSearch" placeholder="Tìm tên sản phẩm hoặc SKU...">
-                    </div>
-                    <select class="form-control" id="prodCategory">
-                        <option value="">Tất cả danh mục</option>
-                        @foreach($productCategories as $cat)
-                            <option value="{{ $cat }}">{{ $cat }}</option>
-                        @endforeach
-                    </select>
-                    <select class="form-control" id="prodStatus">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="active">Đang bán</option>
-                        <option value="draft">Tạm dừng</option>
-                    </select>
-                </div>
 
-                <div class="table-container">
-                    <table class="be-product-table">
-                        <thead>
-                            <tr>
-                                <th>Sản phẩm</th>
-                                <th>Danh mục</th>
-                                <th>Giá bán</th>
-                                <th>Trạng thái</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($products as $product)
-                                @php
-                                    $variant = $product->variants->first();
-                                    $price = $variant ? number_format((float) $variant->effectivePrice(), 0, ',', '.') . ' đ' : '—';
-                                @endphp
-                                <tr class="be-prow"
-                                    data-name="{{ strtolower($product->name.' '.($product->sku ?? 'sp-'.$product->id)) }}"
-                                    data-category="{{ optional($product->category)->name ?: '' }}"
-                                    data-status="{{ $product->status === 'active' ? 'active' : 'draft' }}">
-                                    <td>
-                                        <div class="be-product-name">
-                                            @if($product->primaryImage)
-                                                <img class="be-product-thumb" src="{{ asset($product->primaryImage->image_url) }}" alt="{{ $product->name }}">
-                                            @else
-                                                <span class="be-product-thumb"><i class="fa-solid fa-box-open"></i></span>
-                                            @endif
-                                            <div>
-                                                <strong>{{ $product->name }}</strong>
-                                                <small>SKU: {{ $product->sku ?? 'SP-'.$product->id }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td><span class="badge-count">{{ optional($product->category)->name ?: '—' }}</span></td>
-                                    <td><strong>{{ $price }}</strong></td>
-                                    <td><span class="badge-status {{ $product->status === 'active' ? 'active' : 'draft' }}">{{ $product->status === 'active' ? 'In Stock' : 'Low Stock' }}</span></td>
-                                    <td style="text-align: right;">
-                                        <a href="{{ route('admin.products.edit', $product->id) }}" class="btn-filter-action brand-admin-action" title="Chỉnh sửa" style="text-decoration: none;"><i class="fa-solid fa-pen" style="font-size: 0.78rem;"></i></a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 28px;">Chưa có sản phẩm thuộc thương hiệu này.</td>
-                                </tr>
-                            @endforelse
-                            <tr id="prodNoResult" style="display: none;">
-                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 28px;">Không tìm thấy sản phẩm phù hợp với bộ lọc.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+
         </div>
 
         <!-- RIGHT COLUMN -->
@@ -539,30 +411,36 @@
                     </div>
                 </div>
 
-            </div>
-
-            <!-- Display config -->
+            <!-- Images -->
             <div class="form-card">
                 <div class="be-card-head">
-                    <i class="fa-solid fa-sliders"></i>
-                    <span>Cấu hình hiển thị</span>
+                    <i class="fa-solid fa-image"></i>
+                    <span>Logo thương hiệu</span>
                 </div>
-
-                <div class="be-toggle-row">
-                    <div>
-                        <strong>Hiển thị trên Storefront</strong>
-                        <span>Khách hàng có thể thấy thương hiệu này</span>
+                <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                    <div class="be-logo-box" id="logoBox" data-initial="{{ mb_substr($brand->name, 0, 1) }}" style="margin-bottom: 12px;">
+                        @if($hasImage)
+                            <img src="{{ asset($brand->image) }}" alt="{{ $brand->name }}" id="logoPreview">
+                        @else
+                            <span class="be-logo-placeholder" id="logoPreview">{{ mb_substr($brand->name, 0, 1) }}</span>
+                        @endif
+                        <div class="be-logo-overlay">
+                            <i class="fa-solid fa-pen" style="font-size: 1rem;"></i>
+                            <span>THAY ĐỔI</span>
+                        </div>
                     </div>
-                    <button type="button" class="be-switch {{ $statusVal === 'active' ? 'is-on' : '' }}" id="toggleStorefront" aria-label="Hiển thị trên Storefront"></button>
+                    <input type="file" id="brand_logo" name="image" style="display: none;" accept="image/*">
+                    @if($hasImage)
+                        <input type="hidden" name="image_prefilled" value="yes" id="imagePrefilled">
+                    @endif
+                    <p class="be-hint" style="margin-top: 0; text-align: center; line-height: 1.5; margin-bottom: 0;">Định dạng: PNG, JPG (Max 5MB).
+                        <br>Khuyên dùng: 200x200px.
+                    </p>
+                    <a href="#" id="logoRemove" class="btn-remove-logo">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>Xóa logo</span>
+                    </a>
                 </div>
-            </div>
-
-            <!-- Tip -->
-            <div class="be-tip">
-                <i class="fa-solid fa-bolt be-tip-bg"></i>
-                <h4>Mẹo quản trị</h4>
-                <p>Thương hiệu có hình ảnh sắc nét và mô tả trên 300 từ thường có tỷ lệ chuyển đổi cao hơn 25%.</p>
-                <a href="#"><span>Xem hướng dẫn quản trị</span> <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
             </div>
         </aside>
     </div>
@@ -589,10 +467,9 @@
             });
         }
 
-        // ---- Status segmented control + storefront toggle sync ----
+        // ---- Status segmented control ----
         const statusInput = document.getElementById('statusInput');
         const segBtns = document.querySelectorAll('.be-seg-btn');
-        const toggleStorefront = document.getElementById('toggleStorefront');
         const statusNotice = document.getElementById('brandStatusNotice');
         const statusToast = document.getElementById('brandStatusToast');
         let statusToastTimeout;
@@ -626,22 +503,7 @@
                 statusInput.value = value;
                 segBtns.forEach(b => b.classList.remove('is-active'));
                 btn.classList.add('is-active');
-                if (toggleStorefront) toggleStorefront.classList.toggle('is-on', value === 'active');
                 updateStatusNotice(value);
-            });
-        });
-
-        // ---- Generic switch toggles ----
-        document.querySelectorAll('.be-switch').forEach(function (sw) {
-            sw.addEventListener('click', function () {
-                sw.classList.toggle('is-on');
-                // Storefront toggle also drives status for consistency
-                if (sw.id === 'toggleStorefront' && statusInput) {
-                    const on = sw.classList.contains('is-on');
-                    statusInput.value = on ? 'active' : 'draft';
-                    segBtns.forEach(b => b.classList.toggle('is-active', b.dataset.status === statusInput.value));
-                    updateStatusNotice(statusInput.value);
-                }
             });
         });
 
@@ -711,52 +573,9 @@
             });
         }
 
-        // ---- Revenue chart period toggle ----
-        const chartPeriod = document.getElementById('chartPeriod');
-        if (chartPeriod) {
-            chartPeriod.querySelectorAll('button').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    const period = btn.dataset.period;
-                    chartPeriod.querySelectorAll('button').forEach(b => b.classList.toggle('is-active', b === btn));
-                    document.querySelectorAll('.be-chart-series').forEach(g => g.classList.toggle('be-hide', g.dataset.series !== period));
-                    document.querySelectorAll('.be-chart-x').forEach(x => x.classList.toggle('be-hide', x.dataset.labels !== period));
-                });
-            });
-        }
 
-        // ---- Product table filters (search + category + status) ----
-        const prodSearch = document.getElementById('prodSearch');
-        const prodCategory = document.getElementById('prodCategory');
-        const prodStatus = document.getElementById('prodStatus');
-        const prodRows = document.querySelectorAll('.be-prow');
-        const prodNoResult = document.getElementById('prodNoResult');
-        function applyProductFilters() {
-            const q = (prodSearch ? prodSearch.value : '').trim().toLowerCase();
-            const cat = prodCategory ? prodCategory.value : '';
-            const st = prodStatus ? prodStatus.value : '';
-            let visible = 0;
-            prodRows.forEach(function (row) {
-                const matchName = !q || (row.dataset.name || '').indexOf(q) !== -1;
-                const matchCat = !cat || row.dataset.category === cat;
-                const matchStatus = !st || row.dataset.status === st;
-                const show = matchName && matchCat && matchStatus;
-                row.style.display = show ? '' : 'none';
-                if (show) visible++;
-            });
-            if (prodNoResult) prodNoResult.style.display = (prodRows.length && visible === 0) ? '' : 'none';
-        }
-        if (prodSearch) prodSearch.addEventListener('input', applyProductFilters);
-        if (prodCategory) prodCategory.addEventListener('change', applyProductFilters);
-        if (prodStatus) prodStatus.addEventListener('change', applyProductFilters);
 
-        // ---- Toggle filter bar visibility ----
-        const prodFilterToggle = document.getElementById('prodFilterToggle');
-        const prodFilterBar = document.getElementById('prodFilterBar');
-        if (prodFilterToggle && prodFilterBar) {
-            prodFilterToggle.addEventListener('click', function () {
-                prodFilterBar.classList.toggle('be-hide');
-            });
-        }
+
 
         // ---- Save button feedback ----
         const form = document.getElementById('brandEditForm');
