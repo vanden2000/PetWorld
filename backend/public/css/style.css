@@ -2095,15 +2095,16 @@
     }
 
     .dashboard-card .table-container {
-        overflow: visible;
+        overflow: visible !important;
+        padding-bottom: 45px;
     }
 
     .dashboard-card .quick-status-menu {
-        top: auto;
-        bottom: 100%;
-        margin-top: 0;
-        margin-bottom: 6px;
-        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+        top: 100%;
+        bottom: auto;
+        margin-top: 4px;
+        margin-bottom: 0;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     }
 
     .quick-status-menu {
