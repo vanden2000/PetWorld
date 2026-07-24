@@ -14,7 +14,7 @@
     .brand-admin-name strong { color: var(--text-main); font-size: 0.92rem; }
     .brand-admin-name span { color: var(--text-muted); font-size: 0.76rem; }
     .brand-admin-action { width: 34px; height: 34px; padding: 0; justify-content: center; text-decoration: none; }
-    .brand-admin-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin-top: 24px; }
+    .brand-admin-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin-top: 0; margin-bottom: 24px; }
     .brand-admin-stat { min-height: 116px; border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-subtle); }
     .brand-admin-stat:nth-child(1) { background: #fff4f0; }
     .brand-admin-stat:nth-child(2) { background: #eef8f4; }
@@ -48,6 +48,55 @@
         border: 1px solid #ffd1d1;
         color: var(--danger);
     }
+    
+    /* Reset and set specific column alignments for Brands Table */
+    .brand-admin-table-card .category-table th,
+    .brand-admin-table-card .category-table td {
+        text-align: left !important;
+    }
+
+    .brand-admin-table-card .category-table th:nth-child(1),
+    .brand-admin-table-card .category-table td:nth-child(1) {
+        text-align: center !important;
+        width: 60px;
+        padding-left: 12px !important;
+    }
+
+    .brand-admin-table-card .category-table th:nth-child(2),
+    .brand-admin-table-card .category-table td:nth-child(2) {
+        text-align: center !important;
+        width: 80px;
+    }
+
+    .brand-admin-table-card .category-table th:nth-child(3),
+    .brand-admin-table-card .category-table td:nth-child(3) {
+        text-align: left !important;
+    }
+
+    .brand-admin-table-card .category-table th:nth-child(5),
+    .brand-admin-table-card .category-table td:nth-child(5) {
+        text-align: center !important;
+        width: 110px;
+    }
+
+    .brand-admin-table-card .category-table th:nth-child(6),
+    .brand-admin-table-card .category-table td:nth-child(6) {
+        text-align: center !important;
+        width: 180px;
+    }
+
+    .brand-admin-table-card .category-table th:nth-child(7),
+    .brand-admin-table-card .category-table td:nth-child(7) {
+        text-align: right !important;
+        width: 120px;
+        padding-right: 20px !important;
+    }
+
+    .brand-admin-table-card .badge-status {
+        justify-content: center;
+        display: inline-flex;
+    }
+
     @media (max-width: 1100px) { .brand-admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 640px) {
         .brand-admin-stats { grid-template-columns: 1fr; }
@@ -91,6 +140,29 @@
                 <span>Thêm thương hiệu mới</span>
             </a>
         </div>
+    </div>
+
+    <div class="brand-admin-stats">
+        <div class="brand-admin-stat">
+            <span class="brand-admin-stat-label">Tổng cộng</span>
+            <strong class="brand-admin-stat-value">{{ str_pad($totalBrands, 2, '0', STR_PAD_LEFT) }}</strong>
+            <span class="brand-admin-stat-note">Thương hiệu hiện có</span>
+        </div>
+        <div class="brand-admin-stat">
+            <span class="brand-admin-stat-label">Đang hoạt động</span>
+            <strong class="brand-admin-stat-value">{{ str_pad($activeBrands, 2, '0', STR_PAD_LEFT) }}</strong>
+            <span class="brand-admin-stat-note">Sẵn sàng hiển thị</span>
+        </div>
+        <div class="brand-admin-stat">
+            <span class="brand-admin-stat-label">Thêm mới</span>
+            <strong class="brand-admin-stat-value">+{{ $newBrands }}</strong>
+            <span class="brand-admin-stat-note">Trong 30 ngày qua</span>
+        </div>
+        <a class="brand-admin-detail-card" href="{{ $topBrand ? route('admin.brands.edit', $topBrand->id) : route('admin.brands.create') }}">
+            <i class="fa-solid fa-square-poll-vertical"></i>
+            <strong>Xem báo cáo chi tiết</strong>
+            <span class="brand-admin-stat-note">{{ $topBrand ? 'Nổi bật: '.$topBrand->name : 'Tạo thương hiệu đầu tiên' }}</span>
+        </a>
     </div>
 
     <div class="categories-filter-bar">
@@ -185,29 +257,6 @@
                 <button class="pagination-btn" type="button" title="Next Page"><i class="fa-solid fa-angle-right"></i></button>
             </div>
         </div>
-    </div>
-
-    <div class="brand-admin-stats">
-        <div class="brand-admin-stat">
-            <span class="brand-admin-stat-label">Tổng cộng</span>
-            <strong class="brand-admin-stat-value">{{ str_pad($totalBrands, 2, '0', STR_PAD_LEFT) }}</strong>
-            <span class="brand-admin-stat-note">Thương hiệu hiện có</span>
-        </div>
-        <div class="brand-admin-stat">
-            <span class="brand-admin-stat-label">Đang hoạt động</span>
-            <strong class="brand-admin-stat-value">{{ str_pad($activeBrands, 2, '0', STR_PAD_LEFT) }}</strong>
-            <span class="brand-admin-stat-note">Sẵn sàng hiển thị</span>
-        </div>
-        <div class="brand-admin-stat">
-            <span class="brand-admin-stat-label">Thêm mới</span>
-            <strong class="brand-admin-stat-value">+{{ $newBrands }}</strong>
-            <span class="brand-admin-stat-note">Trong 30 ngày qua</span>
-        </div>
-        <a class="brand-admin-detail-card" href="{{ $topBrand ? route('admin.brands.edit', $topBrand->id) : route('admin.brands.create') }}">
-            <i class="fa-solid fa-square-poll-vertical"></i>
-            <strong>Xem báo cáo chi tiết</strong>
-            <span class="brand-admin-stat-note">{{ $topBrand ? 'Nổi bật: '.$topBrand->name : 'Tạo thương hiệu đầu tiên' }}</span>
-        </a>
     </div>
 </div>
 @endsection
