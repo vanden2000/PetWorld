@@ -402,6 +402,12 @@
 
                     // Close dropdown
                     dropdown.classList.remove('open');
+
+                    // Submit form automatically
+                    const form = dropdown.closest('form');
+                    if (form) {
+                        form.submit();
+                    }
                 });
             });
         });
