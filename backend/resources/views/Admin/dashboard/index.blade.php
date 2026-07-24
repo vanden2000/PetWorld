@@ -281,9 +281,29 @@
                             </td>
                             <td class="col-total">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</td>
                             <td style="white-space: nowrap;">
-                                <span class="badge-status {{ $orderStatusClasses[$order->order_status] ?? 'status-pending' }}" style="white-space: nowrap;">
-                                    {{ $orderStatusLabels[$order->order_status] ?? $order->order_status }}
-                                </span>
+                                @php
+                                    $allowedNext = $nextOrderStatusesMap[$order->order_status] ?? [];
+                                @endphp
+                                <div class="quick-status-wrapper" style="position: relative;">
+                                    <span class="quick-status-trigger badge-status {{ $orderStatusClasses[$order->order_status] ?? 'status-pending' }}" aria-disabled="{{ $allowedNext === [] ? 'true' : 'false' }}" style="cursor: {{ $allowedNext !== [] ? 'pointer' : 'default' }}; white-space: nowrap;">
+                                        <span>{{ $orderStatusLabels[$order->order_status] ?? $order->order_status }}</span>
+                                        @if($allowedNext !== [])
+                                            <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; margin-left: 4px;"></i>
+                                        @endif
+                                    </span>
+                                    @if($allowedNext !== [])
+                                        <div class="quick-status-menu">
+                                            @foreach($allowedNext as $nextSt)
+                                                <form method="POST" action="{{ route('admin.orders.update-status', $order) }}">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <input type="hidden" name="order_status" value="{{ $nextSt }}">
+                                                    <button type="submit" class="quick-status-item">{{ $orderStatusLabels[$nextSt] ?? $nextSt }}</button>
+                                                </form>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
                             </td>
                             <td style="text-align: right;">
                                 <a href="{{ route('admin.orders.show', $order->id) }}" class="dashboard-detail-icon" title="Xem chi tiết">
@@ -585,6 +605,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // 3. Quick Status Dropdown toggle handlers
+    document.querySelectorAll('.quick-status-trigger').forEach((trigger) => {
+        if (trigger.getAttribute('aria-disabled') === 'true') return;
+        trigger.addEventListener('click', function (event) {
+            event.stopPropagation();
+            document.querySelectorAll('.quick-status-menu').forEach((menu) => {
+                if (menu !== this.nextElementSibling) {
+                    menu.classList.remove('show');
+                }
+            });
+            this.nextElementSibling?.classList.toggle('show');
+        });
+    });
+
+    document.addEventListener('click', function () {
+        document.querySelectorAll('.quick-status-menu').forEach((menu) => menu.classList.remove('show'));
+    });
 });
 
 function switchFilter(range, btn) {
