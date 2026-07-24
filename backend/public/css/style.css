@@ -2094,6 +2094,18 @@
         box-shadow: none;
     }
 
+    .dashboard-card .table-container {
+        overflow: visible;
+    }
+
+    .dashboard-card .quick-status-menu {
+        top: auto;
+        bottom: 100%;
+        margin-top: 0;
+        margin-bottom: 6px;
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+    }
+
     .quick-status-menu {
         position: absolute;
         left: 0;
