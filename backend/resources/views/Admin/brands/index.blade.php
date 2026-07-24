@@ -125,6 +125,13 @@
         user-select: none;
     }
 
+    .custom-admin-select-trigger span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 8px;
+    }
+
     .custom-admin-select-trigger:hover,
     .custom-admin-select-container.open .custom-admin-select-trigger {
         border-color: var(--primary);
@@ -146,7 +153,8 @@
         position: absolute;
         top: calc(100% + 4px);
         left: 0;
-        right: 0;
+        min-width: 100%;
+        width: max-content;
         background-color: #ffffff;
         border: 1px solid #ebdcd0;
         border-radius: 8px;
@@ -173,6 +181,7 @@
         cursor: pointer;
         transition: all 0.15s ease;
         text-align: left !important;
+        white-space: nowrap;
     }
 
     .custom-admin-select-option:hover {
@@ -188,7 +197,7 @@
     /* 4-column filter grid */
     .brand-filters-grid-custom {
         display: grid;
-        grid-template-columns: 1.8fr 1.2fr 1.2fr minmax(180px, 1.2fr) !important;
+        grid-template-columns: 1.5fr minmax(210px, 1.2fr) minmax(140px, 1fr) minmax(180px, 1fr) !important;
         gap: 16px !important;
         align-items: flex-end !important;
         width: 100%;
