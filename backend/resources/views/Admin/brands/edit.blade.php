@@ -359,10 +359,7 @@
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="slug">Slug</label>
-                        <div class="be-slug">
-                            <span class="be-slug-prefix">petworld.com/brand/</span>
-                            <input type="text" class="form-control" id="slug" name="slug" value="{{ $slugValue }}" placeholder="brand-slug">
-                        </div>
+                        <input type="text" class="form-control" id="slug" name="slug" value="{{ $slugValue }}" placeholder="brand-slug">
                     </div>
                 </div>
 
