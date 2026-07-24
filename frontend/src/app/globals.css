@@ -8469,7 +8469,7 @@ body {
   flex-direction: column;
   gap: 24px;
   position: sticky;
-  top: 20px;
+  top: 90px;
 }
 
 .news-widget {
@@ -8643,6 +8643,387 @@ body {
   }
   .news-cta-form {
     flex-direction: column;
+  }
+}
+
+/* ============================================================
+   Giao diện danh sách tin tức Premium (News List Layout)
+   ============================================================ */
+.news-banner {
+  height: 220px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 2000px rgba(0, 0, 0, 0.4);
+}
+
+.news-banner-title {
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 800;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Layout 2 cột chính */
+.news-main-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 40px;
+  align-items: start;
+  margin-bottom: 50px;
+}
+
+/* Bài viết tiêu điểm (Hero Featured) */
+.featured-blog-card {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  background-color: #ffffff;
+  border: 1px solid #eef0f3;
+  border-radius: 24px;
+  overflow: hidden;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.02);
+  transition: var(--transition-default);
+}
+
+.featured-blog-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.06);
+}
+
+.featured-blog-img-wrapper {
+  width: 100%;
+  height: 320px;
+  overflow: hidden;
+}
+
+.featured-blog-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.featured-blog-card:hover .featured-blog-img {
+  transform: scale(1.04);
+}
+
+.featured-blog-content {
+  padding: 24px 24px 24px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.featured-blog-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1.35;
+  margin-bottom: 12px;
+  text-decoration: none;
+  transition: var(--transition-default);
+}
+
+.featured-blog-title:hover {
+  color: var(--primary-orange);
+}
+
+.featured-blog-excerpt {
+  color: var(--text-muted);
+  font-size: 14.5px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Lưới bài viết 2 cột */
+.blog-grid-2col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+}
+
+/* Sidebar tiện ích tin tức */
+.blog-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  position: sticky;
+  top: 90px;
+}
+
+.sidebar-widget {
+  background-color: #ffffff;
+  border: 1px solid #eef1f6;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.sidebar-widget-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0;
+}
+
+/* Lọc danh mục */
+.sidebar-cat-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-cat-item a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #475569;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.sidebar-cat-item a:hover,
+.sidebar-cat-item.active a {
+  background-color: #fff4ec;
+  color: var(--primary-orange);
+  font-weight: 700;
+}
+
+.sidebar-cat-count {
+  font-size: 12px;
+  background-color: #f1f5f9;
+  color: #64748b;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.sidebar-cat-item a:hover .sidebar-cat-count,
+.sidebar-cat-item.active .sidebar-cat-count {
+  background-color: var(--primary-orange);
+  color: #ffffff;
+}
+
+/* Bài viết xem nhiều */
+.sidebar-popular-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sidebar-popular-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.sidebar-popular-img-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-popular-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.sidebar-popular-item:hover .sidebar-popular-img {
+  transform: scale(1.06);
+}
+
+.sidebar-popular-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-popular-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-decoration: none;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.sidebar-popular-title:hover {
+  color: var(--primary-orange);
+}
+
+.sidebar-popular-date {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* Đồng bộ ô tìm kiếm và bộ lọc sắp xếp trong sidebar */
+.blog-sidebar .sidebar-widget .search-container {
+  width: 100% !important;
+  height: 40px !important;
+  box-sizing: border-box;
+}
+
+/* Custom Select Dropdown cho BlogSort */
+.blog-sort-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.blog-sort-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  margin-left: 4px;
+}
+
+.custom-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  height: 40px;
+  border: 1.5px solid #eef0f3;
+  border-radius: 30px;
+  padding: 0 16px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-dark);
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  outline: none;
+  transition: var(--transition-default);
+  box-sizing: border-box;
+}
+
+.custom-select-trigger:hover,
+.custom-select-trigger.open {
+  border-color: var(--primary-orange);
+  box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.12);
+}
+
+.custom-select-arrow {
+  transition: transform 0.2s ease;
+  color: #64748b;
+}
+
+.custom-select-arrow.open {
+  transform: rotate(180deg);
+  color: var(--primary-orange);
+}
+
+/* Danh sách Options thả xuống */
+.custom-select-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 6px;
+  margin: 0;
+  list-style: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.custom-select-option {
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #475569;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.custom-select-option:hover {
+  background-color: #fff4ec;
+  color: var(--primary-orange);
+}
+
+.custom-select-option.selected {
+  background-color: var(--primary-orange);
+  color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .news-main-layout {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .blog-sidebar {
+    position: static;
+  }
+  .featured-blog-card {
+    grid-template-columns: 1fr;
+  }
+  .featured-blog-img-wrapper {
+    height: 240px;
+  }
+  .featured-blog-content {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .blog-grid-2col {
+    grid-template-columns: 1fr;
+  }
+  .news-banner {
+    padding: 0 24px;
+    height: 180px;
+  }
+  .news-banner-title {
+    font-size: 24px;
   }
 }
 
