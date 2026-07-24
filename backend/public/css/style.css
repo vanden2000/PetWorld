@@ -974,6 +974,7 @@
     /* Recent Orders Table */
     .table-container {
         overflow-x: auto;
+        overflow-y: visible;
     }
 
     .orders-table {
@@ -988,15 +989,15 @@
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        padding: 16px 12px;
+        padding: 12px 10px;
         border-bottom: 2px solid var(--border-color);
         background-color: var(--bg-color);
     }
 
     .orders-table td {
-        padding: 16px 5px;
+        padding: 12px 6px;
         border-bottom: 1px solid var(--border-color);
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         color: var(--text-main);
         vertical-align: middle;
     }
