@@ -4,8 +4,8 @@
 
 @section('styles')
 <style>
-    .brand-admin-header h1 { color: var(--text-main); font-size: 1.9rem; font-weight: 800; letter-spacing: 0; }
-    .brand-admin-header p { color: var(--text-muted); margin-top: 6px; font-size: 0.92rem; }
+    .brand-admin-header h1 { color: var(--primary); font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px; }
+    .brand-admin-header p { color: var(--text-muted); margin-top: 4px; font-size: 0.95rem; }
     .brand-admin-table-card { border-radius: 10px; overflow: hidden; }
     .brand-admin-logo { width: 44px; height: 44px; border: 1px solid var(--border-color); border-radius: 6px; background: #fff; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; }
     .brand-admin-logo img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
@@ -97,10 +97,113 @@
         display: inline-flex;
     }
 
+    /* Custom Select Dropdowns in Admin Filters */
+    .custom-admin-select-container {
+        position: relative;
+        width: 100%;
+    }
+
+    .custom-admin-select-trigger {
+        height: 38px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 0 14px;
+        background-color: #ffffff;
+        font-size: 0.9rem;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: var(--transition);
+        user-select: none;
+    }
+
+    .custom-admin-select-trigger:hover,
+    .custom-admin-select-container.open .custom-admin-select-trigger {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(255, 120, 45, 0.1);
+    }
+
+    .custom-admin-select-trigger i {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        transition: transform 0.2s ease;
+    }
+
+    .custom-admin-select-container.open .custom-admin-select-trigger i {
+        transform: rotate(180deg);
+        color: var(--primary);
+    }
+
+    .custom-admin-select-options {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background-color: #ffffff;
+        border: 1px solid #ebdcd0;
+        border-radius: 8px;
+        padding: 4px;
+        margin: 0;
+        list-style: none;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+        z-index: 99;
+        display: none;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .custom-admin-select-container.open .custom-admin-select-options {
+        display: flex;
+    }
+
+    .custom-admin-select-option {
+        padding: 8px 12px;
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: #4b5563;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-align: left !important;
+    }
+
+    .custom-admin-select-option:hover {
+        background-color: #fff4ec;
+        color: var(--primary);
+    }
+
+    .custom-admin-select-option.selected {
+        background-color: var(--primary);
+        color: #ffffff;
+    }
+
+    /* 4-column filter grid */
+    .brand-filters-grid-custom {
+        display: grid;
+        grid-template-columns: 1.8fr 1.2fr 1.2fr minmax(180px, 1.2fr) !important;
+        gap: 16px !important;
+        align-items: flex-end !important;
+        width: 100%;
+        background-color: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px 24px;
+        box-shadow: var(--shadow-subtle);
+    }
+
     @media (max-width: 1100px) { .brand-admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 900px) {
+        .brand-filters-grid-custom {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
     @media (max-width: 640px) {
         .brand-admin-stats { grid-template-columns: 1fr; }
-        .categories-filter-bar { align-items: flex-start; gap: 14px; }
+        .brand-filters-grid-custom {
+            grid-template-columns: 1fr !important;
+        }
     }
 </style>
 @endsection
@@ -142,19 +245,64 @@
         </div>
     </div>
 
-    <div class="categories-filter-bar">
-        <div class="categories-filter-left">
-            <button class="btn-filter-action" type="button"><i class="fa-solid fa-filter"></i><span>Bộ lọc</span></button>
-            <button class="btn-filter-action" type="button"><i class="fa-solid fa-arrow-down-wide-short"></i><span>Sắp xếp: Mới nhất</span></button>
-        </div>
-        <div class="categories-filter-right">
-            <span class="categories-display-text">Hiển thị {{ $totalBrands }} thương hiệu</span>
-            <div class="categories-layout-toggles">
-                <button class="categories-layout-btn active" type="button" title="Dạng danh sách"><i class="fa-solid fa-table-list"></i></button>
-                <button class="categories-layout-btn" type="button" title="Dạng lưới"><i class="fa-solid fa-grip"></i></button>
+    <form class="brand-filters-grid-custom" method="GET" action="{{ route('admin.brands') }}" style="margin-bottom: 24px;">
+        <!-- Search -->
+        <div class="filter-col">
+            <label class="filter-label">Tìm kiếm thương hiệu</label>
+            <div class="filter-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass filter-input-icon"></i>
+                <input class="filter-input" name="search" value="{{ request('search') }}" placeholder="Tên hoặc mô tả...">
             </div>
         </div>
-    </div>
+
+        <!-- Trạng thái -->
+        <div class="filter-col">
+            <label class="filter-label">Trạng thái</label>
+            <div class="filter-input-wrapper">
+                <div class="custom-admin-select-container">
+                    <div class="custom-admin-select-trigger">
+                        <span>Tất cả trạng thái</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                    <div class="custom-admin-select-options">
+                        <div class="custom-admin-select-option" data-value="">Tất cả trạng thái</div>
+                        <div class="custom-admin-select-option" data-value="active">Thương hiệu đang hoạt động</div>
+                        <div class="custom-admin-select-option" data-value="draft">Thương hiệu bị ẩn</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sắp xếp -->
+        <div class="filter-col">
+            <label class="filter-label">Sắp xếp</label>
+            <div class="filter-input-wrapper">
+                <div class="custom-admin-select-container">
+                    <div class="custom-admin-select-trigger">
+                        <span>Mới nhất</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <input type="hidden" name="sort" value="{{ request('sort', 'newest') }}">
+                    <div class="custom-admin-select-options">
+                        <div class="custom-admin-select-option" data-value="newest">Mới nhất</div>
+                        <div class="custom-admin-select-option" data-value="oldest">Cũ nhất</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="filter-col orders-filter-actions" style="display: flex; gap: 10px; margin-top: auto; padding-bottom: 2px;">
+            <button class="btn-dark-slate" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer;">
+                <i class="fa-solid fa-filter"></i>
+                <span>Lọc</span>
+            </button>
+            <a href="{{ route('admin.brands') }}" class="btn-clear-filters" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 7px; box-sizing: border-box; padding: 0;">
+                Xóa lọc
+            </a>
+        </div>
+    </form>
 
     <div class="table-card brand-admin-table-card">
         <div class="table-container">
@@ -236,4 +384,67 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdowns = document.querySelectorAll('.custom-admin-select-container');
+
+        dropdowns.forEach(dropdown => {
+            const trigger = dropdown.querySelector('.custom-admin-select-trigger');
+            const triggerText = trigger.querySelector('span');
+            const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+            const options = dropdown.querySelectorAll('.custom-admin-select-option');
+
+            // Set initial state based on hidden input value
+            const initialValue = hiddenInput.value;
+            let matchedOption = Array.from(options).find(opt => opt.getAttribute('data-value') === initialValue);
+            if (matchedOption) {
+                triggerText.textContent = matchedOption.textContent;
+                options.forEach(opt => opt.classList.remove('selected'));
+                matchedOption.classList.add('selected');
+            }
+
+            // Toggle Open/Close
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Close other dropdowns
+                dropdowns.forEach(other => {
+                    if (other !== dropdown) other.classList.remove('open');
+                });
+                dropdown.classList.toggle('open');
+            });
+
+            // Handle option selection
+            options.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const val = option.getAttribute('data-value');
+                    const text = option.textContent;
+
+                    // Update hidden input and trigger text
+                    hiddenInput.value = val;
+                    triggerText.textContent = text;
+
+                    // Update selected class
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+
+                    // Close dropdown
+                    dropdown.classList.remove('open');
+
+                    // Submit form automatically
+                    const form = dropdown.closest('form');
+                    if (form) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+
+        // Close on click outside
+        document.addEventListener('click', function() {
+            dropdowns.forEach(dropdown => dropdown.classList.remove('open'));
+        });
+    });
+</script>
 @endsection

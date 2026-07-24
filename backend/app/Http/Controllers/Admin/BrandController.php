@@ -11,14 +11,35 @@ use Illuminate\Support\Facades\DB;
 
 class BrandController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $brands = Brand::query()
-            ->withCount('products')
-            ->latest()
-            ->get();
+        $query = Brand::query()->withCount('products');
 
-        if ($brands->isEmpty()) {
+        // Tìm kiếm theo tên hoặc mô tả
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Lọc theo trạng thái
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Sắp xếp
+        $sort = $request->input('sort', 'newest');
+        if ($sort === 'oldest') {
+            $query->oldest();
+        } else {
+            $query->latest();
+        }
+
+        $brands = $query->get();
+
+        if ($brands->isEmpty() && !$request->filled('search') && !$request->filled('status')) {
             Brand::create([
                 'name' => 'Royal Canin',
                 'slug' => 'royal-canin',
