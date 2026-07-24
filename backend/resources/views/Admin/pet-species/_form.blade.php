@@ -20,7 +20,7 @@
     </label>
     @error('show_on_home')<p class="species-error">{{ $message }}</p>@enderror
 
-    <div class="species-form-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; justify-content: flex-end;">
+    <div class="species-form-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; justify-content: center;">
       <a href="{{ route('admin.pet-species') }}" class="species-cancel">Hủy</a>
       <button type="submit" class="species-save"><i class="fa-solid fa-floppy-disk"></i> Lưu loài</button>
     </div>
