@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState, useSyncExternalStore, useEffect } from "react";
 import {
   getCartSnapshot,
@@ -26,10 +26,20 @@ import { resolveBackendImage } from "@/lib/format";
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const [keyword, setKeyword] = useState("");
+  const searchParams = useSearchParams();
+  const urlKeyword = pathname === ROUTES.shop ? (searchParams.get("search") ?? "") : "";
+  const [keyword, setKeyword] = useState(urlKeyword);
+  const [previousUrlKeyword, setPreviousUrlKeyword] = useState(urlKeyword);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Đồng bộ khi người dùng đi bằng back/forward hoặc mở URL tìm kiếm trực tiếp.
+  // Điều chỉnh state ngay trong render để không tạo thêm một render từ Effect.
+  if (urlKeyword !== previousUrlKeyword) {
+    setPreviousUrlKeyword(urlKeyword);
+    setKeyword(urlKeyword);
+  }
 
   useEffect(() => {
     const handleScroll = () => {
