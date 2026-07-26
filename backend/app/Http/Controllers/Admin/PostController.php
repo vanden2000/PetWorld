@@ -5,20 +5,19 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\BlogCategory;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-
-use App\Models\User;
 
 class PostController extends Controller
 {
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $categoryId = $request->input('category_id');
-        $authorId = $request->input('author_id');
-        $status = $request->input('status');
-        $sort = $request->input('sort', 'newest');
+        $categoryId = $request->input('category_id', 'all');
+        $authorId = $request->input('author_id', 'all');
+        $status = $request->input('status', 'all');
+        $sort = $request->input('sort', 'latest');
 
         $posts = Blog::query()
             ->with(['category:id,name,slug', 'author:id,name'])
@@ -26,46 +25,74 @@ class PostController extends Controller
             ->when($search, function ($query, string $search) {
                 $query->where(function ($nested) use ($search) {
                     $nested->where('title', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('slug', 'like', "%{$search}%")
+                        ->orWhereHas('category', fn ($cat) => $cat->where('name', 'like', "%{$search}%"));
                 });
             })
-            ->when($categoryId, function ($query, $categoryId) {
-                $query->where('blog_category_id', $categoryId);
-            })
-            ->when($authorId, function ($query, $authorId) {
-                $query->where('user_id', $authorId);
-            })
-            ->when($status, function ($query, $status) {
-                $query->where('status', $status);
-            })
-            ->when($sort === 'oldest', function ($query) {
-                $query->oldest();
-            })
-            ->when($sort === 'popular', function ($query) {
-                $query->orderBy('view_count', 'desc');
-            })
-            ->when($sort === 'newest' || !$sort, function ($query) {
-                $query->latest();
-            })
+            ->when($categoryId !== 'all', fn ($query) => $query->where('blog_category_id', $categoryId))
+            ->when($authorId !== 'all', fn ($query) => $query->where('user_id', $authorId))
+            ->when(in_array($status, ['active', 'inactive'], true), fn ($query) => $query->where('status', $status))
+            ->when($sort === 'oldest', fn ($query) => $query->oldest())
+            // 'popular' giu lai de khong hong link loc cu cua nhanh develop
+            ->when(in_array($sort, ['most_viewed', 'popular'], true), fn ($query) => $query->orderByDesc('view_count'))
+            ->when($sort === 'most_commented', fn ($query) => $query->orderByDesc('comments_count'))
+            ->when(! in_array($sort, ['oldest', 'most_viewed', 'popular', 'most_commented'], true), fn ($query) => $query->latest())
             ->paginate(10)
             ->withQueryString();
 
-        $categories = BlogCategory::all();
-        $authors = User::select('id', 'name')->get();
+        $categories = BlogCategory::orderBy('name')->get(['id', 'name']);
+        $authors = User::whereIn('id', Blog::select('user_id'))->orderBy('name')->get(['id', 'name']);
 
-        return view('admin.posts.index', compact('posts', 'search', 'categoryId', 'authorId', 'status', 'sort', 'categories', 'authors'));
+        $totalCount = Blog::count();
+        $publishedCount = Blog::where('status', 'active')->count();
+        $draftCount = Blog::where('status', 'inactive')->count();
+        $totalViews = (int) Blog::sum('view_count');
+
+        return view('admin.posts.index', compact(
+            'posts',
+            'categories',
+            'authors',
+            'search',
+            'categoryId',
+            'authorId',
+            'status',
+            'sort',
+            'totalCount',
+            'publishedCount',
+            'draftCount',
+            'totalViews'
+        ));
+    }
+
+    public function updateStatus(Request $request, Blog $post)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:active,inactive'],
+        ]);
+
+        $post->update(['status' => $validated['status']]);
+
+        $message = $validated['status'] === 'inactive'
+            ? 'Đã chuyển bài viết về bản nháp.'
+            : 'Đã xuất bản bài viết.';
+
+        return back()->with('success', $message);
     }
 
     public function create()
     {
         $categories = BlogCategory::where('status', 'active')->get();
-        return view('admin.posts.create', compact('categories'));
+        $post = new Blog();
+
+        return view('admin.posts.create', compact('categories', 'post'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'title' => ['required', 'string', 'max:255', 'unique:blogs,title'],
+            'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:blogs,slug'],
             'blog_category_id' => ['required', 'exists:blog_categories,id'],
             'description' => ['required', 'string', 'max:500'],
             'content' => ['required', 'string'],
@@ -74,6 +101,8 @@ class PostController extends Controller
         ], [
             'title.required' => 'Vui lòng nhập tiêu đề bài viết.',
             'title.unique' => 'Tiêu đề bài viết này đã tồn tại.',
+            'slug.regex' => 'Đường dẫn chỉ gồm chữ thường không dấu, số và dấu gạch ngang.',
+            'slug.unique' => 'Đường dẫn này đã được dùng cho một bài viết khác.',
             'blog_category_id.required' => 'Vui lòng chọn danh mục bài viết.',
             'blog_category_id.exists' => 'Danh mục bài viết không hợp lệ.',
             'description.required' => 'Vui lòng nhập mô tả ngắn.',
@@ -90,7 +119,7 @@ class PostController extends Controller
             $imagePath = $path; // Lưu dạng 'blogs/filename.ext'
         }
 
-        $slug = Str::slug($request->input('title'));
+        $slug = $this->resolveSlug($request->input('slug'), $request->input('title'));
 
         Blog::create([
             'blog_category_id' => $request->input('blog_category_id'),
@@ -117,6 +146,7 @@ class PostController extends Controller
     {
         $request->validate([
             'title' => ['required', 'string', 'max:255', 'unique:blogs,title,' . $post->id],
+            'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:blogs,slug,' . $post->id],
             'blog_category_id' => ['required', 'exists:blog_categories,id'],
             'description' => ['required', 'string', 'max:500'],
             'content' => ['required', 'string'],
@@ -125,6 +155,8 @@ class PostController extends Controller
         ], [
             'title.required' => 'Vui lòng nhập tiêu đề bài viết.',
             'title.unique' => 'Tiêu đề bài viết này đã tồn tại.',
+            'slug.regex' => 'Đường dẫn chỉ gồm chữ thường không dấu, số và dấu gạch ngang.',
+            'slug.unique' => 'Đường dẫn này đã được dùng cho một bài viết khác.',
             'blog_category_id.required' => 'Vui lòng chọn danh mục bài viết.',
             'blog_category_id.exists' => 'Danh mục bài viết không hợp lệ.',
             'description.required' => 'Vui lòng nhập mô tả ngắn.',
@@ -143,7 +175,7 @@ class PostController extends Controller
             $imagePath = $path;
         }
 
-        $slug = Str::slug($request->input('title'));
+        $slug = $this->resolveSlug($request->input('slug'), $request->input('title'), $post->id);
 
         $post->update([
             'blog_category_id' => $request->input('blog_category_id'),
@@ -168,5 +200,28 @@ class PostController extends Controller
         $post->delete();
 
         return redirect()->route('admin.posts')->with('success', 'Đã xóa bài viết thành công.');
+    }
+
+    /**
+     * Sinh slug hợp lệ cho cột `blogs.slug` (unique trong ERD).
+     * Ưu tiên slug admin tự nhập, nếu bỏ trống thì lấy từ tiêu đề.
+     * Trùng slug sẽ được thêm hậu tố -2, -3... thay vì lỗi ràng buộc CSDL.
+     */
+    private function resolveSlug(?string $slug, string $title, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($slug ?: $title) ?: 'bai-viet';
+        $candidate = $base;
+        $suffix = 2;
+
+        while (
+            Blog::where('slug', $candidate)
+                ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $candidate = $base . '-' . $suffix;
+            $suffix++;
+        }
+
+        return $candidate;
     }
 }
