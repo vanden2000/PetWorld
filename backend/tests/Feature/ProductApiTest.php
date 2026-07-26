@@ -161,6 +161,58 @@ class ProductApiTest extends TestCase
             ->assertJsonPath('data.pagination.current_page', 1);
     }
 
+    public function test_default_product_search_prioritizes_name_matches(): void
+    {
+        $category = Category::create([
+            'name' => 'Food',
+            'slug' => 'food',
+            'image' => 'food.jpg',
+        ]);
+        $brand = Brand::create([
+            'name' => 'PetWorld',
+            'slug' => 'petworld',
+            'image' => 'petworld.jpg',
+        ]);
+        $variantType = VariantType::create([
+            'name' => 'Weight',
+            'status' => 'active',
+        ]);
+
+        $nameMatch = Product::create([
+            'category_id' => $category->id,
+            'brand_id' => $brand->id,
+            'name' => 'Royal Canin Mini',
+            'slug' => 'royal-canin-mini',
+            'description' => 'Thức ăn cho chó nhỏ.',
+            'status' => 'active',
+        ]);
+        $this->createProductVariant([
+            'product_id' => $nameMatch->id,
+            'price' => 200000,
+            'quantity' => 5,
+            'status' => 'active',
+        ], [$variantType->id => '1kg']);
+
+        $descriptionMatch = Product::create([
+            'category_id' => $category->id,
+            'brand_id' => $brand->id,
+            'name' => 'Dog Food Premium',
+            'slug' => 'dog-food-premium',
+            'description' => 'Được sản xuất cùng Royal Canin.',
+            'status' => 'active',
+        ]);
+        $this->createProductVariant([
+            'product_id' => $descriptionMatch->id,
+            'price' => 180000,
+            'quantity' => 5,
+            'status' => 'active',
+        ], [$variantType->id => '1kg']);
+
+        $this->getJson('/api/products?search=Royal')
+            ->assertOk()
+            ->assertJsonPath('data.products.0.slug', 'royal-canin-mini');
+    }
+
     public function test_product_detail_api_returns_variants_reviews_and_related_products(): void
     {
         $category = Category::create([

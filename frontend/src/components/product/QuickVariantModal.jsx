@@ -142,7 +142,9 @@ export default function QuickVariantModal({ isOpen, onClose, product }) {
               <span className="qvm-price-current">{formatPrice(currentPrice)}</span>
             </div>
             <span className={`qvm-stock-status ${!inStock ? "out-of-stock" : ""}`}>
-              {inStock ? "Còn hàng" : "Hết hàng"}
+              {inStock
+                ? `Còn ${selectedVariant.quantity} sản phẩm`
+                : "Hết hàng"}
             </span>
             {product.short_description && (
               <p className="qvm-short-description">{product.short_description}</p>
