@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
@@ -21,20 +22,22 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'email:rfc,dns', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20', 'regex:/^(0|\+84)(3|5|7|8|9)[0-9]{8}$/'],
             'date_of_birth' => ['nullable', 'date', 'before_or_equal:today'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required','confirmed',Password::min(8)->mixedCase()->numbers()->symbols(),],
         ], [
             'name.required' => 'Vui lòng nhập họ tên.',
             'email.required' => 'Vui lòng nhập email.',
             'email.email' => 'Email không hợp lệ.',
             'email.unique' => 'Email này đã được đăng ký.',
             'password.required' => 'Vui lòng nhập mật khẩu.',
-            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
+            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
             'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
             'date_of_birth.date' => 'Ngày sinh không hợp lệ.',
             'date_of_birth.before_or_equal' => 'Ngày sinh phải là một ngày trong quá khứ.',
             'phone.regex' => 'Số điện thoại không hợp lệ.',
+            'password.mixed' =>'Mật khẩu phải chứa chữ hoa và chữ thường, ít nhất một số và một ký tự đặc biệt.',        
+            'password.numbers' =>'Mật khẩu phải chứa chữ hoa và chữ thường, ít nhất một số và một ký tự đặc biệt.',
+            'password.symbols' =>'Mật khẩu phải chứa chữ hoa và chữ thường, ít nhất một số và một ký tự đặc biệt.',
         ]);
-
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -77,11 +80,11 @@ class AuthController extends Controller
                 'email' => ['Email hoặc mật khẩu không đúng.'],
             ]);
         }
-        if(!$user->hasVerifiedEmail()){
+        if (!$user->hasVerifiedEmail()) {
             return response()->json([
                 'message' => 'Tài khoản của bạn chưa được xác minh vui lòng kiểm tra email để xác minh tài khoản',
                 'code' => 'EMAIL_NOT_VERIFIED',
-            ],403);
+            ], 403);
         }
         if ($user->status !== 'active') {
             throw ValidationException::withMessages([
@@ -93,7 +96,7 @@ class AuthController extends Controller
                 'message' => ['Tài khoản của bạn không có quyền truy cập.'],
             ]);
         }
-        
+
 
         $token = $user->createToken('auth')->plainTextToken;
 
@@ -143,7 +146,12 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'current_password' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
+        ],[
+            'password.min' => 'Mật khẩu phải chứa ít nhất 8 ký tự.',
+            'password.symbols' => 'Mật khẩu phải chứa ít nhất một ký tự đặc biệt.',
+            'password.numbers' => 'Mật khẩu phải chứa ít nhất một chữ số.',
+            'password.mixedCase' => 'Mật khẩu phải chứa cả chữ hoa và chữ thường.',
         ]);
         $user = $request->user();
 
