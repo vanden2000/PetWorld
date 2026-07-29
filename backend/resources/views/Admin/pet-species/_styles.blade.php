@@ -7,9 +7,69 @@
   .species-add, .species-save { display:inline-flex; align-items:center; justify-content:center; gap:9px; border:0; border-radius:10px; padding:11px 16px; color:#fff; background:var(--primary); font-weight:700; text-decoration:none; cursor:pointer; transition:transform .18s ease, background .18s ease; white-space:nowrap; }
   .species-add:hover, .species-save:hover { color:#fff; background:var(--primary-hover); transform:translateY(-1px); }
   .species-metrics { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; margin-bottom:20px; }
-  .species-metric { padding:17px 18px; border:1px solid var(--border-color); border-radius:13px; background:var(--surface-color); }
-  .species-metric span { display:block; color:var(--text-muted); font-size:.8rem; font-weight:600; }
-  .species-metric strong { display:block; color:var(--text-main); font-size:1.55rem; line-height:1.15; margin-top:6px; }
+  .species-metric {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      background: var(--surface-color);
+      box-shadow: var(--shadow-subtle);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+  }
+  .species-metric::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--primary);
+      border-radius: 4px 0 0 4px;
+  }
+  .species-metric:nth-child(2)::before {
+      background: #16734a;
+  }
+  .species-metric:nth-child(3)::before {
+      background: #a34b13;
+  }
+  .species-metric:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-medium);
+  }
+  .species-metric-info {
+      display: flex;
+      flex-direction: column;
+  }
+  .species-metric span {
+      display: block;
+      color: var(--text-muted);
+      font-size: .8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+  }
+  .species-metric strong {
+      display: block;
+      color: var(--text-main);
+      font-size: 1.6rem;
+      line-height: 1.15;
+      margin-top: 6px;
+      font-weight: 800;
+  }
+  .species-metric-icon {
+      font-size: 1.8rem;
+      color: var(--primary);
+      opacity: 0.15;
+      transition: all 0.2s ease;
+  }
+  .species-metric:hover .species-metric-icon {
+      opacity: 0.35;
+      transform: scale(1.1);
+  }
   /* Table styles */
   .species-table-card {
       background: var(--surface-color);
@@ -151,13 +211,90 @@
   .species-field label { display:block; margin-bottom:7px; color:var(--text-main); font-size:.86rem; font-weight:700; }
   .species-field input[type="text"], .species-field input[type="number"] { width:100%; min-height:42px; box-sizing:border-box; border:1px solid var(--border-color); border-radius:9px; padding:10px 11px; color:var(--text-main); background:#fff; }
   .species-field input:focus { outline:0; border-color:var(--primary); box-shadow:0 0 0 3px rgba(255,120,45,.12); }
-  .species-upload { display:flex; align-items:center; gap:13px; padding:12px; border:1px dashed #e4c6b2; border-radius:11px; background:#fffaf6; }
-  .species-upload-preview { width:54px; height:54px; overflow:hidden; display:grid; place-items:center; border-radius:10px; color:#9a6849; background:#f6e7db; flex:0 0 auto; }
-  .species-upload-preview img { width:100%; height:100%; object-fit:cover; }
-  .species-file { width:100%; color:var(--text-muted); font-size:.82rem; }
-  .species-color-row { display:flex; align-items:center; gap:10px; }
-  .species-color { width:46px; height:40px; padding:2px; border:1px solid var(--border-color); border-radius:9px; cursor:pointer; }
-  .species-help { margin:7px 0 0; color:var(--text-muted); font-size:.78rem; line-height:1.45; }
+  /* Premium Upload Area */
+  .species-upload-dropzone {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border: 1px dashed #e4c6b2;
+      border-radius: 12px;
+      background: #fffaf6;
+      cursor: pointer;
+      transition: all 0.2s ease;
+  }
+  .species-upload-dropzone:hover {
+      border-color: var(--primary);
+      background: #fffcf9;
+  }
+  .species-upload-preview {
+      width: 56px;
+      height: 56px;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: #9a6849;
+      background: #f6e7db;
+      flex: 0 0 auto;
+      font-size: 1.35rem;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+      transition: all 0.2s ease;
+  }
+  .species-upload-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+  }
+  .species-upload-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.4;
+      text-align: left;
+  }
+  .species-upload-text strong {
+      font-size: 0.88rem;
+      color: var(--text-main);
+      font-weight: 700;
+  }
+  .species-upload-text span {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+  }
+
+  /* Premium Color Input Block */
+  .species-color-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+  }
+  .species-color-bubble {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1px var(--border-color), 0 4px 8px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex: 0 0 auto;
+  }
+  .species-color-bubble:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 0 1px var(--primary), 0 6px 12px rgba(0,0,0,0.1);
+  }
+  .color-hex-input {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace !important;
+      font-weight: 600 !important;
+      color: var(--text-main) !important;
+      text-align: center;
+  }
+
+  .species-help {
+      margin: 7px 0 0;
+      color: var(--text-muted);
+      font-size: .78rem;
+      line-height: 1.45;
+  }
   .species-switch { display:flex; gap:11px; padding:13px 0; border-top:1px solid var(--border-color); cursor:pointer; }
   .species-switch:first-of-type { border-top:0; padding-top:0; }
   .species-switch input { margin-top:3px; accent-color:var(--primary); }
