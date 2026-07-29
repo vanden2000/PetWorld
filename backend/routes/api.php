@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CheckoutOptionController;
+use App\Http\Controllers\Api\GhtkQuoteController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PetSpeciesController;
@@ -53,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Sổ địa chỉ giao hàng
     Route::apiResource('addresses', AddressController::class)->except(['show']);
+    Route::post('/shipping/ghtk/quote', GhtkQuoteController::class)->middleware('throttle:20,1');
 
     // Đơn hàng
     Route::get('/orders', [OrderController::class, 'index']);

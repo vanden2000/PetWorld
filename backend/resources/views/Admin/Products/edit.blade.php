@@ -2130,6 +2130,7 @@
             const price = initial.price ?? basePriceInput?.value ?? '';
             const salePrice = initial.sale_price ?? baseSalePriceInput?.value ?? '';
             const quantity = initial.quantity ?? baseQtyInput?.value ?? '';
+            const weightGrams = initial.weight_grams ?? '';
             const active = initial.status ? initial.status === 'active' : true;
 
             row.innerHTML = `
@@ -2163,6 +2164,7 @@
                     <div class="variant-card-field"><label>Giá bán</label><input type="number" name="variants[${index}][price]" value="${price}" class="cell-input-small js-variant-price" step="1000" min="0" required></div>
                     <div class="variant-card-field"><label>Giá giảm</label><input type="number" name="variants[${index}][sale_price]" value="${salePrice || ''}" class="cell-input-small js-variant-sale-price" step="1000" min="0"></div>
                     <div class="variant-card-field"><label>Tồn kho</label><input type="number" name="variants[${index}][quantity]" value="${quantity}" class="cell-input-small js-variant-quantity" min="0" required></div>
+                    <div class="variant-card-field"><label>Cân nặng ship (g)</label><input type="number" name="variants[${index}][weight_grams]" value="${weightGrams}" class="cell-input-small js-variant-weight" min="0" max="50000" step="1" placeholder="Ví dụ: 30"></div>
                 </div>
                 <div class="variant-card-footer">
                     <label class="variant-visibility-toggle"><input type="checkbox" class="js-variant-visible" name="variants[${index}][visible]" value="1" ${active ? 'checked' : ''}> Hiển thị cho khách</label>

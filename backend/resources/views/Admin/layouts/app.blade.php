@@ -118,7 +118,7 @@
                         request()->routeIs('admin.pet-species*');
                 @endphp
                 <li class="menu-item-dropdown {{ $isProductMenuActive ? 'open' : '' }}">
-                    <a href="#" class="menu-item-link dropdown-toggle {{ $isProductMenuActive ? 'active' : '' }}">
+                    <a href="{{ route('admin.products') }}" class="menu-item-link dropdown-toggle {{ $isProductMenuActive ? 'active' : '' }}">
                         <i class="fa-solid fa-box"></i>
                         <span>Sản phẩm</span>
 
