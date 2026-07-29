@@ -40,6 +40,18 @@
       transform: translateY(-2px);
       box-shadow: var(--shadow-medium);
   }
+  .species-metric:first-child:hover {
+      background: #fffdfa;
+      border-color: rgba(227, 94, 20, 0.2);
+  }
+  .species-metric:nth-child(2):hover {
+      background: #f6fcf9;
+      border-color: rgba(22, 115, 74, 0.2);
+  }
+  .species-metric:nth-child(3):hover {
+      background: #fdfaf7;
+      border-color: rgba(163, 75, 19, 0.2);
+  }
   .species-metric-info {
       display: flex;
       flex-direction: column;
@@ -64,11 +76,11 @@
       font-size: 1.8rem;
       color: var(--primary);
       opacity: 0.15;
-      transition: all 0.2s ease;
+      transition: all 0.25s ease;
   }
   .species-metric:hover .species-metric-icon {
-      opacity: 0.35;
-      transform: scale(1.1);
+      opacity: 0.95;
+      transform: scale(1.18);
   }
   /* Table styles */
   .species-table-card {
