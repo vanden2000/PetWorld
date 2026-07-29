@@ -49,12 +49,12 @@
       <label class="species-filter-label">Trạng thái</label>
       <div class="custom-admin-select-container">
         <div class="custom-admin-select-trigger">
-          <span>Tất cả trạng thái</span>
+          <span>Tất cả</span>
           <i class="fa-solid fa-chevron-down"></i>
         </div>
         <input type="hidden" class="filter-input-val" id="filterStatus" value="">
         <div class="custom-admin-select-options">
-          <div class="custom-admin-select-option selected" data-value="">Tất cả trạng thái</div>
+          <div class="custom-admin-select-option selected" data-value="">Tất cả</div>
           <div class="custom-admin-select-option" data-value="active">Đang hoạt động</div>
           <div class="custom-admin-select-option" data-value="hidden">Đang ẩn</div>
         </div>
@@ -66,12 +66,12 @@
       <label class="species-filter-label">Sản phẩm</label>
       <div class="custom-admin-select-container">
         <div class="custom-admin-select-trigger">
-          <span>Tất cả sản phẩm</span>
+          <span>Tất cả</span>
           <i class="fa-solid fa-chevron-down"></i>
         </div>
         <input type="hidden" class="filter-input-val" id="filterProduct" value="">
         <div class="custom-admin-select-options">
-          <div class="custom-admin-select-option selected" data-value="">Tất cả sản phẩm</div>
+          <div class="custom-admin-select-option selected" data-value="">Tất cả</div>
           <div class="custom-admin-select-option" data-value="has_products">Đã gán sản phẩm</div>
           <div class="custom-admin-select-option" data-value="no_products">Chưa gán sản phẩm</div>
         </div>
@@ -83,12 +83,12 @@
       <label class="species-filter-label">Hiển thị trang chủ</label>
       <div class="custom-admin-select-container">
         <div class="custom-admin-select-trigger">
-          <span>Tất cả hiển thị</span>
+          <span>Tất cả</span>
           <i class="fa-solid fa-chevron-down"></i>
         </div>
         <input type="hidden" class="filter-input-val" id="filterHome" value="">
         <div class="custom-admin-select-options">
-          <div class="custom-admin-select-option selected" data-value="">Tất cả hiển thị</div>
+          <div class="custom-admin-select-option selected" data-value="">Tất cả</div>
           <div class="custom-admin-select-option" data-value="home">Nổi bật trang chủ</div>
           <div class="custom-admin-select-option" data-value="not_home">Không nổi bật</div>
         </div>
@@ -102,10 +102,6 @@
         <span>Xóa lọc</span>
       </button>
     </div>
-  </div>
-
-  <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; text-align: right;">
-      Hiển thị <strong style="color: var(--text-main); font-weight: 700;" id="visibleCount">{{ $petSpecies->count() }}</strong> / <strong>{{ $petSpecies->count() }}</strong> loài
   </div>
 
   <div class="species-table-card">
@@ -170,6 +166,12 @@
           @endforelse
         </tbody>
       </table>
+    </div>
+    <!-- Table Footer status bar -->
+    <div class="species-table-footer" style="border-top: 1px solid var(--border-color); padding: 14px 20px; background: #fafbfc; display: flex; justify-content: flex-end; align-items: center; border-radius: 0 0 14px 14px;">
+        <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 500;">
+            Hiển thị <strong style="color: var(--text-main); font-weight: 700;" id="visibleCount">{{ $petSpecies->count() }}</strong> trên <strong style="color: var(--text-main); font-weight: 700;">{{ $petSpecies->count() }}</strong> loài
+        </div>
     </div>
   </div>
 </div>
