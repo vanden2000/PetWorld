@@ -304,6 +304,165 @@
   .species-form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
   .species-cancel { display:inline-flex; align-items:center; justify-content:center; padding:11px 16px; border:1px solid var(--border-color); border-radius:10px; color:var(--text-main); background:var(--surface-color); font-weight:700; text-decoration:none; }
   .species-error { margin:8px 0 0; color:#c9362a; font-size:.82rem; }
+  /* Custom Filters Grid styling */
+  .species-filters-grid {
+      display: grid;
+      grid-template-columns: 1.5fr minmax(160px, 1fr) minmax(160px, 1fr) minmax(180px, 1fr) 120px;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow-subtle);
+  }
+  
+  .species-filter-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+  }
+  
+  .species-filter-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+  }
+  
+  .btn-reset-filters {
+      height: 38px;
+      border: 1px solid #ffd8c0;
+      background: #fff7f2;
+      color: var(--primary);
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      width: 100%;
+  }
+  .btn-reset-filters:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+  }
+
+  /* Custom Select Dropdowns in Admin Filters */
+  .custom-admin-select-container {
+      position: relative;
+      width: 100%;
+  }
+
+  .custom-admin-select-trigger {
+      height: 38px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0 14px;
+      background-color: #ffffff;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+  }
+
+  .custom-admin-select-trigger span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-right: 8px;
+  }
+
+  .custom-admin-select-trigger:hover,
+  .custom-admin-select-container.open .custom-admin-select-trigger {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 120, 45, 0.1);
+  }
+
+  .custom-admin-select-trigger i {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      transition: transform 0.2s ease;
+  }
+
+  .custom-admin-select-container.open .custom-admin-select-trigger i {
+      transform: rotate(180deg);
+      color: var(--primary);
+  }
+
+  .custom-admin-select-options {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      min-width: 100%;
+      width: max-content;
+      background-color: #ffffff;
+      border: 1px solid #ebdcd0;
+      border-radius: 8px;
+      padding: 4px;
+      margin: 0;
+      list-style: none;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+      z-index: 99;
+      display: none;
+      flex-direction: column;
+      gap: 2px;
+  }
+
+  .custom-admin-select-container.open .custom-admin-select-options {
+      display: flex;
+  }
+
+  .custom-admin-select-option {
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: #4b5563;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left !important;
+      white-space: nowrap;
+  }
+
+  .custom-admin-select-option:hover {
+      background-color: #fff4ec;
+      color: var(--primary);
+  }
+
+  .custom-admin-select-option.selected {
+      background-color: var(--primary);
+      color: #ffffff;
+  }
+
+  @media (max-width: 1000px) {
+      .species-filters-grid {
+          grid-template-columns: repeat(2, 1fr) !important;
+      }
+      .species-filters-grid .species-filter-col:first-child {
+          grid-column: 1 / -1;
+      }
+  }
+  @media (max-width: 600px) {
+      .species-filters-grid {
+          grid-template-columns: 1fr !important;
+      }
+      .species-filters-grid .species-filter-col:first-child {
+          grid-column: span 1;
+      }
+  }
+
   @media (max-width: 820px) { .species-header { align-items:stretch; flex-direction:column; } .species-add { align-self:flex-start; } .species-form { grid-template-columns:1fr; } }
   @media (max-width: 640px) { .species-page { margin:0; } .species-metrics, .species-form-grid { grid-template-columns:1fr; } .species-table-card { overflow-x:auto; } .species-table { min-width:720px; } .species-panel { padding:18px; } }
 </style>
