@@ -122,11 +122,12 @@
         display: grid;
         grid-template-columns: 320px minmax(0, 1fr);
         gap: 24px;
-        align-items: start;
+        align-items: stretch;
     }
     @media (max-width: 1024px) {
         .variant-grid {
             grid-template-columns: 1fr;
+            align-items: start;
         }
     }
 
@@ -136,6 +137,8 @@
         border-radius: 16px;
         box-shadow: var(--shadow-subtle);
         padding: 24px;
+        height: 100%;
+        box-sizing: border-box;
     }
 
     .variant-panel-title {
