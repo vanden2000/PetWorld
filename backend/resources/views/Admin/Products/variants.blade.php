@@ -120,7 +120,7 @@
     /* 2 Column Grid */
     .variant-grid {
         display: grid;
-        grid-template-columns: 320px 1fr;
+        grid-template-columns: 320px minmax(0, 1fr);
         gap: 24px;
         align-items: start;
     }
@@ -220,7 +220,7 @@
     /* Filter Bar */
     .variant-filter {
         display: grid;
-        grid-template-columns: 1fr 160px 100px 100px;
+        grid-template-columns: 1fr 150px auto auto;
         gap: 12px;
         align-items: center;
     }
