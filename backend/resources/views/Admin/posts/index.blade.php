@@ -2,134 +2,24 @@
 
 @section('title', 'Danh sách bài viết')
 
-@section('styles')
-<style>
-    /* Ngăn tiêu đề bảng bị xuống hàng */
-    .orders-table th {
-        white-space: nowrap !important;
-    }
-
-    /* Responsive Grid for Filter Card */
-    .filters-form-grid-custom {
-        display: grid;
-        grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr minmax(190px, 1.2fr) !important;
-        gap: 15px !important;
-        align-items: flex-end !important;
-        width: 100%;
-    }
-
-    @media (max-width: 1200px) {
-        .filters-form-grid-custom {
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 20px !important;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .filters-form-grid-custom {
-            grid-template-columns: repeat(2, 1fr) !important;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .filters-form-grid-custom {
-            grid-template-columns: 1fr !important;
-        }
-    }
-
-    /* Custom Select Dropdowns in Admin Filters */
-    .custom-admin-select-container {
-        position: relative;
-        width: 100%;
-    }
-
-    .custom-admin-select-trigger {
-        height: 38px;
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        padding: 0 14px;
-        background-color: #ffffff;
-        font-size: 0.9rem;
-        color: var(--text-main);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        cursor: pointer;
-        transition: var(--transition);
-        user-select: none;
-    }
-
-    .custom-admin-select-trigger:hover,
-    .custom-admin-select-container.open .custom-admin-select-trigger {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(255, 120, 45, 0.1);
-    }
-
-    .custom-admin-select-trigger i {
-        font-size: 0.75rem;
-        color: #9ca3af;
-        transition: transform 0.2s ease;
-    }
-
-    .custom-admin-select-container.open .custom-admin-select-trigger i {
-        transform: rotate(180deg);
-        color: var(--primary);
-    }
-
-    .custom-admin-select-options {
-        position: absolute;
-        top: calc(100% + 4px);
-        left: 0;
-        right: 0;
-        background-color: #ffffff;
-        border: 1px solid #ebdcd0;
-        border-radius: 8px;
-        padding: 4px;
-        margin: 0;
-        list-style: none;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
-        z-index: 99;
-        display: none;
-        flex-direction: column;
-        gap: 2px;
-    }
-
-    .custom-admin-select-container.open .custom-admin-select-options {
-        display: flex;
-    }
-
-    .custom-admin-select-option {
-        padding: 8px 12px;
-        font-size: 0.88rem;
-        font-weight: 500;
-        color: #4b5563;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-
-    .custom-admin-select-option:hover {
-        background-color: #fff4ec;
-        color: var(--primary);
-    }
-
-    .custom-admin-select-option.selected {
-        background-color: var(--primary);
-        color: #ffffff;
-    }
-</style>
-@endsection
+@section('styles') @include('admin.posts._index_styles') @endsection
 
 @section('content')
-<div class="dashboard-header">
+@php
+    $siteBase = rtrim(config('app.frontend_url'), '/') . '/news/';
+@endphp
+
+<div class="pl-header">
     <div class="header-title-block">
         <h1>Danh sách bài viết</h1>
-        <p>Quản lý tin tức, bài viết của cửa hàng PetWorld.</p>
+        <p>Quản lý tin tức, cẩm nang chăm sóc thú cưng của PetWorld.</p>
     </div>
-    <div class="header-actions">
-        <a href="{{ route('admin.posts.create') }}" class="categories-add-btn" style="text-decoration: none; padding: 10px 20px; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; font-weight: bold; background: var(--primary); color: #fff; border: none; transition: var(--transition);" onmouseover="this.style.background='var(--primary-hover)'" onmouseout="this.style.background='var(--primary)'">
-            <i class="fa-solid fa-plus" style="font-size: 0.95rem;"></i>
-            <span>Thêm bài viết mới</span>
+    <div class="pl-header-actions">
+        <a href="{{ route('admin.blog-comments') }}" class="pl-btn">
+            <i class="fa-solid fa-comments"></i> Quản lý bình luận
+        </a>
+        <a href="{{ route('admin.posts.create') }}" class="pl-btn pl-btn-primary">
+            <i class="fa-solid fa-plus"></i> Thêm bài viết mới
         </a>
     </div>
 </div>
@@ -140,212 +30,228 @@
     </div>
 @endif
 
-<form class="filters-card orders-filter-card filters-form-grid-custom" method="GET" action="{{ route('admin.posts') }}">
-    <!-- Row 1: Search, Category, Author -->
-    <div class="filter-col">
-        <label class="filter-label">Tìm kiếm bài viết</label>
-        <div class="filter-input-wrapper">
-            <i class="fa-solid fa-magnifying-glass filter-input-icon"></i>
-            <input class="filter-input" name="search" value="{{ $search ?? '' }}" placeholder="Tiêu đề, mô tả ngắn...">
+{{-- Số liệu tổng quan: đếm trực tiếp từ bảng blogs --}}
+<div class="pl-stats">
+    <div class="pl-stat">
+        <div class="pl-stat-icon is-total"><i class="fa-solid fa-newspaper"></i></div>
+        <div>
+            <div class="pl-stat-value">{{ number_format($totalCount) }}</div>
+            <div class="pl-stat-label">Tổng bài viết</div>
+        </div>
+    </div>
+    <div class="pl-stat">
+        <div class="pl-stat-icon is-live"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+            <div class="pl-stat-value">{{ number_format($publishedCount) }}</div>
+            <div class="pl-stat-label">Đang xuất bản</div>
+        </div>
+    </div>
+    <div class="pl-stat">
+        <div class="pl-stat-icon is-draft"><i class="fa-regular fa-file-lines"></i></div>
+        <div>
+            <div class="pl-stat-value">{{ number_format($draftCount) }}</div>
+            <div class="pl-stat-label">Bản nháp</div>
+        </div>
+    </div>
+    <div class="pl-stat">
+        <div class="pl-stat-icon is-views"><i class="fa-regular fa-eye"></i></div>
+        <div>
+            <div class="pl-stat-value">{{ number_format($totalViews) }}</div>
+            <div class="pl-stat-label">Tổng lượt xem</div>
+        </div>
+    </div>
+</div>
+
+{{-- Bộ lọc: search + blog_category_id + status + sắp xếp --}}
+<form method="GET" action="{{ route('admin.posts') }}" class="pl-filters">
+    <div class="pl-filter">
+        <label for="search">Tìm kiếm</label>
+        <div class="pl-search-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search" name="search" class="pl-input"
+                   value="{{ $search }}" placeholder="Tiêu đề, mô tả, đường dẫn, danh mục...">
         </div>
     </div>
 
-    <div class="filter-col">
-        <label class="filter-label">Chuyên mục</label>
-        <div class="filter-input-wrapper">
-            <div class="custom-admin-select-container">
-                <div class="custom-admin-select-trigger">
-                    <span>Tất cả danh mục</span>
-                    <i class="fa-solid fa-chevron-down"></i>
-                </div>
-                <input type="hidden" name="category_id" value="{{ $categoryId ?? '' }}">
-                <div class="custom-admin-select-options">
-                    <div class="custom-admin-select-option" data-value="">Tất cả danh mục</div>
-                    @foreach($categories as $cat)
-                        <div class="custom-admin-select-option" data-value="{{ $cat->id }}">{{ $cat->name }}</div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
+    <div class="pl-filter">
+        <label for="category_id">Danh mục</label>
+        <select id="category_id" name="category_id" class="pl-select">
+            <option value="all">Tất cả danh mục</option>
+            @foreach($categories as $category)
+                <option value="{{ $category->id }}" @selected((string) $categoryId === (string) $category->id)>
+                    {{ $category->name }}
+                </option>
+            @endforeach
+        </select>
     </div>
 
-    <div class="filter-col">
-        <label class="filter-label">Tác giả</label>
-        <div class="filter-input-wrapper">
-            <div class="custom-admin-select-container">
-                <div class="custom-admin-select-trigger">
-                    <span>Tất cả tác giả</span>
-                    <i class="fa-solid fa-chevron-down"></i>
-                </div>
-                <input type="hidden" name="author_id" value="{{ $authorId ?? '' }}">
-                <div class="custom-admin-select-options">
-                    <div class="custom-admin-select-option" data-value="">Tất cả tác giả</div>
-                    @foreach($authors as $author)
-                        <div class="custom-admin-select-option" data-value="{{ $author->id }}">{{ $author->name }}</div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
+    <div class="pl-filter">
+        <label for="author_id">Tác giả</label>
+        <select id="author_id" name="author_id" class="pl-select">
+            <option value="all">Tất cả tác giả</option>
+            @foreach($authors as $author)
+                <option value="{{ $author->id }}" @selected((string) $authorId === (string) $author->id)>
+                    {{ $author->name }}
+                </option>
+            @endforeach
+        </select>
     </div>
 
-    <!-- Row 2: Status, Sort, Actions -->
-    <div class="filter-col">
-        <label class="filter-label">Trạng thái</label>
-        <div class="filter-input-wrapper">
-            <div class="custom-admin-select-container">
-                <div class="custom-admin-select-trigger">
-                    <span>Tất cả trạng thái</span>
-                    <i class="fa-solid fa-chevron-down"></i>
-                </div>
-                <input type="hidden" name="status" value="{{ $status ?? '' }}">
-                <div class="custom-admin-select-options">
-                    <div class="custom-admin-select-option" data-value="">Tất cả trạng thái</div>
-                    <div class="custom-admin-select-option" data-value="active">Đã xuất bản</div>
-                    <div class="custom-admin-select-option" data-value="inactive">Bản nháp</div>
-                </div>
-            </div>
-        </div>
+    <div class="pl-filter">
+        <label for="status">Trạng thái</label>
+        <select id="status" name="status" class="pl-select">
+            <option value="all" @selected($status === 'all')>Tất cả trạng thái</option>
+            <option value="active" @selected($status === 'active')>Đang xuất bản</option>
+            <option value="inactive" @selected($status === 'inactive')>Bản nháp</option>
+        </select>
     </div>
 
-    <div class="filter-col">
-        <label class="filter-label">Sắp xếp</label>
-        <div class="filter-input-wrapper">
-            <div class="custom-admin-select-container">
-                <div class="custom-admin-select-trigger">
-                    <span>Mới nhất</span>
-                    <i class="fa-solid fa-chevron-down"></i>
-                </div>
-                <input type="hidden" name="sort" value="{{ $sort ?? 'newest' }}">
-                <div class="custom-admin-select-options">
-                    <div class="custom-admin-select-option" data-value="newest">Mới nhất</div>
-                    <div class="custom-admin-select-option" data-value="oldest">Cũ nhất</div>
-                    <div class="custom-admin-select-option" data-value="popular">Nhiều lượt xem nhất</div>
-                </div>
-            </div>
-        </div>
+    <div class="pl-filter">
+        <label for="sort">Sắp xếp</label>
+        <select id="sort" name="sort" class="pl-select">
+            <option value="latest" @selected($sort === 'latest')>Mới nhất</option>
+            <option value="oldest" @selected($sort === 'oldest')>Cũ nhất</option>
+            <option value="most_viewed" @selected($sort === 'most_viewed')>Xem nhiều nhất</option>
+            <option value="most_commented" @selected($sort === 'most_commented')>Nhiều bình luận nhất</option>
+        </select>
     </div>
 
-    <div class="filter-col orders-filter-actions" style="display: flex; gap: 10px; margin-top: auto; padding-bottom: 2px;">
-        <button class="btn-dark-slate" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer;">
-            <i class="fa-solid fa-filter"></i>
-            <span>Lọc</span>
+    <div class="pl-filter pl-filter-actions">
+        <button type="submit" class="pl-btn pl-btn-primary">
+            <i class="fa-solid fa-sliders"></i> Lọc
         </button>
-        <a href="{{ route('admin.posts') }}" class="btn-clear-filters" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 7px; box-sizing: border-box; padding: 0;">
-            Xóa lọc
-        </a>
+        <a href="{{ route('admin.posts') }}" class="pl-btn">Xóa lọc</a>
     </div>
 </form>
 
-<div class="table-card">
-    <div class="table-container">
-        <table class="orders-table">
+<div class="pl-table-card">
+    <div class="pl-table-scroll">
+        <table class="pl-table">
             <thead>
                 <tr>
-                    <th style="width: 80px;">Hình ảnh</th>
-                    <th style="width: 32%;">Tiêu đề bài viết</th>
-                    <th style="width: 14%;">Danh mục</th>
-                    <th style="width: 12%;">Tác giả</th>
-                    <th style="width: 8%; text-align: center;">Lượt xem</th>
-                    <th style="width: 8%; text-align: center;">Bình luận</th>
-                    <th style="width: 10%;">Ngày tạo</th>
-                    <th style="width: 10%;">Trạng thái</th>
-                    <th style="width: 14%; text-align: right;">Thao tác</th>
+                    <th>Bài viết</th>
+                    <th>Danh mục</th>
+                    <th>Tác giả</th>
+                    <th style="text-align: center;">Lượt xem</th>
+                    <th style="text-align: center;">Bình luận</th>
+                    <th>Ngày tạo</th>
+                    <th>Trạng thái</th>
+                    <th style="text-align: right;">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($posts as $post)
+                    @php
+                        $postImageUrl = null;
+                        if ($post->image) {
+                            if (filter_var($post->image, FILTER_VALIDATE_URL)) {
+                                $postImageUrl = $post->image;
+                            } elseif (str_starts_with($post->image, 'uploads/') || str_starts_with($post->image, 'image/') || str_starts_with($post->image, 'storage/')) {
+                                $postImageUrl = asset($post->image);
+                            } else {
+                                $postImageUrl = asset('storage/' . $post->image);
+                            }
+                        }
+                    @endphp
                     <tr>
                         <td>
-                            @php
-                                $postImageUrl = asset('images/default-blog.jpg');
-                                if ($post->image) {
-                                    if (filter_var($post->image, FILTER_VALIDATE_URL)) {
-                                        $postImageUrl = $post->image;
-                                    } elseif (str_starts_with($post->image, 'uploads/') || str_starts_with($post->image, 'blogs/')) {
-                                        $postImageUrl = asset('storage/' . $post->image);
-                                    } elseif (str_starts_with($post->image, 'storage/')) {
-                                        $postImageUrl = asset($post->image);
-                                    } else {
-                                        $postImageUrl = asset('storage/' . $post->image);
-                                    }
-                                }
-                            @endphp
-                            <img src="{{ $postImageUrl }}" 
-                                 alt="{{ $post->title }}" 
-                                 style="width: 64px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #ebdcd0;">
+                            <div class="pl-post-cell">
+                                @if($postImageUrl)
+                                    <img class="pl-thumb" src="{{ $postImageUrl }}" alt="{{ $post->title }}" loading="lazy">
+                                @else
+                                    <span class="pl-thumb-empty" title="Chưa có ảnh bìa">
+                                        <i class="fa-regular fa-image"></i>
+                                    </span>
+                                @endif
+                                <div style="min-width: 0;">
+                                    <a href="{{ route('admin.posts.edit', $post) }}" class="pl-post-title">{{ $post->title }}</a>
+                                    <span class="pl-post-slug" title="{{ $siteBase }}{{ $post->slug }}">
+                                        <i class="fa-solid fa-link"></i> /news/{{ $post->slug }}
+                                    </span>
+                                </div>
+                            </div>
                         </td>
                         <td>
-                            <strong style="color: #2d2926; font-size: 0.95rem; display: block; line-height: 1.4;">{{ $post->title }}</strong>
-                            <span style="font-size: 0.82rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; max-width: 450px; margin-top: 4px;">
-                                {{ $post->description }}
-                            </span>
+                            @if($post->category)
+                                <span class="pl-badge pl-badge-category">{{ $post->category->name }}</span>
+                            @else
+                                <span class="pl-badge pl-badge-none">Chưa phân loại</span>
+                            @endif
                         </td>
-                        <td>
-                            <span class="badge-fulfillment delivered" style="background: rgba(255, 120, 45, 0.08); color: #ff782d; border: 1px solid rgba(255, 120, 45, 0.15); font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-block; white-space: nowrap;">
-                                {{ $post->category?->name ?? 'Chưa phân loại' }}
-                            </span>
-                        </td>
-                        <td>
-                            <span style="font-size: 0.9rem; color: #5b5550; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; white-space: nowrap;">
-                                <i class="fa-regular fa-user-circle" style="font-size: 1.05rem; color: #9ca3af;"></i>
-                                {{ $post->author?->name ?? 'Admin' }}
-                            </span>
-                        </td>
-                        <td style="text-align: center; font-weight: 600; color: #2d2926; font-size: 0.9rem; white-space: nowrap;">
-                            👁 {{ number_format($post->view_count) }}
+                        <td>{{ $post->author?->name ?? 'Admin' }}</td>
+                        <td style="text-align: center;">
+                            <span class="pl-metric"><i class="fa-regular fa-eye"></i> {{ number_format($post->view_count) }}</span>
                         </td>
                         <td style="text-align: center;">
-                            <a href="{{ route('admin.blog-comments', ['blog_id' => $post->id]) }}" 
-                               style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-weight: bold; background: #fff8f3; border: 1px solid #ffe3d1; padding: 6px 12px; border-radius: 20px; color: var(--primary-orange); font-size: 0.85rem; transition: all 0.2s;"
-                               onmouseover="this.style.background='#ff782d'; this.style.color='#fff'"
-                               onmouseout="this.style.background='#fff8f3'; this.style.color='var(--primary-orange)'"
-                               title="Xem các bình luận của bài viết này">
-                                <i class="fa-solid fa-comment-dots"></i> {{ $post->comments_count }}
+                            <a href="{{ route('admin.blog-comments', ['blog_id' => $post->id]) }}"
+                               class="pl-comment-link" title="Xem bình luận của bài viết này">
+                                <i class="fa-solid fa-comment-dots"></i> {{ number_format($post->comments_count) }}
                             </a>
                         </td>
                         <td>
-                            <span style="font-size: 0.85rem; color: var(--text-muted);">{{ $post->created_at?->format('d/m/Y') }}</span>
+                            <span class="pl-date">
+                                {{ $post->created_at?->format('d/m/Y') }}
+                                <small>{{ $post->created_at?->format('H:i') }}</small>
+                            </span>
                         </td>
                         <td>
                             @if($post->status === 'active')
-                                <span class="badge-fulfillment delivered" style="background: rgba(16, 185, 129, 0.08); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.15); font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-block; white-space: nowrap;">
-                                    Đã xuất bản
-                                </span>
+                                <span class="pl-badge pl-badge-live"><i class="fa-solid fa-circle-check"></i> Đã xuất bản</span>
                             @else
-                                <span class="badge-fulfillment pending" style="background: rgba(107, 114, 128, 0.08); color: #6b7280; border: 1px solid rgba(107, 114, 128, 0.15); font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-block; white-space: nowrap;">
-                                    Bản nháp
-                                </span>
+                                <span class="pl-badge pl-badge-draft"><i class="fa-regular fa-file-lines"></i> Bản nháp</span>
                             @endif
                         </td>
-                        <td style="text-align: right; vertical-align: middle; white-space: nowrap;">
-                            <div style="display: inline-flex; align-items: center; gap: 8px; justify-content: flex-end; width: 100%;">
-                                <a href="{{ route('admin.posts.edit', $post) }}" 
-                                   title="Sửa bài viết"
-                                   style="text-decoration: none; border: 1px solid #ebdcd0; background: #fff; width: 34px; height: 34px; border-radius: 8px; color: #ff782d; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem;" 
-                                   onmouseover="this.style.background='#fff8f3'; this.style.borderColor='var(--primary)'" 
-                                   onmouseout="this.style.background='#fff'; this.style.borderColor='#ebdcd0'">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </a>
-                                <form method="POST" action="{{ route('admin.posts.destroy', $post) }}" 
-                                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này? Tất cả bình luận liên quan cũng sẽ bị xóa.')" 
-                                      style="display:inline-block; margin: 0; padding: 0;">
+                        <td>
+                            <div class="pl-row-actions">
+                                @if($post->status === 'active')
+                                    <a href="{{ $siteBase }}{{ $post->slug }}" target="_blank" rel="noopener"
+                                       class="pl-action" title="Xem trên website">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </a>
+                                @endif
+
+                                {{-- Đổi nhanh cột status của bảng blogs --}}
+                                <form method="POST" action="{{ route('admin.posts.status', $post) }}" class="pl-action-form">
                                     @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            title="Xóa bài viết"
-                                            style="border: 1px solid #ebdcd0; background: #fff; width: 34px; height: 34px; border-radius: 8px; color: #dc2626; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; padding: 0;" 
-                                            onmouseover="this.style.background='#fef2f2'; this.style.borderColor='#fca5a5'" 
-                                            onmouseout="this.style.background='#fff'; this.style.borderColor='#ebdcd0'">
-                                        <i class="fa-solid fa-trash-can"></i>
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="{{ $post->status === 'active' ? 'inactive' : 'active' }}">
+                                    <button type="submit" class="pl-action"
+                                            title="{{ $post->status === 'active' ? 'Chuyển về bản nháp' : 'Xuất bản bài viết' }}">
+                                        <i class="fa-solid {{ $post->status === 'active' ? 'fa-eye-slash' : 'fa-upload' }}"></i>
                                     </button>
                                 </form>
+
+                                <a href="{{ route('admin.posts.edit', $post) }}" class="pl-action" title="Chỉnh sửa">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+
+                                <button type="button" class="pl-action is-danger" title="Xóa bài viết"
+                                        data-delete-post
+                                        data-title="{{ $post->title }}"
+                                        data-comments="{{ $post->comments_count }}"
+                                        data-action="{{ route('admin.posts.destroy', $post) }}">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" style="text-align:center;padding:32px;color:var(--text-muted)">
-                            Chưa có bài viết nào phù hợp.
+                        <td colspan="8">
+                            <div class="pl-empty">
+                                <div class="pl-empty-icon"><i class="fa-regular fa-newspaper"></i></div>
+                                @if($search || $categoryId !== 'all' || $status !== 'all')
+                                    <strong>Không tìm thấy bài viết phù hợp</strong>
+                                    <p>Thử đổi từ khóa hoặc bỏ bớt điều kiện lọc.</p>
+                                    <a href="{{ route('admin.posts') }}" class="pl-btn">Xóa bộ lọc</a>
+                                @else
+                                    <strong>Chưa có bài viết nào</strong>
+                                    <p>Bắt đầu bằng bài cẩm nang chăm sóc thú cưng đầu tiên của bạn.</p>
+                                    <a href="{{ route('admin.posts.create') }}" class="pl-btn pl-btn-primary">
+                                        <i class="fa-solid fa-plus"></i> Viết bài đầu tiên
+                                    </a>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @endforelse
@@ -356,66 +262,63 @@
 
 {{ $posts->links('admin.layouts.pagination') }}
 
+{{-- Xác nhận xóa --}}
+<div class="pl-modal" id="pl-delete-modal" role="dialog" aria-modal="true" aria-labelledby="pl-delete-heading">
+    <div class="pl-modal-box">
+        <div class="pl-modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h3 id="pl-delete-heading">Xóa bài viết này?</h3>
+        <p id="pl-delete-note">Thao tác này không thể hoàn tác.</p>
+        <div class="pl-modal-target" id="pl-delete-title"></div>
+        <form method="POST" id="pl-delete-form">
+            @csrf
+            @method('DELETE')
+            <div class="pl-modal-actions">
+                <button type="button" class="pl-btn" id="pl-delete-cancel">Hủy</button>
+                <button type="submit" class="pl-btn pl-modal-danger">
+                    <i class="fa-solid fa-trash-can"></i> Xóa bài viết
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const dropdowns = document.querySelectorAll('.custom-admin-select-container');
+(function () {
+    const modal = document.getElementById('pl-delete-modal');
+    const form = document.getElementById('pl-delete-form');
+    const titleBox = document.getElementById('pl-delete-title');
+    const note = document.getElementById('pl-delete-note');
 
-        dropdowns.forEach(dropdown => {
-            const trigger = dropdown.querySelector('.custom-admin-select-trigger');
-            const triggerText = trigger.querySelector('span');
-            const hiddenInput = dropdown.querySelector('input[type="hidden"]');
-            const options = dropdown.querySelectorAll('.custom-admin-select-option');
+    const close = () => {
+        modal.classList.remove('is-open');
+        document.body.style.overflow = '';
+    };
 
-            // Set initial state based on hidden input value
-            const initialValue = hiddenInput.value;
-            let matchedOption = Array.from(options).find(opt => opt.getAttribute('data-value') === initialValue);
-            if (matchedOption) {
-                triggerText.textContent = matchedOption.textContent;
-                options.forEach(opt => opt.classList.remove('selected'));
-                matchedOption.classList.add('selected');
-            }
-
-            // Toggle Open/Close
-            trigger.addEventListener('click', function(e) {
-                e.stopPropagation();
-                // Close other dropdowns
-                dropdowns.forEach(other => {
-                    if (other !== dropdown) other.classList.remove('open');
-                });
-                dropdown.classList.toggle('open');
-            });
-
-            // Handle option selection
-            options.forEach(option => {
-                option.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const val = option.getAttribute('data-value');
-                    const text = option.textContent;
-
-                    // Update hidden input and trigger text
-                    hiddenInput.value = val;
-                    triggerText.textContent = text;
-
-                    // Update selected class
-                    options.forEach(opt => opt.classList.remove('selected'));
-                    option.classList.add('selected');
-
-                    // Close dropdown
-                    dropdown.classList.remove('open');
-
-                    // Submit form automatically
-                    const form = dropdown.closest('form');
-                    if (form) {
-                        form.submit();
-                    }
-                });
-            });
-        });
-
-        // Close on click outside
-        document.addEventListener('click', function() {
-            dropdowns.forEach(dropdown => dropdown.classList.remove('open'));
+    document.querySelectorAll('[data-delete-post]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const comments = Number(button.dataset.comments || 0);
+            form.action = button.dataset.action;
+            titleBox.textContent = button.dataset.title;
+            note.textContent = comments > 0
+                ? `Bài viết đang có ${comments} bình luận, tất cả sẽ bị xóa cùng. Thao tác này không thể hoàn tác.`
+                : 'Thao tác này không thể hoàn tác.';
+            modal.classList.add('is-open');
+            document.body.style.overflow = 'hidden';
         });
     });
+
+    document.getElementById('pl-delete-cancel').addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) close();
+    });
+
+    // Đổi bộ lọc là áp dụng ngay, không cần bấm nút Lọc
+    ['category_id', 'author_id', 'status', 'sort'].forEach((id) => {
+        document.getElementById(id)?.addEventListener('change', (e) => e.target.form.submit());
+    });
+})();
 </script>
 @endsection

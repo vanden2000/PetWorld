@@ -29,6 +29,9 @@ class ProductController extends Controller
         $query = $this->baseProductQuery($this->authenticatedUserId($request));
 
         $this->applyFilters($query, $request);
+        if ($request->filled('search') && $request->query('sort', 'newest') === 'newest') {
+            $this->applySearchRanking($query, trim((string) $request->query('search')));
+        }
         $this->applySorting($query, $request->query('sort', 'newest'));
 
         $products = $query->paginate(
@@ -223,6 +226,26 @@ class ProductController extends Controller
             'rating' => $query->orderByDesc('rating_average')->orderByDesc('rating_count')->orderByDesc('id'),
             default => $query->orderByDesc('id'),
         };
+    }
+
+    /**
+     * Giữ kết quả tên sản phẩm khớp gần nhất ở đầu danh sách mặc định.
+     * Khi khách chọn một kiểu sắp xếp khác, lựa chọn đó được ưu tiên hoàn toàn.
+     */
+    private function applySearchRanking(Builder $query, string $keyword): void
+    {
+        $escapedKeyword = $this->escapeLikeKeyword($keyword);
+
+        $query->orderByRaw(
+            'CASE
+                WHEN name = ? THEN 0
+                WHEN name LIKE ? THEN 1
+                WHEN name LIKE ? THEN 2
+                WHEN slug LIKE ? THEN 3
+                ELSE 4
+            END',
+            [$keyword, "{$escapedKeyword}%", "%{$escapedKeyword}%", "%{$escapedKeyword}%"],
+        );
     }
 
     private function formatProducts(Collection $products): array

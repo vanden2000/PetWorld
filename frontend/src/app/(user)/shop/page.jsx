@@ -60,6 +60,8 @@ export default async function ShopPage({ searchParams }) {
             selectedCategory={category}
             selectedPet={pet}
             selectedBrands={selectedBrands}
+            search={search ?? ""}
+            sort={sort}
             minPrice={min_price}
             maxPrice={max_price}
           />
@@ -67,7 +69,7 @@ export default async function ShopPage({ searchParams }) {
           <div className="shop-main">
             <div className="shop-toolbar">
               <h1 className="shop-result-title">
-                {title} <span>({total})</span>
+                {search ? `Kết quả cho “${search}”` : title} <span>({total})</span>
               </h1>
               <ShopSort
                 options={sort_options}

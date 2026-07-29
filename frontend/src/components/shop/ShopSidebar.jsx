@@ -28,6 +28,8 @@ export default function ShopSidebar({
   selectedCategory = "",
   selectedPet = "",
   selectedBrands = [],
+  search = "",
+  sort = "newest",
   minPrice = "",
   maxPrice = "",
 }) {
@@ -43,6 +45,8 @@ export default function ShopSidebar({
 
   const navigate = ({ categoryValues, pet, brandsValue, minValue, maxValue }) => {
     const query = new URLSearchParams();
+    if (search) query.set("search", search);
+    if (sort && sort !== "newest") query.set("sort", sort);
     const catList = categoryValues !== undefined ? categoryValues : [...categorySet];
     if (catList.length) query.set("category", catList.join(","));
 
