@@ -29,7 +29,7 @@
           <div class="species-color-bubble" id="colorBubble" style="background: {{ old('background_color', $petSpecies->background_color ?: '#FFF2E8') }}" onclick="document.getElementById('background_color').click();" title="Chọn màu"></div>
           <input type="text" id="colorHex" class="form-control color-hex-input" value="{{ old('background_color', $petSpecies->background_color ?: '#FFF2E8') }}" style="max-width: 100px; text-transform: uppercase;" placeholder="#FFFFFF">
           <input id="background_color" name="background_color" type="color" class="species-color-hidden" value="{{ old('background_color', $petSpecies->background_color ?: '#FFF2E8') }}" style="opacity: 0; width: 0; height: 0; position: absolute; z-index: -1;">
-          <span class="species-help" style="margin:0">Màu nền dự phòng.</span>
+          <span class="species-help" style="margin:0; white-space: nowrap;">Màu nền dự phòng.</span>
         </div>
         @error('background_color')<p class="species-error">{{ $message }}</p>@enderror
       </div>
