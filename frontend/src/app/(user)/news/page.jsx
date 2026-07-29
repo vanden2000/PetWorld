@@ -83,7 +83,7 @@ export default async function NewsPage({ searchParams }) {
                 <Link href={`/news/${featuredBlog.slug}`} className="featured-blog-img-wrapper">
                   <img
                     src={resolveBlogImage(featuredBlog.image)}
-                    alt={featuredBlog.title}
+                    alt={featuredBlog.image_alt || featuredBlog.title}
                     className="featured-blog-img"
                   />
                 </Link>
@@ -117,7 +117,7 @@ export default async function NewsPage({ searchParams }) {
                 {remainingBlogs.map((blog) => (
                   <article className="blog-card" key={blog.id}>
                     <Link href={`/news/${blog.slug}`} className="blog-img-wrapper" style={{ borderRadius: "20px 20px 0 0" }}>
-                      <img src={resolveBlogImage(blog.image)} alt={blog.title} className="blog-img" />
+                      <img src={resolveBlogImage(blog.image)} alt={blog.image_alt || blog.title} className="blog-img" />
                     </Link>
                     <div className="blog-content">
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -234,7 +234,7 @@ export default async function NewsPage({ searchParams }) {
                         <Link href={`/news/${popBlog.slug}`} className="sidebar-popular-img-wrapper">
                           <img
                             src={resolveBlogImage(popBlog.image)}
-                            alt={popBlog.title}
+                            alt={popBlog.image_alt || popBlog.title}
                             className="sidebar-popular-img"
                           />
                         </Link>

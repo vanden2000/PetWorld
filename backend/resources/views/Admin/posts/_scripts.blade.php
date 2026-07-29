@@ -32,6 +32,10 @@
     const dropzone = document.getElementById('pe-dropzone');
     const coverPreview = document.getElementById('pe-cover-preview');
     const coverName = document.getElementById('pe-cover-name');
+    const keywordInput = document.getElementById('focus_keyword');
+    const seoTitleInput = document.getElementById('seo_title');
+    const seoDescInput = document.getElementById('seo_description');
+    const imageAltInput = document.getElementById('image_alt');
 
     const editorHtml = () => quill.root.innerHTML;
     const editorText = () => quill.getText().replace(/\s+/g, ' ').trim();
@@ -85,6 +89,15 @@
     const seoScoreEl = document.getElementById('pe-seo-score');
     const seoLabelEl = document.getElementById('pe-seo-label');
 
+    const clip = (value, max) => value.length > max ? value.slice(0, max - 1).trimEnd() + '…' : value;
+    const lower = (value) => (value || '').toLocaleLowerCase('vi').trim();
+    const countPhrase = (haystack, needle) => {
+        if (!haystack || !needle) return 0;
+        let count = 0, at = 0;
+        while ((at = haystack.indexOf(needle, at)) !== -1) { count += 1; at += needle.length; }
+        return count;
+    };
+
     const refreshSeo = () => {
         const title = titleInput.value.trim();
         const desc = descInput.value.trim();
@@ -92,17 +105,51 @@
         const text = editorText();
         const words = wordCount();
 
+        // Tiêu đề/mô tả SEO để trống thì Google lấy tiêu đề và mô tả ngắn của bài viết.
+        const keyword = lower(keywordInput?.value);
+        const seoTitle = seoTitleInput?.value.trim() || '';
+        const seoDesc = seoDescInput?.value.trim() || '';
+        const metaTitle = seoTitle || title;
+        const metaDesc = seoDesc || desc;
+        const keywordHits = countPhrase(lower(text), keyword);
+        const minHits = words ? Math.max(1, Math.ceil(words / 250)) : 1;
+        const maxHits = words ? Math.max(3, Math.floor(words / 50)) : 3;
+
+        const previewTitle = document.getElementById('pe-seo-preview-title');
+        const previewUrl = document.getElementById('pe-seo-preview-url');
+        const previewDesc = document.getElementById('pe-seo-preview-desc');
+        if (previewTitle) previewTitle.textContent = clip(metaTitle || 'Tiêu đề bài viết', 60);
+        if (previewUrl) previewUrl.textContent = `PetWorld › news › ${slugInput.value || 'duong-dan-bai-viet'}`;
+        if (previewDesc) previewDesc.textContent = clip(metaDesc || 'Mô tả bài viết sẽ hiển thị tại đây.', 160);
+
+        const seoTitleCounter = document.getElementById('pe-seo-title-counter');
+        if (seoTitleCounter) setCounter(seoTitleCounter, `${seoTitle.length}/60`,
+            seoTitle.length === 0 ? '' : (seoTitle.length <= 60 ? 'is-ok' : 'is-over'));
+
+        const seoDescCounter = document.getElementById('pe-seo-desc-counter');
+        if (seoDescCounter) setCounter(seoDescCounter, `${seoDesc.length}/160`,
+            seoDesc.length === 0 ? '' : (seoDesc.length >= 120 && seoDesc.length <= 160 ? 'is-ok' : (seoDesc.length > 160 ? 'is-over' : 'is-warn')));
+
         const checks = [
             [`Tiêu đề dài 30–60 ký tự (hiện ${title.length})`, title.length >= 30 && title.length <= 60],
             [`Mô tả ngắn dài 120–160 ký tự (hiện ${desc.length})`, desc.length >= 120 && desc.length <= 160],
             ['Đã chọn danh mục bài viết', !!categorySelect.value],
             ['Có ảnh bìa', dropzone.classList.contains('has-image')],
+            ['Ảnh bìa có mô tả alt', (imageAltInput?.value.trim().length || 0) > 2],
+            ['Có từ khóa chính', keyword.length > 1],
+            ['Từ khóa có trong tiêu đề', !!keyword && lower(metaTitle).includes(keyword)],
+            ['Từ khóa có trong mô tả', !!keyword && lower(metaDesc).includes(keyword)],
+            ['Từ khóa có trong đường dẫn', !!keyword && lower(slugInput.value.replace(/-/g, ' ')).includes(keyword)],
+            [`Từ khóa trong nội dung: ${keywordHits} lần (khuyến nghị ${minHits}–${maxHits})`, !!keyword && keywordHits >= minHits && keywordHits <= maxHits],
+            [`Tiêu đề SEO tối đa 60 ký tự (hiện ${metaTitle.length})`, metaTitle.length > 0 && metaTitle.length <= 60],
+            [`Mô tả SEO dài 120–160 ký tự (hiện ${metaDesc.length})`, metaDesc.length >= 120 && metaDesc.length <= 160],
             ['Đường dẫn ngắn gọn, không dấu (≤ 80 ký tự)', /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slugInput.value) && slugInput.value.length <= 80],
             [`Nội dung tối thiểu 300 từ (hiện ${words})`, words >= 300],
             ['Có tiêu đề phụ H2/H3 trong nội dung', /<h[23][\s>]/i.test(html)],
             ['Có ít nhất 1 ảnh minh họa trong nội dung', /<img[\s>]/i.test(html)],
             ['Có liên kết tới trang khác của website', /<a[\s>]/i.test(html)],
             ['Tiêu đề xuất hiện trong đoạn mở đầu', !!title && text.slice(0, 300).toLowerCase().includes(title.toLowerCase().split(' ').slice(0, 3).join(' '))],
+            ['Trang bài viết có Article schema tự động', true],
         ];
 
         const passed = checks.filter(([, ok]) => ok).length;
@@ -149,6 +196,10 @@
     categorySelect.addEventListener('change', () => { refresh(); markDirty(); });
     slugInput.addEventListener('input', refresh);
     quill.on('text-change', () => { refresh(); markDirty(); });
+
+    [keywordInput, seoTitleInput, seoDescInput, imageAltInput].forEach((input) => {
+        input?.addEventListener('input', () => { refresh(); markDirty(); });
+    });
 
     /* ---------------- Ảnh bìa: chọn / kéo thả ---------------- */
     const MAX_SIZE = 5 * 1024 * 1024;

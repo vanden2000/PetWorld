@@ -105,7 +105,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/reviews/{review}/status', [ReviewController::class, 'updateStatus'])->name('reviews.status.update');
 
     Route::get('/blog-comments', [BlogCommentController::class, 'index'])->name('blog-comments');
-    Route::delete('/blog-comments/{comment}', [BlogCommentController::class, 'destroy'])->name('blog-comments.destroy');
+    Route::patch('/blog-comments/{comment}/visibility', [BlogCommentController::class, 'updateVisibility'])->name('blog-comments.visibility');
 
     Route::get('/posts', [PostController::class, 'index'])->name('posts');
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');

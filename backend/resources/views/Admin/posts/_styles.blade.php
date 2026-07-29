@@ -414,6 +414,20 @@
     .pe-preview-body blockquote { border-left: 3px solid var(--primary); background: #fff8f3; padding: 12px 18px; border-radius: 0 10px 10px 0; margin-bottom: 14px; }
     .pe-preview-body a { color: var(--primary); }
 
+    /* Xem trước kết quả trên Google */
+    .pe-seo-preview {
+        margin-top: 4px; padding: 14px 16px;
+        border: 1px solid var(--border-color); border-radius: 12px; background: #fcfdfd;
+    }
+    .pe-seo-preview-label {
+        display: block; margin-bottom: 9px;
+        font-size: 0.7rem; font-weight: 800; letter-spacing: .04em;
+        text-transform: uppercase; color: var(--text-muted);
+    }
+    .pe-seo-preview-title { color: #1a0dab; font-size: 1.02rem; line-height: 1.35; }
+    .pe-seo-preview-url { margin-top: 2px; color: #006621; font-size: 0.78rem; }
+    .pe-seo-preview-desc { margin: 5px 0 0; color: #4d5156; font-size: 0.82rem; line-height: 1.6; }
+
     @media (max-width: 620px) {
         .pe-header h1 { font-size: 1.45rem; }
         .pe-preview { padding: 20px; }

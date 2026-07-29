@@ -5,10 +5,43 @@ import { resolveBlogImage } from "@/lib/format";
 import BlogComments from "@/components/blog/BlogComments";
 import TableOfContents from "@/components/blog/TableOfContents";
 
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+
+function absoluteUrl(path = "/") {
+  return new URL(path, `${SITE_URL}/`).toString();
+}
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const data = await getBlogDetail(slug);
-  return { title: `${data?.blog?.title ?? slug} - PetWorld` };
+  const blog = data?.blog;
+  const seo = data?.seo;
+  const title = seo?.title || `${blog?.title ?? slug} - PetWorld`;
+  const description = seo?.description || blog?.description || "";
+  const canonical = absoluteUrl(seo?.canonical_url || `/news/${blog?.slug || slug}`);
+  const image = blog?.image ? resolveBlogImage(blog.image) : null;
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    robots: seo?.noindex ? { index: false, follow: true } : undefined,
+    openGraph: {
+      type: "article",
+      title,
+      description,
+      url: canonical,
+      publishedTime: blog?.published_at || blog?.created_at || undefined,
+      modifiedTime: blog?.updated_at || undefined,
+      images: image ? [{ url: image, alt: blog?.image_alt || blog?.title || title }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : [],
+    },
+  };
 }
 
 function formatDate(value) {
@@ -27,9 +60,34 @@ export default async function BlogDetailPage({ params }) {
   const { blog, related_blogs = [] } = data;
   const recentBlogs = (listData.blogs ?? []).filter((item) => item.slug !== slug).slice(0, 4);
   const categories = listData.categories ?? [];
+  const canonicalUrl = absoluteUrl(data.seo?.canonical_url || `/news/${blog.slug}`);
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: blog.title,
+    description: data.seo?.description || blog.description || "",
+    image: blog.image ? [resolveBlogImage(blog.image)] : undefined,
+    url: canonicalUrl,
+    mainEntityOfPage: canonicalUrl,
+    datePublished: blog.published_at || blog.created_at || undefined,
+    dateModified: blog.updated_at || blog.published_at || undefined,
+    author: blog.author?.name
+      ? { "@type": "Person", name: blog.author.name }
+      : undefined,
+    publisher: {
+      "@type": "Organization",
+      name: "PetWorld",
+    },
+  };
 
   return (
     <main className="main-content">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(articleJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <div className="homepage-container">
         {/* Breadcrumb */}
         <nav className="shop-breadcrumb" style={{ marginBottom: 24 }}>
@@ -155,7 +213,7 @@ export default async function BlogDetailPage({ params }) {
               {related_blogs.map((item) => (
                 <article className="blog-card" key={item.id}>
                   <Link href={`/news/${item.slug}`} className="blog-img-wrapper">
-                    <img src={resolveBlogImage(item.image)} alt={item.title} className="blog-img" />
+                    <img src={resolveBlogImage(item.image)} alt={item.image_alt || item.title} className="blog-img" />
                   </Link>
                   <div className="blog-content">
                     <span className="blog-tag">{item.category?.name ?? "Tin tức"}</span>

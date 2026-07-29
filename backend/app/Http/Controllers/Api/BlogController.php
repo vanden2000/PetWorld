@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
 
 class BlogController extends Controller
 {
@@ -84,6 +85,7 @@ class BlogController extends Controller
             ->all();
 
         $comments = $blog->comments()
+            ->visible()
             ->with('user')
             ->latest()
             ->get()
@@ -111,6 +113,7 @@ class BlogController extends Controller
                     'content' => $blog->content,
                     'comments' => $comments,
                 ]),
+                'seo' => $this->formatSeo($blog),
                 'related_blogs' => $relatedBlogs,
             ],
         ]);
@@ -124,6 +127,27 @@ class BlogController extends Controller
             ->whereHas('category', fn (Builder $category) => $category->where('status', 'active'));
     }
 
+    /**
+     * Dữ liệu thẻ meta cho trang chi tiết bài viết.
+     * Bỏ trống tiêu đề/mô tả SEO thì lấy tiêu đề và mô tả ngắn của bài viết.
+     */
+    private function formatSeo(Blog $blog): array
+    {
+        $fallbackDescription = Str::limit(
+            Str::squish(strip_tags((string) ($blog->description ?: $blog->content))),
+            160,
+            '',
+        );
+
+        return [
+            'title' => $blog->seo_title ?: $blog->title . ' | PetWorld',
+            'description' => $blog->seo_description ?: $fallbackDescription,
+            'canonical_url' => $blog->canonical_url ?: '/news/' . $blog->slug,
+            'noindex' => (bool) $blog->noindex,
+            'focus_keyword' => $blog->focus_keyword,
+        ];
+    }
+
     private function formatBlogCard(Blog $blog): array
     {
         return [
@@ -132,8 +156,11 @@ class BlogController extends Controller
             'slug' => $blog->slug,
             'description' => $blog->description,
             'image' => $blog->image,
+            'image_alt' => $blog->image_alt,
             'view_count' => $blog->view_count,
             'created_at' => $blog->created_at?->toDateTimeString(),
+            'published_at' => ($blog->published_at ?: $blog->created_at)?->toIso8601String(),
+            'updated_at' => $blog->updated_at?->toIso8601String(),
             'category' => [
                 'id' => $blog->category->id,
                 'name' => $blog->category->name,

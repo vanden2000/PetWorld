@@ -16,14 +16,23 @@ class Blog extends Model
         'title',
         'slug',
         'description',
+        'seo_title',
+        'seo_description',
+        'focus_keyword',
         'content',
         'view_count',
         'image',
+        'image_alt',
+        'canonical_url',
+        'noindex',
         'status',
+        'published_at',
     ];
 
     protected $casts = [
         'view_count' => 'integer',
+        'noindex' => 'boolean',
+        'published_at' => 'datetime',
     ];
 
     public function category(): BelongsTo

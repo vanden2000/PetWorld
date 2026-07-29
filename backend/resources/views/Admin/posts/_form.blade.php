@@ -138,6 +138,74 @@
                     <div style="padding: 0 20px 16px;"><span class="pe-error">{{ $message }}</span></div>
                 @enderror
             </div>
+
+            {{-- blogs.focus_keyword, seo_title, seo_description, canonical_url, noindex --}}
+            <div class="pe-card">
+                <div class="pe-card-head">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                    <h2>SEO tìm kiếm</h2>
+                    <span class="pe-card-hint">Để trống sẽ tự lấy tiêu đề và mô tả ngắn của bài viết</span>
+                </div>
+                <div class="pe-card-body">
+                    <div class="pe-field">
+                        <label class="pe-label" for="focus_keyword">Từ khóa chính</label>
+                        <input type="text" id="focus_keyword" name="focus_keyword" class="pe-input" maxlength="120"
+                               value="{{ old('focus_keyword', $post->focus_keyword) }}"
+                               placeholder="Ví dụ: thức ăn cho mèo con">
+                        <div class="pe-help">Từ khóa bạn muốn bài viết này lên top Google. Dùng để chấm điểm ở khung "Gợi ý tối ưu".</div>
+                        @error('focus_keyword') <span class="pe-error">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="pe-field">
+                        <label class="pe-label" for="seo_title">
+                            Tiêu đề SEO
+                            <span class="pe-counter" id="pe-seo-title-counter">0/60</span>
+                        </label>
+                        <input type="text" id="seo_title" name="seo_title" class="pe-input" maxlength="255"
+                               value="{{ old('seo_title', $post->seo_title) }}"
+                               placeholder="Để trống sẽ dùng tiêu đề bài viết">
+                        <div class="pe-help">Tiêu đề hiển thị trên kết quả Google. Nên 30–60 ký tự.</div>
+                        @error('seo_title') <span class="pe-error">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="pe-field">
+                        <label class="pe-label" for="seo_description">
+                            Mô tả SEO
+                            <span class="pe-counter" id="pe-seo-desc-counter">0/160</span>
+                        </label>
+                        <textarea id="seo_description" name="seo_description" class="pe-textarea" maxlength="320"
+                                  placeholder="Để trống sẽ dùng mô tả ngắn phía trên">{{ old('seo_description', $post->seo_description) }}</textarea>
+                        <div class="pe-help">Đoạn mô tả dưới tiêu đề trên Google. Nên 120–160 ký tự.</div>
+                        @error('seo_description') <span class="pe-error">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="pe-seo-preview" aria-live="polite">
+                        <span class="pe-seo-preview-label">Xem trước trên Google</span>
+                        <div class="pe-seo-preview-title" id="pe-seo-preview-title">Tiêu đề bài viết</div>
+                        <div class="pe-seo-preview-url" id="pe-seo-preview-url">PetWorld › news › duong-dan</div>
+                        <p class="pe-seo-preview-desc" id="pe-seo-preview-desc">Mô tả bài viết sẽ hiển thị tại đây.</p>
+                    </div>
+
+                    <div class="pe-field" style="margin-top: 18px;">
+                        <label class="pe-label" for="canonical_url">Đường dẫn canonical</label>
+                        <input type="url" id="canonical_url" name="canonical_url" class="pe-input" maxlength="255"
+                               value="{{ old('canonical_url', $post->canonical_url) }}"
+                               placeholder="Để trống nếu đây là bài viết gốc">
+                        <div class="pe-help">Chỉ điền khi bài viết đăng lại từ nguồn khác, để Google biết bản gốc nằm ở đâu.</div>
+                        @error('canonical_url') <span class="pe-error">{{ $message }}</span> @enderror
+                    </div>
+
+                    <label class="pe-status-option" style="margin-top: 4px;">
+                        <input type="hidden" name="noindex" value="0">
+                        <input type="checkbox" name="noindex" value="1" @checked(old('noindex', $post->noindex))>
+                        <span>
+                            <strong>Không cho Google lập chỉ mục (noindex)</strong>
+                            <small>Bài viết vẫn xem được qua link nhưng sẽ không xuất hiện trên kết quả tìm kiếm.</small>
+                        </span>
+                    </label>
+                    @error('noindex') <span class="pe-error">{{ $message }}</span> @enderror
+                </div>
+            </div>
         </div>
 
         {{-- ============ CỘT PHẢI: cấu hình ============ --}}
@@ -166,6 +234,15 @@
                         </label>
                     </div>
                     @error('status') <span class="pe-error">{{ $message }}</span> @enderror
+
+                    {{-- blogs.published_at --}}
+                    <div class="pe-field" style="margin-top: 14px;">
+                        <label class="pe-label" for="published_at">Ngày xuất bản</label>
+                        <input type="datetime-local" id="published_at" name="published_at" class="pe-input"
+                               value="{{ old('published_at', ($post->published_at ?: ($isEdit ? $post->created_at : now()))?->format('Y-m-d\TH:i')) }}">
+                        <div class="pe-help">Hiển thị trên bài viết và gửi cho Google qua schema Article.</div>
+                        @error('published_at') <span class="pe-error">{{ $message }}</span> @enderror
+                    </div>
 
                     <div class="pe-actions" style="margin-top: 18px;">
                         <button type="submit" class="pe-btn pe-btn-primary pe-btn-block" id="pe-submit">
@@ -239,6 +316,16 @@
                         <div class="pe-help">Không chọn ảnh mới thì hệ thống giữ nguyên ảnh bìa hiện tại.</div>
                     @endif
                     @error('image') <span class="pe-error">{{ $message }}</span> @enderror
+
+                    {{-- blogs.image_alt --}}
+                    <div class="pe-field" style="margin-top: 14px;">
+                        <label class="pe-label" for="image_alt">Mô tả ảnh (alt)</label>
+                        <input type="text" id="image_alt" name="image_alt" class="pe-input" maxlength="255"
+                               value="{{ old('image_alt', $post->image_alt) }}"
+                               placeholder="Ví dụ: Mèo con đang ăn hạt trong bát sứ">
+                        <div class="pe-help">Mô tả nội dung ảnh cho Google Image và trình đọc màn hình.</div>
+                        @error('image_alt') <span class="pe-error">{{ $message }}</span> @enderror
+                    </div>
                 </div>
             </div>
 
