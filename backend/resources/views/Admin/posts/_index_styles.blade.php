@@ -377,7 +377,7 @@
     .pl-badge-live { background: var(--success-light); color: #12805c; border: 1px solid #b8ead3; }
     .pl-badge-draft { background: #eef2f0; color: var(--text-muted); border: 1px solid var(--border-color); }
 
-    .pl-metric { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .pl-metric { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .pl-metric i { color: var(--text-muted); font-size: 0.82rem; }
     .pl-comment-link {
         display: inline-flex; align-items: center; gap: 6px;
@@ -389,7 +389,7 @@
     }
     .pl-comment-link:hover { border-color: var(--primary); color: var(--primary); background: #fff8f3; }
     .pl-date { font-size: 0.82rem; color: var(--text-muted); white-space: nowrap; }
-    .pl-date small { display: block; font-size: 0.72rem; opacity: 0.8; }
+    .pl-date small { display: inline-block; margin-left: 6px; font-size: 0.72rem; opacity: 0.8; }
 
     /* Nút thao tác */
     .pl-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }

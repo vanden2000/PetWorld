@@ -230,7 +230,7 @@
                         <td>
                             <span class="pl-date">
                                 {{ $post->created_at?->format('d/m/Y') }}
-                                <small style="color: var(--text-muted); display: block; margin-top: 3px;">{{ $post->created_at?->format('H:i') }}</small>
+                                <small style="color: var(--text-muted); display: inline-block; margin-left: 6px;">{{ $post->created_at?->format('H:i') }}</small>
                             </span>
                         </td>
                         <td>
