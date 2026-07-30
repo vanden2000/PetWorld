@@ -19,6 +19,8 @@ use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\BlogCommentController;
 use App\Http\Controllers\Admin\KnowledgeArticleController;
+use App\Http\Controllers\Admin\HomeSectionController;
+
 
 
 Route::get('/', fn() => response('XIn chào'));
@@ -203,4 +205,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/low-stock', [ReportController::class, 'lowStock'])->name('low-stock');
         Route::get('/latest-orders', [ReportController::class, 'latestOrders'])->name('latest-orders');
     });
+
+    // Home Sections Management
+    Route::get('/home-sections', [HomeSectionController::class, 'index'])->name('home-sections.index');
+    Route::match(['PUT', 'POST', 'PATCH'], '/home-sections', [HomeSectionController::class, 'update'])->name('home-sections.update');
+    Route::match(['PATCH', 'POST', 'GET', 'PUT'], '/home-sections/{id}/toggle', [HomeSectionController::class, 'toggleStatus'])->name('home-sections.toggle');
+    Route::match(['POST', 'GET'], '/home-sections/reset', [HomeSectionController::class, 'resetDefaults'])->name('home-sections.reset');
+
 });
+
