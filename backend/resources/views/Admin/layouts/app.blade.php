@@ -364,6 +364,28 @@
         </main>
     </div>
 
+    @php
+        $validationToast = $errors->any()
+            ? $errors->first().($errors->count() > 1 ? ' và '.($errors->count() - 1).' mục khác.' : '')
+            : null;
+        $adminToast = session('success') ? ['success', session('success')] : (session('error') ? ['error', session('error')] : (session('warning') ? ['warning', session('warning')] : ($validationToast ? ['error', $validationToast] : null)));
+    @endphp
+    @if($adminToast)
+        <div class="admin-global-toast {{ $adminToast[0] }}" id="admin-global-toast" role="alert">
+            <i class="fa-solid {{ $adminToast[0] === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation' }}"></i>
+            <span>{{ $adminToast[1] }}</span><button type="button" aria-label="Đóng thông báo">&times;</button>
+        </div>
+    @endif
+
+    <style>
+        .admin-global-toast { position: fixed; right: 22px; bottom: 24px; z-index: 1100; display: flex; align-items: center; gap: 9px; max-width: min(420px, calc(100vw - 28px)); padding: 12px 14px; border: 1px solid; border-radius: 9px; box-shadow: 0 12px 28px rgba(15,23,42,.16); font-size: .86rem; font-weight: 700; transition: opacity .2s ease, transform .2s ease; }
+        .admin-global-toast.success { color: #176b37; border-color: #bde5ca; background: #ecf9f0; }
+        .admin-global-toast.error { color: #a12626; border-color: #f2c5c5; background: #fff1f1; }
+        .admin-global-toast.warning { color: #9a4b1b; border-color: #f0d5bc; background: #fff8ed; }
+        .admin-global-toast button { margin-left: 4px; padding: 0; border: 0; color: inherit; background: transparent; font-size: 1.25rem; line-height: 1; cursor: pointer; }
+        .admin-global-toast.is-hidden { opacity: 0; transform: translateY(8px); pointer-events: none; }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
@@ -379,6 +401,14 @@
                     }
                 });
             });
+
+            const adminToast = document.getElementById('admin-global-toast');
+            if (adminToast) {
+                document.querySelectorAll('.alert-panel').forEach((alert) => { alert.hidden = true; });
+                const hideToast = () => adminToast.classList.add('is-hidden');
+                adminToast.querySelector('button')?.addEventListener('click', hideToast);
+                setTimeout(hideToast, 3000);
+            }
         });
     </script>
     @yield('scripts')

@@ -81,6 +81,7 @@ Route::get('/home', HomeController::class);
 Route::get('/checkout-options', CheckoutOptionController::class);
 Route::post('/webhooks/sepay', SepayWebhookController::class);
 Route::get('/blogs', [BlogController::class, 'index']);
+Route::get('/blogs/sitemap', [BlogController::class, 'sitemap']);
 Route::get('/blogs/{slug}', [BlogController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/pet-species', [PetSpeciesController::class, 'index']);

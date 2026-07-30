@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\PetSpeciesController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductAiContentController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
@@ -129,6 +130,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::post('/products', [ProductController::class, 'store'])
         ->name('products.store');
+
+    Route::post('/products/ai/improve', ProductAiContentController::class)
+        ->middleware('throttle:10,10')
+        ->name('products.ai.improve');
+
+    Route::post('/posts/ai/improve', \App\Http\Controllers\Admin\PostAiContentController::class)
+        ->middleware('throttle:10,10')
+        ->name('posts.ai.improve');
 
     Route::get('/products/export', [ProductController::class, 'export'])
         ->name('products.export');

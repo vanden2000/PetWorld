@@ -139,6 +139,32 @@
     .product-save-toast.error { color: #a12626; background: #fff1f1; }
     .product-save-toast[hidden] { display: none; }
 
+    .product-ai-card { border: 1px solid rgba(255, 120, 45, .48); border-left: 5px solid var(--theme-primary); background: linear-gradient(135deg, #fff9f5 0%, #ffffff 58%); box-shadow: 0 10px 24px rgba(207, 92, 24, .14); }
+    .product-ai-card.is-collapsed { overflow: hidden; padding: 12px 14px; }
+    .product-ai-card.is-collapsed .form-card-title { margin: 0; padding: 0; border: 0; }
+    .product-ai-card.is-collapsed .product-ai-note, .product-ai-card.is-collapsed .product-ai-actions, .product-ai-card.is-collapsed .product-ai-status, .product-ai-card.is-collapsed .product-ai-result, .product-ai-card.is-collapsed .btn-ai-undo { display: none; }
+    .product-ai-card .form-card-title { position: sticky; top: 76px; z-index: 3; margin: -18px -18px 16px; padding: 18px 18px 12px; color: #a8440d; background: linear-gradient(135deg, #fff9f5 0%, #ffffff 58%); }
+    .product-ai-card .form-card-title i { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #fff; background: var(--theme-primary); box-shadow: 0 4px 10px rgba(255, 120, 45, .3); }
+    .product-ai-toggle { margin-left: auto; border: 1px solid rgba(255, 120, 45, .32); background: #fff5ee; color: #b44a11; border-radius: 999px; padding: 5px 8px; cursor: pointer; font: inherit; font-size: .72rem; font-weight: 800; }
+    .product-ai-note { margin: -4px 0 14px; color: var(--theme-text-gray); font-size: .82rem; line-height: 1.5; }
+    .product-ai-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn-ai-action, .btn-ai-undo { border: 1px solid rgba(255, 120, 45, .4); background: #fff; color: #b44a11; border-radius: 8px; padding: 8px 10px; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 800; }
+    .btn-ai-action:hover, .btn-ai-action:focus-visible { color: #fff; background: var(--theme-primary); border-color: var(--theme-primary); }
+    .btn-ai-action:disabled { cursor: wait; opacity: .65; }
+    .product-ai-status { margin-top: 12px; padding: 9px 10px; border-radius: 8px; color: #a8440d; background: #fff0e5; font-size: .8rem; font-weight: 700; }
+    .product-ai-status.error { color: #a12626; background: #fff1f1; }
+    .product-ai-result { margin-top: 14px; display: grid; gap: 9px; }
+    .product-ai-suggestion { border: 1px solid #f1dfd3; border-radius: 8px; padding: 10px; background: #fff; }
+    .product-ai-suggestion strong { display: block; font-size: .78rem; color: var(--theme-text-main); margin-bottom: 5px; }
+    .product-ai-suggestion p { margin: 0 0 8px; white-space: pre-wrap; color: var(--theme-text-gray); font-size: .8rem; line-height: 1.45; }
+    .product-ai-apply { border: 0; color: #fff; background: var(--theme-primary); border-radius: 6px; padding: 6px 9px; font-size: .75rem; font-weight: 800; cursor: pointer; }
+    .product-ai-apply:hover, .product-ai-apply:focus-visible { background: var(--theme-primary-hover); }
+    .product-ai-footer { display: flex; gap: 8px; flex-wrap: wrap; }
+    .product-ai-warning { margin: 0; padding-left: 18px; color: #9a4b1b; font-size: .78rem; }
+    .btn-ai-undo { margin-top: 12px; color: #8a2929; border-color: #f2c5c5; }
+
+    @media (max-width: 900px) { .product-ai-card .form-card-title { top: 68px; } }
+
     /* Core column structure */
     .create-listing-wrapper {
         display: grid;
@@ -840,6 +866,18 @@
         background: var(--theme-primary-light);
     }
 
+    .variant-editor-card.is-low-stock {
+        border-color: #ef4444;
+        background: #fff8f7;
+        box-shadow: 0 0 0 1px rgba(239, 68, 68, .08);
+    }
+
+    .variant-editor-card.is-out-of-stock {
+        border-color: #dc2626;
+        background: #fef2f2;
+        box-shadow: 0 0 0 1px rgba(220, 38, 38, .12);
+    }
+
     .variant-card-header,
     .variant-card-footer {
         display: flex;
@@ -941,10 +979,15 @@
 
     .variant-card-status.active { color: var(--theme-success); background: rgba(11, 228, 91, 0.72); }
     .variant-card-status.inactive { color: var(--theme-text-gray); background: rgba(128, 128, 128, 0.72); }
+    .variant-card-status-group { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+    .variant-stock-status { border-radius: 999px; padding: 10px; font-size: .72rem; font-weight: 800; }
+    .variant-stock-status.low { color: #b91c1c; background: #fee2e2; }
+    .variant-stock-status.out { color: #fff; background: #dc2626; }
+    .variant-stock-status[hidden] { display: none; }
 
     .variant-price-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
         margin: 16px 0;
     }
@@ -956,6 +999,15 @@
         font-size: .72rem;
         font-weight: 800;
         text-transform: uppercase;
+    }
+
+    .price-format-preview {
+        display: block;
+        min-height: 17px;
+        margin-top: 4px;
+        color: var(--theme-primary);
+        font-size: .72rem;
+        font-weight: 800;
     }
 
     .variant-card-footer {
@@ -1409,6 +1461,28 @@
                     @include('Admin.Products._seo_score')
                 </div>
 
+                @unless($isCreate)
+                    <section class="form-card product-ai-card" id="product-ai-card" data-product-id="{{ $product->id }}">
+                        <div class="form-card-title">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Trợ lý nội dung AI</span>
+                            <button type="button" id="btn-toggle-product-ai" class="product-ai-toggle" aria-expanded="true">Thu gọn</button>
+                        </div>
+                        <p class="product-ai-note">AI chỉ tạo đề xuất trên form. Nội dung chỉ được lưu khi bạn bấm <strong>Lưu sản phẩm</strong>.</p>
+                        <div class="product-ai-actions">
+                            <button type="button" class="btn-ai-action" data-ai-action="generate_seo_content">Viết content chuẩn SEO</button>
+                            <button type="button" class="btn-ai-action" data-ai-action="improve_existing_content">Cải thiện content</button>
+                            <button type="button" class="btn-ai-action" data-ai-action="generate_seo_meta">Tạo SEO title &amp; description</button>
+                            <button type="button" class="btn-ai-action" data-ai-action="suggest_product_profile">Gợi ý hồ sơ tư vấn</button>
+                            <button type="button" class="btn-ai-action" data-ai-action="audit_seo">Kiểm tra SEO</button>
+                            <button type="button" class="btn-ai-action" data-ai-action="generate_image_alt">Tạo alt ảnh</button>
+                        </div>
+                        <div id="product-ai-status" class="product-ai-status" aria-live="polite" hidden></div>
+                        <div id="product-ai-result" class="product-ai-result" hidden></div>
+                        <button type="button" id="btn-undo-product-ai" class="btn-ai-undo" hidden>Hoàn tác thay đổi AI</button>
+                    </section>
+                @endunless
+
 
             </div>
 
@@ -1620,8 +1694,11 @@
     </div>
     <div id="product-save-toast" class="product-save-toast" role="status" aria-live="polite" hidden></div>
     <div id="image-delete-modal" class="product-save-modal" hidden role="dialog" aria-modal="true" aria-labelledby="image-delete-modal-title"><div class="product-save-modal-card"><div class="product-save-modal-icon"><i class="fa-solid fa-trash"></i></div><h3 id="image-delete-modal-title">Xác nhận xóa ảnh</h3><p>Ảnh sẽ bị bỏ khỏi sản phẩm khi lưu. Thao tác này không thể hoàn tác.</p><div class="product-save-modal-actions"><button type="button" id="btn-cancel-image-delete" class="btn-action-cancel">Hủy</button><button type="button" id="btn-confirm-image-delete" class="btn-action-save">Xóa ảnh</button></div></div></div>
+    @include('Admin.Products._unsaved_changes_guard')
 
 @endsection
+
+@include('Admin.Products._readiness_panel')
 
 @section('scripts')
 <script>
@@ -1638,6 +1715,13 @@
         let pendingImageDeleteBox = null;
         let productIsSaving = false;
         let toastTimeout;
+        const productAiCard = document.getElementById('product-ai-card');
+        const productAiResult = document.getElementById('product-ai-result');
+        const productAiStatus = document.getElementById('product-ai-status');
+        const undoProductAiButton = document.getElementById('btn-undo-product-ai');
+        const toggleProductAiButton = document.getElementById('btn-toggle-product-ai');
+        let productAiSuggestions = null;
+        let productAiSnapshot = null;
 
         productEditForm.noValidate = true;
 
@@ -1657,7 +1741,237 @@
             productSaveToast.classList.toggle('error', isError);
             productSaveToast.hidden = false;
             clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { productSaveToast.hidden = true; }, 5000);
+            toastTimeout = setTimeout(() => { productSaveToast.hidden = true; }, 3000);
+        }
+
+        if (productAiCard) {
+            const aiEndpoint = @json(route('admin.products.ai.improve'));
+            const csrfToken = productEditForm.querySelector('input[name="_token"]')?.value;
+            const aiLabels = {
+                short_description: 'Mô tả ngắn', description: 'Mô tả chi tiết', focus_keyword: 'Focus keyword',
+                seo_title: 'SEO title', seo_description: 'SEO description', category_id: 'Danh mục',
+                pet_species_ids: 'Loài thú cưng phù hợp', advice_life_stages: 'Giai đoạn sống phù hợp',
+                advice_needs: 'Nhu cầu được hỗ trợ', image_alts: 'Alt ảnh',
+            };
+
+            const selectedText = (selector) => [...productEditForm.querySelectorAll(selector)]
+                .filter((input) => input.checked)
+                .map((input) => productEditForm.querySelector(`label[for="${input.id}"]`)?.innerText?.trim() || input.value);
+            const stripHtml = (value) => {
+                const node = document.createElement('div'); node.innerHTML = value || ''; return node.textContent || node.innerText || '';
+            };
+            const suggestionDisplayValue = (field, value) => {
+                if (field === 'category_id') {
+                    return document.getElementById('category_id')?.querySelector(`option[value="${CSS.escape(String(value))}"]`)?.textContent?.trim() || String(value);
+                }
+                const checkboxGroups = {
+                    pet_species_ids: 'pet_species_ids',
+                    advice_life_stages: 'advice_life_stages',
+                    advice_needs: 'advice_needs',
+                };
+                if (Array.isArray(value) && checkboxGroups[field]) {
+                    return value.map((item) => {
+                        const input = productEditForm.querySelector(`input[name="${checkboxGroups[field]}[]"][value="${CSS.escape(String(item))}"]`);
+                        const label = input ? productEditForm.querySelector(`label[for="${input.id}"]`) : null;
+                        return label?.querySelector('strong')?.textContent?.trim() || label?.innerText?.trim() || String(item);
+                    }).join(', ');
+                }
+                return Array.isArray(value) ? value.join(', ') : stripHtml(value);
+            };
+            const currentProduct = () => ({
+                name: document.getElementById('name')?.value || '',
+                category: document.getElementById('category_id')?.selectedOptions?.[0]?.text?.trim() || '',
+                brand: document.getElementById('brand_id')?.selectedOptions?.[0]?.text?.trim() || '',
+                short_description: document.getElementById('short_description')?.value || '',
+                description: document.getElementById('description')?.value || '',
+                focus_keyword: document.getElementById('focus_keyword')?.value || '',
+                seo_title: document.getElementById('seo_title')?.value || '',
+                seo_description: document.getElementById('seo_description')?.value || '',
+                variants: [...document.querySelectorAll('.variant-card')].map((card) =>
+                    [...card.querySelectorAll('select')]
+                        .map((select) => select.selectedOptions?.[0]?.textContent?.trim())
+                        .filter((value) => value && !value.startsWith('Chọn'))
+                        .join(' / ')
+                ).filter(Boolean),
+                pet_species: selectedText('input[name="pet_species_ids[]"]'),
+            });
+            const currentImageIds = () => [...document.querySelectorAll('.js-existing-image[data-image-id]')]
+                .map((box) => Number(box.dataset.imageId))
+                .filter(Number.isInteger);
+            const setAiStatus = (message = '', isError = false) => {
+                productAiStatus.hidden = !message;
+                productAiStatus.textContent = message;
+                productAiStatus.classList.toggle('error', isError);
+            };
+            const setProductAiCollapsed = (collapsed) => {
+                productAiCard.classList.toggle('is-collapsed', collapsed);
+                toggleProductAiButton.setAttribute('aria-expanded', String(!collapsed));
+                toggleProductAiButton.textContent = collapsed ? 'Mở trợ lý' : 'Thu gọn';
+            };
+            const snapshotAiFields = () => {
+                if (productAiSnapshot) return;
+                productAiSnapshot = {
+                    short_description: document.getElementById('short_description')?.value || '',
+                    description: document.getElementById('description')?.value || '',
+                    focus_keyword: document.getElementById('focus_keyword')?.value || '',
+                    seo_title: document.getElementById('seo_title')?.value || '',
+                    seo_description: document.getElementById('seo_description')?.value || '',
+                    category_id: document.getElementById('category_id')?.value || '',
+                    pet_species_ids: [...productEditForm.querySelectorAll('input[name="pet_species_ids[]"]')].filter((input) => input.checked).map((input) => input.value),
+                    advice_life_stages: [...productEditForm.querySelectorAll('input[name="advice_life_stages[]"]')].filter((input) => input.checked).map((input) => input.value),
+                    advice_needs: [...productEditForm.querySelectorAll('input[name="advice_needs[]"]')].filter((input) => input.checked).map((input) => input.value),
+                    image_alts: [...document.querySelectorAll('.js-existing-image[data-image-id]')].map((box) => ({ id: Number(box.dataset.imageId), alt_text: box.dataset.altText || '' })),
+                };
+                undoProductAiButton.hidden = false;
+            };
+            const updateTextField = (field, value) => {
+                const element = document.getElementById(field);
+                if (!element) return;
+                element.value = value;
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                element.dispatchEvent(new Event('change', { bubbles: true }));
+            };
+            const updateCheckboxes = (name, values) => {
+                const allowed = new Set(values.map(String));
+                productEditForm.querySelectorAll(`input[name="${name}[]"]`).forEach((input) => {
+                    input.checked = allowed.has(input.value);
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            };
+            const updateImageAlts = (values) => {
+                values.forEach(({ id, alt_text: altText }) => {
+                    const box = document.querySelector(`.js-existing-image[data-image-id="${CSS.escape(String(id))}"]`);
+                    if (box) box.dataset.altText = altText;
+                });
+                const selectedBox = document.querySelector('.thumbnail-img-box.is-selected');
+                if (selectedBox && typeof imageAltInput !== 'undefined') {
+                    imageAltInput.value = selectedBox.dataset.altText || '';
+                    imageAltCount.textContent = imageAltInput.value.length;
+                }
+                if (typeof syncImageMetadata === 'function') syncImageMetadata();
+            };
+            const applyAiField = (field) => {
+                const value = productAiSuggestions?.[field];
+                if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '') || (Array.isArray(value) && value.length === 0)) return;
+                snapshotAiFields();
+                if (field === 'description') {
+                    updateTextField(field, value);
+                    window.dispatchEvent(new CustomEvent('petworld:description-set', { detail: { html: value } }));
+                } else if (field === 'category_id') {
+                    updateTextField(field, String(value));
+                } else if (field === 'image_alts') {
+                    updateImageAlts(value);
+                } else if (['pet_species_ids', 'advice_life_stages', 'advice_needs'].includes(field)) {
+                    const names = { pet_species_ids: 'pet_species_ids', advice_life_stages: 'advice_life_stages', advice_needs: 'advice_needs' };
+                    updateCheckboxes(names[field], value);
+                } else {
+                    updateTextField(field, value);
+                }
+                setAiStatus('Đã áp dụng đề xuất AI vào form — chưa lưu.');
+            };
+            const renderAiResult = (data) => {
+                productAiSuggestions = data.suggestions || {};
+                productAiResult.innerHTML = '';
+                Object.entries(aiLabels).forEach(([field, label]) => {
+                    const value = productAiSuggestions[field];
+                    if (value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)) return;
+                    if (field === 'image_alts') {
+                        value.forEach((item) => {
+                            const box = document.querySelector(`.js-existing-image[data-image-id="${CSS.escape(String(item.id))}"]`);
+                            const order = box ? [...document.querySelectorAll('.js-existing-image')].indexOf(box) + 1 : item.id;
+                            const suggestion = document.createElement('div'); suggestion.className = 'product-ai-suggestion';
+                            const title = document.createElement('strong'); title.textContent = `Alt ảnh ${order}`;
+                            const preview = document.createElement('p'); preview.textContent = item.alt_text;
+                            const apply = document.createElement('button'); apply.type = 'button'; apply.className = 'product-ai-apply'; apply.textContent = 'Áp dụng';
+                            apply.addEventListener('click', () => {
+                                productAiSuggestions = { image_alts: [item] };
+                                applyAiField('image_alts');
+                                productAiSuggestions = data.suggestions || {};
+                                suggestion.remove();
+                            });
+                            suggestion.append(title, preview, apply); productAiResult.appendChild(suggestion);
+                        });
+                        return;
+                    }
+                    const box = document.createElement('div'); box.className = 'product-ai-suggestion';
+                    const title = document.createElement('strong'); title.textContent = label;
+                    const preview = document.createElement('p');
+                    preview.textContent = suggestionDisplayValue(field, value);
+                    const apply = document.createElement('button'); apply.type = 'button'; apply.className = 'product-ai-apply'; apply.textContent = 'Áp dụng';
+                    apply.addEventListener('click', () => {
+                        applyAiField(field);
+                        box.remove();
+                    });
+                    box.append(title, preview, apply); productAiResult.appendChild(box);
+                });
+                if (Array.isArray(data.warnings) && data.warnings.length) {
+                    const warnings = document.createElement('ul'); warnings.className = 'product-ai-warning';
+                    data.warnings.forEach((warning) => { const item = document.createElement('li'); item.textContent = warning; warnings.appendChild(item); });
+                    productAiResult.appendChild(warnings);
+                }
+                if (Array.isArray(data.audit) && data.audit.length) {
+                    const auditTitle = document.createElement('strong'); auditTitle.textContent = 'Kết quả kiểm tra SEO';
+                    const audit = document.createElement('ul'); audit.className = 'product-ai-warning';
+                    data.audit.forEach((item) => {
+                        const row = document.createElement('li');
+                        row.textContent = typeof item === 'string' ? item : (item.message || item.title || 'Có một điểm cần kiểm tra lại.');
+                        audit.appendChild(row);
+                    });
+                    productAiResult.append(auditTitle, audit);
+                }
+                if (productAiResult.children.length) {
+                    const footer = document.createElement('div'); footer.className = 'product-ai-footer';
+                    const applyAll = document.createElement('button'); applyAll.type = 'button'; applyAll.className = 'product-ai-apply'; applyAll.textContent = 'Áp dụng tất cả';
+                    applyAll.addEventListener('click', () => {
+                        Object.keys(aiLabels).forEach(applyAiField);
+                        productAiResult.querySelectorAll('.product-ai-suggestion').forEach((suggestion) => suggestion.remove());
+                        applyAll.hidden = true;
+                    });
+                    const finish = document.createElement('button'); finish.type = 'button'; finish.className = 'btn-ai-action'; finish.textContent = 'Xong, kiểm tra form';
+                    finish.addEventListener('click', () => setProductAiCollapsed(true));
+                    footer.append(applyAll, finish); productAiResult.appendChild(footer);
+                    productAiResult.hidden = false;
+                } else {
+                    productAiResult.hidden = true;
+                }
+            };
+            const runAi = async (action, button) => {
+                const name = document.getElementById('name')?.value?.trim();
+                if (!name) { setAiStatus('Hãy nhập tên sản phẩm trước khi dùng AI.', true); return; }
+                const imageIds = action === 'generate_image_alt' ? currentImageIds() : [];
+                if (action === 'generate_image_alt' && imageIds.length === 0) { setAiStatus('Hãy lưu ít nhất một ảnh sản phẩm trước khi tạo alt bằng AI.', true); return; }
+                const buttons = [...productAiCard.querySelectorAll('.btn-ai-action')];
+                buttons.forEach((item) => { item.disabled = true; });
+                button.textContent = 'AI đang xử lý...'; setAiStatus('AI đang tạo đề xuất. Nội dung hiện tại chưa thay đổi.'); productAiResult.hidden = true;
+                try {
+                    const response = await fetch(aiEndpoint, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                        body: JSON.stringify({ action, product: currentProduct(), product_id: Number(productAiCard.dataset.productId), image_ids: imageIds, options: { length: action === 'generate_seo_content' ? 'detailed' : 'standard', tone: 'professional' } }),
+                    });
+                    const json = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(json.message || 'AI chưa thể trả đề xuất.');
+                    renderAiResult(json.data || {}); setAiStatus('AI đã tạo đề xuất. Hãy xem và chọn phần muốn áp dụng.');
+                } catch (error) { setAiStatus(error.message || 'Không thể kết nối AI. Form chưa thay đổi.', true); }
+                finally { buttons.forEach((item) => { item.disabled = false; }); button.textContent = button.dataset.aiLabel; }
+            };
+            productAiCard.querySelectorAll('.btn-ai-action').forEach((button) => {
+                button.dataset.aiLabel = button.textContent;
+                button.addEventListener('click', () => runAi(button.dataset.aiAction, button));
+            });
+            toggleProductAiButton.addEventListener('click', () => {
+                setProductAiCollapsed(!productAiCard.classList.contains('is-collapsed'));
+            });
+            undoProductAiButton.addEventListener('click', () => {
+                if (!productAiSnapshot) return;
+                Object.entries(productAiSnapshot).forEach(([field, value]) => {
+                    if (field === 'description') { updateTextField(field, value); window.dispatchEvent(new CustomEvent('petworld:description-set', { detail: { html: value } })); }
+                    else if (field === 'category_id') updateTextField(field, value);
+                    else if (field === 'image_alts') updateImageAlts(value);
+                    else if (['pet_species_ids', 'advice_life_stages', 'advice_needs'].includes(field)) updateCheckboxes(field === 'pet_species_ids' ? 'pet_species_ids' : field, value);
+                    else updateTextField(field, value);
+                });
+                productAiSnapshot = null; undoProductAiButton.hidden = true; setAiStatus('Đã hoàn tác các thay đổi AI trên form.');
+            });
         }
 
         function productFieldLabel(field) {
@@ -1703,7 +2017,10 @@
 
         productEditForm.addEventListener('submit', function(event) {
             event.preventDefault();
-            if (productIsSaving || productFormHasMissingFields()) return;
+            if (productIsSaving || productFormHasMissingFields()) {
+                sessionStorage.removeItem('petworld.product.exit_after_save');
+                return;
+            }
             productSaveModal.hidden = false;
             btnConfirmProductSave.focus();
         });
@@ -1720,6 +2037,7 @@
         btnConfirmProductSave.addEventListener('click', async function() {
             updateImageState();
             if (productFormHasMissingFields()) {
+                sessionStorage.removeItem('petworld.product.exit_after_save');
                 closeProductSaveModal();
                 return;
             }
@@ -1753,7 +2071,17 @@
                 closeProductSaveModal();
                 document.querySelector('.last-edited-text span').textContent = `Đã lưu lúc: ${payload.updated_at}`;
                 showProductSaveToast(payload.message || 'Đã lưu thay đổi.');
+                window.dispatchEvent(new CustomEvent('petworld:product-saved'));
+                const exitAfterSave = sessionStorage.getItem('petworld.product.exit_after_save');
+                if (exitAfterSave) {
+                    sessionStorage.removeItem('petworld.product.exit_after_save');
+                    try {
+                        const nextUrl = new URL(exitAfterSave, window.location.href);
+                        if (nextUrl.origin === window.location.origin) window.location.assign(nextUrl.href);
+                    } catch (ignore) { /* URL rời trang không hợp lệ thì chỉ giữ lại trang hiện tại. */ }
+                }
             } catch (error) {
+                sessionStorage.removeItem('petworld.product.exit_after_save');
                 closeProductSaveModal();
                 showProductSaveToast(error.message || 'Đã xảy ra lỗi khi lưu sản phẩm.', true);
             } finally {
@@ -2038,9 +2366,15 @@
                 .join(' / ');
             const sku = row.querySelector('.js-variant-sku')?.value?.trim() || '';
             const isVisible = row.querySelector('.js-variant-visible')?.checked ?? false;
+            const quantityInput = row.querySelector('.js-variant-quantity');
+            const quantity = Number(quantityInput?.value);
+            const hasQuantity = quantityInput?.value !== '' && Number.isFinite(quantity);
+            const isOutOfStock = hasQuantity && quantity === 0;
+            const isLowStock = hasQuantity && quantity > 0 && quantity < 10;
             const titleElement = row.querySelector('.js-variant-title');
             const skuPreview = row.querySelector('.js-variant-sku-preview');
             const status = row.querySelector('.js-variant-status');
+            const stockStatus = row.querySelector('.js-variant-stock-status');
 
             if (titleElement) titleElement.textContent = title || (row.dataset.isNew === 'true' ? 'Biến thể mới' : 'Biến thể');
             if (skuPreview) skuPreview.textContent = `SKU: ${sku || 'Chưa nhập SKU'}`;
@@ -2049,6 +2383,16 @@
                 status.classList.toggle('active', isVisible);
                 status.classList.toggle('inactive', !isVisible);
             }
+            if (stockStatus) {
+                stockStatus.hidden = !isLowStock && !isOutOfStock;
+                stockStatus.textContent = isOutOfStock ? 'Hết hàng' : 'Sắp hết hàng';
+                stockStatus.classList.toggle('low', isLowStock);
+                stockStatus.classList.toggle('out', isOutOfStock);
+            }
+            row.classList.toggle('is-low-stock', isLowStock);
+            row.classList.toggle('is-out-of-stock', isOutOfStock);
+            updatePricePreview(row.querySelector('.js-variant-price'), row.querySelector('.js-variant-price-preview'));
+            updatePricePreview(row.querySelector('.js-variant-sale-price'), row.querySelector('.js-variant-sale-price-preview'));
 
             const visibilityButton = row.querySelector('.js-toggle-variant-visibility');
             if (visibilityButton) {
@@ -2061,6 +2405,12 @@
 
         function formatVariantPrice(value) {
             return `${new Intl.NumberFormat('vi-VN').format(value)}đ`;
+        }
+
+        function updatePricePreview(input, preview) {
+            if (!input || !preview) return;
+            const value = Number(input.value);
+            preview.textContent = Number.isFinite(value) && value >= 0 ? formatVariantPrice(value) : '';
         }
 
         function validateSalePrice(priceInput, salePriceInput) {
@@ -2140,7 +2490,10 @@
                             <span class="variant-card-title js-variant-title">${initial.id ? 'Biến thể' : 'Biến thể mới'}</span>
                             <span class="variant-card-sku js-variant-sku-preview">SKU: ${sku || 'Chưa nhập SKU'}</span>
                         </span>
-                        <span class="variant-card-status ${active ? 'active' : 'inactive'} js-variant-status">${active ? 'Đang hiển thị' : 'Đã ẩn'}</span>
+                        <span class="variant-card-status-group">
+                            <span class="variant-card-status ${active ? 'active' : 'inactive'} js-variant-status">${active ? 'Đang hiển thị' : 'Đã ẩn'}</span>
+                            <span class="variant-stock-status js-variant-stock-status" hidden></span>
+                        </span>
                     </button>
                 </div>
                 <div class="variant-card-details">
@@ -2161,8 +2514,8 @@
                     <small class="variant-sku-hint js-variant-sku-hint">SKU tự tạo từ tên sản phẩm và thuộc tính.</small>
                 </div>
                 <div class="variant-price-grid">
-                    <div class="variant-card-field"><label>Giá bán</label><input type="number" name="variants[${index}][price]" value="${price}" class="cell-input-small js-variant-price" step="1000" min="0" required></div>
-                    <div class="variant-card-field"><label>Giá giảm</label><input type="number" name="variants[${index}][sale_price]" value="${salePrice || ''}" class="cell-input-small js-variant-sale-price" step="1000" min="0"></div>
+                    <div class="variant-card-field"><label>Giá bán</label><input type="number" name="variants[${index}][price]" value="${price}" class="cell-input-small js-variant-price" step="1000" min="0" required><small class="price-format-preview js-variant-price-preview"></small></div>
+                    <div class="variant-card-field"><label>Giá giảm</label><input type="number" name="variants[${index}][sale_price]" value="${salePrice || ''}" class="cell-input-small js-variant-sale-price" step="1000" min="0"><small class="price-format-preview js-variant-sale-price-preview"></small></div>
                     <div class="variant-card-field"><label>Tồn kho</label><input type="number" name="variants[${index}][quantity]" value="${quantity}" class="cell-input-small js-variant-quantity" min="0" required></div>
                     <div class="variant-card-field"><label>Cân nặng ship (g)</label><input type="number" name="variants[${index}][weight_grams]" value="${weightGrams}" class="cell-input-small js-variant-weight" min="0" max="50000" step="1" placeholder="Ví dụ: 30"></div>
                 </div>

@@ -127,6 +127,7 @@ class ProductController extends Controller
     {
         $validated = $this->validateProduct($request);
         $this->validateSpeciesLifeStages($validated);
+        $this->ensureCreateProductHasImage($request);
 
         $product = DB::transaction(function () use ($request, $validated) {
             $product = Product::create([
@@ -525,6 +526,17 @@ class ProductController extends Controller
         }
 
         return $validated;
+    }
+
+    private function ensureCreateProductHasImage(Request $request): void
+    {
+        if (count($request->file('images', [])) > 0) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'images' => 'Sản phẩm mới cần có ít nhất một ảnh.',
+        ]);
     }
 
     private function adviceAttributes(array $validated): array

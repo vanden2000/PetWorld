@@ -401,6 +401,7 @@ class HomeController extends Controller
                 'slug' => $blog->slug,
                 'description' => $blog->description,
                 'image' => $blog->image,
+                'cover_alt' => $blog->cover_alt,
                 'view_count' => $blog->view_count,
                 'created_at' => $blog->created_at?->toDateTimeString(),
                 'category' => $blog->category ? [

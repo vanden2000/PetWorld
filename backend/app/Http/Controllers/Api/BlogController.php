@@ -116,6 +116,24 @@ class BlogController extends Controller
         ]);
     }
 
+    public function sitemap(): JsonResponse
+    {
+        $blogs = Blog::query()
+            ->where('status', 'active')
+            ->whereHas('category', fn (Builder $category) => $category->where('status', 'active'))
+            ->orderBy('id')
+            ->get(['id', 'slug', 'image', 'updated_at', 'created_at'])
+            ->map(fn (Blog $blog): array => [
+                'slug' => $blog->slug,
+                'image' => $blog->image,
+                'updated_at' => $blog->updated_at?->toDateTimeString(),
+                'created_at' => $blog->created_at?->toDateTimeString(),
+            ])
+            ->all();
+
+        return response()->json(['data' => ['blogs' => $blogs]]);
+    }
+
     private function visibleBlogQuery(): Builder
     {
         return Blog::query()
@@ -129,11 +147,18 @@ class BlogController extends Controller
         return [
             'id' => $blog->id,
             'title' => $blog->title,
+            'seo_title' => $blog->seo_title,
             'slug' => $blog->slug,
             'description' => $blog->description,
+            'meta_description' => $blog->meta_description,
+            'focus_keyword' => $blog->focus_keyword,
+            'secondary_keywords' => $blog->secondary_keywords ?? [],
+            'search_intent' => $blog->search_intent,
             'image' => $blog->image,
+            'cover_alt' => $blog->cover_alt,
             'view_count' => $blog->view_count,
             'created_at' => $blog->created_at?->toDateTimeString(),
+            'updated_at' => $blog->updated_at?->toDateTimeString(),
             'category' => [
                 'id' => $blog->category->id,
                 'name' => $blog->category->name,
