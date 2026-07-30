@@ -31,7 +31,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="vi" className={`${inter.variable} ${playfair.variable} ${caveat.variable}`}>
-      <link rel="icon" type="image/x-icon" href={resolveBackendImage("logo/logo.png")} />
+      <link rel="icon" type="image/png" href={resolveBackendImage("logo/Special_Offer_1-removebg-preview.png")} />
       <body>{children}</body>
     </html>
   );
