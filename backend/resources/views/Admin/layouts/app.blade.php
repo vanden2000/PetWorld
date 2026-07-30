@@ -43,6 +43,14 @@
                         <span>Thống Kê</span>
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('admin.home-sections.index') }}"
+                        class="menu-item-link {{ request()->routeIs('admin.home-sections*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Quản Lý Trang Chủ</span>
+                    </a>
+                </li>
+
                 <li
                     class="menu-item-dropdown {{ request()->routeIs('admin.orders*') || request()->routeIs('admin.reviews*') ? 'open' : '' }}">
                     <a href="{{ route('admin.orders')}}"
