@@ -4,6 +4,7 @@ import { getProductDetail } from "@/lib/api";
 import ProductDetail from "@/components/product/ProductDetail";
 import ProductSection from "@/components/product/ProductSection";
 import TrackRecentlyViewed from "@/components/product/TrackRecentlyViewed";
+import ScrollToTop from "@/components/layout/ScrollToTop";
 import { resolveBackendImage } from "@/lib/format";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
@@ -123,6 +124,7 @@ export default async function ProductDetailPage({ params }) {
           __html: JSON.stringify(productJsonLd).replace(/</g, "\\u003c"),
         }}
       />
+      <ScrollToTop routeKey={product.slug} />
       <TrackRecentlyViewed slug={product.slug} />
       <div className="homepage-container">
         <nav className="shop-breadcrumb">

@@ -1,26 +1,30 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import { resolveImage } from "@/lib/format";
 
+const CTA_CONFIG = {
+  "banners/petworld-hero.jpg": { label: "Khám phá ngay" },
+  "banners/pet-food-sale.jpg": { label: "Xem ưu đãi" },
+  "banners/pet-care.jpg": { label: "Mua sắm ngay" },
+  default: { label: "Khám phá ngay" },
+};
+
+function imageSource(path, version) {
+  const source = resolveImage(path);
+  if (!version) return source;
+
+  return `${source}${source.includes("?") ? "&" : "?"}v=${version}`;
+}
+
 export default function HeroSlider({ banners = [] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const timeoutRef = useRef(null);
-
-  const resetTimeout = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-  }, []);
-
   const goToSlide = useCallback(
     (slideIndex) => {
-      resetTimeout();
       setCurrentIndex(slideIndex);
     },
-    [resetTimeout],
+    [],
   );
 
   const goToNext = useCallback(() => {
@@ -33,17 +37,6 @@ export default function HeroSlider({ banners = [] }) {
     goToSlide((currentIndex - 1 + banners.length) % banners.length);
   }, [banners.length, currentIndex, goToSlide]);
 
-  useEffect(() => {
-    if (isPaused || banners.length <= 1) {
-      return;
-    }
-    resetTimeout();
-    timeoutRef.current = setTimeout(goToNext, 5000);
-
-    // eslint-disable-next-line consistent-return
-    return () => resetTimeout();
-  }, [currentIndex, isPaused, banners.length, goToNext, resetTimeout]);
-
   if (banners.length === 0) return null;
   const activeIndex = Math.min(currentIndex, banners.length - 1);
 
@@ -51,12 +44,6 @@ export default function HeroSlider({ banners = [] }) {
     <section className="homepage-section hero-slider-section">
       <div
         className="hero-slider"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onFocusCapture={() => setIsPaused(true)}
-        onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) setIsPaused(false);
-        }}
         aria-roledescription="carousel"
         aria-label="Khuyến mãi nổi bật"
       >
@@ -71,16 +58,27 @@ export default function HeroSlider({ banners = [] }) {
               className={`hero-slide ${index === activeIndex ? "active" : ""}`}
               aria-hidden={index !== activeIndex}
             >
-              <a href={slide.link || "/shop"} className="slide-link" tabIndex={index === activeIndex ? 0 : -1}>
+              <div className="slide-image-frame">
                 <Image
-                  src={resolveImage(slide.image)}
+                  src={imageSource(slide.image, slide.image_version)}
                   alt={slide.description || "PetWorld Banner"}
                   className="slide-img"
                   fill
                   priority={index === 0}
-                  sizes="100vw"
+                  sizes="(min-width: 1320px) 1280px, calc(100vw - 40px)"
                 />
-              </a>
+              </div>
+              {slide.link && (
+                <a
+                  href={slide.link}
+                  className="slide-cta"
+                  tabIndex={index === activeIndex ? 0 : -1}
+                  aria-label={CTA_CONFIG[slide.image]?.label || CTA_CONFIG.default.label}
+                  data-cta-label={CTA_CONFIG[slide.image]?.label || CTA_CONFIG.default.label}
+                >
+                  Xem ưu đãi
+                </a>
+              )}
             </div>
           ))}
         </div>

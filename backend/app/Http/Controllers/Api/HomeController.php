@@ -110,10 +110,32 @@ class HomeController extends Controller
             ->map(fn(Banner $banner): array => [
                 'id' => $banner->id,
                 'image' => $banner->image,
+                'image_version' => $this->bannerImageVersion($banner->image),
                 'link' => $banner->link,
                 'description' => $banner->description,
             ])
             ->all();
+    }
+
+    private function bannerImageVersion(?string $image): ?int
+    {
+        if (!$image || str_starts_with($image, 'http://') || str_starts_with($image, 'https://')) {
+            return null;
+        }
+
+        $path = ltrim($image, '/');
+        $candidates = [
+            public_path($path),
+            storage_path('app/public/' . $path),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate)) {
+                return filemtime($candidate) ?: null;
+            }
+        }
+
+        return null;
     }
 
     private function formatCategories(): array

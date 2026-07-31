@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ProductCard from "@/components/product/ProductCard";
 import Link from "next/link";
 import { resolveBackendImage } from "@/lib/format";
@@ -22,6 +22,31 @@ export default function NewProductsSplit({ products = [] }) {
   const dragStart = useRef({ x: 0, scrollLeft: 0 });
   const activePointerId = useRef(null);
   const didDrag = useRef(false);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const updateScrollControls = useCallback(() => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    const maxScroll = slider.scrollWidth - slider.clientWidth;
+    setCanScrollPrev(slider.scrollLeft > 4);
+    setCanScrollNext(slider.scrollLeft < maxScroll - 4);
+  }, []);
+
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider) return undefined;
+
+    updateScrollControls();
+    slider.addEventListener("scroll", updateScrollControls, { passive: true });
+    window.addEventListener("resize", updateScrollControls);
+
+    return () => {
+      slider.removeEventListener("scroll", updateScrollControls);
+      window.removeEventListener("resize", updateScrollControls);
+    };
+  }, [products.length, updateScrollControls]);
 
   if (products.length === 0) return null;
 
@@ -71,8 +96,17 @@ export default function NewProductsSplit({ products = [] }) {
     event.stopPropagation();
   };
 
+  const scrollByCard = (direction) => {
+    const slider = sliderRef.current;
+    const item = slider?.querySelector(".new-products-slider-item");
+    if (!slider || !item) return;
+
+    const gap = Number.parseFloat(getComputedStyle(slider.firstElementChild).gap) || 20;
+    slider.scrollBy({ left: direction * (item.clientWidth + gap), behavior: "smooth" });
+  };
+
   return (
-    <section className="homepage-section">
+    <section className="homepage-section new-products-section">
       <div className="section-header">
         <h2 className="section-title">Sản Phẩm Mới</h2>
         <Link href="/shop" className="view-all-link">
@@ -94,6 +128,18 @@ export default function NewProductsSplit({ products = [] }) {
         <img src={resolveBackendImage("storage/promo/sidebar-pets.png")} alt="" className="sidebar-illustration" aria-hidden="true" />
       </aside>
 
+      <button
+        type="button"
+        className="new-products-slider-arrow new-products-slider-arrow-prev"
+        onClick={() => scrollByCard(-1)}
+        disabled={!canScrollPrev}
+        aria-label="Sản phẩm trước"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+
       <div
         ref={sliderRef}
         className={`new-products-slider${isDragging ? " is-dragging" : ""}`}
@@ -111,6 +157,17 @@ export default function NewProductsSplit({ products = [] }) {
           ))}
         </div>
       </div>
+      <button
+        type="button"
+        className="new-products-slider-arrow new-products-slider-arrow-next"
+        onClick={() => scrollByCard(1)}
+        disabled={!canScrollNext}
+        aria-label="Sản phẩm tiếp theo"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
       </div>
     </section>
   );
