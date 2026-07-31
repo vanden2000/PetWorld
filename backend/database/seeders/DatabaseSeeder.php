@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             OrderSeeder::class,
             ReviewSeeder::class,
             BlogCommentSeeder::class,
+            HomeSectionSeeder::class,
         ]);
     }
 }

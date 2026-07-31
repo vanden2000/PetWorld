@@ -5,9 +5,9 @@ import { getHomeData, getProductDetail, getProducts } from "@/lib/api";
 import { getOrder, getOrders } from "@/lib/auth";
 
 export const swrOptions = {
-  // Khi người dùng quay lại tab, chỉ lấy dữ liệu mới ở nền thay vì tải lại cả trang.
-  revalidateOnFocus: true,
-  revalidateOnReconnect: true,
+  // Bỏ revalidateOnFocus để không tự động tải lại dữ liệu khi người dùng chuyển qua lại giữa IDE và trình duyệt.
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false,
   // Không tự gọi lại API ngay khi dữ liệu do Server Component truyền xuống vẫn còn dùng được.
   revalidateIfStale: false,
   // Gộp các yêu cầu trùng nhau trong 30 giây để giảm tải cho Laravel và trình duyệt.
@@ -34,12 +34,14 @@ function stableParams(params = {}) {
 }
 
 export function useHomeData(fallbackData) {
-  return useSWR("/api/home", getHomeData, optionsWithFallback(fallbackData));
+  const hasFallback = fallbackData && Object.keys(fallbackData).length > 0;
+  return useSWR(hasFallback ? null : "/api/home", getHomeData, optionsWithFallback(fallbackData));
 }
 
 export function useProducts(params = {}, fallbackData) {
   const normalized = stableParams(params);
-  return useSWR(["/api/products", normalized], ([, query]) => getProducts(query), {
+  const hasFallback = fallbackData && Object.keys(fallbackData).length > 0;
+  return useSWR(hasFallback ? null : ["/api/products", normalized], ([, query]) => getProducts(query), {
     ...optionsWithFallback(fallbackData),
   });
 }
