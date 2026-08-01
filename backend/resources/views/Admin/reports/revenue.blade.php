@@ -33,11 +33,11 @@
         text-align: left;
     }
     .filter-option:hover {
-        background-color: var(--bg-color);
+        background-color: #fff4ec;
         color: var(--primary);
     }
     .filter-option.active {
-        background-color: var(--primary-light);
+        background-color: #fff4ec;
         color: var(--primary);
         font-weight: 600;
     }
