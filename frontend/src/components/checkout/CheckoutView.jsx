@@ -14,6 +14,7 @@ import {
   getServerCartSnapshot,
   parseCart,
   clearCart,
+  restoreToCart,
   onCartChange,
 } from "@/lib/cart";
 import {
@@ -27,9 +28,11 @@ import {
   buildSepayQrUrl,
   getAvailableVouchers,
 } from "@/lib/checkout";
+import { cancelOrder } from "@/lib/auth";
 import AddressLocationFields from "@/components/auth/AddressLocationFields";
 import { toastError } from "@/lib/toast";
 import CheckoutSuccessView from "@/components/checkout/CheckoutSuccessView";
+import PaymentLeaveGuard from "@/components/checkout/PaymentLeaveGuard";
 import {
   clearBuyNow,
   getBuyNowSnapshot,
@@ -75,7 +78,7 @@ function clearPendingPayment() {
 // Thông tin ngân hàng hiển thị (chuyển khoản thủ công) — cấu hình qua env.
 const BANK_INFO = {
   name: process.env.NEXT_PUBLIC_BANK_NAME || "MBBank",
-  account: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || "VQRQAKCIT7920",
+  account: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER || "0865130622",
   holder: process.env.NEXT_PUBLIC_BANK_ACCOUNT_HOLDER || "LE TRAN PHAT",
 };
 
@@ -113,6 +116,8 @@ export default function CheckoutView() {
   const [submitting, setSubmitting] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
   const [orderPaid, setOrderPaid] = useState(false);
+  // Đang gọi API hủy đơn: tạm dừng poll để request không xếp hàng chồng lên nhau.
+  const [cancelling, setCancelling] = useState(false);
   const [fullOrderDetails, setFullOrderDetails] = useState(null);
   // Lưu MỐC hết hạn tuyệt đối (ms epoch) thay vì đếm giây, để sống sót khi tải lại/rớt mạng.
   const [paymentExpiresAt, setPaymentExpiresAt] = useState(null);
@@ -162,7 +167,7 @@ export default function CheckoutView() {
 
   // Sau khi đặt đơn chuyển khoản, hỏi server mỗi 4s tới khi SePay xác nhận (dừng khi đã trả/hết hạn).
   useEffect(() => {
-    if (!placedOrder || !placedOrder.is_bank || orderPaid || qrExpired) return;
+    if (!placedOrder || !placedOrder.is_bank || orderPaid || qrExpired || cancelling) return;
     const timer = setInterval(async () => {
       const fresh = await checkSepayPayment(placedOrder.id);
       if (fresh?.payment_status === "paid") {
@@ -170,7 +175,7 @@ export default function CheckoutView() {
       }
     }, 4000);
     return () => clearInterval(timer);
-  }, [placedOrder, orderPaid, qrExpired]);
+  }, [placedOrder, orderPaid, qrExpired, cancelling]);
 
   // Nhịp đồng hồ mỗi giây để tính lại thời gian còn lại từ mốc hết hạn tuyệt đối.
   useEffect(() => {
@@ -422,7 +427,8 @@ export default function CheckoutView() {
         : Date.now() + QR_TTL_SECONDS * 1000;
       setPaymentExpiresAt(exp);
       setNowMs(Date.now());
-      savePendingPayment({ orderId: result.data.id, snapshot, expiresAt: exp, paid: false });
+      // Giữ lại đúng các dòng vừa thanh toán để trả về giỏ nếu khách hủy giữa chừng.
+      savePendingPayment({ orderId: result.data.id, snapshot, expiresAt: exp, paid: false, cartLines: items });
     } else {
       setPaymentExpiresAt(null);
     }
@@ -445,6 +451,56 @@ export default function CheckoutView() {
     setNowMs(Date.now());
     const sess = readPendingPayment();
     if (sess) savePendingPayment({ ...sess, expiresAt: exp });
+  };
+
+  /**
+   * Khách chọn "Rời khỏi & hủy đơn" trong hộp cảnh báo.
+   *
+   * Gọi thẳng API hủy thay vì kiểm tra thanh toán trước: server đã khóa dòng đơn
+   * trong transaction và từ chối đơn đã trả tiền, nên vừa tránh khe hở giữa hai
+   * lần gọi vừa bớt được một vòng request (server dev chỉ chạy đơn tiến trình).
+   */
+  const handleConfirmLeave = async () => {
+    if (!placedOrder) return { ok: true };
+
+    setCancelling(true);
+    try {
+      const res = await cancelOrder(placedOrder.id);
+      if (res.ok) {
+        restoreCancelledOrderToCart();
+        return { ok: true };
+      }
+
+      // Hủy bị từ chối: hỏi lại server xem tiền có vừa về đúng lúc khách bấm không.
+      const fresh = await checkSepayPayment(placedOrder.id);
+      if (fresh?.payment_status === "paid") {
+        setOrderPaid(true);
+        clearPendingPayment();
+        return { ok: true, paid: true };
+      }
+
+      // Đơn đã bị hủy sẵn (hết hạn) thì coi như xong, chỉ dọn phiên rồi cho đi.
+      if (fresh?.status === "cancelled") {
+        restoreCancelledOrderToCart();
+        return { ok: true };
+      }
+
+      return { ok: false, message: res.message };
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  /**
+   * Sau khi đơn bị hủy: đưa lại hàng vào giỏ để khách mua tiếp không phải chọn lại,
+   * rồi dọn phiên thanh toán đang chờ.
+   */
+  const restoreCancelledOrderToCart = () => {
+    const sess = readPendingPayment();
+    restoreToCart(sess?.cartLines ?? []);
+    clearPendingPayment();
+    setPlacedOrder(null);
+    setPaymentExpiresAt(null);
   };
 
   const copyText = async (value) => {
@@ -473,6 +529,12 @@ export default function CheckoutView() {
 
     return (
       <div className="co-result">
+        <PaymentLeaveGuard
+          active={!orderPaid && !qrExpired}
+          minutesLeft={Math.max(1, Math.ceil(qrSecondsLeft / 60))}
+          onConfirmLeave={handleConfirmLeave}
+        />
+
         <div className="co-result-hero">
           <div className="co-result-success">
             <span className="co-result-check">✓</span>
@@ -526,7 +588,7 @@ export default function CheckoutView() {
                     <div className="co-qr-panel">
                       <img
                         src={qrUrl}
-                        alt="QR thanh toán - Ngân hàng TMCP Quân Đội - VQRQAKCIT7920 - LE TRAN PHAT"
+                        alt="QR thanh toán - Ngân hàng TMCP Quân Đội - 0865130622 - LE TRAN PHAT"
                         className="co-qr-img"
                         width="300"
                       />

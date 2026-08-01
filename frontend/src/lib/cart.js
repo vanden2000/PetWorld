@@ -79,6 +79,42 @@ export function addToCart(item, quantity = 1) {
   return true;
 }
 
+/**
+ * Trả các dòng đã thanh toán dở về giỏ (khách hủy đơn chuyển khoản giữa chừng).
+ * Giỏ đã bị dọn lúc đặt đơn nên thường là rỗng, nhưng vẫn cộng dồn phòng khi
+ * khách đã thêm hàng mới, và không vượt quá tồn kho đã biết.
+ * Trả về số dòng khôi phục được.
+ */
+export function restoreToCart(lines) {
+  if (typeof window === "undefined") return 0;
+  if (!Array.isArray(lines) || lines.length === 0) return 0;
+
+  const items = getCart();
+  let restored = 0;
+
+  lines.forEach((line) => {
+    if (!line?.productId) return;
+
+    const key = line.key || lineKey(line.productId, line.variantId);
+    const qtyNum = Math.max(1, Math.trunc(Number(line.quantity) || 1));
+    const stockQuantity = Number(line.stockQuantity);
+    const capped = (value) => Number.isFinite(stockQuantity)
+      ? Math.min(value, Math.max(1, Math.trunc(stockQuantity)))
+      : value;
+
+    const existing = items.find((item) => item.key === key);
+    if (existing) {
+      existing.quantity = capped(Math.max(1, Number(existing.quantity) || 0) + qtyNum);
+    } else {
+      items.push({ ...line, key, quantity: capped(qtyNum) });
+    }
+    restored += 1;
+  });
+
+  if (restored > 0) saveCart(items);
+  return restored;
+}
+
 export function updateQuantity(key, quantity) {
   const qtyNum = Math.trunc(Number(quantity) || 0);
   const items = getCart()

@@ -108,7 +108,7 @@ export async function getOrder(id) {
  */
 export function buildSepayQrUrl(paymentCode, amount) {
   const base = process.env.NEXT_PUBLIC_SEPAY_QR_BASE
-    || "https://vietqr.app/img?bank=MBBank&acc=VQRQAKCIT7920&template=compact&showinfo=true&fullacc=true&holder=LE%20TRAN%20PHAT";
+    || "https://vietqr.app/img?bank=MBBank&acc=0865130622&template=compact&showinfo=true&fullacc=true&holder=LE%20TRAN%20PHAT";
   const sep = base.includes("?") ? "&" : "?";
   return `${base}${sep}amount=${Math.round(amount)}&des=${encodeURIComponent(paymentCode)}`;
 }

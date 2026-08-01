@@ -158,12 +158,17 @@ class OrderController extends Controller
         });
         // lấy user sở hữu đơn hàng
         $cancelledOrder->load('user');
-        try {
-            Mail::to($cancelledOrder->user->email)
-                ->send(new OrderStatusMail($cancelledOrder));
-        } catch (Throwable $exception) {
-            report($exception);
-        }
+
+        // Gửi sau khi đã trả response: SMTP mất ~4s, để trong request thì khách
+        // bấm hủy phải ngồi chờ (và server dev đơn tiến trình bị chặn theo).
+        dispatch(function () use ($cancelledOrder): void {
+            try {
+                Mail::to($cancelledOrder->user->email)
+                    ->send(new OrderStatusMail($cancelledOrder));
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        })->afterResponse();
 
         return response()->json([
             'message' => 'Đã hủy đơn hàng thành công.',
