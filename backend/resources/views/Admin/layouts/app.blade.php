@@ -210,6 +210,13 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('admin.reports.profit') }}"
+                                class="submenu-item-link {{ request()->routeIs('admin.reports.profit') ? 'active' : '' }}">
+                                <i class="fa-solid fa-money-bill-trend-up"></i>
+                                <span>Lợi Nhuận</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('admin.reports.order-status') }}"
                                 class="submenu-item-link {{ request()->routeIs('admin.reports.order-status') ? 'active' : '' }}">
                                 <i class="fa-solid fa-chart-pie"></i>
