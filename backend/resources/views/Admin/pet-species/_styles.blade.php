@@ -1,5 +1,5 @@
 <style>
-  .species-page { max-width: 1180px; margin: 0 auto; }
+  .species-page { max-width: 2080px; margin: 0 auto; }
   .species-header { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; margin-bottom:26px; }
   .species-kicker { display:flex; align-items:center; gap:8px; color:var(--primary); font-size:.78rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
   .species-header h1 { margin:8px 0 6px; color:var(--text-main); font-size:1.8rem; letter-spacing:-.03em; }

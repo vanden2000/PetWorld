@@ -49,6 +49,7 @@
         background-color: var(--primary-hover);
         box-shadow: 0 4px 12px rgba(255, 120, 45, 0.28);
     }
+    .orders-filter-card.is-filtering { opacity: .65; pointer-events: none; }
 </style>
 @endsection
 
@@ -79,7 +80,7 @@
     </div>
 </div>
 
-<form class="filters-card orders-filter-card" method="GET" action="{{ route('admin.orders') }}">
+<form class="filters-card orders-filter-card" method="GET" action="{{ route('admin.orders') }}" id="orders-filter-form">
     <div class="filter-col orders-filter-search">
         <label class="filter-label">Tìm kiếm</label>
         <div class="filter-input-wrapper">
@@ -88,7 +89,7 @@
         </div>
     </div>
     <div class="filter-col">
-        <label class="filter-label">Thanh ToÃ¡n</label>
+        <label class="filter-label">Thanh Toán</label>
         <select name="payment_status" class="filter-select">
             <option value="">Tất Cả</option>
             @foreach($paymentStatuses as $value => $label)
@@ -106,10 +107,6 @@
         </select>
     </div>
     <div class="filter-col orders-filter-actions">
-        <button class="btn-dark-slate" type="submit">
-            <i class="fa-solid fa-filter"></i>
-            <span>Lọc</span>
-        </button>
         <a href="{{ route('admin.orders') }}"  style="text-decoration:none"class="btn-clear-filters">Xoá Bộ Lọc</a>
     </div>
 </form>
@@ -331,6 +328,20 @@
         document.addEventListener('click', function () {
             document.querySelectorAll('.quick-status-menu').forEach((menu) => menu.classList.remove('show'));
         });
+
+        const ordersFilterForm = document.getElementById('orders-filter-form');
+        const ordersSearchInput = ordersFilterForm?.querySelector('input[name="search"]');
+        let ordersSearchTimer;
+        const submitOrderFilters = () => {
+            if (!ordersFilterForm) return;
+            ordersFilterForm.classList.add('is-filtering');
+            ordersFilterForm.submit();
+        };
+        ordersSearchInput?.addEventListener('input', () => {
+            clearTimeout(ordersSearchTimer);
+            ordersSearchTimer = setTimeout(submitOrderFilters, 350);
+        });
+        ordersFilterForm?.querySelectorAll('select').forEach((select) => select.addEventListener('change', submitOrderFilters));
 
         const exportModal = document.getElementById('order-export-modal');
         const openExportButton = document.getElementById('open-order-export-modal');

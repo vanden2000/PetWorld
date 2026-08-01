@@ -43,6 +43,16 @@ return [
         'api_base_url' => rtrim((string) env('SEPAY_API_BASE_URL', 'https://userapi.sepay.vn/v2'), '/'),
     ],
 
+    'ghtk' => [
+        'api_token' => env('GHTK_API_TOKEN'),
+        'client_source' => env('GHTK_CLIENT_SOURCE'),
+        'base_url' => rtrim((string) env('GHTK_BASE_URL', 'https://services.giaohangtietkiem.vn'), '/'),
+        'timeout' => (int) env('GHTK_TIMEOUT', 15),
+        'pickup_address_id' => env('GHTK_PICKUP_ADDRESS_ID'),
+        'pickup_name' => env('GHTK_PICKUP_NAME'),
+        'pickup_phone' => env('GHTK_PICKUP_PHONE'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Google AI Studio / Gemini

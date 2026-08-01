@@ -17,7 +17,7 @@ export default function BlogSection({ blogs = [] }) {
         {blogs.map((blog) => (
           <article className="blog-card" key={blog.id}>
             <Link href={`/news/${blog.slug}`} className="blog-img-wrapper">
-              <img src={resolveBlogImage(blog.image)} alt={blog.image_alt || blog.title} className="blog-img" />
+              <img src={resolveBlogImage(blog.image)} alt={blog.cover_alt || blog.title} className="blog-img" />
             </Link>
             <div className="blog-content">
               <span className="blog-tag">{blog.category?.name ?? "Pet knowledge"}</span>

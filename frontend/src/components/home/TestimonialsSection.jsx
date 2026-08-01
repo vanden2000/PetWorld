@@ -86,7 +86,6 @@ export default function TestimonialsSection({ reviews = [] }) {
   return (
     <section className="homepage-section testimonials-section">
       <div className="section-header-center">
-        <span className="section-badge">💬 ĐÁNH GIÁ THỰC TẾ</span>
         <h2 className="section-title">Khách Hàng Nói Gì Về PetWorld</h2>
         <p className="section-subtitle">
           100% đánh giá từ các Sen đã trực tiếp mua hàng và trải nghiệm sản phẩm

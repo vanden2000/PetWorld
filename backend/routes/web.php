@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\PetSpeciesController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductAiContentController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
@@ -18,6 +19,8 @@ use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\BlogCommentController;
 use App\Http\Controllers\Admin\KnowledgeArticleController;
+use App\Http\Controllers\Admin\HomeSectionController;
+
 
 
 Route::get('/', fn() => response('XIn chào'));
@@ -130,6 +133,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/products', [ProductController::class, 'store'])
         ->name('products.store');
 
+    Route::post('/products/ai/improve', ProductAiContentController::class)
+        ->middleware('throttle:10,10')
+        ->name('products.ai.improve');
+
+    Route::post('/posts/ai/improve', \App\Http\Controllers\Admin\PostAiContentController::class)
+        ->middleware('throttle:10,10')
+        ->name('posts.ai.improve');
+
     Route::get('/products/export', [ProductController::class, 'export'])
         ->name('products.export');
 
@@ -188,10 +199,19 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Reports/Statistics routes
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/revenue', [ReportController::class, 'revenue'])->name('revenue');
+        Route::get('/profit', [ReportController::class, 'profit'])->name('profit');
         Route::get('/order-status', [ReportController::class, 'orderStatus'])->name('order-status');
         Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
         Route::get('/best-sellers', [ReportController::class, 'bestSellers'])->name('best-sellers');
         Route::get('/low-stock', [ReportController::class, 'lowStock'])->name('low-stock');
         Route::get('/latest-orders', [ReportController::class, 'latestOrders'])->name('latest-orders');
     });
+
+    // Home Sections Management
+    Route::get('/home-sections', [HomeSectionController::class, 'index'])->name('home-sections.index');
+    Route::match(['PUT', 'POST', 'PATCH'], '/home-sections', [HomeSectionController::class, 'update'])->name('home-sections.update');
+    Route::match(['PATCH', 'POST', 'GET', 'PUT'], '/home-sections/{id}/toggle', [HomeSectionController::class, 'toggleStatus'])->name('home-sections.toggle');
+    Route::match(['POST', 'GET'], '/home-sections/reset', [HomeSectionController::class, 'resetDefaults'])->name('home-sections.reset');
+
 });
+

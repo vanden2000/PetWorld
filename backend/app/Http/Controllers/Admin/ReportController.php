@@ -225,4 +225,267 @@ class ReportController extends Controller
     {
         return view('Admin.reports.latest_orders');
     }
+
+    public function profit()
+    {
+        $now = Carbon::now();
+
+        $periods = [
+            'today' => $this->profitForRange($now->copy()->startOfDay(), $now->copy(), 'hour'),
+            '7days' => $this->profitForRange($now->copy()->subDays(6)->startOfDay(), $now->copy(), 'day'),
+            '30days' => $this->profitForRange($now->copy()->subDays(29)->startOfDay(), $now->copy(), 'week'),
+        ];
+
+        return view('Admin.reports.profit', compact('periods'));
+    }
+
+    private function profitForRange(Carbon $start, Carbon $end, string $bucket): array
+    {
+        $current = $this->profitRangeAggregate($start, $end);
+
+        $lengthSeconds = max(1, $end->getTimestamp() - $start->getTimestamp());
+        $prevEnd = $start->copy();
+        $prevStart = $start->copy()->subSeconds($lengthSeconds);
+        $previous = $this->profitRangeAggregate($prevStart, $prevEnd);
+
+        $table = $this->profitTableRows($start, $end, $bucket);
+
+        return [
+            'revenue' => $this->money($current['revenue']),
+            'cost' => $this->money($current['cost']),
+            'profit' => $this->money($current['profit']),
+            'margin' => $this->percent($current['margin']),
+            'trends' => [
+                'revenue' => $this->trend($current['revenue'], $previous['revenue']),
+                'cost' => $this->trend($current['cost'], $previous['cost']),
+                'profit' => $this->trend($current['profit'], $previous['profit']),
+                'margin' => $this->trend($current['margin'], $previous['margin']),
+            ],
+            'categories' => $this->profitByCategory($start, $end),
+            'table' => $table,
+            'chart' => array_map(
+                fn (array $row): array => [
+                    'label' => $row['time'], 
+                    'revenue' => $row['revenueRaw'], 
+                    'profit' => $row['profitRaw']
+                ],
+                array_reverse($table)
+            ),
+        ];
+    }
+
+    private function profitRangeAggregate(Carbon $start, Carbon $end): array
+    {
+        $rows = DB::table('order_items as oi')
+            ->join('orders as o', 'o.id', '=', 'oi.order_id')
+            ->join('product_variants as pv', 'pv.id', '=', 'oi.product_variant_id')
+            ->join('products as p', 'p.id', '=', 'pv.product_id')
+            ->join('categories as c', 'c.id', '=', 'p.category_id')
+            ->where('o.payment_status', 'paid')
+            ->where('o.order_status', '!=', 'cancelled')
+            ->whereBetween('o.created_at', [$start, $end])
+            ->selectRaw('
+                SUM(oi.price * oi.quantity) as gross_revenue,
+                SUM(oi.price * oi.quantity * (
+                    CASE 
+                        WHEN c.name LIKE "%Thức ăn%" THEN 0.70 
+                        WHEN c.name LIKE "%Phụ kiện%" THEN 0.50 
+                        WHEN c.name LIKE "%Đồ chơi%" THEN 0.45 
+                        ELSE 0.60 
+                    END
+                )) as gross_cost
+            ')
+            ->first();
+
+        $grossRevenue = (float) ($rows->gross_revenue ?? 0);
+        $cost = (float) ($rows->gross_cost ?? 0);
+
+        $orderStats = DB::table('orders')
+            ->where('payment_status', 'paid')
+            ->where('order_status', '!=', 'cancelled')
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw('SUM(total_amount) as net_revenue, SUM(discount_amount) as discount')
+            ->first();
+
+        $netRevenue = (float) ($orderStats->net_revenue ?? 0);
+
+        if ($grossRevenue > 0) {
+            $cost = $cost * ($netRevenue / $grossRevenue);
+        } else {
+            $cost = 0;
+        }
+
+        $profit = $netRevenue - $cost;
+        $margin = $netRevenue > 0 ? ($profit / $netRevenue) * 100 : 0;
+
+        return [
+            'revenue' => $netRevenue,
+            'cost' => $cost,
+            'profit' => $profit,
+            'margin' => $margin,
+        ];
+    }
+
+    private function profitByCategory(Carbon $start, Carbon $end): array
+    {
+        $rows = DB::table('order_items as oi')
+            ->join('orders as o', 'o.id', '=', 'oi.order_id')
+            ->join('product_variants as pv', 'pv.id', '=', 'oi.product_variant_id')
+            ->join('products as p', 'p.id', '=', 'pv.product_id')
+            ->join('categories as c', 'c.id', '=', 'p.category_id')
+            ->where('o.payment_status', 'paid')
+            ->where('o.order_status', '!=', 'cancelled')
+            ->whereBetween('o.created_at', [$start, $end])
+            ->groupBy('c.id', 'c.name')
+            ->selectRaw('
+                c.name as name, 
+                SUM(oi.price * oi.quantity) as revenue,
+                SUM(oi.price * oi.quantity * (
+                    CASE 
+                        WHEN c.name LIKE "%Thức ăn%" THEN 0.70 
+                        WHEN c.name LIKE "%Phụ kiện%" THEN 0.50 
+                        WHEN c.name LIKE "%Đồ chơi%" THEN 0.45 
+                        ELSE 0.60 
+                    END
+                )) as cost
+            ')
+            ->get();
+
+        $totalProfit = 0;
+        $categoriesData = [];
+
+        foreach ($rows as $row) {
+            $rev = (float) $row->revenue;
+            $cst = (float) $row->cost;
+            $prof = $rev - $cst;
+            $totalProfit += $prof;
+
+            $categoriesData[] = [
+                'name' => $row->name,
+                'revenue' => $rev,
+                'cost' => $cst,
+                'profit' => $prof,
+                'margin' => $rev > 0 ? ($prof / $rev) * 100 : 0,
+            ];
+        }
+
+        usort($categoriesData, fn($a, $b) => $b['profit'] <=> $a['profit']);
+
+        return array_map(function ($cat, $index) use ($totalProfit) {
+            return [
+                'name' => $cat['name'],
+                'percentage' => ($totalProfit > 0 ? round($cat['profit'] / $totalProfit * 100) : 0) . '%',
+                'revenue' => $this->money($cat['revenue']),
+                'cost' => $this->money($cat['cost']),
+                'profit' => $this->money($cat['profit']),
+                'margin' => $this->percent($cat['margin']),
+                'color' => self::CATEGORY_PALETTE[$index % count(self::CATEGORY_PALETTE)],
+            ];
+        }, $categoriesData, array_keys($categoriesData));
+    }
+
+    private function profitTableRows(Carbon $start, Carbon $end, string $bucket): array
+    {
+        if ($bucket === 'hour') {
+            $rows = DB::table('order_items as oi')
+                ->join('orders as o', 'o.id', '=', 'oi.order_id')
+                ->join('product_variants as pv', 'pv.id', '=', 'oi.product_variant_id')
+                ->join('products as p', 'p.id', '=', 'pv.product_id')
+                ->join('categories as c', 'c.id', '=', 'p.category_id')
+                ->where('o.payment_status', 'paid')
+                ->where('o.order_status', '!=', 'cancelled')
+                ->whereBetween('o.created_at', [$start, $end])
+                ->selectRaw('
+                    DATE_FORMAT(o.created_at, "%H:00") as label,
+                    MIN(o.created_at) as sort_key,
+                    SUM(oi.price * oi.quantity) as revenue,
+                    SUM(oi.price * oi.quantity * (
+                        CASE 
+                            WHEN c.name LIKE "%Thức ăn%" THEN 0.70 
+                            WHEN c.name LIKE "%Phụ kiện%" THEN 0.50 
+                            WHEN c.name LIKE "%Đồ chơi%" THEN 0.45 
+                            ELSE 0.60 
+                        END
+                    )) as cost
+                ')
+                ->groupByRaw('DATE_FORMAT(o.created_at, "%H:00")')
+                ->orderByRaw('MIN(o.created_at) DESC')
+                ->get();
+        } elseif ($bucket === 'day') {
+            $rows = DB::table('order_items as oi')
+                ->join('orders as o', 'o.id', '=', 'oi.order_id')
+                ->join('product_variants as pv', 'pv.id', '=', 'oi.product_variant_id')
+                ->join('products as p', 'p.id', '=', 'pv.product_id')
+                ->join('categories as c', 'c.id', '=', 'p.category_id')
+                ->where('o.payment_status', 'paid')
+                ->where('o.order_status', '!=', 'cancelled')
+                ->whereBetween('o.created_at', [$start, $end])
+                ->selectRaw('
+                    DATE(o.created_at) as day,
+                    SUM(oi.price * oi.quantity) as revenue,
+                    SUM(oi.price * oi.quantity * (
+                        CASE 
+                            WHEN c.name LIKE "%Thức ăn%" THEN 0.70 
+                            WHEN c.name LIKE "%Phụ kiện%" THEN 0.50 
+                            WHEN c.name LIKE "%Đồ chơi%" THEN 0.45 
+                            ELSE 0.60 
+                        END
+                    )) as cost
+                ')
+                ->groupByRaw('DATE(o.created_at)')
+                ->orderByRaw('DATE(o.created_at) DESC')
+                ->get();
+        } else {
+            $rows = DB::table('order_items as oi')
+                ->join('orders as o', 'o.id', '=', 'oi.order_id')
+                ->join('product_variants as pv', 'pv.id', '=', 'oi.product_variant_id')
+                ->join('products as p', 'p.id', '=', 'pv.product_id')
+                ->join('categories as c', 'c.id', '=', 'p.category_id')
+                ->where('o.payment_status', 'paid')
+                ->where('o.order_status', '!=', 'cancelled')
+                ->whereBetween('o.created_at', [$start, $end])
+                ->selectRaw('
+                    YEARWEEK(o.created_at, 3) as yw,
+                    MIN(DATE(o.created_at)) as wk_start,
+                    MAX(DATE(o.created_at)) as wk_end,
+                    SUM(oi.price * oi.quantity) as revenue,
+                    SUM(oi.price * oi.quantity * (
+                        CASE 
+                            WHEN c.name LIKE "%Thức ăn%" THEN 0.70 
+                            WHEN c.name LIKE "%Phụ kiện%" THEN 0.50 
+                            WHEN c.name LIKE "%Đồ chơi%" THEN 0.45 
+                            ELSE 0.60 
+                        END
+                    )) as cost
+                ')
+                ->groupByRaw('YEARWEEK(o.created_at, 3)')
+                ->orderByRaw('YEARWEEK(o.created_at, 3) DESC')
+                ->get();
+        }
+
+        return $rows->map(function ($row) use ($bucket): array {
+            $rev = (float) $row->revenue;
+            $cst = (float) $row->cost;
+            $prof = $rev - $cst;
+            $marg = $rev > 0 ? ($prof / $rev) * 100 : 0;
+
+            if ($bucket === 'hour') {
+                $label = $row->label;
+            } elseif ($bucket === 'day') {
+                $label = Carbon::parse($row->day)->format('d/m');
+            } else {
+                $label = 'Tuần ' . Carbon::parse($row->wk_start)->format('d/m') . '–' . Carbon::parse($row->wk_end)->format('d/m');
+            }
+
+            return [
+                'time' => $label,
+                'revenue' => $this->money($rev),
+                'cost' => $this->money($cst),
+                'profit' => $this->money($prof),
+                'margin' => $this->percent($marg),
+                'revenueRaw' => $rev,
+                'profitRaw' => $prof,
+            ];
+        })->all();
+    }
 }

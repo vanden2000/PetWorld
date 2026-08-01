@@ -20,6 +20,7 @@
     $siteBase = rtrim(config('app.frontend_url'), '/') . '/news/';
     $currentStatus = old('status', $post->status ?: 'active');
     $currentSlug = old('slug', $post->slug);
+    $secondaryKeywords = old('secondary_keywords', implode(', ', $post->secondary_keywords ?? []));
 @endphp
 
 @if ($errors->any())
@@ -45,6 +46,19 @@
     <div class="pe-alert-actions">
         <button type="button" id="pe-draft-restore">Khôi phục</button>
         <button type="button" id="pe-draft-discard">Bỏ qua</button>
+    </div>
+</div>
+
+<div class="pe-exit-modal" id="pe-exit-modal" role="dialog" aria-modal="true" aria-labelledby="pe-exit-title" hidden>
+    <div class="pe-exit-dialog">
+        <div class="pe-exit-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+        <h2 id="pe-exit-title">Bạn có thay đổi chưa lưu</h2>
+        <p>Nội dung trên form chưa được lưu thành bài viết. Bạn muốn tiếp tục soạn, lưu nháp trên trình duyệt rồi rời đi, hay rời mà không lưu?</p>
+        <div class="pe-exit-actions">
+            <button type="button" class="pe-btn" id="pe-exit-stay">Ở lại tiếp tục soạn</button>
+            <button type="button" class="pe-btn pe-btn-primary" id="pe-exit-save-draft">Lưu nháp &amp; rời đi</button>
+            <button type="button" class="pe-exit-discard" id="pe-exit-discard">Rời đi không lưu</button>
+        </div>
     </div>
 </div>
 
@@ -115,6 +129,41 @@
                 </div>
             </div>
 
+            <section class="pe-card pe-ai-card" id="pe-ai-card" data-ai-url="{{ route('admin.posts.ai.improve') }}">
+                <div class="pe-card-head pe-ai-head">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <h2>Trợ lý nội dung AI</h2>
+                    <button type="button" class="pe-ai-toggle" id="pe-ai-toggle" aria-expanded="true">Thu gọn</button>
+                </div>
+                <div class="pe-ai-body" id="pe-ai-body">
+                    <p class="pe-ai-note">AI chỉ đề xuất trên form. Bạn xem, áp dụng từng phần và tự bấm <strong>Lưu bài viết</strong> khi đã kiểm tra.</p>
+                    <div class="pe-ai-options">
+                        <label>Độ dài
+                            <select id="pe-ai-length" class="pe-select">
+                                <option value="standard">Tiêu chuẩn</option>
+                                <option value="detailed">Chi tiết</option>
+                            </select>
+                        </label>
+                        <label>Giọng văn
+                            <select id="pe-ai-tone" class="pe-select">
+                                <option value="friendly">Thân thiện</option>
+                                <option value="professional">Chuyên nghiệp</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="pe-ai-actions">
+                        <button type="button" class="pe-ai-action" data-ai-action="generate_post_draft">Viết bản nháp từ tiêu đề</button>
+                        <button type="button" class="pe-ai-action" data-ai-action="improve_post_content">Cải thiện toàn bài</button>
+                        <button type="button" class="pe-ai-action" data-ai-action="rewrite_intro">Viết lại mở bài</button>
+                        <button type="button" class="pe-ai-action" data-ai-action="generate_seo_meta">Tạo SEO title &amp; meta</button>
+                        <button type="button" class="pe-ai-action" data-ai-action="audit_seo">Kiểm tra SEO bằng AI</button>
+                    </div>
+                    <div class="pe-ai-status" id="pe-ai-status" aria-live="polite" hidden></div>
+                    <div class="pe-ai-result" id="pe-ai-result" hidden></div>
+                    <button type="button" class="pe-btn pe-ai-undo" id="pe-ai-undo" hidden>Hoàn tác đề xuất AI</button>
+                </div>
+            </section>
+
             {{-- blogs.content --}}
             <div class="pe-card">
                 <div class="pe-card-head">
@@ -139,73 +188,7 @@
                 @enderror
             </div>
 
-            {{-- blogs.focus_keyword, seo_title, seo_description, canonical_url, noindex --}}
-            <div class="pe-card">
-                <div class="pe-card-head">
-                    <i class="fa-solid fa-magnifying-glass-chart"></i>
-                    <h2>SEO tìm kiếm</h2>
-                    <span class="pe-card-hint">Để trống sẽ tự lấy tiêu đề và mô tả ngắn của bài viết</span>
-                </div>
-                <div class="pe-card-body">
-                    <div class="pe-field">
-                        <label class="pe-label" for="focus_keyword">Từ khóa chính</label>
-                        <input type="text" id="focus_keyword" name="focus_keyword" class="pe-input" maxlength="120"
-                               value="{{ old('focus_keyword', $post->focus_keyword) }}"
-                               placeholder="Ví dụ: thức ăn cho mèo con">
-                        <div class="pe-help">Từ khóa bạn muốn bài viết này lên top Google. Dùng để chấm điểm ở khung "Gợi ý tối ưu".</div>
-                        @error('focus_keyword') <span class="pe-error">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="pe-field">
-                        <label class="pe-label" for="seo_title">
-                            Tiêu đề SEO
-                            <span class="pe-counter" id="pe-seo-title-counter">0/60</span>
-                        </label>
-                        <input type="text" id="seo_title" name="seo_title" class="pe-input" maxlength="255"
-                               value="{{ old('seo_title', $post->seo_title) }}"
-                               placeholder="Để trống sẽ dùng tiêu đề bài viết">
-                        <div class="pe-help">Tiêu đề hiển thị trên kết quả Google. Nên 30–60 ký tự.</div>
-                        @error('seo_title') <span class="pe-error">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="pe-field">
-                        <label class="pe-label" for="seo_description">
-                            Mô tả SEO
-                            <span class="pe-counter" id="pe-seo-desc-counter">0/160</span>
-                        </label>
-                        <textarea id="seo_description" name="seo_description" class="pe-textarea" maxlength="320"
-                                  placeholder="Để trống sẽ dùng mô tả ngắn phía trên">{{ old('seo_description', $post->seo_description) }}</textarea>
-                        <div class="pe-help">Đoạn mô tả dưới tiêu đề trên Google. Nên 120–160 ký tự.</div>
-                        @error('seo_description') <span class="pe-error">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="pe-seo-preview" aria-live="polite">
-                        <span class="pe-seo-preview-label">Xem trước trên Google</span>
-                        <div class="pe-seo-preview-title" id="pe-seo-preview-title">Tiêu đề bài viết</div>
-                        <div class="pe-seo-preview-url" id="pe-seo-preview-url">PetWorld › news › duong-dan</div>
-                        <p class="pe-seo-preview-desc" id="pe-seo-preview-desc">Mô tả bài viết sẽ hiển thị tại đây.</p>
-                    </div>
-
-                    <div class="pe-field" style="margin-top: 18px;">
-                        <label class="pe-label" for="canonical_url">Đường dẫn canonical</label>
-                        <input type="url" id="canonical_url" name="canonical_url" class="pe-input" maxlength="255"
-                               value="{{ old('canonical_url', $post->canonical_url) }}"
-                               placeholder="Để trống nếu đây là bài viết gốc">
-                        <div class="pe-help">Chỉ điền khi bài viết đăng lại từ nguồn khác, để Google biết bản gốc nằm ở đâu.</div>
-                        @error('canonical_url') <span class="pe-error">{{ $message }}</span> @enderror
-                    </div>
-
-                    <label class="pe-status-option" style="margin-top: 4px;">
-                        <input type="hidden" name="noindex" value="0">
-                        <input type="checkbox" name="noindex" value="1" @checked(old('noindex', $post->noindex))>
-                        <span>
-                            <strong>Không cho Google lập chỉ mục (noindex)</strong>
-                            <small>Bài viết vẫn xem được qua link nhưng sẽ không xuất hiện trên kết quả tìm kiếm.</small>
-                        </span>
-                    </label>
-                    @error('noindex') <span class="pe-error">{{ $message }}</span> @enderror
-                </div>
-            </div>
+            @include('admin.posts._seo_fields')
         </div>
 
         {{-- ============ CỘT PHẢI: cấu hình ============ --}}
@@ -234,15 +217,6 @@
                         </label>
                     </div>
                     @error('status') <span class="pe-error">{{ $message }}</span> @enderror
-
-                    {{-- blogs.published_at --}}
-                    <div class="pe-field" style="margin-top: 14px;">
-                        <label class="pe-label" for="published_at">Ngày xuất bản</label>
-                        <input type="datetime-local" id="published_at" name="published_at" class="pe-input"
-                               value="{{ old('published_at', ($post->published_at ?: ($isEdit ? $post->created_at : now()))?->format('Y-m-d\TH:i')) }}">
-                        <div class="pe-help">Hiển thị trên bài viết và gửi cho Google qua schema Article.</div>
-                        @error('published_at') <span class="pe-error">{{ $message }}</span> @enderror
-                    </div>
 
                     <div class="pe-actions" style="margin-top: 18px;">
                         <button type="submit" class="pe-btn pe-btn-primary pe-btn-block" id="pe-submit">
@@ -315,17 +289,15 @@
                     @if($isEdit)
                         <div class="pe-help">Không chọn ảnh mới thì hệ thống giữ nguyên ảnh bìa hiện tại.</div>
                     @endif
-                    @error('image') <span class="pe-error">{{ $message }}</span> @enderror
-
-                    {{-- blogs.image_alt --}}
-                    <div class="pe-field" style="margin-top: 14px;">
-                        <label class="pe-label" for="image_alt">Mô tả ảnh (alt)</label>
-                        <input type="text" id="image_alt" name="image_alt" class="pe-input" maxlength="255"
-                               value="{{ old('image_alt', $post->image_alt) }}"
-                               placeholder="Ví dụ: Mèo con đang ăn hạt trong bát sứ">
-                        <div class="pe-help">Mô tả nội dung ảnh cho Google Image và trình đọc màn hình.</div>
-                        @error('image_alt') <span class="pe-error">{{ $message }}</span> @enderror
+                    <div class="pe-field pe-cover-alt-field">
+                        <label class="pe-label" for="cover_alt">Alt ảnh bìa</label>
+                        <input type="text" id="cover_alt" name="cover_alt" class="pe-input" maxlength="255"
+                               value="{{ old('cover_alt', $post->cover_alt) }}"
+                               placeholder="Mô tả đúng nội dung ảnh bìa">
+                        <div class="pe-help">Hỗ trợ khả năng tiếp cận và tìm kiếm hình ảnh. Không cần mở đầu bằng “ảnh của”.</div>
+                        @error('cover_alt') <span class="pe-error">{{ $message }}</span> @enderror
                     </div>
+                    @error('image') <span class="pe-error">{{ $message }}</span> @enderror
                 </div>
             </div>
 
@@ -344,6 +316,7 @@
                         </div>
                     </div>
                     <ul class="pe-seo-list" id="pe-seo-list"></ul>
+                    <button type="button" class="pe-seo-show-all" id="pe-seo-show-all" hidden>Xem toàn bộ kiểm tra</button>
                 </div>
             </div>
 

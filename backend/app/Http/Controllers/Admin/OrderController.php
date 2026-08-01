@@ -171,22 +171,23 @@ class OrderController extends Controller
             return back()->with('error', 'Vui lòng chọn trạng thái cần cập nhật.');
         }
 
-        $updatedOrder = DB::transaction(function () use ($order, $data): Order {
-            $lockedOrder = Order::query()
-                ->with('items')
-                ->whereKey($order->id)
-                ->lockForUpdate()
-                ->firstOrFail();
+        try {
+            $updatedOrder = DB::transaction(function () use ($order, $data): Order {
+                $lockedOrder = Order::query()
+                    ->with('items')
+                    ->whereKey($order->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            if ($lockedOrder->order_status === 'cancelled') {
-                throw ValidationException::withMessages([
-                    'order_status' => 'Đơn hàng đã hủy nên không thể cập nhật trạng thái.',
-                ]);
-            }
+                if ($lockedOrder->order_status === 'cancelled') {
+                    throw ValidationException::withMessages([
+                        'order_status' => 'Đơn hàng đã hủy nên không thể cập nhật trạng thái.',
+                    ]);
+                }
 
-            $updates = [];
+                $updates = [];
 
-            if (isset($data['order_status']) && $data['order_status'] !== $lockedOrder->order_status) {
+                if (isset($data['order_status']) && $data['order_status'] !== $lockedOrder->order_status) {
                 if (! in_array($data['order_status'], $this->nextOrderStatuses($lockedOrder->order_status), true)) {
                     throw ValidationException::withMessages([
                         'order_status' => 'Trạng thái đơn hàng chỉ được đi tiếp, không được lùi bước.',
@@ -198,9 +199,9 @@ class OrderController extends Controller
                 }
 
                 $updates['order_status'] = $data['order_status'];
-            }
+                }
 
-            if (isset($data['payment_status']) && $data['payment_status'] !== $lockedOrder->payment_status) {
+                if (isset($data['payment_status']) && $data['payment_status'] !== $lockedOrder->payment_status) {
                 if (! in_array($data['payment_status'], $this->nextPaymentStatuses($lockedOrder->payment_status), true)) {
                     throw ValidationException::withMessages([
                         'payment_status' => 'Trạng thái thanh toán không hợp lệ.',
@@ -208,14 +209,21 @@ class OrderController extends Controller
                 }
 
                 $updates['payment_status'] = $data['payment_status'];
-            }
+                }
 
-            if ($updates !== []) {
-                $lockedOrder->update($updates);
-            }
+                if ($updates !== []) {
+                    $lockedOrder->update($updates);
+                }
 
-            return $lockedOrder->refresh();
-        });
+                return $lockedOrder->refresh();
+            });
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->with('error', 'Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng. Vui lòng thử lại.');
+        }
 
         $updatedOrder->load('user');
 

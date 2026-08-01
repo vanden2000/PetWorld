@@ -33,34 +33,270 @@
         text-align: left;
     }
     .filter-option:hover {
-        background-color: var(--bg-color);
+        background-color: #fff4ec;
         color: var(--primary);
     }
     .filter-option.active {
-        background-color: var(--primary-light);
+        background-color: #fff4ec;
         color: var(--primary);
         font-weight: 600;
     }
+
+    /* Stats Cards Premium Style */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    @media (max-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 560px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .stat-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: var(--shadow-subtle);
+        transition: all 0.25s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #10b981;
+        border-radius: 4px 0 0 4px;
+    }
+    .stat-card:nth-child(2)::before { background: #3b82f6; }
+    .stat-card:nth-child(3)::before { background: #ef4444; }
+    .stat-card:nth-child(4)::before { background: #8b5cf6; }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-medium);
+    }
+    .stat-card:first-child:hover { background: #fffdfa; border-color: rgba(16, 185, 129, 0.2); }
+    .stat-card:nth-child(2):hover { background: #f6fcf9; border-color: rgba(59, 130, 246, 0.2); }
+    .stat-card:nth-child(3):hover { background: #fdf2f2; border-color: rgba(239, 68, 68, 0.2); }
+    .stat-card:nth-child(4):hover { background: #faf5ff; border-color: rgba(139, 92, 246, 0.2); }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    .stat-icon-wrapper {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 1.15rem;
+        transition: all 0.25s ease;
+    }
+    .icon-revenue { background: #e6f7ed; color: #10b981; }
+    .icon-orders { background: #ebf5ff; color: #3b82f6; }
+    .icon-aov { background: #fdf2f2; color: #ef4444; }
+    .icon-conversion { background: #f3e8ff; color: #8b5cf6; }
+
+    .stat-card:hover .stat-icon-wrapper {
+        transform: scale(1.1);
+    }
+
+    .stat-trend {
+        font-size: 0.78rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 20px;
+    }
+    .stat-trend.trend-up {
+        background: #e6f7ed;
+        color: #10b981;
+    }
+    .stat-trend.trend-down {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+    .stat-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .stat-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-top: 6px;
+        line-height: 1.2;
+    }
+
+    /* Grid layout for charts */
     .revenue-detail-grid {
         display: grid;
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 1.8fr 1.2fr;
         gap: 24px;
         margin-top: 24px;
     }
-    @media (max-width: 1024px) {
+    @media (max-width: 1100px) {
         .revenue-detail-grid {
             grid-template-columns: 1fr;
         }
     }
 
-    /* Biểu đồ cột doanh thu theo thời gian — 1 chuỗi, dùng màu chủ đạo (cam) */
-    .rvbar { display: flex; align-items: flex-end; gap: 14px; min-height: 262px; padding: 20px 4px 0; overflow-x: auto; }
-    .rvbar-col { flex: 1 1 0; min-width: 56px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; cursor: default; }
-    .rvbar-value { font-size: 0.72rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; white-space: nowrap; }
-    .rvbar-fill { width: 100%; max-width: 48px; background: var(--primary); border-radius: 5px 5px 0 0; min-height: 4px; transition: height .35s ease, background-color .2s ease; }
-    .rvbar-col:hover .rvbar-fill { background: var(--primary-hover); }
-    .rvbar-label { margin-top: 10px; font-size: 0.7rem; color: var(--text-muted); text-align: center; white-space: nowrap; }
-    .rvbar-empty { margin: auto; color: var(--text-muted); font-size: 0.9rem; padding: 40px 0; }
+    .dashboard-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: var(--shadow-subtle);
+        padding: 24px;
+        margin-top: 0;
+    }
+    .card-header-styled {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+    }
+    .card-title-styled {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .chart-container-time {
+        position: relative;
+        height: 280px;
+        width: 100%;
+    }
+
+    .chart-container-category {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    .category-canvas-wrapper {
+        position: relative;
+        height: 180px;
+        width: 180px;
+    }
+
+    /* Category list items */
+    .category-legend-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    .legend-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed var(--border-color);
+    }
+    .legend-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .legend-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .legend-color {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+    .legend-name {
+        font-weight: 600;
+        font-size: 0.86rem;
+        color: var(--text-main);
+    }
+    .legend-percentage {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 700;
+    }
+    .legend-value {
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: var(--text-main);
+        white-space: nowrap;
+    }
+
+    /* Detail Table */
+    .detail-table-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: var(--shadow-subtle);
+        padding: 24px;
+        margin-top: 24px;
+        overflow: hidden;
+    }
+    .pl-table-scroll {
+        overflow-x: auto;
+    }
+    .pl-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+    .pl-table th {
+        background: #fafbfc;
+        padding: 12px 16px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        text-align: left;
+    }
+    .pl-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.88rem;
+        color: var(--text-main);
+        vertical-align: middle;
+    }
+    .pl-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .pl-table tbody tr {
+        transition: all 0.15s ease;
+    }
+    .pl-table tbody tr:hover {
+        background: #fff8f3;
+    }
 </style>
 @endsection
 
@@ -68,7 +304,7 @@
 <!-- Header Area -->
 <div class="dashboard-header" style="margin-bottom: 24px;">
     <div class="header-title-block">
-        <h1>Thống kê Doanh thu</h1>
+        <h1 style="font-size: 1.8rem; font-weight: 800;">Thống kê <span style="color: var(--primary);">Doanh thu</span></h1>
         <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Xem báo cáo doanh thu chi tiết, tỷ suất lợi nhuận và doanh số bán hàng theo danh mục.</p>
     </div>
     
@@ -100,11 +336,11 @@
             </div>
             <div class="stat-trend trend-up" id="revenue-trend">
                 <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+12.5%</span>
+                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Tổng doanh thu</div>
-        <div class="stat-value" id="revenue-val">1.284.000.000đ</div>
+        <div class="stat-value" id="revenue-val">0đ</div>
     </div>
 
     <div class="stat-card">
@@ -114,11 +350,11 @@
             </div>
             <div class="stat-trend trend-up" id="orders-trend">
                 <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+8.2%</span>
+                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Đơn hàng thành công</div>
-        <div class="stat-value" id="orders-val">3,120 đơn</div>
+        <div class="stat-value" id="orders-val">0 đơn</div>
     </div>
 
     <div class="stat-card">
@@ -126,23 +362,23 @@
             <div class="stat-icon-wrapper icon-aov">
                 <i class="fa-solid fa-bag-shopping"></i>
             </div>
-            <div class="stat-trend trend-down" id="aov-trend">
-                <i class="fa-solid fa-arrow-trend-down"></i>
-                <span>-2.4%</span>
+            <div class="stat-trend trend-up" id="aov-trend">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Giá trị trung bình đơn</div>
-        <div class="stat-value" id="aov-val">372.000đ</div>
+        <div class="stat-value" id="aov-val">0đ</div>
     </div>
 
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-icon-wrapper icon-conversion" style="background-color: var(--purple-light); color: var(--purple);">
+            <div class="stat-icon-wrapper icon-conversion">
                 <i class="fa-solid fa-percent"></i>
             </div>
             <div class="stat-trend trend-up" id="margin-trend">
                 <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+1.5%</span>
+                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Tỷ lệ giảm giá TB</div>
@@ -151,31 +387,64 @@
 </div>
 
 <div class="revenue-detail-grid">
-    <!-- Revenue Table -->
-    <div class="dashboard-card" style="margin-top: 0;">
+    <!-- Revenue Over Time Line Chart -->
+    <div class="dashboard-card">
         <div class="card-header-styled">
             <span class="card-title-styled">Doanh thu theo thời gian</span>
         </div>
-        <div class="rvbar" id="revenue-bar-chart">
-            <!-- Cột doanh thu được vẽ động qua JS -->
+        <div class="chart-container-time">
+            <canvas id="revenue-time-chart"></canvas>
+            <div id="time-chart-empty" style="display:none; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.9rem;">
+                Chưa có dữ liệu thanh toán trong khoảng thời gian này.
+            </div>
         </div>
     </div>
 
-    <!-- Revenue by category list -->
-    <div class="dashboard-card" style="margin-top: 0;">
+    <!-- Revenue by category list with doughnut chart -->
+    <div class="dashboard-card">
         <div class="card-header-styled">
             <span class="card-title-styled">Doanh thu theo danh mục</span>
         </div>
-        <div class="doughnut-wrapper" style="flex-direction: column; gap: 20px;">
-            <div class="doughnut-legend-grid" style="width: 100%; display: flex; flex-direction: column; gap: 14px;" id="category-list">
+        <div class="chart-container-category">
+            <div class="category-canvas-wrapper">
+                <canvas id="revenue-category-chart"></canvas>
+                <div id="category-chart-empty" style="display:none; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.85rem; text-align:center;">
+                    Chưa có dữ liệu danh mục.
+                </div>
+            </div>
+            <div class="category-legend-list" id="category-list">
                 <!-- Loaded dynamically via js -->
             </div>
         </div>
     </div>
 </div>
+
+<!-- Detailed Data Table (Fills space beautifully) -->
+<div class="detail-table-card">
+    <div class="card-header-styled">
+        <span class="card-title-styled"><i class="fa-solid fa-chart-line" style="color: var(--primary); margin-right: 6px;"></i> Chi tiết doanh số bán hàng</span>
+    </div>
+    <div class="pl-table-scroll">
+        <table class="pl-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Thời gian</th>
+                    <th style="width: 15%;">Số đơn hàng</th>
+                    <th style="width: 20%;">Doanh thu gộp</th>
+                    <th style="width: 20%;">Giảm giá</th>
+                    <th style="width: 20%;">Doanh thu thực tế</th>
+                </tr>
+            </thead>
+            <tbody id="detail-table-body">
+                <!-- Dynanically populated -->
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const filterBtn = document.getElementById('filter-btn');
@@ -194,13 +463,17 @@
             filterMenu.style.display = 'none';
         });
 
-        // Dữ liệu thật do ReportController tính sẵn cho 3 mốc thời gian.
+        // Data from Controller
         const periodData = @json($periods);
+
+        let timeChartInstance = null;
+        let categoryChartInstance = null;
 
         function trendHtml(t) {
             const icon = t.up ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
             return `<i class="fa-solid ${icon}"></i> <span>${t.pct}</span>`;
         }
+
         function setTrend(id, t) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -213,60 +486,223 @@
             return Number(n || 0).toLocaleString('vi-VN') + 'đ';
         }
 
-        // Render function
+        // Render line chart
+        function renderTimeChart(chartData) {
+            const canvas = document.getElementById('revenue-time-chart');
+            const emptyEl = document.getElementById('time-chart-empty');
+            
+            if (timeChartInstance) {
+                timeChartInstance.destroy();
+            }
+
+            if (!chartData || chartData.length === 0) {
+                canvas.style.display = 'none';
+                emptyEl.style.display = 'flex';
+                return;
+            }
+
+            canvas.style.display = 'block';
+            emptyEl.style.display = 'none';
+
+            const ctx = canvas.getContext('2d');
+            const labels = chartData.map(d => d.label);
+            const values = chartData.map(d => d.value);
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+            gradient.addColorStop(0, 'rgba(255, 120, 45, 0.25)');
+            gradient.addColorStop(1, 'rgba(255, 120, 45, 0.005)');
+
+            timeChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu thực tế',
+                        data: values,
+                        borderColor: '#ff782d',
+                        borderWidth: 3,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#ff782d',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointHitRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { family: 'Outfit, Inter, sans-serif', size: 12, weight: 'bold' },
+                            bodyFont: { family: 'Outfit, Inter, sans-serif', size: 12 },
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + formatMoney(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Outfit, Inter, sans-serif', size: 10, weight: '500' },
+                                color: '#64748b'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: '#f1f5f9',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: { family: 'Outfit, Inter, sans-serif', size: 10, weight: '500' },
+                                color: '#64748b',
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        return (value / 1000000) + 'Tr';
+                                    } else if (value >= 1000) {
+                                        return (value / 1000) + 'k';
+                                    }
+                                    return value + 'đ';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render doughnut chart
+        function renderCategoryChart(categories) {
+            const canvas = document.getElementById('revenue-category-chart');
+            const emptyEl = document.getElementById('category-chart-empty');
+            
+            if (categoryChartInstance) {
+                categoryChartInstance.destroy();
+            }
+
+            if (!categories || categories.length === 0) {
+                canvas.style.display = 'none';
+                emptyEl.style.display = 'flex';
+                return;
+            }
+
+            canvas.style.display = 'block';
+            emptyEl.style.display = 'none';
+
+            const ctx = canvas.getContext('2d');
+            const labels = categories.map(c => c.name);
+            const values = categories.map(c => {
+                return parseFloat(c.val.replace(/[^\d]/g, '')) || 0;
+            });
+            const colors = categories.map(c => c.color);
+
+            categoryChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { family: 'Outfit, Inter, sans-serif', size: 12, weight: 'bold' },
+                            bodyFont: { family: 'Outfit, Inter, sans-serif', size: 12 },
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + formatMoney(context.raw);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render page data
         function updatePage(filter) {
             const data = periodData[filter];
             if (!data) return;
             
-            // Update stats
+            // 1. Update metric values
             document.getElementById('revenue-val').innerText = data.revenue;
             document.getElementById('orders-val').innerText = data.orders;
             document.getElementById('aov-val').innerText = data.aov;
             document.getElementById('margin-val').innerText = data.discountRate;
+
+            // 2. Update trend indicators
             setTrend('revenue-trend', data.trends.revenue);
             setTrend('orders-trend', data.trends.orders);
             setTrend('aov-trend', data.trends.aov);
             setTrend('margin-trend', data.trends.discount);
 
-            // Render categories list
+            // 3. Render categories legend list
             const categoryList = document.getElementById('category-list');
             categoryList.innerHTML = '';
             if (!data.categories.length) {
-                categoryList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">Chưa có doanh thu theo danh mục trong kỳ này.</div>';
-            }
-            data.categories.forEach(cat => {
-                categoryList.innerHTML += `
-                    <div class="legend-row" style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                        <div class="legend-row-left" style="display: flex; align-items: center; gap: 10px;">
-                            <span class="legend-color-indicator" style="width: 12px; height: 12px; border-radius: 50%; background-color: ${cat.color}; display: inline-block;"></span>
-                            <span style="font-weight: 600;">${cat.name} (${cat.percentage})</span>
-                        </div>
-                        <span class="legend-value-percentage" style="font-weight: 700; color: var(--primary);">${cat.val}</span>
-                    </div>
-                `;
-            });
-
-            // Render bar chart (doanh thu thực tế theo thời gian)
-            const barChart = document.getElementById('revenue-bar-chart');
-            barChart.innerHTML = '';
-            if (!data.chart.length) {
-                barChart.innerHTML = '<div class="rvbar-empty">Chưa có đơn đã thanh toán trong khoảng thời gian này.</div>';
+                categoryList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align:center; padding:10px 0;">Chưa có dữ liệu danh mục trong kỳ này.</div>';
             } else {
-                const maxVal = Math.max(...data.chart.map(d => d.value), 1);
-                data.chart.forEach(d => {
-                    const h = Math.max(4, Math.round(d.value / maxVal * 190));
-                    barChart.innerHTML += `
-                        <div class="rvbar-col" title="${d.label}: ${formatMoney(d.value)}">
-                            <div class="rvbar-value">${formatMoney(d.value)}</div>
-                            <div class="rvbar-fill" style="height: ${h}px;"></div>
-                            <div class="rvbar-label">${d.label}</div>
+                data.categories.forEach(cat => {
+                    categoryList.innerHTML += `
+                        <div class="legend-item">
+                            <div class="legend-left">
+                                <span class="legend-color" style="background-color: ${cat.color};"></span>
+                                <span class="legend-name">${cat.name}</span>
+                                <span class="legend-percentage">${cat.percentage}</span>
+                            </div>
+                            <span class="legend-value">${cat.val}</span>
                         </div>
+                    `;
+                });
+            }
+
+            // 4. Render ChartJS Line chart
+            renderTimeChart(data.chart);
+
+            // 5. Render ChartJS Doughnut chart
+            renderCategoryChart(data.categories);
+
+            // 6. Render Detailed Data Table
+            const tableBody = document.getElementById('detail-table-body');
+            tableBody.innerHTML = '';
+            if (!data.table || data.table.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--text-muted);">Không có dữ liệu chi tiết trong khoảng thời gian này.</td></tr>';
+            } else {
+                data.table.forEach(row => {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td style="font-weight: 600; color: var(--text-main);">${row.time}</td>
+                            <td>${row.count} đơn</td>
+                            <td style="color: #64748b; font-weight: 500;">${row.gross}</td>
+                            <td style="color: #ef4444; font-weight: 500;">${row.discount}</td>
+                            <td style="font-weight: 700; color: var(--primary);">${row.net}</td>
+                        </tr>
                     `;
                 });
             }
         }
 
-        // Handle Filter Option click
+        // Handle Filter dropdown selection
         filterOptions.forEach(opt => {
             opt.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -280,7 +716,7 @@
             });
         });
 
-        // Initial render
+        // Trigger initial page render (30 Days default)
         updatePage('30days');
     });
 </script>

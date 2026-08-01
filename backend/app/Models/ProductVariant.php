@@ -21,6 +21,7 @@ class ProductVariant extends Model
         'price',
         'sale_price',
         'quantity',
+        'weight_grams',
         'status',
     ];
 
@@ -28,6 +29,7 @@ class ProductVariant extends Model
         'price' => 'decimal:2',
         'sale_price' => 'decimal:2',
         'quantity' => 'integer',
+        'weight_grams' => 'integer',
         'deleted_at' => 'datetime',
     ];
 

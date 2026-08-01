@@ -92,19 +92,18 @@ class PostController extends Controller
     {
         $request->validate([
             'title' => ['required', 'string', 'max:255', 'unique:blogs,title'],
+            'seo_title' => ['nullable', 'string', 'max:70'],
             'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:blogs,slug'],
             'blog_category_id' => ['required', 'exists:blog_categories,id'],
             'description' => ['required', 'string', 'max:500'],
-            'seo_title' => ['nullable', 'string', 'max:255'],
-            'seo_description' => ['nullable', 'string', 'max:320'],
+            'meta_description' => ['nullable', 'string', 'max:180'],
             'focus_keyword' => ['nullable', 'string', 'max:120'],
+            'secondary_keywords' => ['nullable', 'string', 'max:700'],
+            'search_intent' => ['nullable', 'in:informational,commercial,transactional,navigational'],
             'content' => ['required', 'string'],
             'image' => ['required', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
-            'image_alt' => ['nullable', 'string', 'max:255'],
-            'canonical_url' => ['nullable', 'url', 'max:255'],
-            'noindex' => ['nullable', 'boolean'],
+            'cover_alt' => ['nullable', 'string', 'max:255'],
             'status' => ['required', 'in:active,inactive'],
-            'published_at' => ['nullable', 'date'],
         ], [
             'title.required' => 'Vui lòng nhập tiêu đề bài viết.',
             'title.unique' => 'Tiêu đề bài viết này đã tồn tại.',
@@ -113,10 +112,6 @@ class PostController extends Controller
             'blog_category_id.required' => 'Vui lòng chọn danh mục bài viết.',
             'blog_category_id.exists' => 'Danh mục bài viết không hợp lệ.',
             'description.required' => 'Vui lòng nhập mô tả ngắn.',
-            'seo_title.max' => 'Tiêu đề SEO không được vượt quá 255 ký tự.',
-            'seo_description.max' => 'Mô tả SEO không được vượt quá 320 ký tự.',
-            'canonical_url.url' => 'Đường dẫn canonical phải là một URL hợp lệ (bắt đầu bằng http:// hoặc https://).',
-            'published_at.date' => 'Ngày xuất bản không hợp lệ.',
             'content.required' => 'Vui lòng nhập nội dung bài viết.',
             'image.required' => 'Vui lòng tải lên ảnh bìa cho bài viết.',
             'image.file' => 'Ảnh bìa phải là định dạng tệp tin.',
@@ -132,24 +127,29 @@ class PostController extends Controller
 
         $slug = $this->resolveSlug($request->input('slug'), $request->input('title'));
 
-        Blog::create([
+        $post = Blog::create([
             'blog_category_id' => $request->input('blog_category_id'),
             'user_id' => auth()->id() ?: 1, // Fallback
             'title' => $request->input('title'),
+            ...$this->seoPayload($request),
             'slug' => $slug,
             'description' => $request->input('description'),
-            'seo_title' => $request->input('seo_title'),
-            'seo_description' => $request->input('seo_description'),
-            'focus_keyword' => $request->input('focus_keyword'),
             'content' => $request->input('content'),
             'view_count' => 0,
             'image' => $imagePath,
-            'image_alt' => $request->input('image_alt'),
-            'canonical_url' => $request->input('canonical_url'),
-            'noindex' => $request->boolean('noindex'),
             'status' => $request->input('status'),
-            'published_at' => $request->input('published_at') ?: now(),
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Đã thêm bài viết mới thành công.',
+                'data' => [
+                    'id' => $post->id,
+                    'slug' => $post->slug,
+                    'edit_url' => route('admin.posts.edit', $post),
+                ],
+            ], 201);
+        }
 
         return redirect()->route('admin.posts')->with('success', 'Đã thêm bài viết mới thành công.');
     }
@@ -164,19 +164,18 @@ class PostController extends Controller
     {
         $request->validate([
             'title' => ['required', 'string', 'max:255', 'unique:blogs,title,' . $post->id],
+            'seo_title' => ['nullable', 'string', 'max:70'],
             'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:blogs,slug,' . $post->id],
             'blog_category_id' => ['required', 'exists:blog_categories,id'],
             'description' => ['required', 'string', 'max:500'],
-            'seo_title' => ['nullable', 'string', 'max:255'],
-            'seo_description' => ['nullable', 'string', 'max:320'],
+            'meta_description' => ['nullable', 'string', 'max:180'],
             'focus_keyword' => ['nullable', 'string', 'max:120'],
+            'secondary_keywords' => ['nullable', 'string', 'max:700'],
+            'search_intent' => ['nullable', 'in:informational,commercial,transactional,navigational'],
             'content' => ['required', 'string'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
-            'image_alt' => ['nullable', 'string', 'max:255'],
-            'canonical_url' => ['nullable', 'url', 'max:255'],
-            'noindex' => ['nullable', 'boolean'],
+            'cover_alt' => ['nullable', 'string', 'max:255'],
             'status' => ['required', 'in:active,inactive'],
-            'published_at' => ['nullable', 'date'],
         ], [
             'title.required' => 'Vui lòng nhập tiêu đề bài viết.',
             'title.unique' => 'Tiêu đề bài viết này đã tồn tại.',
@@ -185,10 +184,6 @@ class PostController extends Controller
             'blog_category_id.required' => 'Vui lòng chọn danh mục bài viết.',
             'blog_category_id.exists' => 'Danh mục bài viết không hợp lệ.',
             'description.required' => 'Vui lòng nhập mô tả ngắn.',
-            'seo_title.max' => 'Tiêu đề SEO không được vượt quá 255 ký tự.',
-            'seo_description.max' => 'Mô tả SEO không được vượt quá 320 ký tự.',
-            'canonical_url.url' => 'Đường dẫn canonical phải là một URL hợp lệ (bắt đầu bằng http:// hoặc https://).',
-            'published_at.date' => 'Ngày xuất bản không hợp lệ.',
             'content.required' => 'Vui lòng nhập nội dung bài viết.',
             'image.file' => 'Ảnh bìa phải là định dạng tệp tin.',
             'image.mimes' => 'Ảnh bìa chỉ hỗ trợ JPG, JPEG, PNG, GIF, WEBP.',
@@ -209,19 +204,20 @@ class PostController extends Controller
         $post->update([
             'blog_category_id' => $request->input('blog_category_id'),
             'title' => $request->input('title'),
+            ...$this->seoPayload($request),
             'slug' => $slug,
             'description' => $request->input('description'),
-            'seo_title' => $request->input('seo_title'),
-            'seo_description' => $request->input('seo_description'),
-            'focus_keyword' => $request->input('focus_keyword'),
             'content' => $request->input('content'),
             'image' => $imagePath,
-            'image_alt' => $request->input('image_alt'),
-            'canonical_url' => $request->input('canonical_url'),
-            'noindex' => $request->boolean('noindex'),
             'status' => $request->input('status'),
-            'published_at' => $request->input('published_at') ?: $post->published_at ?: $post->created_at,
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Đã cập nhật bài viết thành công.',
+                'data' => ['id' => $post->id, 'slug' => $post->slug],
+            ]);
+        }
 
         return redirect()->route('admin.posts')->with('success', 'Đã cập nhật bài viết thành công.');
     }
@@ -259,5 +255,32 @@ class PostController extends Controller
         }
 
         return $candidate;
+    }
+
+    private function seoPayload(Request $request): array
+    {
+        $keywords = collect(explode(',', (string) $request->input('secondary_keywords')))
+            ->map(fn (string $keyword) => trim($keyword))
+            ->filter()
+            ->unique(fn (string $keyword) => mb_strtolower($keyword))
+            ->take(6)
+            ->values()
+            ->all();
+
+        return [
+            'seo_title' => $this->cleanSeoValue($request->input('seo_title')),
+            'meta_description' => $this->cleanSeoValue($request->input('meta_description')),
+            'focus_keyword' => $this->cleanSeoValue($request->input('focus_keyword')),
+            'secondary_keywords' => $keywords ?: null,
+            'search_intent' => $request->input('search_intent') ?: null,
+            'cover_alt' => $this->cleanSeoValue($request->input('cover_alt')),
+        ];
+    }
+
+    private function cleanSeoValue(?string $value): ?string
+    {
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 }

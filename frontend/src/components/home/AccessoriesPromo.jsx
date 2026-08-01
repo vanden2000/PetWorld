@@ -35,16 +35,13 @@ export default function AccessoriesPromo({ products = [] }) {
     }
   };
 
-  const scrollLeft = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -320, behavior: "smooth" });
-    }
-  };
+  const scrollByCard = (direction) => {
+    const slider = sliderRef.current;
+    const item = slider?.querySelector(".new-products-slider-item");
+    if (!slider || !item) return;
 
-  const scrollRight = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 320, behavior: "smooth" });
-    }
+    const gap = Number.parseFloat(getComputedStyle(slider.firstElementChild).gap) || 20;
+    slider.scrollBy({ left: direction * (item.clientWidth + gap), behavior: "smooth" });
   };
 
   const handlePointerDown = (event) => {
@@ -143,7 +140,7 @@ export default function AccessoriesPromo({ products = [] }) {
             <button
               type="button"
               className="slider-nav-btn slider-nav-prev"
-              onClick={scrollLeft}
+              onClick={() => scrollByCard(-1)}
               aria-label="Lướt sang trái"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -174,7 +171,7 @@ export default function AccessoriesPromo({ products = [] }) {
             <button
               type="button"
               className="slider-nav-btn slider-nav-next"
-              onClick={scrollRight}
+              onClick={() => scrollByCard(1)}
               aria-label="Lướt sang phải"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

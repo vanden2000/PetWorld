@@ -257,7 +257,7 @@ body {
   box-shadow: var(--shadow-navbar);
   padding: 8px 30px;
   width: 100%;
-  max-width: 1300px;
+  max-width: 1280px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1751,7 +1751,7 @@ body {
 }
 .orders-tabs button.active {
   color: #fff;
-  background: #25262a;
+  background: var(--primary-orange);
 }
 .orders-search {
   width: min(310px, 100%);
@@ -4335,8 +4335,6 @@ body {
 .hero-slider {
   width: 100%;
   aspect-ratio: 1480 / 540;
-  min-height: 360px;
-  max-height: 540px;
   position: relative;
   z-index: 1;
   border-radius: 24px;
@@ -4374,10 +4372,9 @@ body {
   z-index: 3;
 }
 
-.slide-link {
+.slide-image-frame {
   position: absolute;
   inset: 0;
-  display: block;
   overflow: hidden;
 }
 
@@ -4388,6 +4385,43 @@ body {
   height: 100%;
   object-fit: cover;
   object-position: center;
+}
+
+.slide-cta {
+  position: absolute;
+  left: 15%;
+  top: 76%;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(156px, 1.625vw, 200px);
+  height: clamp(44px, 3.75vw, 48px);
+  border-radius: 999px;
+  background: var(--primary-orange);
+  cursor: pointer;
+  font-size: 0;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.slide-cta::after {
+  content: attr(data-cta-label);
+  color: #ffffff;
+  font-size: clamp(14px, 1.25vw, 16px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.slide-cta:hover {
+  background: var(--primary-orange-hover);
+  box-shadow: 0 10px 20px rgba(138, 75, 25, 0.24);
+  transform: translateY(-2px);
+}
+
+.slide-cta:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
 }
 
 /* Slider Controls */
@@ -4824,6 +4858,7 @@ body {
   grid-template-columns: 280px 1fr;
   gap: 30px;
   margin-bottom: 60px;
+  position: relative;
 }
 
 /* Khi nằm trong .homepage-section (đã có section-title) thì bỏ margin để tránh khoảng cách kép. */
@@ -4861,6 +4896,58 @@ body {
 .new-products-slider-item {
   flex: 0 0 calc((100% - 60px) / 4);
   max-width: calc((100% - 60px) / 4);
+}
+
+.new-products-slider-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #f0e6da;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  color: #000000;
+  box-shadow: 0 8px 20px rgba(92, 61, 40, 0.14);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(0.94);
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+}
+
+.new-products-section:hover .new-products-slider-arrow,
+.new-products-section:focus-within .new-products-slider-arrow {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%);
+}
+
+.new-products-slider-arrow:hover:not(:disabled) {
+  background: var(--primary-orange);
+  color: #fff;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.new-products-slider-arrow:focus-visible {
+  outline: 3px solid var(--primary-orange);
+  outline-offset: 3px;
+}
+
+.new-products-slider-arrow:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.new-products-slider-arrow-prev {
+  left: 288px;
+}
+
+.new-products-slider-arrow-next {
+  right: -22px;
 }
 
 .category-sidebar {
@@ -4931,9 +5018,23 @@ body {
 /* Promo Banner Split Section */
 .promo-split-section {
   display: grid;
-  grid-template-columns: 1fr 2.6fr;
+  grid-template-columns: 280px 1fr;
   gap: 30px;
   margin-bottom: 60px;
+}
+
+.promo-split-section .slider-nav-btn {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(0.94);
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.promo-split-section:hover .slider-nav-btn,
+.promo-split-section:focus-within .slider-nav-btn {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%);
 }
 
 .promo-card {
@@ -5130,7 +5231,6 @@ body {
 }
 
 .section-header-center {
-  text-align: center;
   margin-bottom: 32px;
 }
 
@@ -5608,7 +5708,8 @@ body {
 
 /* Tiêu đề section cân đối, ngắt dòng đẹp */
 .section-title {
-  text-wrap: balance;
+   position: relative;
+    display: inline-block;
 }
 
 /* Header section không để nút "xem tất cả" bị bóp */
@@ -13285,6 +13386,10 @@ body {
 }
 
 /* Product Slider Carousel */
+.product-slider-shell {
+  position: relative;
+}
+
 .product-slider-container {
   width: 100%;
   overflow-x: auto;
@@ -13310,7 +13415,72 @@ body {
   max-width: calc((100% - 80px) / 5);
 }
 
+.product-slider-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #f0e6da;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  color: #000000;
+  box-shadow: 0 8px 20px rgba(92, 61, 40, 0.14);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) scale(0.94);
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-slider-shell:hover .product-slider-arrow,
+.product-slider-shell:focus-within .product-slider-arrow {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%);
+}
+
+.product-slider-arrow:hover:not(:disabled) {
+  background: var(--primary-orange);
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(92, 61, 40, 0.18);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.product-slider-arrow:focus-visible {
+  outline: 3px solid var(--primary-orange);
+
+  outline-offset: 3px;
+}
+
+.product-slider-arrow:disabled {
+  cursor: default;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.product-slider-shell:hover .product-slider-arrow:disabled,
+.product-slider-shell:focus-within .product-slider-arrow:disabled {
+  opacity: 0.35;
+}
+
+.product-slider-arrow-prev {
+  left: -20px;
+}
+
+.product-slider-arrow-next {
+  right: -20px;
+}
+
 @media (max-width: 1100px) {
+  .new-products-slider-arrow {
+    display: none;
+  }
+
   .product-slider-item {
     flex: 0 0 calc((100% - 40px) / 3); /* 3 items visible, 2 gaps of 20px = 40px */
     max-width: calc((100% - 40px) / 3);
@@ -13318,6 +13488,10 @@ body {
 }
 
 @media (max-width: 640px) {
+  .product-slider-arrow {
+    display: none;
+  }
+
   .product-slider-track {
     gap: 14px;
   }
@@ -13347,10 +13521,10 @@ body {
 
 .qvm-modal {
   background-color: #ffffff;
-  border-radius: 20px;
+  border-radius: 15px;
   border: 1px solid rgba(62, 39, 26, 0.08);
   width: 100%;
-  max-width: 440px;
+  max-width: 600px;
   padding: 24px;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
   position: relative;
@@ -15242,45 +15416,21 @@ body {
     flex: 1 1 100%;
   }
 }
-/* Custom Homepage Boxed Borderless Hero Banner */
+/* The homepage content area is 1280px wide (1320px including its 20px gutters). */
+.homepage-main .homepage-container {
+  max-width: 1320px;
+}
+
+/* Hero uses the same 1280px content width as every homepage section. */
 .homepage-main .hero-slider-section {
-  width: 100% !important;
-  max-width: 1380px !important;
-  margin: 0 auto 30px auto !important;
-  padding: 0 40px !important;
+  margin-bottom: 30px;
+
 }
 
 .homepage-main .hero-slider {
   border-radius: 0 !important;
   border: none !important;
   box-shadow: none !important;
-}
-
-@media (max-width: 1024px) {
-  .homepage-main .hero-slider-section {
-    padding: 0 20px !important;
-  }
-  .homepage-main .hero-slider {
-    border-radius: 0 !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .homepage-main .hero-slider-section {
-    padding: 0 15px !important;
-  }
-  .homepage-main .hero-slider {
-    border-radius: 0 !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .homepage-main .hero-slider-section {
-    padding: 0 10px !important;
-  }
-  .homepage-main .hero-slider {
-    border-radius: 0 !important;
-  }
 }
 
 .slide-btn-overlay {
@@ -15317,24 +15467,9 @@ body {
   }
 }
 
-@media (max-width: 1024px) {
-  .homepage-main .hero-slider-section {
-    padding: 0 20px !important;
-  }
-  .homepage-main .hero-slider {
-    border-radius: 0 !important;
-  }
-}
-
 @media (max-width: 768px) {
   .slide-btn-overlay {
     font-size: 1.3vw;
-  }
-  .homepage-main .hero-slider-section {
-    padding: 0 15px !important;
-  }
-  .homepage-main .hero-slider {
-    border-radius: 0 !important;
   }
 }
 
@@ -15342,12 +15477,6 @@ body {
   .slide-btn-overlay {
     font-size: 2.0vw;
     box-shadow: 0 2px 6px rgba(255, 120, 45, 0.2);
-  }
-  .homepage-main .hero-slider-section {
-    padding: 0 10px !important;
-  }
-  .homepage-main .hero-slider {
-    border-radius: 0 !important;
   }
 }
 

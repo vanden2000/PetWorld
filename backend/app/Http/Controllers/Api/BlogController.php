@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Str;
 
 class BlogController extends Controller
 {
@@ -113,10 +112,27 @@ class BlogController extends Controller
                     'content' => $blog->content,
                     'comments' => $comments,
                 ]),
-                'seo' => $this->formatSeo($blog),
                 'related_blogs' => $relatedBlogs,
             ],
         ]);
+    }
+
+    public function sitemap(): JsonResponse
+    {
+        $blogs = Blog::query()
+            ->where('status', 'active')
+            ->whereHas('category', fn (Builder $category) => $category->where('status', 'active'))
+            ->orderBy('id')
+            ->get(['id', 'slug', 'image', 'updated_at', 'created_at'])
+            ->map(fn (Blog $blog): array => [
+                'slug' => $blog->slug,
+                'image' => $blog->image,
+                'updated_at' => $blog->updated_at?->toDateTimeString(),
+                'created_at' => $blog->created_at?->toDateTimeString(),
+            ])
+            ->all();
+
+        return response()->json(['data' => ['blogs' => $blogs]]);
     }
 
     private function visibleBlogQuery(): Builder
@@ -127,40 +143,23 @@ class BlogController extends Controller
             ->whereHas('category', fn (Builder $category) => $category->where('status', 'active'));
     }
 
-    /**
-     * Dữ liệu thẻ meta cho trang chi tiết bài viết.
-     * Bỏ trống tiêu đề/mô tả SEO thì lấy tiêu đề và mô tả ngắn của bài viết.
-     */
-    private function formatSeo(Blog $blog): array
-    {
-        $fallbackDescription = Str::limit(
-            Str::squish(strip_tags((string) ($blog->description ?: $blog->content))),
-            160,
-            '',
-        );
-
-        return [
-            'title' => $blog->seo_title ?: $blog->title . ' | PetWorld',
-            'description' => $blog->seo_description ?: $fallbackDescription,
-            'canonical_url' => $blog->canonical_url ?: '/news/' . $blog->slug,
-            'noindex' => (bool) $blog->noindex,
-            'focus_keyword' => $blog->focus_keyword,
-        ];
-    }
-
     private function formatBlogCard(Blog $blog): array
     {
         return [
             'id' => $blog->id,
             'title' => $blog->title,
+            'seo_title' => $blog->seo_title,
             'slug' => $blog->slug,
             'description' => $blog->description,
+            'meta_description' => $blog->meta_description,
+            'focus_keyword' => $blog->focus_keyword,
+            'secondary_keywords' => $blog->secondary_keywords ?? [],
+            'search_intent' => $blog->search_intent,
             'image' => $blog->image,
-            'image_alt' => $blog->image_alt,
+            'cover_alt' => $blog->cover_alt,
             'view_count' => $blog->view_count,
             'created_at' => $blog->created_at?->toDateTimeString(),
-            'published_at' => ($blog->published_at ?: $blog->created_at)?->toIso8601String(),
-            'updated_at' => $blog->updated_at?->toIso8601String(),
+            'updated_at' => $blog->updated_at?->toDateTimeString(),
             'category' => [
                 'id' => $blog->category->id,
                 'name' => $blog->category->name,
