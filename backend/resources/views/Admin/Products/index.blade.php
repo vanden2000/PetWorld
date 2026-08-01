@@ -105,6 +105,7 @@
         gap: 16px;
         align-items: flex-end;
     }
+    .filter-grid-form.is-filtering { opacity: .65; pointer-events: none; }
 
     .filter-input-element {
         display: flex;
@@ -466,6 +467,11 @@
         color: var(--theme-danger);
     }
 
+    .badge-qty-low-stock {
+        background-color: #fff1f0;
+        color: #c2410c;
+    }
+
     /* Pagination Footer Container */
     .products-pagination-container {
         display: flex;
@@ -741,6 +747,18 @@
     .product-main-row.is-inactive > td { background: rgba(255, 120, 45, .16); }
     .product-main-row.is-inactive > td:first-child { border-left: 4px solid var(--theme-primary); }
     .product-main-row.is-inactive:hover > td { background: rgba(255, 120, 45, .23); }
+    .product-main-row.has-low-stock > td { background: #fff8f7; }
+    .product-main-row.has-low-stock > td:first-child { border-left: 4px solid #ef4444; }
+    .product-main-row.has-low-stock:hover > td { background: #fff0ee; }
+    .product-main-row.is-out-of-stock > td { background: #fef2f2; }
+    .product-main-row.is-out-of-stock > td:first-child { border-left: 4px solid var(--theme-danger); }
+    .product-main-row.is-out-of-stock:hover > td { background: #fee2e2; }
+    .variant-item-box.is-low-stock { border-color: #f87171; background: #fff8f7; }
+    .variant-item-box.is-out-of-stock { border-color: var(--theme-danger); background: #fef2f2; }
+    .stock-state-chip { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; padding: 4px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; }
+    .stock-state-chip.low { color: #c2410c; background: #fff1f0; }
+    .stock-state-chip.out { color: var(--theme-danger); background: #fee2e2; }
+    .status-danger-text { color: var(--theme-danger); background: #fef2f2; }
     .variant-status-chip { display: inline-flex; align-items: center; border-radius: 999px; padding: 4px 8px; font-size: .75rem; font-weight: 700; }
     .variant-status-chip.active { color: var(--theme-success); background: rgba(34, 197, 94, .1); }
     .variant-status-chip.inactive { color: var(--theme-text-gray); background: var(--theme-gray-light); }
@@ -811,7 +829,7 @@
 
     <!-- Filter Bar Card -->
     <div class="filter-card-wrapper">
-        <form action="{{ route('admin.products') }}" method="GET" class="filter-grid-form">
+        <form action="{{ route('admin.products') }}" method="GET" class="filter-grid-form" id="product-filter-form">
             
             <div class="filter-input-element">
                 <label for="search">Tìm kiếm theo tên/SKU</label>
@@ -843,9 +861,7 @@
                 </select>
             </div>
 
-            <button type="submit" class="btn-filter-submit">
-                <i class="fa-solid fa-sliders"></i> Lọc kết quả
-            </button>
+            <a href="{{ route('admin.products') }}" class="btn-filter-submit" style="text-decoration: none;">Xóa bộ lọc</a>
 
         </form>
     </div>
@@ -884,6 +900,10 @@
 
                                 $minPrice = count($prices) ? min($prices) : 0;
                                 $maxPrice = count($prices) ? max($prices) : 0;
+                                $lowStockThreshold = 10;
+                                $visibleVariants = $product->variants->where('status', 'active');
+                                $isOutOfStock = $visibleVariants->isNotEmpty() && $visibleVariants->every(fn ($variant) => (int) $variant->quantity === 0);
+                                $hasLowStock = ! $isOutOfStock && $visibleVariants->contains(fn ($variant) => (int) $variant->quantity > 0 && (int) $variant->quantity < $lowStockThreshold);
                                 $advice = $product->advice_attributes ?? [];
                                 $hasSpecies = $product->petSpecies->isNotEmpty();
                                 $hasAdvice = !empty($advice['life_stages']) || !empty($advice['needs']);
@@ -902,7 +922,7 @@
                                     ->implode(' · ');
                             @endphp
                             <!-- Main Product Row -->
-                            <tr class="product-main-row {{ $product->status === 'inactive' ? 'is-inactive' : '' }}" data-product-id="{{ $product->id }}">
+                            <tr class="product-main-row {{ $product->status === 'inactive' ? 'is-inactive' : ($isOutOfStock ? 'is-out-of-stock' : ($hasLowStock ? 'has-low-stock' : '')) }}" data-product-id="{{ $product->id }}">
                                 <td class="col-expand-btn js-toggle-drawer" title="Chi tiết biến thể">
                                     <i class="fa-solid fa-chevron-right arrow-icon"></i>
                                 </td>
@@ -978,6 +998,14 @@
                                         <div class="status-badge-cell status-warning-text">                              
                                             <span>Đã ẩn</span>
                                         </div>
+                                    @elseif($isOutOfStock)
+                                        <div class="status-badge-cell status-danger-text">
+                                            <span>Hết hàng</span>
+                                        </div>
+                                    @elseif($hasLowStock)
+                                        <div class="status-badge-cell status-warning-text">
+                                            <span>Sắp hết hàng</span>
+                                        </div>
                                     @else
                                         <div class="status-badge-cell status-success-text">
                                             <span>Đang hiển thị</span>
@@ -1017,7 +1045,11 @@
                                             </div>
                                             <div class="variants-grid-list">
                                                 @foreach($product->variants as $variant)
-                                                    <div class="variant-item-box">
+                                                    @php
+                                                        $isVariantOutOfStock = $variant->status === 'active' && (int) $variant->quantity === 0;
+                                                        $isVariantLowStock = $variant->status === 'active' && (int) $variant->quantity > 0 && (int) $variant->quantity < $lowStockThreshold;
+                                                    @endphp
+                                                    <div class="variant-item-box {{ $isVariantOutOfStock ? 'is-out-of-stock' : ($isVariantLowStock ? 'is-low-stock' : '') }}">
                                                         <div>
                                                             <div class="variant-options-label">
                                                                 {{ $variant->display_name ?: 'Biến thể mặc định' }}
@@ -1040,12 +1072,17 @@
                                                                 @endif
                                                             </div>
                                                             <div>
-                                                                <span class="variant-qty-badge {{ $variant->quantity > 0 ? 'badge-qty-in-stock' : 'badge-qty-out-stock' }}">
+                                                                <span class="variant-qty-badge {{ $isVariantOutOfStock ? 'badge-qty-out-stock' : ($isVariantLowStock ? 'badge-qty-low-stock' : 'badge-qty-in-stock') }}">
                                                                     Còn lại: {{ $variant->quantity }}
                                                                 </span>
                                                                 <span class="variant-status-chip {{ $variant->status }}">
                                                                     {{ $variant->status === 'active' ? 'Đang hiển thị' : 'Đã ẩn' }}
                                                                 </span>
+                                                                @if($isVariantOutOfStock)
+                                                                    <span class="stock-state-chip out"><i class="fa-solid fa-circle-xmark"></i> Hết hàng</span>
+                                                                @elseif($isVariantLowStock)
+                                                                    <span class="stock-state-chip low"><i class="fa-solid fa-triangle-exclamation"></i> Sắp hết hàng</span>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1237,6 +1274,21 @@
                 }
             });
         });
+
+        const productFilterForm = document.getElementById('product-filter-form');
+        const productSearchInput = document.getElementById('search');
+        const productFilterSelects = productFilterForm?.querySelectorAll('select');
+        let productSearchTimer;
+        const submitProductFilters = () => {
+            if (!productFilterForm) return;
+            productFilterForm.classList.add('is-filtering');
+            productFilterForm.submit();
+        };
+        productSearchInput?.addEventListener('input', () => {
+            clearTimeout(productSearchTimer);
+            productSearchTimer = setTimeout(submitProductFilters, 350);
+        });
+        productFilterSelects?.forEach((select) => select.addEventListener('change', submitProductFilters));
 
         const exportModal = document.getElementById('export-product-modal');
         const openExportButton = document.getElementById('open-export-modal');

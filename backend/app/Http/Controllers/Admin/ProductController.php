@@ -127,6 +127,7 @@ class ProductController extends Controller
     {
         $validated = $this->validateProduct($request);
         $this->validateSpeciesLifeStages($validated);
+        $this->ensureCreateProductHasImage($request);
 
         $product = DB::transaction(function () use ($request, $validated) {
             $product = Product::create([
@@ -308,6 +309,7 @@ class ProductController extends Controller
             'price' => (float) $variant->price,
             'sale_price' => $variant->sale_price !== null ? (float) $variant->sale_price : '',
             'quantity' => $variant->quantity,
+            'weight_grams' => $variant->weight_grams,
             'status' => $variant->status,
             'value_ids' => $variant->variantValues->pluck('id')->values()->all(),
         ])->all();
@@ -360,6 +362,7 @@ class ProductController extends Controller
                     'price' => $validated['price'],
                     'sale_price' => $validated['sale_price'] ?? null,
                     'quantity' => $validated['quantity'],
+                    'weight_grams' => $validated['weight_grams'] ?? 0,
                     'status' => 'active',
                 ];
 
@@ -434,6 +437,7 @@ class ProductController extends Controller
             'variants.*.price' => 'nullable|numeric|min:0',
             'variants.*.sale_price' => 'nullable|numeric|min:0',
             'variants.*.quantity' => 'nullable|integer|min:0',
+            'variants.*.weight_grams' => 'nullable|integer|min:0|max:50000',
             'variants.*.visible' => 'nullable|in:1',
             'variants.*.value_ids' => 'nullable|array',
             'variants.*.value_ids.*' => 'integer|exists:variant_values,id',
@@ -524,6 +528,17 @@ class ProductController extends Controller
         return $validated;
     }
 
+    private function ensureCreateProductHasImage(Request $request): void
+    {
+        if (count($request->file('images', [])) > 0) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'images' => 'Sản phẩm mới cần có ít nhất một ảnh.',
+        ]);
+    }
+
     private function adviceAttributes(array $validated): array
     {
         return array_filter([
@@ -569,6 +584,7 @@ class ProductController extends Controller
                     'price' => $fallback['price'],
                     'sale_price' => $fallback['sale_price'] ?? null,
                     'quantity' => $fallback['quantity'],
+                    'weight_grams' => $fallback['weight_grams'] ?? 0,
                     'status' => 'active',
                 ]);
             }
@@ -586,6 +602,7 @@ class ProductController extends Controller
                 'price' => $price,
                 'sale_price' => $salePrice,
                 'quantity' => $variantInput['quantity'] ?? $fallback['quantity'],
+                'weight_grams' => $variantInput['weight_grams'] ?? 0,
                 'status' => isset($variantInput['visible']) ? 'active' : 'inactive',
             ];
 

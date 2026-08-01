@@ -20,6 +20,7 @@
     $siteBase = rtrim(config('app.frontend_url'), '/') . '/news/';
     $currentStatus = old('status', $post->status ?: 'active');
     $currentSlug = old('slug', $post->slug);
+    $secondaryKeywords = old('secondary_keywords', implode(', ', $post->secondary_keywords ?? []));
 @endphp
 
 @if ($errors->any())
@@ -45,6 +46,19 @@
     <div class="pe-alert-actions">
         <button type="button" id="pe-draft-restore">Khôi phục</button>
         <button type="button" id="pe-draft-discard">Bỏ qua</button>
+    </div>
+</div>
+
+<div class="pe-exit-modal" id="pe-exit-modal" role="dialog" aria-modal="true" aria-labelledby="pe-exit-title" hidden>
+    <div class="pe-exit-dialog">
+        <div class="pe-exit-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+        <h2 id="pe-exit-title">Bạn có thay đổi chưa lưu</h2>
+        <p>Nội dung trên form chưa được lưu thành bài viết. Bạn muốn tiếp tục soạn, lưu nháp trên trình duyệt rồi rời đi, hay rời mà không lưu?</p>
+        <div class="pe-exit-actions">
+            <button type="button" class="pe-btn" id="pe-exit-stay">Ở lại tiếp tục soạn</button>
+            <button type="button" class="pe-btn pe-btn-primary" id="pe-exit-save-draft">Lưu nháp &amp; rời đi</button>
+            <button type="button" class="pe-exit-discard" id="pe-exit-discard">Rời đi không lưu</button>
+        </div>
     </div>
 </div>
 
@@ -115,6 +129,41 @@
                 </div>
             </div>
 
+            <section class="pe-card pe-ai-card" id="pe-ai-card" data-ai-url="{{ route('admin.posts.ai.improve') }}">
+                <div class="pe-card-head pe-ai-head">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <h2>Trợ lý nội dung AI</h2>
+                    <button type="button" class="pe-ai-toggle" id="pe-ai-toggle" aria-expanded="true">Thu gọn</button>
+                </div>
+                <div class="pe-ai-body" id="pe-ai-body">
+                    <p class="pe-ai-note">AI chỉ đề xuất trên form. Bạn xem, áp dụng từng phần và tự bấm <strong>Lưu bài viết</strong> khi đã kiểm tra.</p>
+                    <div class="pe-ai-options">
+                        <label>Độ dài
+                            <select id="pe-ai-length" class="pe-select">
+                                <option value="standard">Tiêu chuẩn</option>
+                                <option value="detailed">Chi tiết</option>
+                            </select>
+                        </label>
+                        <label>Giọng văn
+                            <select id="pe-ai-tone" class="pe-select">
+                                <option value="friendly">Thân thiện</option>
+                                <option value="professional">Chuyên nghiệp</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="pe-ai-actions">
+                        <button type="button" class="pe-ai-action" data-ai-action="generate_post_draft">Viết bản nháp từ tiêu đề</button>
+                        <button type="button" class="pe-ai-action" data-ai-action="improve_post_content">Cải thiện toàn bài</button>
+                        <button type="button" class="pe-ai-action" data-ai-action="rewrite_intro">Viết lại mở bài</button>
+                        <button type="button" class="pe-ai-action" data-ai-action="generate_seo_meta">Tạo SEO title &amp; meta</button>
+                        <button type="button" class="pe-ai-action" data-ai-action="audit_seo">Kiểm tra SEO bằng AI</button>
+                    </div>
+                    <div class="pe-ai-status" id="pe-ai-status" aria-live="polite" hidden></div>
+                    <div class="pe-ai-result" id="pe-ai-result" hidden></div>
+                    <button type="button" class="pe-btn pe-ai-undo" id="pe-ai-undo" hidden>Hoàn tác đề xuất AI</button>
+                </div>
+            </section>
+
             {{-- blogs.content --}}
             <div class="pe-card">
                 <div class="pe-card-head">
@@ -138,6 +187,8 @@
                     <div style="padding: 0 20px 16px;"><span class="pe-error">{{ $message }}</span></div>
                 @enderror
             </div>
+
+            @include('admin.posts._seo_fields')
         </div>
 
         {{-- ============ CỘT PHẢI: cấu hình ============ --}}
@@ -238,6 +289,14 @@
                     @if($isEdit)
                         <div class="pe-help">Không chọn ảnh mới thì hệ thống giữ nguyên ảnh bìa hiện tại.</div>
                     @endif
+                    <div class="pe-field pe-cover-alt-field">
+                        <label class="pe-label" for="cover_alt">Alt ảnh bìa</label>
+                        <input type="text" id="cover_alt" name="cover_alt" class="pe-input" maxlength="255"
+                               value="{{ old('cover_alt', $post->cover_alt) }}"
+                               placeholder="Mô tả đúng nội dung ảnh bìa">
+                        <div class="pe-help">Hỗ trợ khả năng tiếp cận và tìm kiếm hình ảnh. Không cần mở đầu bằng “ảnh của”.</div>
+                        @error('cover_alt') <span class="pe-error">{{ $message }}</span> @enderror
+                    </div>
                     @error('image') <span class="pe-error">{{ $message }}</span> @enderror
                 </div>
             </div>
@@ -257,6 +316,7 @@
                         </div>
                     </div>
                     <ul class="pe-seo-list" id="pe-seo-list"></ul>
+                    <button type="button" class="pe-seo-show-all" id="pe-seo-show-all" hidden>Xem toàn bộ kiểm tra</button>
                 </div>
             </div>
 

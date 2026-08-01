@@ -33,5 +33,5 @@
 @endsection
 
 @section('scripts')
-    @include('admin.posts._scripts', ['peConfig' => ['isEdit' => true, 'draftKey' => null]])
+    @include('admin.posts._scripts', ['peConfig' => ['isEdit' => true, 'draftKey' => 'petworld.admin.post.draft.edit.' . $post->id]])
 @endsection

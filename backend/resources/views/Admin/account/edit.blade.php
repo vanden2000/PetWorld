@@ -10,7 +10,7 @@
 
 @section('styles')
 <style>
-    .account-page { display: grid; gap: 22px; max-width: 1180px; }
+    .account-page { display: grid; gap: 22px; }
     .account-hero { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px; border: 1px solid var(--border-color); border-radius: 14px; background: #fff; box-shadow: var(--shadow-subtle); }
     .account-identity { display: flex; align-items: center; gap: 16px; min-width: 0; }
     .account-identity img { width: 76px; height: 76px; flex: 0 0 auto; border: 4px solid var(--primary-light); border-radius: 50%; object-fit: cover; }

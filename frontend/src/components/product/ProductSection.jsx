@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import ProductCard from "@/components/product/ProductCard";
 
@@ -81,6 +81,31 @@ function ProductSliderSection({
   const [scrollLeftState, setScrollLeftState] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const updateScrollControls = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    setCanScrollPrev(container.scrollLeft > 4);
+    setCanScrollNext(container.scrollLeft < maxScroll - 4);
+  }, []);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return undefined;
+
+    updateScrollControls();
+    container.addEventListener("scroll", updateScrollControls, { passive: true });
+    window.addEventListener("resize", updateScrollControls);
+
+    return () => {
+      container.removeEventListener("scroll", updateScrollControls);
+      window.removeEventListener("resize", updateScrollControls);
+    };
+  }, [products.length, updateScrollControls]);
 
   // Auto scroll effect
   useEffect(() => {
@@ -150,6 +175,16 @@ function ProductSliderSection({
     }
   };
 
+  const scrollByCards = (direction) => {
+    const container = scrollRef.current;
+    const item = container?.querySelector(".product-slider-item");
+    if (!container || !item) return;
+
+    const gap = Number.parseFloat(getComputedStyle(container.firstElementChild).gap) || 20;
+    const amount = item.clientWidth + gap;
+    container.scrollBy({ left: direction * amount, behavior: "smooth" });
+  };
+
   return (
     <section
       className="homepage-section"
@@ -163,31 +198,57 @@ function ProductSliderSection({
         </Link>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="product-slider-container"
-        onMouseDown={handleMouseDown}
-        onMouseLeave={handleMouseLeave}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
-        onDragStart={handleDragStart}
-        onClickCapture={handleClickCapture}
-        style={{
-          cursor: isDown ? "grabbing" : "grab",
-        }}
-      >
-        <div className="product-slider-track">
-          {products.map((product) => (
-            <div key={product.id} className="product-slider-item">
-              <ProductCard
-                product={product}
-                badge={badge}
-                showSoldCount={showSoldCount}
-                showSale={showSale}
-              />
-            </div>
-          ))}
+      <div className="product-slider-shell">
+        <button
+          type="button"
+          className="product-slider-arrow product-slider-arrow-prev"
+          onClick={() => scrollByCards(-1)}
+          disabled={!canScrollPrev}
+          aria-label="Sản phẩm trước"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="product-slider-container"
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          onDragStart={handleDragStart}
+          onClickCapture={handleClickCapture}
+          style={{
+            cursor: isDown ? "grabbing" : "grab",
+          }}
+        >
+          <div className="product-slider-track">
+            {products.map((product) => (
+              <div key={product.id} className="product-slider-item">
+                <ProductCard
+                  product={product}
+                  badge={badge}
+                  showSoldCount={showSoldCount}
+                  showSale={showSale}
+                />
+              </div>
+            ))}
+          </div>
         </div>
+
+        <button
+          type="button"
+          className="product-slider-arrow product-slider-arrow-next"
+          onClick={() => scrollByCards(1)}
+          disabled={!canScrollNext}
+          aria-label="Sản phẩm tiếp theo"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
       </div>
     </section>
   );

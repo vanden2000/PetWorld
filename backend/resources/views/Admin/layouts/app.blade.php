@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <link rel="icon" href="{{ asset('image/logo/Special_Offer_1-removebg-preview.png') }}" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- FontAwesome for icons -->
@@ -23,15 +24,21 @@
     <!-- Sidebar Layout -->
     <aside class="sidebar">
         <!-- Brand Logo/Details -->
-        <a href="{{ route('admin.dashboard') }}" class="brand">
-            <div class="brand-icon">
-                <i class="fa-solid fa-paw"></i>
-            </div>
-            <div class="brand-text">
-                <span class="brand-name">PetWorld</span>
-                <span class="brand-sub">Admin Dashboard</span>
-            </div>
-        </a>
+        <div class="brand-shell">
+            <a href="{{ route('admin.dashboard') }}" class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-paw"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">PetWorld</span>
+                    <span class="brand-sub">Admin Dashboard</span>
+                </div>
+            </a>
+            <button type="button" class="sidebar-collapse-toggle" aria-label="Thu gọn menu" aria-expanded="true"
+                title="Thu gọn menu">
+                <i class="fa-solid fa-angles-left"></i>
+            </button>
+        </div>
 
         <!-- Menu items -->
         <nav class="sidebar-nav">
@@ -39,15 +46,15 @@
                 <li>
                     <a href="{{ route('admin.dashboard') }}"
                         class="menu-item-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                        <i class="fa-solid fa-house"></i>
-                        <span>Thống Kê</span>
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Tổng quan</span>
                     </a>
                 </li>
                 <li
                     class="menu-item-dropdown {{ request()->routeIs('admin.orders*') || request()->routeIs('admin.reviews*') ? 'open' : '' }}">
                     <a href="{{ route('admin.orders')}}"
                         class="menu-item-link dropdown-toggle orders-dropdown-toggle {{ request()->routeIs('admin.orders') ? 'active' : '' }} ">
-                        <i class="fa-solid fa-cart-shopping"></i>
+                        <i class="fa-solid fa-receipt"></i>
                         <span>Đơn Hàng</span>
                         <i class="fa-solid fa-chevron-down dropdown-arrow"
                             style="margin-left: auto; font-size: 0.75rem; transition: var(--transition);"></i>
@@ -61,65 +68,17 @@
                                     class="fa-solid fa-star"></i><span>Đánh giá sản phẩm</span></a></li>
                     </ul>
                 </li>
-                <li class="menu-item-dropdown {{ request()->routeIs('admin.categories*') ? 'open' : '' }}">
-                    <a href="{{ route('admin.categories') }}"
-                        class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.categories*') ? 'active' : '' }}">
-                        <i class="fa-solid fa-list"></i>
-                        <span>Danh Mục</span>
-                        <i class="fa-solid fa-chevron-down dropdown-arrow"
-                            style="margin-left: auto; font-size: 0.75rem; transition: var(--transition);"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li>
-                            <a href="{{ route('admin.categories') }}"
-                                class="submenu-item-link {{ request()->routeIs('admin.categories') && !request()->routeIs('admin.categories.create') ? 'active' : '' }}">
-                                <i class="fa-solid fa-list-ul"></i>
-                                <span>Danh sách</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('admin.categories.create') }}"
-                                class="submenu-item-link {{ request()->routeIs('admin.categories.create') ? 'active' : '' }}">
-                                <i class="fa-solid fa-square-plus"></i>
-                                <span>Thêm danh mục</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-
-                <li class="menu-item-dropdown {{ request()->routeIs('admin.brands*') ? 'open' : '' }}">
-                    <a href="{{ route('admin.brands') }}"
-                        class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.brands*') ? 'active' : '' }}">
-                        <i class="fa-solid fa-trademark"></i>
-                        <span>Thương Hiệu</span>
-                        <i class="fa-solid fa-chevron-down dropdown-arrow"
-                            style="margin-left: auto; font-size: 0.75rem; transition: var(--transition);"></i>
-                    </a>
-                    <ul class="submenu">
-                        <li>
-                            <a href="{{ route('admin.brands') }}"
-                                class="submenu-item-link {{ request()->routeIs('admin.brands') && !request()->routeIs('admin.brands.create') ? 'active' : '' }}">
-                                <i class="fa-solid fa-list-ul"></i>
-                                <span>Danh sách</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('admin.brands.create') }}"
-                                class="submenu-item-link {{ request()->routeIs('admin.brands.create') ? 'active' : '' }}">
-                                <i class="fa-solid fa-square-plus"></i>
-                                <span>Thêm thương hiệu</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
                 @php
                     $isProductMenuActive =
                         request()->routeIs('admin.products*') ||
-                        request()->routeIs('admin.pet-species*');
+                        request()->routeIs('admin.pet-species*') ||
+                        request()->routeIs('admin.categories*') ||
+                        request()->routeIs('admin.brands*');
                 @endphp
                 <li class="menu-item-dropdown {{ $isProductMenuActive ? 'open' : '' }}">
-                    <a href="#" class="menu-item-link dropdown-toggle {{ $isProductMenuActive ? 'active' : '' }}">
-                        <i class="fa-solid fa-box"></i>
+                    <a href="{{ route('admin.products') }}"
+                        class="menu-item-link dropdown-toggle {{ $isProductMenuActive ? 'active' : '' }}">
+                        <i class="fa-solid fa-box-open"></i>
                         <span>Sản phẩm</span>
 
                         <i class="fa-solid fa-chevron-down dropdown-arrow"
@@ -159,6 +118,20 @@
                                 <span>Loài thú cưng</span>
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route('admin.categories') }}"
+                                class="submenu-item-link {{ request()->routeIs('admin.categories*') ? 'active' : '' }}">
+                                <i class="fa-solid fa-folder-tree"></i>
+                                <span>Danh mục</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.brands') }}"
+                                class="submenu-item-link {{ request()->routeIs('admin.brands*') ? 'active' : '' }}">
+                                <i class="fa-solid fa-tag"></i>
+                                <span>Thương hiệu</span>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li>
@@ -168,19 +141,24 @@
                         <span>Người Dùng</span>
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('admin.vouchers') }}"
-                        class="menu-item-link {{ request()->routeIs('admin.vouchers*') ? 'active' : '' }}">
-                        <i class="fa-solid fa-ticket"></i>
-                        <span>Voucher</span>
+                <li
+                    class="menu-item-dropdown {{ request()->routeIs('admin.home-sections*') || request()->routeIs('admin.banners*') ? 'open' : '' }}">
+                    <a href="{{ route('admin.home-sections.index') }}"
+                        class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.home-sections*') || request()->routeIs('admin.banners*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Trang chủ</span>
+                        <i class="fa-solid fa-chevron-down dropdown-arrow"
+                            style="margin-left: auto; font-size: 0.75rem; transition: var(--transition);">
+                        </i>
                     </a>
-                </li>
-                <li>
-                    <a href="{{ route('admin.banners') }}"
-                        class="menu-item-link {{ request()->routeIs('admin.banners*') ? 'active' : '' }}">
-                        <i class="fa-regular fa-image"></i>
-                        <span>Banner Trang Chủ</span>
-                    </a>
+                    <ul class="submenu">
+                        <li><a href="{{ route('admin.home-sections.index') }}"
+                                class="submenu-item-link {{ request()->routeIs('admin.home-sections*') ? 'active' : '' }}"><i
+                                    class="fa-solid fa-layer-group"></i><span>Quản lý khu vực</span></a></li>
+                        <li><a href="{{ route('admin.banners') }}"
+                                class="submenu-item-link {{ request()->routeIs('admin.banners*') ? 'active' : '' }}"><i
+                                    class="fa-solid fa-images"></i><span>Banner trang chủ</span></a></li>
+                    </ul>
                 </li>
                 <li
                     class="menu-item-dropdown {{ request()->routeIs('admin.posts*') || request()->routeIs('admin.blog-comments*') ? 'open' : '' }}">
@@ -200,12 +178,21 @@
                                     class="fa-solid fa-comments"></i><span>Quản lý bình luận</span></a></li>
                     </ul>
                 </li>
+                <li class="menu-section-label"><span>Tiếp thị &amp; AI</span></li>
+                <li>
+                    <a href="{{ route('admin.vouchers') }}"
+                        class="menu-item-link {{ request()->routeIs('admin.vouchers*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-ticket"></i>
+                        <span>Voucher</span>
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('admin.knowledge') }}"
                         class="menu-item-link {{ request()->routeIs('admin.knowledge*') ? 'active' : '' }}">
-                        <i class="fa-solid fa-book-open"></i><span>Kiến thức chatbot</span>
+                        <i class="fa-solid fa-robot"></i><span>Kiến thức chatbot</span>
                     </a>
                 </li>
+                <li class="menu-section-label"><span>Phân tích</span></li>
                 <li class="menu-item-dropdown {{ request()->routeIs('admin.reports*') ? 'open' : '' }}">
                     <a href="#"
                         class="menu-item-link dropdown-toggle {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
@@ -259,6 +246,7 @@
                         </li>
                     </ul>
                 </li>
+                <li class="menu-section-label"><span>Hệ thống</span></li>
                 <li>
                     <a href="{{ route('admin.account.edit') }}"
                         class="menu-item-link {{ request()->routeIs('admin.account.*') ? 'active' : '' }}">
@@ -269,11 +257,11 @@
             </ul>
         </nav>
 
-        <!-- Sidebar CTA -->
-        <div class="sidebar-footer" style="padding: 1rem;">
+        <!-- Sidebar logout -->
+        <div class="sidebar-footer">
             <form action="{{ route('admin.logout') }}" method="POST" id="logout-form" style="width: 100%;">
                 @csrf
-                <button type="submit" class="btn-add-product" style="width: 100%; cursor: pointer;">
+                <button type="submit" class="sidebar-logout" style="width: 100%; cursor: pointer;">
                     <i class="fa-solid fa-right-from-bracket"></i>
                     <span>Đăng Xuất</span>
                 </button>
@@ -364,21 +352,138 @@
         </main>
     </div>
 
+    @php
+        $validationToast = $errors->any()
+            ? $errors->first() . ($errors->count() > 1 ? ' và ' . ($errors->count() - 1) . ' mục khác.' : '')
+            : null;
+        $adminToast = session('success') ? ['success', session('success')] : (session('error') ? ['error', session('error')] : (session('warning') ? ['warning', session('warning')] : ($validationToast ? ['error', $validationToast] : null)));
+    @endphp
+    @if($adminToast)
+        <div class="admin-global-toast {{ $adminToast[0] }}" id="admin-global-toast" role="alert">
+            <i class="fa-solid {{ $adminToast[0] === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation' }}"></i>
+            <span>{{ $adminToast[1] }}</span><button type="button" aria-label="Đóng thông báo">&times;</button>
+        </div>
+    @endif
+
+    <style>
+        .admin-global-toast {
+            position: fixed;
+            right: 22px;
+            bottom: 24px;
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            max-width: min(420px, calc(100vw - 28px));
+            padding: 12px 14px;
+            border: 1px solid;
+            border-radius: 9px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
+            font-size: .86rem;
+            font-weight: 700;
+            transition: opacity .2s ease, transform .2s ease;
+        }
+
+        .admin-global-toast.success {
+            color: #176b37;
+            border-color: #bde5ca;
+            background: #ecf9f0;
+        }
+
+        .admin-global-toast.error {
+            color: #a12626;
+            border-color: #f2c5c5;
+            background: #fff1f1;
+        }
+
+        .admin-global-toast.warning {
+            color: #9a4b1b;
+            border-color: #f0d5bc;
+            background: #fff8ed;
+        }
+
+        .admin-global-toast button {
+            margin-left: 4px;
+            padding: 0;
+            border: 0;
+            color: inherit;
+            background: transparent;
+            font-size: 1.25rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .admin-global-toast.is-hidden {
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+        }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.querySelector('.sidebar');
+            const collapseToggle = document.querySelector('.sidebar-collapse-toggle');
+            const sidebarStateKey = 'petworld.admin.sidebar.collapsed';
+
+            const syncSidebarState = (collapsed) => {
+                document.body.classList.toggle('sidebar-collapsed', collapsed);
+                collapseToggle?.setAttribute('aria-expanded', String(!collapsed));
+                collapseToggle?.setAttribute('aria-label', collapsed ? 'Mở rộng menu' : 'Thu gọn menu');
+                collapseToggle?.setAttribute('title', collapsed ? 'Mở rộng menu' : 'Thu gọn menu');
+                collapseToggle?.querySelector('i')?.classList.toggle('fa-angles-right', collapsed);
+                collapseToggle?.querySelector('i')?.classList.toggle('fa-angles-left', !collapsed);
+
+                sidebar?.querySelectorAll('.menu-item-link, .sidebar-logout').forEach((item) => {
+                    const label = item.querySelector('span')?.textContent?.trim();
+                    if (label) item.setAttribute('title', collapsed ? label : '');
+                });
+            };
+
+            const initiallyCollapsed = window.localStorage.getItem(sidebarStateKey) === 'true';
+            syncSidebarState(initiallyCollapsed);
+
+            collapseToggle?.addEventListener('click', function () {
+                const collapsed = !document.body.classList.contains('sidebar-collapsed');
+                window.localStorage.setItem(sidebarStateKey, String(collapsed));
+                syncSidebarState(collapsed);
+            });
+
             const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
             dropdownToggles.forEach(toggle => {
                 toggle.addEventListener('click', function (e) {
-                    const href = this.getAttribute('href');
-                    if (href === '#' || href === 'javascript:void(0);' || e.target.classList.contains('dropdown-arrow')) {
+                    const isCollapsed = document.body.classList.contains('sidebar-collapsed') && window.innerWidth > 992;
+                    if (isCollapsed) {
                         e.preventDefault();
                         const parent = this.closest('.menu-item-dropdown');
-                        if (parent) {
-                            parent.classList.toggle('open');
-                        }
+                        window.localStorage.setItem(sidebarStateKey, 'false');
+                        syncSidebarState(false);
+                        sidebar?.querySelectorAll('.menu-item-dropdown.open').forEach((item) => {
+                            if (item !== parent) item.classList.remove('open');
+                        });
+                        parent?.classList.add('open');
+                        return;
+                    }
+
+                    e.preventDefault();
+                    const parent = this.closest('.menu-item-dropdown');
+                    if (parent) {
+                        const willOpen = !parent.classList.contains('open');
+                        sidebar?.querySelectorAll('.menu-item-dropdown.open').forEach((item) => {
+                            if (item !== parent) item.classList.remove('open');
+                        });
+                        parent.classList.toggle('open', willOpen);
                     }
                 });
             });
+
+            const adminToast = document.getElementById('admin-global-toast');
+            if (adminToast) {
+                document.querySelectorAll('.alert-panel').forEach((alert) => { alert.hidden = true; });
+                const hideToast = () => adminToast.classList.add('is-hidden');
+                adminToast.querySelector('button')?.addEventListener('click', hideToast);
+                setTimeout(hideToast, 3000);
+            }
         });
     </script>
     @yield('scripts')

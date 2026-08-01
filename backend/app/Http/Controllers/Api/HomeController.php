@@ -11,6 +11,7 @@ use App\Models\PetSpecies;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Review;
+use App\Models\HomeSection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -29,11 +30,14 @@ class HomeController extends Controller
 
         // Các khối trang chủ giống nhau với mọi khách nên cache ngắn hạn để giảm truy vấn lặp.
         $data = Cache::remember('api.home.sections.v1', now()->addSeconds(30), function (): array {
+            $sectionsConfig = HomeSection::orderBy('order', 'asc')->get();
+            $limits = $sectionsConfig->pluck('limit', 'key')->toArray();
+
             // Đặt truy vấn trong callback để lần cache hit có thể bỏ qua hoàn toàn phần database.
             $featuredProducts = $this->productCardQuery()
                 ->orderByDesc('sold_quantity')
                 ->orderByDesc('products.id')
-                ->limit(8)
+                ->limit($limits['featured_products'] ?? 8)
                 ->get();
 
             $saleProducts = $this->productCardQuery()
@@ -43,27 +47,35 @@ class HomeController extends Controller
                         ->whereColumn('sale_price', '<', 'price');
                 })
                 ->orderByDesc('id')
-                ->limit(8)
+                ->limit($limits['sale_products_tabs'] ?? 8)
                 ->get();
 
             $newProducts = $this->productCardQuery()
                 ->orderByDesc('id')
-                ->limit(8)
+                ->limit($limits['new_products'] ?? 8)
                 ->get();
 
             $newAccessories = $this->productCardQuery()
                 ->whereHas('category', fn($query) => $query->whereIn('slug', ['phu-kien', 'do-choi']))
                 ->orderByDesc('id')
-                ->limit(20)
+                ->limit($limits['accessories_promo'] ?? 20)
                 ->get();
 
             return [
+                'sections' => $sectionsConfig->map(fn(HomeSection $s): array => [
+                    'key' => $s->key,
+                    'name' => $s->name,
+                    'custom_title' => $s->custom_title,
+                    'order' => (int) $s->order,
+                    'is_active' => (bool) $s->is_active,
+                    'limit' => $s->limit,
+                ])->values()->toArray(),
                 // Homepage hero slider data comes from formatBanners().
                 'banners' => $this->formatBanners(),
                 // Main category menu data comes from formatCategories().
                 'categories' => $this->formatCategories(),
                 // Brand strip data comes from formatBrands().
-                'brands' => $this->formatBrands(),
+                'brands' => $this->formatBrands($limits['brands'] ?? 12),
                 // The homepage shows no more than two featured pet species.
                 'pet_species' => $this->formatFeaturedPetSpecies(),
                 // Các phần sản phẩm bên dưới đều sử dụng lại định dạng Product().
@@ -74,11 +86,12 @@ class HomeController extends Controller
                 // Category blocks are built in productsByCategories().
                 'products_by_categories' => $this->productsByCategories(),
                 // Blog cards are built in latestBlogs().
-                'latest_blogs' => $this->latestBlogs(),
+                'latest_blogs' => $this->latestBlogs($limits['latest_blogs'] ?? 3),
                 // Đánh giá tốt từ khách hàng đã mua sản phẩm.
-                'top_reviews' => $this->featuredReviews(),
+                'top_reviews' => $this->featuredReviews($limits['testimonials'] ?? 6),
             ];
         });
+
 
         // Sản phẩm vừa xem phụ thuộc từng trình duyệt nên không đưa vào cache dùng chung.
         $data['recent_viewed_accessories'] = $this->formatProducts($recentViewedAccessories);
@@ -97,10 +110,32 @@ class HomeController extends Controller
             ->map(fn(Banner $banner): array => [
                 'id' => $banner->id,
                 'image' => $banner->image,
+                'image_version' => $this->bannerImageVersion($banner->image),
                 'link' => $banner->link,
                 'description' => $banner->description,
             ])
             ->all();
+    }
+
+    private function bannerImageVersion(?string $image): ?int
+    {
+        if (!$image || str_starts_with($image, 'http://') || str_starts_with($image, 'https://')) {
+            return null;
+        }
+
+        $path = ltrim($image, '/');
+        $candidates = [
+            public_path($path),
+            storage_path('app/public/' . $path),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate)) {
+                return filemtime($candidate) ?: null;
+            }
+        }
+
+        return null;
     }
 
     private function formatCategories(): array
@@ -119,11 +154,12 @@ class HomeController extends Controller
             ->all();
     }
 
-    private function formatBrands(): array
+    private function formatBrands(int $limit = 12): array
     {
         return Brand::query()
             ->orderBy('id')
             ->where('status', 'active')
+            ->limit($limit)
             ->get(['id', 'name', 'slug', 'image'])
             ->map(fn(Brand $brand): array => [
                 'id' => $brand->id,
@@ -133,6 +169,7 @@ class HomeController extends Controller
             ])
             ->all();
     }
+
 
     private function formatFeaturedPetSpecies(): array
     {
@@ -386,14 +423,14 @@ class HomeController extends Controller
         ]);
     }
 
-    private function latestBlogs(): array
+    private function latestBlogs(int $limit = 3): array
     {
         return Blog::query()
             ->with(['category', 'author'])
             ->where('status', 'active')
             ->whereHas('category', fn(Builder $category) => $category->where('status', 'active'))
             ->latest('created_at')
-            ->limit(3)
+            ->limit($limit)
             ->get()
             ->map(fn(Blog $blog): array => [
                 'id' => $blog->id,
@@ -401,6 +438,7 @@ class HomeController extends Controller
                 'slug' => $blog->slug,
                 'description' => $blog->description,
                 'image' => $blog->image,
+                'cover_alt' => $blog->cover_alt,
                 'view_count' => $blog->view_count,
                 'created_at' => $blog->created_at?->toDateTimeString(),
                 'category' => $blog->category ? [
@@ -416,7 +454,7 @@ class HomeController extends Controller
             ->all();
     }
 
-    private function featuredReviews(): array
+    private function featuredReviews(int $limit = 6): array
     {
         return Review::query()
             ->with([
@@ -430,7 +468,7 @@ class HomeController extends Controller
                 $query->where('order_status', 'completed');
             })
             ->latest('id')
-            ->limit(6)
+            ->limit($limit)
             ->get()
             ->map(function (Review $review): array {
                 $product = $review->orderItem?->productVariant?->product;
@@ -452,4 +490,5 @@ class HomeController extends Controller
             })
             ->all();
     }
+
 }

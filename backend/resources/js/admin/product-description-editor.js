@@ -36,4 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     quill.on('text-change', syncDescription);
     descriptionInput.form?.addEventListener('submit', syncDescription);
+
+    const setDescription = (html = descriptionInput.value) => {
+        quill.setText('');
+        if (html) {
+            quill.clipboard.dangerouslyPasteHTML(html);
+        }
+        syncDescription();
+    };
+
+    window.petworldSetProductDescription = setDescription;
+    window.addEventListener('petworld:description-set', (event) => setDescription(event.detail?.html));
 });
