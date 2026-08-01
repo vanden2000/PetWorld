@@ -52,6 +52,25 @@
             @error('search_intent') <span class="pe-error">{{ $message }}</span> @enderror
         </div>
 
+        <div class="pe-field">
+            <label class="pe-label" for="canonical_url">Đường dẫn canonical</label>
+            <input type="url" id="canonical_url" name="canonical_url" class="pe-input" maxlength="255"
+                   value="{{ old('canonical_url', $post->canonical_url) }}"
+                   placeholder="Để trống nếu đây là bài viết gốc">
+            <div class="pe-help">Chỉ điền khi bài viết đăng lại từ nguồn khác, để Google biết bản gốc nằm ở đâu.</div>
+            @error('canonical_url') <span class="pe-error">{{ $message }}</span> @enderror
+        </div>
+
+        <label class="pe-status-option">
+            <input type="hidden" name="noindex" value="0">
+            <input type="checkbox" name="noindex" value="1" @checked(old('noindex', $post->noindex))>
+            <span>
+                <strong>Không cho Google lập chỉ mục (noindex)</strong>
+                <small>Bài viết vẫn xem được qua link nhưng sẽ không xuất hiện trên kết quả tìm kiếm.</small>
+            </span>
+        </label>
+        @error('noindex') <span class="pe-error">{{ $message }}</span> @enderror
+
         <div class="pe-google-preview" id="pe-google-preview" data-base-url="{{ $siteBase }}">
             <div class="pe-google-preview-label"><i class="fa-brands fa-google"></i> Xem trước trên Google</div>
             <div class="pe-google-preview-site"><span class="pe-google-preview-favicon">P</span><span>PetWorld</span></div>
