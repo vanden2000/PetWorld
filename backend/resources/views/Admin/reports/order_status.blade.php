@@ -33,55 +33,276 @@
         text-align: left;
     }
     .filter-option:hover {
-        background-color: var(--bg-color);
+        background-color: #fff4ec;
         color: var(--primary);
     }
     .filter-option.active {
-        background-color: var(--primary-light);
+        background-color: #fff4ec;
         color: var(--primary);
         font-weight: 600;
     }
-    .status-bar-container {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        margin-top: 10px;
+
+    /* Stats Cards Premium Style */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
     }
-    .status-bar-item {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+    @media (max-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
-    .status-bar-header {
+    @media (max-width: 560px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .stat-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: var(--shadow-subtle);
+        transition: all 0.25s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary);
+        border-radius: 4px 0 0 4px;
+    }
+    .stat-card:nth-child(2)::before { background: #10b981; }
+    .stat-card:nth-child(3)::before { background: #f59e0b; }
+    .stat-card:nth-child(4)::before { background: #ef4444; }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-medium);
+    }
+    .stat-card:first-child:hover { background: #fffdfa; border-color: rgba(255, 120, 45, 0.2); }
+    .stat-card:nth-child(2):hover { background: #f6fcf9; border-color: rgba(16, 185, 129, 0.2); }
+    .stat-card:nth-child(3):hover { background: #fffbeb; border-color: rgba(245, 158, 11, 0.2); }
+    .stat-card:nth-child(4):hover { background: #fdf2f2; border-color: rgba(239, 68, 68, 0.2); }
+
+    .stat-header {
         display: flex;
         justify-content: space-between;
-        font-size: 0.9rem;
-        font-weight: 600;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    .stat-icon-wrapper {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 1.15rem;
+        transition: all 0.25s ease;
+    }
+    .icon-total { background: #fff4ec; color: var(--primary); }
+    .icon-completed { background: #e6f7ed; color: #10b981; }
+    .icon-pending { background: #fffbeb; color: #f59e0b; }
+    .icon-cancelled { background: #fdf2f2; color: #ef4444; }
+
+    .stat-card:hover .stat-icon-wrapper {
+        transform: scale(1.1);
+    }
+
+    .stat-trend {
+        font-size: 0.78rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        border-radius: 20px;
+    }
+    .stat-trend.trend-up {
+        background: #e6f7ed;
+        color: #10b981;
+    }
+    .stat-trend.trend-down {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+    .stat-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .stat-value {
+        font-size: 1.6rem;
+        font-weight: 800;
         color: var(--text-main);
+        margin-top: 6px;
+        line-height: 1.2;
     }
-    .status-progress-track {
-        height: 12px;
-        background-color: var(--border-color);
-        border-radius: 6px;
-        overflow: hidden;
-        width: 100%;
-    }
-    .status-progress-fill {
-        height: 100%;
-        border-radius: 6px;
-        transition: width 0.6s ease;
-    }
+
+    /* Grid layout for charts */
     .grid-order-split {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1.8fr 1.2fr;
         gap: 24px;
         margin-top: 24px;
     }
-    @media (max-width: 768px) {
+    @media (max-width: 1100px) {
         .grid-order-split {
             grid-template-columns: 1fr;
         }
     }
+
+    .dashboard-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: var(--shadow-subtle);
+        padding: 24px;
+        margin-top: 0;
+    }
+    .card-header-styled {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+    }
+    .card-title-styled {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .chart-container-time {
+        position: relative;
+        height: 280px;
+        width: 100%;
+    }
+
+    .chart-container-category {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    .category-canvas-wrapper {
+        position: relative;
+        height: 180px;
+        width: 180px;
+    }
+
+    /* Status indicators list */
+    .status-legend-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    .legend-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed var(--border-color);
+    }
+    .legend-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .legend-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .legend-color {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+    .legend-name {
+        font-weight: 600;
+        font-size: 0.86rem;
+        color: var(--text-main);
+    }
+    .legend-percentage {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 700;
+    }
+    .legend-value {
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: var(--text-main);
+        white-space: nowrap;
+    }
+
+    /* Detailed Table */
+    .table-container {
+        overflow-x: auto;
+    }
+    .orders-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+    .orders-table th {
+        background: #fafbfc;
+        padding: 12px 16px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        text-align: left;
+    }
+    .orders-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.88rem;
+        color: var(--text-main);
+        vertical-align: middle;
+    }
+    .orders-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .orders-table tbody tr {
+        transition: all 0.15s ease;
+    }
+    .orders-table tbody tr:hover {
+        background: #fff8f3;
+    }
+
+    .badge-status {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        display: inline-block;
+        white-space: nowrap;
+    }
+    .badge-completed { background: rgba(16, 185, 129, 0.08); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.15); }
+    .badge-shipping { background: rgba(59, 130, 246, 0.08); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.15); }
+    .badge-pending { background: rgba(245, 158, 11, 0.08); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.15); }
+    .badge-cancelled { background: rgba(239, 68, 68, 0.08); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.15); }
 </style>
 @endsection
 
@@ -89,7 +310,7 @@
 <!-- Header Area -->
 <div class="dashboard-header" style="margin-bottom: 24px;">
     <div class="header-title-block">
-        <h1>Trạng thái Đơn hàng</h1>
+        <h1 style="font-size: 1.8rem; font-weight: 800;">Trạng thái <span style="color: var(--primary);">Đơn hàng</span></h1>
         <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Thống kê chi tiết tỷ lệ chuyển đổi đơn hàng, tốc độ giao nhận và phân bố trạng thái đơn hàng.</p>
     </div>
     
@@ -116,97 +337,113 @@
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-icon-wrapper icon-orders">
+            <div class="stat-icon-wrapper icon-total">
                 <i class="fa-solid fa-boxes-stacked"></i>
             </div>
             <div class="stat-trend trend-up" id="orders-trend">
                 <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+8.2%</span>
+                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Tổng đơn hàng</div>
-        <div class="stat-value" id="orders-val">3,452</div>
+        <div class="stat-value" id="orders-val">0</div>
     </div>
 
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-icon-wrapper icon-revenue" style="background-color: var(--success-light); color: var(--success);">
+            <div class="stat-icon-wrapper icon-completed">
                 <i class="fa-solid fa-circle-check"></i>
             </div>
             <div class="stat-trend trend-up" id="completed-trend">
                 <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+12.4%</span>
+                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Đơn hoàn tất</div>
-        <div class="stat-value" id="completed-val">3,120</div>
+        <div class="stat-value" id="completed-val">0</div>
     </div>
 
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-icon-wrapper icon-aov" style="background-color: var(--warning-light); color: var(--warning);">
+            <div class="stat-icon-wrapper icon-pending">
                 <i class="fa-solid fa-truck-ramp-box"></i>
             </div>
             <div class="stat-trend trend-down" id="pending-trend">
                 <i class="fa-solid fa-arrow-trend-down"></i>
-                <span>-5.4%</span>
+                <span>-0.0%</span>
             </div>
         </div>
         <div class="stat-label">Đang xử lý / Đang giao</div>
-        <div class="stat-value" id="pending-val">242</div>
+        <div class="stat-value" id="pending-val">0</div>
     </div>
 
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-icon-wrapper icon-conversion" style="background-color: var(--danger-light); color: var(--danger);">
+            <div class="stat-icon-wrapper icon-cancelled">
                 <i class="fa-solid fa-circle-xmark"></i>
             </div>
             <div class="stat-trend trend-down" id="cancelled-trend">
                 <i class="fa-solid fa-arrow-trend-down"></i>
-                <span>-2.1%</span>
+                <span>-0.0%</span>
             </div>
         </div>
         <div class="stat-label">Đơn đã hủy</div>
-        <div class="stat-value" id="cancelled-val">90</div>
+        <div class="stat-value" id="cancelled-val">0</div>
     </div>
 </div>
 
 <div class="grid-order-split">
-    <!-- Visual Distribution Chart -->
-    <div class="dashboard-card" style="margin-top: 0;">
+    <!-- Order Trend Line Chart (Visualizes order volume over time) -->
+    <div class="dashboard-card">
         <div class="card-header-styled">
-            <span class="card-title-styled">Biểu đồ phân bố trạng thái</span>
+            <span class="card-title-styled">Biểu đồ xu hướng đơn hàng</span>
         </div>
-        <div class="status-bar-container" id="status-bar-list">
-            <!-- Loaded dynamically via JS -->
+        <div class="chart-container-time">
+            <canvas id="order-trend-chart"></canvas>
         </div>
     </div>
 
-    <!-- Details Table -->
-    <div class="dashboard-card" style="margin-top: 0;">
+    <!-- Doughnut Chart showing Status Distribution -->
+    <div class="dashboard-card">
         <div class="card-header-styled">
-            <span class="card-title-styled">Báo cáo chi tiết</span>
+            <span class="card-title-styled">Biểu đồ phân bố trạng thái</span>
         </div>
-        <div class="table-container">
-            <table class="orders-table">
-                <thead>
-                    <tr>
-                        <th>TRẠNG THÁI</th>
-                        <th>SỐ LƯỢNG</th>
-                        <th>TỶ LỆ</th>
-                        <th>XU HƯỚNG</th>
-                    </tr>
-                </thead>
-                <tbody id="status-table-body">
-                    <!-- Loaded dynamically via JS -->
-                </tbody>
-            </table>
+        <div class="chart-container-category">
+            <div class="category-canvas-wrapper">
+                <canvas id="order-status-chart"></canvas>
+            </div>
+            <div class="status-legend-list" id="status-legend-list">
+                <!-- Dynanically populated legend -->
+            </div>
         </div>
+    </div>
+</div>
+
+<!-- Details Table (Displays structured evaluation data) -->
+<div class="dashboard-card" style="margin-top: 24px;">
+    <div class="card-header-styled">
+        <span class="card-title-styled"><i class="fa-solid fa-file-invoice-dollar" style="color: var(--primary); margin-right: 6px;"></i> Chi tiết tỷ lệ hoàn thành & Tốc độ xử lý</span>
+    </div>
+    <div class="table-container">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">TRẠNG THÁI đơn hàng</th>
+                    <th style="width: 20%;">SỐ LƯỢNG ĐƠN</th>
+                    <th style="width: 20%;">TỶ LỆ PHẦN TRĂM</th>
+                    <th style="width: 35%;">ĐÁNH GIÁ xu hướng</th>
+                </tr>
+            </thead>
+            <tbody id="status-table-body">
+                <!-- Loaded dynamically via JS -->
+            </tbody>
+        </table>
     </div>
 </div>
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const filterBtn = document.getElementById('filter-btn');
@@ -225,110 +462,276 @@
             filterMenu.style.display = 'none';
         });
 
-        // Mock data dictionary
+        // Mock data dictionary with charts coordinate values
         const mockData = {
             today: {
                 total: "102 đơn",
-                totalTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+14.2%</span>",
+                totalTrend: { pct: "+14,2%", up: true },
                 completed: "95 đơn",
-                completedTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+16.5%</span>",
+                completedTrend: { pct: "+16,5%", up: true },
                 pending: "5 đơn",
-                pendingTrend: "<i class='fa-solid fa-arrow-trend-down'></i> <span>-2.1%</span>",
+                pendingTrend: { pct: "-2,1%", up: false },
                 cancelled: "2 đơn",
-                cancelledTrend: "<i class='fa-solid fa-arrow-trend-down'></i> <span>-1.5%</span>",
+                cancelledTrend: { pct: "-1,5%", up: false },
                 statuses: [
-                    { name: "Hoàn tất (Completed)", count: 95, percentage: "93.1%", color: "var(--success)" },
-                    { name: "Đang giao (Shipping)", count: 3, percentage: "2.9%", color: "var(--info)" },
-                    { name: "Chờ xử lý (Pending)", count: 2, percentage: "2.0%", color: "var(--warning)" },
-                    { name: "Đã hủy (Cancelled)", count: 2, percentage: "2.0%", color: "var(--danger)" }
+                    { name: "Hoàn tất", count: 95, percentage: "93,1%", color: "#10b981", badge: "badge-completed", note: "Hoạt động xuất sắc", noteUp: true },
+                    { name: "Đang giao", count: 3, percentage: "2,9%", color: "#3b82f6", badge: "badge-shipping", note: "Giao nhận ổn định", noteUp: true },
+                    { name: "Chờ xử lý", count: 2, percentage: "2,0%", color: "#f59e0b", badge: "badge-pending", note: "Đang chờ giải quyết", noteUp: false },
+                    { name: "Đã hủy", count: 2, percentage: "2,0%", color: "#ef4444", badge: "badge-cancelled", note: "Tỷ lệ rất thấp (Tốt)", noteUp: true }
+                ],
+                chart: [
+                    { label: "00:00", value: 4 },
+                    { label: "04:00", value: 1 },
+                    { label: "08:00", value: 18 },
+                    { label: "12:00", value: 25 },
+                    { label: "16:00", value: 32 },
+                    { label: "20:00", value: 16 },
+                    { label: "23:00", value: 6 }
                 ]
             },
             "7days": {
                 total: "732 đơn",
-                totalTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+9.8%</span>",
+                totalTrend: { pct: "+9,8%", up: true },
                 completed: "680 đơn",
-                completedTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+11.2%</span>",
+                completedTrend: { pct: "+11,2%", up: true },
                 pending: "35 đơn",
-                pendingTrend: "<i class='fa-solid fa-arrow-trend-down'></i> <span>-4.5%</span>",
+                pendingTrend: { pct: "-4,5%", up: false },
                 cancelled: "17 đơn",
-                cancelledTrend: "<i class='fa-solid fa-arrow-trend-down'></i> <span>-0.8%</span>",
+                cancelledTrend: { pct: "-0,8%", up: false },
                 statuses: [
-                    { name: "Hoàn tất (Completed)", count: 680, percentage: "92.9%", color: "var(--success)" },
-                    { name: "Đang giao (Shipping)", count: 20, percentage: "2.7%", color: "var(--info)" },
-                    { name: "Chờ xử lý (Pending)", count: 15, percentage: "2.1%", color: "var(--warning)" },
-                    { name: "Đã hủy (Cancelled)", count: 17, percentage: "2.3%", color: "var(--danger)" }
+                    { name: "Hoàn tất", count: 680, percentage: "92,9%", color: "#10b981", badge: "badge-completed", note: "Tỷ lệ hoàn thành cao", noteUp: true },
+                    { name: "Đang giao", count: 20, percentage: "2,7%", color: "#3b82f6", badge: "badge-shipping", note: "Vận chuyển nhanh", noteUp: true },
+                    { name: "Chờ xử lý", count: 15, percentage: "2,1%", color: "#f59e0b", badge: "badge-pending", note: "Đang xử lý trong ngày", noteUp: true },
+                    { name: "Đã hủy", count: 17, percentage: "2,3%", color: "#ef4444", badge: "badge-cancelled", note: "Kiểm soát tốt", noteUp: true }
+                ],
+                chart: [
+                    { label: "26/07", value: 92 },
+                    { label: "27/07", value: 105 },
+                    { label: "28/07", value: 118 },
+                    { label: "29/07", value: 98 },
+                    { label: "30/07", value: 125 },
+                    { label: "31/07", value: 110 },
+                    { label: "01/08", value: 84 }
                 ]
             },
             "30days": {
-                total: "3,452 đơn",
-                totalTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+8.2%</span>",
-                completed: "3,120 đơn",
-                completedTrend: "<i class='fa-solid fa-arrow-trend-up'></i> <span>+12.4%</span>",
+                total: "3.452 đơn",
+                totalTrend: { pct: "+8,2%", up: true },
+                completed: "3.120 đơn",
+                completedTrend: { pct: "+12,4%", up: true },
                 pending: "242 đơn",
-                pendingTrend: "<i class='fa-solid fa-arrow-trend-down'></i> <span>-5.4%</span>",
+                pendingTrend: { pct: "-5,4%", up: false },
                 cancelled: "90 đơn",
-                cancelledTrend: "<i class='fa-solid fa-arrow-trend-down'></i> <span>-2.1%</span>",
+                cancelledTrend: { pct: "-2,1%", up: false },
                 statuses: [
-                    { name: "Hoàn tất (Completed)", count: 3120, percentage: "90.4%", color: "var(--success)" },
-                    { name: "Đang giao (Shipping)", count: 150, percentage: "4.3%", color: "var(--info)" },
-                    { name: "Chờ xử lý (Pending)", count: 92, percentage: "2.7%", color: "var(--warning)" },
-                    { name: "Đã hủy (Cancelled)", count: 90, percentage: "2.6%", color: "var(--danger)" }
+                    { name: "Hoàn tất", count: 3120, percentage: "90,4%", color: "#10b981", badge: "badge-completed", note: "Tăng trưởng rất tốt", noteUp: true },
+                    { name: "Đang giao", count: 150, percentage: "4,3%", color: "#3b82f6", badge: "badge-shipping", note: "Đúng tiến độ", noteUp: true },
+                    { name: "Chờ xử lý", count: 92, percentage: "2,7%", color: "#f59e0b", badge: "badge-pending", note: "Lượng tồn đọng thấp", noteUp: true },
+                    { name: "Đã hủy", count: 90, percentage: "2,6%", color: "#ef4444", badge: "badge-cancelled", note: "Giảm so với tháng trước", noteUp: true }
+                ],
+                chart: [
+                    { label: "Tuần 1", value: 780 },
+                    { label: "Tuần 2", value: 890 },
+                    { label: "Tuần 3", value: 950 },
+                    { label: "Tuần 4", value: 832 }
                 ]
             }
         };
 
-        // Render page function
+        let trendChartInstance = null;
+        let statusChartInstance = null;
+
+        function setTrend(id, trend) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('trend-up', 'trend-down');
+            el.classList.add(trend.up ? 'trend-up' : 'trend-down');
+            const icon = trend.up ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+            el.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${trend.pct}</span>`;
+        }
+
+        // Render line trend chart
+        function renderTrendChart(chartData) {
+            const ctx = document.getElementById('order-trend-chart').getContext('2d');
+            if (trendChartInstance) {
+                trendChartInstance.destroy();
+            }
+
+            const labels = chartData.map(d => d.label);
+            const values = chartData.map(d => d.value);
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+            gradient.addColorStop(0, 'rgba(255, 120, 45, 0.25)');
+            gradient.addColorStop(1, 'rgba(255, 120, 45, 0.005)');
+
+            trendChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Số lượng đơn hàng',
+                        data: values,
+                        borderColor: '#ff782d',
+                        borderWidth: 3,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#ff782d',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { family: 'Outfit, Inter, sans-serif', size: 12, weight: 'bold' },
+                            bodyFont: { family: 'Outfit, Inter, sans-serif', size: 12 },
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return ' Đơn hàng: ' + Number(context.raw).toLocaleString('vi-VN') + ' đơn';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Outfit, Inter, sans-serif', size: 10, weight: '500' },
+                                color: '#64748b'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: '#f1f5f9',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: { family: 'Outfit, Inter, sans-serif', size: 10, weight: '500' },
+                                color: '#64748b',
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return Number(value).toLocaleString('vi-VN');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render Doughnut distribution chart
+        function renderStatusChart(statuses) {
+            const ctx = document.getElementById('order-status-chart').getContext('2d');
+            if (statusChartInstance) {
+                statusChartInstance.destroy();
+            }
+
+            const labels = statuses.map(s => s.name);
+            const values = statuses.map(s => s.count);
+            const colors = statuses.map(s => s.color);
+
+            statusChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { family: 'Outfit, Inter, sans-serif', size: 12, weight: 'bold' },
+                            bodyFont: { family: 'Outfit, Inter, sans-serif', size: 12 },
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + Number(context.raw).toLocaleString('vi-VN') + ' đơn';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update page elements dynamically
         function updatePage(filter) {
             const data = mockData[filter];
+            if (!data) return;
 
-            // Update stats
+            // 1. Update stats text values
             document.getElementById('orders-val').innerText = data.total;
-            document.getElementById('orders-trend').innerHTML = data.totalTrend;
             document.getElementById('completed-val').innerText = data.completed;
-            document.getElementById('completed-trend').innerHTML = data.completedTrend;
             document.getElementById('pending-val').innerText = data.pending;
-            document.getElementById('pending-trend').innerHTML = data.pendingTrend;
             document.getElementById('cancelled-val').innerText = data.cancelled;
-            document.getElementById('cancelled-trend').innerHTML = data.cancelledTrend;
 
-            // Render status bar list
-            const barList = document.getElementById('status-bar-list');
-            barList.innerHTML = '';
+            // 2. Update trend elements
+            setTrend('orders-trend', data.totalTrend);
+            setTrend('completed-trend', data.completedTrend);
+            setTrend('pending-trend', data.pendingTrend);
+            setTrend('cancelled-trend', data.cancelledTrend);
+
+            // 3. Render status legend list
+            const legendList = document.getElementById('status-legend-list');
+            legendList.innerHTML = '';
             data.statuses.forEach(status => {
-                barList.innerHTML += `
-                    <div class="status-bar-item">
-                        <div class="status-bar-header">
-                            <span>${status.name}</span>
-                            <span>${status.count} đơn (${status.percentage})</span>
+                legendList.innerHTML += `
+                    <div class="legend-item">
+                        <div class="legend-left">
+                            <span class="legend-color" style="background-color: ${status.color};"></span>
+                            <span class="legend-name">${status.name}</span>
+                            <span class="legend-percentage">${status.percentage}</span>
                         </div>
-                        <div class="status-progress-track">
-                            <div class="status-progress-fill" style="width: ${status.percentage}; background-color: ${status.color}"></div>
-                        </div>
+                        <span class="legend-value">${status.count} đơn</span>
                     </div>
                 `;
             });
 
-            // Render table
+            // 4. Render ChartJS Line Chart
+            renderTrendChart(data.chart);
+
+            // 5. Render ChartJS Doughnut Chart
+            renderStatusChart(data.statuses);
+
+            // 6. Render Details Table Rows
             const tableBody = document.getElementById('status-table-body');
             tableBody.innerHTML = '';
             data.statuses.forEach(status => {
-                let badgeClass = 'status-completed';
-                if (status.name.includes('Pending')) badgeClass = 'status-pending';
-                if (status.name.includes('Cancelled')) badgeClass = 'status-cancelled';
-                if (status.name.includes('Shipping')) badgeClass = 'status-pending'; // using pending style for shipping as general loading
+                const noteColor = status.noteUp ? '#10b981' : '#ef4444';
+                const noteIcon = status.noteUp ? 'fa-circle-arrow-up' : 'fa-circle-exclamation';
 
                 tableBody.innerHTML += `
                     <tr>
-                        <td><span class="badge-status ${badgeClass}">${status.name.split(' (')[0].toUpperCase()}</span></td>
-                        <td style="font-weight: 700;">${status.count}</td>
-                        <td style="font-weight: 600; color: var(--primary);">${status.percentage}</td>
-                        <td style="color: var(--success); font-weight: 500;"><i class="fa-solid fa-circle-arrow-up"></i> Tăng trưởng tốt</td>
+                        <td><span class="badge-status ${status.badge}">${status.name.toUpperCase()}</span></td>
+                        <td style="font-weight: 700; color: var(--text-main);">${Number(status.count).toLocaleString('vi-VN')} đơn</td>
+                        <td style="font-weight: 700; color: var(--primary);">${status.percentage}</td>
+                        <td style="color: ${noteColor}; font-weight: 600; font-size: 0.86rem;">
+                            <i class="fa-solid ${noteIcon}" style="margin-right: 4px;"></i> ${status.note}
+                        </td>
                     </tr>
                 `;
             });
         }
 
-        // Handle Filter Option click
+        // Handle dropdown selection click
         filterOptions.forEach(opt => {
             opt.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -342,7 +745,7 @@
             });
         });
 
-        // Initial render
+        // Trigger initial page render (30 Days default)
         updatePage('30days');
     });
 </script>
