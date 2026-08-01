@@ -252,8 +252,17 @@
         white-space: nowrap;
     }
 
-    /* Detailed Table */
-    .table-container {
+    /* Detail Table */
+    .detail-table-card {
+        background: #ffffff;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: var(--shadow-subtle);
+        padding: 24px;
+        margin-top: 24px;
+        overflow: hidden;
+    }
+    .pl-table-scroll {
         overflow-x: auto;
     }
     .orders-table {
@@ -420,11 +429,11 @@
 </div>
 
 <!-- Details Table (Displays structured evaluation data) -->
-<div class="dashboard-card" style="margin-top: 24px;">
+<div class="detail-table-card">
     <div class="card-header-styled">
         <span class="card-title-styled"><i class="fa-solid fa-file-invoice-dollar" style="color: var(--primary); margin-right: 6px;"></i> Chi tiết tỷ lệ hoàn thành & Tốc độ xử lý</span>
     </div>
-    <div class="table-container">
+    <div class="pl-table-scroll">
         <table class="orders-table">
             <thead>
                 <tr>
