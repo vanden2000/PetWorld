@@ -23,6 +23,7 @@ import {
   createAddress,
   createOrder,
   getOrder,
+  getPaymentStatus,
   checkSepayPayment,
   renewPayment,
   buildSepayQrUrl,
@@ -43,6 +44,10 @@ import {
 
 // Mã QR hết hạn sau 15 phút, sau đó khách bấm tạo lại.
 const QR_TTL_SECONDS = 15 * 60;
+
+// Nhịp đọc trạng thái trong DB (nhanh) và nhịp đối soát với API SePay (chậm).
+const PAYMENT_POLL_MS = 4000;
+const PAYMENT_RECONCILE_MS = 30000;
 
 // Phiên thanh toán đang chờ được lưu localStorage để khôi phục khi rớt mạng / tải lại trang.
 const PENDING_PAYMENT_KEY = "petworld_pending_payment";
@@ -168,13 +173,25 @@ export default function CheckoutView() {
   // Sau khi đặt đơn chuyển khoản, hỏi server mỗi 4s tới khi SePay xác nhận (dừng khi đã trả/hết hạn).
   useEffect(() => {
     if (!placedOrder || !placedOrder.is_bank || orderPaid || qrExpired || cancelling) return;
-    const timer = setInterval(async () => {
+
+    // Nhịp dày: chỉ đọc trạng thái trong DB, rất nhanh. Webhook SePay đã cập nhật
+    // sẵn khi tiền về nên đây là đường nhận biết chính.
+    const statusTimer = setInterval(async () => {
+      const fresh = await getPaymentStatus(placedOrder.id);
+      if (fresh?.payment_status === "paid") setOrderPaid(true);
+    }, PAYMENT_POLL_MS);
+
+    // Nhịp thưa: đối soát thẳng với API SePay để vá trường hợp webhook không tới
+    // (ngrok tắt, SePay lỗi). Request này mất 8-10 giây nên không gọi dày được.
+    const reconcileTimer = setInterval(async () => {
       const fresh = await checkSepayPayment(placedOrder.id);
-      if (fresh?.payment_status === "paid") {
-        setOrderPaid(true);
-      }
-    }, 4000);
-    return () => clearInterval(timer);
+      if (fresh?.payment_status === "paid") setOrderPaid(true);
+    }, PAYMENT_RECONCILE_MS);
+
+    return () => {
+      clearInterval(statusTimer);
+      clearInterval(reconcileTimer);
+    };
   }, [placedOrder, orderPaid, qrExpired, cancelling]);
 
   // Nhịp đồng hồ mỗi giây để tính lại thời gian còn lại từ mốc hết hạn tuyệt đối.
@@ -471,8 +488,9 @@ export default function CheckoutView() {
         return { ok: true };
       }
 
-      // Hủy bị từ chối: hỏi lại server xem tiền có vừa về đúng lúc khách bấm không.
-      const fresh = await checkSepayPayment(placedOrder.id);
+      // Hủy bị từ chối: xem trong DB đơn đã được đánh dấu trả tiền chưa. Đọc DB là
+      // đủ vì server chỉ từ chối hủy khi đã ghi nhận thanh toán.
+      const fresh = await getPaymentStatus(placedOrder.id);
       if (fresh?.payment_status === "paid") {
         setOrderPaid(true);
         clearPendingPayment();

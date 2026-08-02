@@ -226,6 +226,31 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Đọc nhanh trạng thái thanh toán từ DB, KHÔNG gọi API SePay.
+     *
+     * Dùng cho vòng poll dày của màn chờ thanh toán: webhook SePay mới là đường
+     * xác nhận chính, còn đối soát qua API (checkSepayPayment) chỉ chạy thưa để
+     * vá trường hợp webhook không tới. Endpoint này chỉ đọc, không ghi.
+     */
+    public function paymentStatus(Request $request, Order $order): JsonResponse
+    {
+        abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
+
+        return response()->json([
+            'data' => [
+                'order' => [
+                    'id' => $order->id,
+                    'payment_code' => $order->payment_code,
+                    'payment_status' => $order->payment_status,
+                    'status' => $order->order_status,
+                    'expires_at' => $order->expires_at?->toIso8601String(),
+                    'updated_at' => $order->updated_at?->toIso8601String(),
+                ],
+            ],
+        ]);
+    }
+
     public function checkSepayPayment(Request $request, Order $order, SepayPaymentReconciler $reconciler): JsonResponse
     {
         abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
