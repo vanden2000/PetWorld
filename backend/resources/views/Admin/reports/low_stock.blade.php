@@ -465,76 +465,8 @@
             filterMenu.style.display = 'none';
         });
 
-        // Mock data dictionary with chart coordinates
-        const mockData = {
-            today: {
-                lowStock: "10 sản phẩm",
-                outOfStock: "3 sản phẩm",
-                safety: "92.1%",
-                total: "1.790 đơn vị",
-                items: [
-                    { name: "Pate Royal Canin Mini Puppy", variant: "Lon 195g", sku: "RC-PUP-LON-195G", cat: "Pate / Thức ăn ướt", stock: 0, status: "HẾT HÀNG", statusClass: "badge-cancelled" },
-                    { name: "Pate Me-O Cá Ngừ", variant: "Lốc 12 túi", sku: "ME-O-CANGU-12", cat: "Pate / Thức ăn ướt", stock: 0, status: "HẾT HÀNG", statusClass: "badge-cancelled" },
-                    { name: "Xịt khử mùi Bioline", variant: "Chai 300ml", sku: "BIO-XIT-300ML", cat: "Vệ sinh & chăm sóc", stock: 0, status: "HẾT HÀNG", statusClass: "badge-cancelled" },
-                    { name: "Royal Canin Mini Adult", variant: "Bao 3kg", sku: "RC-MA-BAO-3KG", cat: "Thức ăn hạt", stock: 3, status: "SẮP HẾT", statusClass: "badge-pending" },
-                    { name: "Dây dắt Trixie Premium", variant: "Kích thước S", sku: "TX-DD-PRE-S", cat: "Phụ kiện", stock: 5, status: "SẮP HẾT", statusClass: "badge-pending" },
-                    { name: "Bóng Trixie Denta Fun", variant: "Màu Đỏ", sku: "TX-BONG-DF-RD", cat: "Đồ chơi", stock: 8, status: "SẮP HẾT", statusClass: "badge-pending" }
-                ],
-                statusBreakdown: [
-                    { name: "Hết hàng", count: 3, color: "#ef4444", percentage: "0.2%" },
-                    { name: "Sắp hết hàng", count: 10, color: "#f59e0b", percentage: "0.6%" },
-                    { name: "Tồn kho an toàn", count: 1777, color: "#10b981", percentage: "99.2%" }
-                ],
-                categoriesBreakdown: {
-                    labels: ["Pate / Ướt", "Hạt", "Vệ sinh", "Phụ kiện", "Đồ chơi"],
-                    values: [3, 1, 1, 1, 1]
-                }
-            },
-            "7days": {
-                lowStock: "9 sản phẩm",
-                outOfStock: "2 sản phẩm",
-                safety: "93.9%",
-                total: "1.810 đơn vị",
-                items: [
-                    { name: "Pate Royal Canin Mini Puppy", variant: "Lon 195g", sku: "RC-PUP-LON-195G", cat: "Pate / Thức ăn ướt", stock: 0, status: "HẾT HÀNG", statusClass: "badge-cancelled" },
-                    { name: "Pate Me-O Cá Ngừ", variant: "Lốc 12 túi", sku: "ME-O-CANGU-12", cat: "Pate / Thức ăn ướt", stock: 0, status: "HẾT HÀNG", statusClass: "badge-cancelled" },
-                    { name: "Royal Canin Mini Adult", variant: "Bao 3kg", sku: "RC-MA-BAO-3KG", cat: "Thức ăn hạt", stock: 2, status: "SẮP HẾT", statusClass: "badge-pending" },
-                    { name: "Dây dắt Trixie Premium", variant: "Kích thước S", sku: "TX-DD-PRE-S", cat: "Phụ kiện", stock: 4, status: "SẮP HẾT", statusClass: "badge-pending" },
-                    { name: "Bóng Trixie Denta Fun", variant: "Màu Đỏ", sku: "TX-BONG-DF-RD", cat: "Đồ chơi", stock: 7, status: "SẮP HẾT", statusClass: "badge-pending" }
-                ],
-                statusBreakdown: [
-                    { name: "Hết hàng", count: 2, color: "#ef4444", percentage: "0.1%" },
-                    { name: "Sắp hết hàng", count: 9, color: "#f59e0b", percentage: "0.5%" },
-                    { name: "Tồn kho an toàn", count: 1799, color: "#10b981", percentage: "99.4%" }
-                ],
-                categoriesBreakdown: {
-                    labels: ["Pate / Ướt", "Hạt", "Vệ sinh", "Phụ kiện", "Đồ chơi"],
-                    values: [2, 1, 0, 1, 1]
-                }
-            },
-            "30days": {
-                lowStock: "8 sản phẩm",
-                outOfStock: "2 sản phẩm",
-                safety: "94.8%",
-                total: "1.825 đơn vị",
-                items: [
-                    { name: "Pate Royal Canin Mini Puppy", variant: "Lon 195g", sku: "RC-PUP-LON-195G", cat: "Pate / Thức ăn ướt", stock: 0, status: "HẾT HÀNG", statusClass: "badge-cancelled" },
-                    { name: "Pate Me-O Cá Ngừ", variant: "Lốc 12 túi", sku: "ME-O-CANGU-12", cat: "Pate / Thức ăn ướt", stock: 0, status: "HẾT HÀNG", statusClass: "badge-cancelled" },
-                    { name: "Royal Canin Mini Adult", variant: "Bao 3kg", sku: "RC-MA-BAO-3KG", cat: "Thức ăn hạt", stock: 1, status: "SẮP HẾT", statusClass: "badge-pending" },
-                    { name: "Dây dắt Trixie Premium", variant: "Kích thước S", sku: "TX-DD-PRE-S", cat: "Phụ kiện", stock: 3, status: "SẮP HẾT", statusClass: "badge-pending" },
-                    { name: "Bóng Trixie Denta Fun", variant: "Màu Đỏ", sku: "TX-BONG-DF-RD", cat: "Đồ chơi", stock: 5, status: "SẮP HẾT", statusClass: "badge-pending" }
-                ],
-                statusBreakdown: [
-                    { name: "Hết hàng", count: 2, color: "#ef4444", percentage: "0.1%" },
-                    { name: "Sắp hết hàng", count: 8, color: "#f59e0b", percentage: "0.4%" },
-                    { name: "Tồn kho an toàn", count: 1815, color: "#10b981", percentage: "99.5%" }
-                ],
-                categoriesBreakdown: {
-                    labels: ["Pate / Ướt", "Hạt", "Vệ sinh", "Phụ kiện", "Đồ chơi"],
-                    values: [2, 1, 0, 1, 1]
-                }
-            }
-        };
+        // Real data from database passed from controller
+        const mockData = @json($periods);
 
         let statusChartInstance = null;
         let categoryChartInstance = null;
