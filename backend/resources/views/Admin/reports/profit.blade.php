@@ -510,35 +510,27 @@
             const profits = chartData.map(d => d.profit);
 
             comparisonChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
                         {
                             label: 'Doanh thu',
                             data: revenues,
+                            backgroundColor: '#ff782d',
                             borderColor: '#ff782d',
-                            borderWidth: 3,
-                            backgroundColor: 'transparent',
-                            tension: 0.35,
-                            pointBackgroundColor: '#ff782d',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
+                            borderRadius: 6,
+                            maxBarThickness: 46,
+                            borderWidth: 0
                         },
                         {
                             label: 'Lợi nhuận gộp',
                             data: profits,
+                            backgroundColor: '#10b981',
                             borderColor: '#10b981',
-                            borderWidth: 3,
-                            backgroundColor: 'transparent',
-                            tension: 0.35,
-                            pointBackgroundColor: '#10b981',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
+                            borderRadius: 6,
+                            maxBarThickness: 46,
+                            borderWidth: 0
                         }
                     ]
                 },

@@ -158,12 +158,17 @@ class OrderController extends Controller
         });
         // lấy user sở hữu đơn hàng
         $cancelledOrder->load('user');
-        try {
-            Mail::to($cancelledOrder->user->email)
-                ->send(new OrderStatusMail($cancelledOrder));
-        } catch (Throwable $exception) {
-            report($exception);
-        }
+
+        // Gửi sau khi đã trả response: SMTP mất ~4s, để trong request thì khách
+        // bấm hủy phải ngồi chờ (và server dev đơn tiến trình bị chặn theo).
+        dispatch(function () use ($cancelledOrder): void {
+            try {
+                Mail::to($cancelledOrder->user->email)
+                    ->send(new OrderStatusMail($cancelledOrder));
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        })->afterResponse();
 
         return response()->json([
             'message' => 'Đã hủy đơn hàng thành công.',
@@ -216,6 +221,31 @@ class OrderController extends Controller
                     'payment_status' => $renewed->payment_status,
                     'status' => $renewed->order_status,
                     'expires_at' => $renewed->expires_at?->toIso8601String(),
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Đọc nhanh trạng thái thanh toán từ DB, KHÔNG gọi API SePay.
+     *
+     * Dùng cho vòng poll dày của màn chờ thanh toán: webhook SePay mới là đường
+     * xác nhận chính, còn đối soát qua API (checkSepayPayment) chỉ chạy thưa để
+     * vá trường hợp webhook không tới. Endpoint này chỉ đọc, không ghi.
+     */
+    public function paymentStatus(Request $request, Order $order): JsonResponse
+    {
+        abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
+
+        return response()->json([
+            'data' => [
+                'order' => [
+                    'id' => $order->id,
+                    'payment_code' => $order->payment_code,
+                    'payment_status' => $order->payment_status,
+                    'status' => $order->order_status,
+                    'expires_at' => $order->expires_at?->toIso8601String(),
+                    'updated_at' => $order->updated_at?->toIso8601String(),
                 ],
             ],
         ]);

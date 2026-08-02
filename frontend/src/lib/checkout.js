@@ -78,6 +78,28 @@ export async function renewPayment(id) {
   return postJson(`/api/orders/${id}/renew-payment`, {});
 }
 
+/**
+ * Đọc nhanh trạng thái thanh toán từ DB (không gọi API SePay) — dùng cho vòng
+ * poll dày. Webhook SePay là đường xác nhận chính nên trạng thái ở đây đã đủ mới.
+ */
+export async function getPaymentStatus(id) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/orders/${id}/payment-status`, {
+      cache: "no-store",
+      headers: { Accept: "application/json", ...authHeaders() },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data?.order ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Đối soát với API SePay (chậm, 8-10 giây). Chỉ gọi thưa để vá trường hợp
+ * webhook không tới, đừng dùng cho vòng poll dày.
+ */
 export async function checkSepayPayment(id) {
   const res = await postJson(`/api/orders/${id}/check-sepay-payment`, {});
   return res.ok ? res.data?.order ?? null : null;
@@ -108,7 +130,7 @@ export async function getOrder(id) {
  */
 export function buildSepayQrUrl(paymentCode, amount) {
   const base = process.env.NEXT_PUBLIC_SEPAY_QR_BASE
-    || "https://vietqr.app/img?bank=MBBank&acc=VQRQAKCIT7920&template=compact&showinfo=true&fullacc=true&holder=LE%20TRAN%20PHAT";
+    || "https://vietqr.app/img?bank=MBBank&acc=0865130622&template=compact&showinfo=true&fullacc=true&holder=LE%20TRAN%20PHAT";
   const sep = base.includes("?") ? "&" : "?";
   return `${base}${sep}amount=${Math.round(amount)}&des=${encodeURIComponent(paymentCode)}`;
 }

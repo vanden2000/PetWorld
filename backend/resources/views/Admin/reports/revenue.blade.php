@@ -513,22 +513,17 @@
             gradient.addColorStop(1, 'rgba(255, 120, 45, 0.005)');
 
             timeChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
                         label: 'Doanh thu thực tế',
                         data: values,
+                        backgroundColor: '#ff782d',
                         borderColor: '#ff782d',
-                        borderWidth: 3,
-                        backgroundColor: gradient,
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: '#ff782d',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
+                        borderRadius: 6,
+                        maxBarThickness: 46,
+                        borderWidth: 0,
                         pointHitRadius: 10
                     }]
                 },
