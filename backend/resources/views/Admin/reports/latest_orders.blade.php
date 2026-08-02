@@ -491,83 +491,8 @@
         });
 
         // Mock data dictionary with chart coordinates
-        const mockData = {
-            today: {
-                total: "15 đơn",
-                totalTrend: { pct: "+4,2%", up: true },
-                revenue: "5.600.000đ",
-                revenueTrend: { pct: "+6,8%", up: true },
-                aov: "373.000đ",
-                pending: "2 đơn",
-                orders: [
-                    { id: "#PW-8291", customer: "Nguyễn Văn A", items: "Royal Canin Adult 5kg", total: "1.250.000đ", status: "HOÀN TẤT", statusClass: "badge-completed" },
-                    { id: "#PW-8292", customer: "Trần Thị B", items: "Dây dắt tự động LED", total: "450.000đ", status: "CHỜ XỬ LÝ", statusClass: "badge-pending" }
-                ],
-                statusBreakdown: [
-                    { name: "Hoàn tất", count: 13, color: "#10b981", percentage: "86.7%" },
-                    { name: "Chờ xử lý", count: 2, color: "#f59e0b", percentage: "13.3%" }
-                ],
-                chart: [
-                    { label: "00:00", value: 1 },
-                    { label: "04:00", value: 0 },
-                    { label: "08:00", value: 4 },
-                    { label: "12:00", value: 5 },
-                    { label: "16:00", value: 3 },
-                    { label: "20:00", value: 2 }
-                ]
-            },
-            "7days": {
-                total: "95 đơn",
-                totalTrend: { pct: "+9,5%", up: true },
-                revenue: "36.200.000đ",
-                revenueTrend: { pct: "+10,4%", up: true },
-                aov: "381.000đ",
-                pending: "15 đơn",
-                orders: [
-                    { id: "#PW-8291", customer: "Nguyễn Văn A", items: "Royal Canin Adult 5kg", total: "1.250.000đ", status: "HOÀN TẤT", statusClass: "badge-completed" },
-                    { id: "#PW-8292", customer: "Trần Thị B", items: "Dây dắt tự động LED", total: "450.000đ", status: "CHỜ XỬ LÝ", statusClass: "badge-pending" },
-                    { id: "#PW-8293", customer: "Lê Hoàng C", items: "Pate Whiskas 12 gói", total: "180.000đ", status: "HOÀN TẤT", statusClass: "badge-completed" }
-                ],
-                statusBreakdown: [
-                    { name: "Hoàn tất", count: 80, color: "#10b981", percentage: "84.2%" },
-                    { name: "Chờ xử lý", count: 15, color: "#f59e0b", percentage: "15.8%" }
-                ],
-                chart: [
-                    { label: "26/07", value: 12 },
-                    { label: "27/07", value: 15 },
-                    { label: "28/07", value: 18 },
-                    { label: "29/07", value: 11 },
-                    { label: "30/07", value: 19 },
-                    { label: "31/07", value: 12 },
-                    { label: "01/08", value: 8 }
-                ]
-            },
-            "30days": {
-                total: "452 đơn",
-                totalTrend: { pct: "+12,4%", up: true },
-                revenue: "168.000.000đ",
-                revenueTrend: { pct: "+15,2%", up: true },
-                aov: "372.000đ",
-                pending: "92 đơn",
-                orders: [
-                    { id: "#PW-8291", customer: "Nguyễn Văn A", items: "Royal Canin Adult 5kg", total: "1.250.000đ", status: "HOÀN TẤT", statusClass: "badge-completed" },
-                    { id: "#PW-8292", customer: "Trần Thị B", items: "Dây dắt tự động LED", total: "450.000đ", status: "CHỜ XỬ LÝ", statusClass: "badge-pending" },
-                    { id: "#PW-8293", customer: "Lê Hoàng C", items: "Pate Whiskas 12 gói", total: "180.000đ", status: "HOÀN TẤT", statusClass: "badge-completed" },
-                    { id: "#PW-8294", customer: "Phạm Minh D", items: "Chuồng chó inox 304", total: "2.800.000đ", status: "ĐÃ HỦY", statusClass: "badge-cancelled" }
-                ],
-                statusBreakdown: [
-                    { name: "Hoàn tất", count: 348, color: "#10b981", percentage: "77.0%" },
-                    { name: "Chờ xử lý", count: 92, color: "#f59e0b", percentage: "20.4%" },
-                    { name: "Đã hủy", count: 12, color: "#ef4444", percentage: "2.6%" }
-                ],
-                chart: [
-                    { label: "Tuần 1", value: 95 },
-                    { label: "Tuần 2", value: 120 },
-                    { label: "Tuần 3", value: 135 },
-                    { label: "Tuần 4", value: 102 }
-                ]
-            }
-        };
+        // Số liệu thật do ReportController tính, khóa theo kỳ: today / 7days / 30days
+        const periodData = @json($periods);
 
         let trendChartInstance = null;
         let statusChartInstance = null;
@@ -596,22 +521,17 @@
             gradient.addColorStop(1, 'rgba(59, 130, 246, 0.005)');
 
             trendChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
                         label: 'Đơn hàng phát sinh',
                         data: values,
+                        backgroundColor: '#3b82f6',
                         borderColor: '#3b82f6',
-                        borderWidth: 3,
-                        backgroundColor: gradient,
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: '#3b82f6',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        borderRadius: 6,
+                        maxBarThickness: 46,
+                        borderWidth: 0
                     }]
                 },
                 options: {
@@ -705,7 +625,7 @@
 
         // Update page components
         function updatePage(filter) {
-            const data = mockData[filter];
+            const data = periodData[filter];
             if (!data) return;
 
             // 1. Update text values

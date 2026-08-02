@@ -475,87 +475,8 @@
         });
 
         // Mock data dictionary with correct Unsplash images for products and chart coords
-        const mockData = {
-            today: {
-                totalSold: "185 sản phẩm",
-                soldTrend: { pct: "+14,2%", up: true },
-                topProduct: "Pate Whiskas mèo lớn",
-                topCategory: "Pate / Thức ăn ướt",
-                topBrand: "Whiskas",
-                sellers: [
-                    { rank: 1, name: "Pate Whiskas vị cá ngừ", cat: "Pate / Thức ăn ướt", brand: "Whiskas", units: 48, revenue: "720.000đ", image: "https://images.unsplash.com/photo-1569591159212-b02ea8a9f239?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-pate" },
-                    { rank: 2, name: "Royal Canin Mother & Babycat", cat: "Thức ăn hạt", brand: "Royal Canin", units: 32, revenue: "14.500.000đ", image: "https://images.unsplash.com/photo-1589733901241-5e8a40070c2e?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-food" },
-                    { rank: 3, name: "Xương gặm KONG Classic Red", cat: "Đồ chơi", brand: "KONG", units: 15, revenue: "4.800.000đ", image: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-toys" }
-                ],
-                categories: [
-                    { name: "Pate / Thức ăn ướt", count: 48, percentage: "50,5%", color: "#8b5cf6" },
-                    { name: "Thức ăn hạt", count: 32, percentage: "33,7%", color: "#ff782d" },
-                    { name: "Đồ chơi", count: 15, percentage: "15,8%", color: "#f59e0b" }
-                ],
-                chart: [
-                    { label: "00:00", value: 5 },
-                    { label: "04:00", value: 1 },
-                    { label: "08:00", value: 34 },
-                    { label: "12:00", value: 52 },
-                    { label: "16:00", value: 68 },
-                    { label: "20:00", value: 20 },
-                    { label: "23:00", value: 5 }
-                ]
-            },
-            "7days": {
-                totalSold: "1.240 sản phẩm",
-                soldTrend: { pct: "+9,8%", up: true },
-                topProduct: "Royal Canin Mother & Babycat",
-                topCategory: "Thức ăn hạt",
-                topBrand: "Royal Canin",
-                sellers: [
-                    { rank: 1, name: "Royal Canin Mother & Babycat", cat: "Thức ăn hạt", brand: "Royal Canin", units: 148, revenue: "64.800.000đ", image: "https://images.unsplash.com/photo-1589733901241-5e8a40070c2e?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-food" },
-                    { rank: 2, name: "Máy lọc nước tự động PETKIT", cat: "Phụ kiện", brand: "PETKIT", units: 82, revenue: "72.980.000đ", image: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-accessories" },
-                    { rank: 3, name: "Pate Whiskas vị cá ngừ", cat: "Pate / Thức ăn ướt", brand: "Whiskas", units: 120, revenue: "1.800.000đ", image: "https://images.unsplash.com/photo-1569591159212-b02ea8a9f239?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-pate" },
-                    { rank: 4, name: "Xương gặm KONG Classic Red", cat: "Đồ chơi", brand: "KONG", units: 45, revenue: "14.400.000đ", image: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-toys" }
-                ],
-                categories: [
-                    { name: "Thức ăn hạt", count: 148, percentage: "37,5%", color: "#ff782d" },
-                    { name: "Pate / Thức ăn ướt", count: 120, percentage: "30,4%", color: "#8b5cf6" },
-                    { name: "Phụ kiện", count: 82, percentage: "20,8%", color: "#3b82f6" },
-                    { name: "Đồ chơi", count: 45, percentage: "11,4%", color: "#f59e0b" }
-                ],
-                chart: [
-                    { label: "26/07", value: 160 },
-                    { label: "27/07", value: 185 },
-                    { label: "28/07", value: 210 },
-                    { label: "29/07", value: 168 },
-                    { label: "30/07", value: 245 },
-                    { label: "31/07", value: 172 },
-                    { label: "01/08", value: 100 }
-                ]
-            },
-            "30days": {
-                totalSold: "5.820 sản phẩm",
-                soldTrend: { pct: "+10,2%", up: true },
-                topProduct: "Royal Canin Mother & Babycat",
-                topCategory: "Thức ăn hạt",
-                topBrand: "Royal Canin",
-                sellers: [
-                    { rank: 1, name: "Royal Canin Mother & Babycat", cat: "Thức ăn hạt", brand: "Royal Canin", units: 612, revenue: "275.400.000đ", image: "https://images.unsplash.com/photo-1589733901241-5e8a40070c2e?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-food" },
-                    { rank: 2, name: "Máy lọc nước tự động PETKIT", cat: "Phụ kiện", brand: "PETKIT", units: 312, revenue: "277.680.000đ", image: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-accessories" },
-                    { rank: 3, name: "Xương gặm KONG Classic Red", cat: "Đồ chơi", brand: "KONG", units: 549, revenue: "175.680.000đ", image: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-toys" },
-                    { rank: 4, name: "Đệm nằm nhung cao cấp", cat: "Vật dụng", brand: "Khác", units: 420, revenue: "504.000.000đ", image: "https://images.unsplash.com/photo-1591584596983-2c70d4948a3c?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-pate" }
-                ],
-                categories: [
-                    { name: "Thức ăn hạt", count: 612, percentage: "32,4%", color: "#ff782d" },
-                    { name: "Đồ chơi", count: 549, percentage: "29,0%", color: "#f59e0b" },
-                    { name: "Vật dụng", count: 420, percentage: "22,2%", color: "#8b5cf6" },
-                    { name: "Phụ kiện", count: 312, percentage: "16,5%", color: "#3b82f6" }
-                ],
-                chart: [
-                    { label: "Tuần 1", value: 1250 },
-                    { label: "Tuần 2", value: 1450 },
-                    { label: "Tuần 3", value: 1620 },
-                    { label: "Tuần 4", value: 1500 }
-                ]
-            }
-        };
+        // Số liệu thật do ReportController tính, khóa theo kỳ: today / 7days / 30days
+        const periodData = @json($periods);
 
         let trendChartInstance = null;
         let categoryChartInstance = null;
@@ -584,22 +505,17 @@
             gradient.addColorStop(1, 'rgba(59, 130, 246, 0.005)');
 
             trendChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
                         label: 'Sản phẩm đã bán',
                         data: values,
+                        backgroundColor: '#3b82f6',
                         borderColor: '#3b82f6',
-                        borderWidth: 3,
-                        backgroundColor: gradient,
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: '#3b82f6',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        borderRadius: 6,
+                        maxBarThickness: 46,
+                        borderWidth: 0
                     }]
                 },
                 options: {
@@ -692,7 +608,7 @@
 
         // Render page components
         function updatePage(filter) {
-            const data = mockData[filter];
+            const data = periodData[filter];
             if (!data) return;
 
             // 1. Update text values

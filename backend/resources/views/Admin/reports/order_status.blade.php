@@ -472,80 +472,8 @@
         });
 
         // Mock data dictionary with charts coordinate values
-        const mockData = {
-            today: {
-                total: "102 đơn",
-                totalTrend: { pct: "+14,2%", up: true },
-                completed: "95 đơn",
-                completedTrend: { pct: "+16,5%", up: true },
-                pending: "5 đơn",
-                pendingTrend: { pct: "-2,1%", up: false },
-                cancelled: "2 đơn",
-                cancelledTrend: { pct: "-1,5%", up: false },
-                statuses: [
-                    { name: "Hoàn tất", count: 95, percentage: "93,1%", color: "#10b981", badge: "badge-completed", note: "Hoạt động xuất sắc", noteUp: true },
-                    { name: "Đang giao", count: 3, percentage: "2,9%", color: "#3b82f6", badge: "badge-shipping", note: "Giao nhận ổn định", noteUp: true },
-                    { name: "Chờ xử lý", count: 2, percentage: "2,0%", color: "#f59e0b", badge: "badge-pending", note: "Đang chờ giải quyết", noteUp: false },
-                    { name: "Đã hủy", count: 2, percentage: "2,0%", color: "#ef4444", badge: "badge-cancelled", note: "Tỷ lệ rất thấp (Tốt)", noteUp: true }
-                ],
-                chart: [
-                    { label: "00:00", value: 4 },
-                    { label: "04:00", value: 1 },
-                    { label: "08:00", value: 18 },
-                    { label: "12:00", value: 25 },
-                    { label: "16:00", value: 32 },
-                    { label: "20:00", value: 16 },
-                    { label: "23:00", value: 6 }
-                ]
-            },
-            "7days": {
-                total: "732 đơn",
-                totalTrend: { pct: "+9,8%", up: true },
-                completed: "680 đơn",
-                completedTrend: { pct: "+11,2%", up: true },
-                pending: "35 đơn",
-                pendingTrend: { pct: "-4,5%", up: false },
-                cancelled: "17 đơn",
-                cancelledTrend: { pct: "-0,8%", up: false },
-                statuses: [
-                    { name: "Hoàn tất", count: 680, percentage: "92,9%", color: "#10b981", badge: "badge-completed", note: "Tỷ lệ hoàn thành cao", noteUp: true },
-                    { name: "Đang giao", count: 20, percentage: "2,7%", color: "#3b82f6", badge: "badge-shipping", note: "Vận chuyển nhanh", noteUp: true },
-                    { name: "Chờ xử lý", count: 15, percentage: "2,1%", color: "#f59e0b", badge: "badge-pending", note: "Đang xử lý trong ngày", noteUp: true },
-                    { name: "Đã hủy", count: 17, percentage: "2,3%", color: "#ef4444", badge: "badge-cancelled", note: "Kiểm soát tốt", noteUp: true }
-                ],
-                chart: [
-                    { label: "26/07", value: 92 },
-                    { label: "27/07", value: 105 },
-                    { label: "28/07", value: 118 },
-                    { label: "29/07", value: 98 },
-                    { label: "30/07", value: 125 },
-                    { label: "31/07", value: 110 },
-                    { label: "01/08", value: 84 }
-                ]
-            },
-            "30days": {
-                total: "3.452 đơn",
-                totalTrend: { pct: "+8,2%", up: true },
-                completed: "3.120 đơn",
-                completedTrend: { pct: "+12,4%", up: true },
-                pending: "242 đơn",
-                pendingTrend: { pct: "-5,4%", up: false },
-                cancelled: "90 đơn",
-                cancelledTrend: { pct: "-2,1%", up: false },
-                statuses: [
-                    { name: "Hoàn tất", count: 3120, percentage: "90,4%", color: "#10b981", badge: "badge-completed", note: "Tăng trưởng rất tốt", noteUp: true },
-                    { name: "Đang giao", count: 150, percentage: "4,3%", color: "#3b82f6", badge: "badge-shipping", note: "Đúng tiến độ", noteUp: true },
-                    { name: "Chờ xử lý", count: 92, percentage: "2,7%", color: "#f59e0b", badge: "badge-pending", note: "Lượng tồn đọng thấp", noteUp: true },
-                    { name: "Đã hủy", count: 90, percentage: "2,6%", color: "#ef4444", badge: "badge-cancelled", note: "Giảm so với tháng trước", noteUp: true }
-                ],
-                chart: [
-                    { label: "Tuần 1", value: 780 },
-                    { label: "Tuần 2", value: 890 },
-                    { label: "Tuần 3", value: 950 },
-                    { label: "Tuần 4", value: 832 }
-                ]
-            }
-        };
+        // Số liệu thật do ReportController tính, khóa theo kỳ: today / 7days / 30days
+        const periodData = @json($periods);
 
         let trendChartInstance = null;
         let statusChartInstance = null;
@@ -574,22 +502,17 @@
             gradient.addColorStop(1, 'rgba(255, 120, 45, 0.005)');
 
             trendChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
                         label: 'Số lượng đơn hàng',
                         data: values,
+                        backgroundColor: '#ff782d',
                         borderColor: '#ff782d',
-                        borderWidth: 3,
-                        backgroundColor: gradient,
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: '#ff782d',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        borderRadius: 6,
+                        maxBarThickness: 46,
+                        borderWidth: 0
                     }]
                 },
                 options: {
@@ -683,7 +606,7 @@
 
         // Update page elements dynamically
         function updatePage(filter) {
-            const data = mockData[filter];
+            const data = periodData[filter];
             if (!data) return;
 
             // 1. Update stats text values
