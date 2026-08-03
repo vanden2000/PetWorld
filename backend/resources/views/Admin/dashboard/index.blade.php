@@ -139,13 +139,13 @@
             <div class="stat-icon-wrapper icon-revenue">
                 <i class="fa-solid fa-wallet"></i>
             </div>
-            <div class="stat-trend trend-up">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+{{ number_format(abs($revenueGrowth), 1) }}%</span>
+            <div class="stat-trend {{ $revenueGrowth >= 0 ? 'trend-up' : 'trend-down' }}">
+                <i class="fa-solid {{ $revenueGrowth >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }}"></i>
+                <span>{{ $revenueGrowth >= 0 ? '+' : '' }}{{ number_format($revenueGrowth, 1) }}%</span>
             </div>
         </div>
         <div class="stat-label">Tổng doanh thu</div>
-        <div class="stat-value">{{ number_format($totalRevenueAllTime > 0 ? $totalRevenueAllTime : 1284000000, 0, ',', '.') }}đ</div>
+        <div class="stat-value">{{ number_format($totalRevenueAllTime, 0, ',', '.') }}đ</div>
     </div>
 
     <!-- Stat 2: Orders -->
@@ -154,13 +154,13 @@
             <div class="stat-icon-wrapper icon-orders">
                 <i class="fa-solid fa-truck"></i>
             </div>
-            <div class="stat-trend trend-up">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+{{ number_format(abs($ordersGrowth), 1) }}%</span>
+            <div class="stat-trend {{ $ordersGrowth >= 0 ? 'trend-up' : 'trend-down' }}">
+                <i class="fa-solid {{ $ordersGrowth >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }}"></i>
+                <span>{{ $ordersGrowth >= 0 ? '+' : '' }}{{ number_format($ordersGrowth, 1) }}%</span>
             </div>
         </div>
         <div class="stat-label">Tổng đơn hàng</div>
-        <div class="stat-value">{{ number_format($totalOrders > 0 ? $totalOrders : 3452, 0, ',', '.') }}</div>
+        <div class="stat-value">{{ number_format($totalOrders, 0, ',', '.') }}</div>
     </div>
 
     <!-- Stat 3: AOV -->
@@ -169,28 +169,24 @@
             <div class="stat-icon-wrapper icon-aov">
                 <i class="fa-solid fa-bag-shopping"></i>
             </div>
-            <div class="stat-trend trend-up">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+{{ number_format(abs($aovGrowth ?? 3.2), 1) }}%</span>
+            <div class="stat-trend {{ $aovGrowth >= 0 ? 'trend-up' : 'trend-down' }}">
+                <i class="fa-solid {{ $aovGrowth >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }}"></i>
+                <span>{{ $aovGrowth >= 0 ? '+' : '' }}{{ number_format($aovGrowth, 1) }}%</span>
             </div>
         </div>
         <div class="stat-label">Giá trị đơn hàng TB</div>
         <div class="stat-value">{{ number_format($avgOrderValue, 0, ',', '.') }}đ</div>
     </div>
 
-    <!-- Stat 4: Conversion Rate -->
+    <!-- Stat 4: Returning Customers Rate -->
     <div class="stat-card">
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-conversion">
                 <i class="fa-solid fa-rotate"></i>
             </div>
-            <div class="stat-trend trend-up">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+4.2%</span>
-            </div>
         </div>
-        <div class="stat-label">Tỷ lệ quay lại</div>
-        <div class="stat-value">{{ $returnRate ?? '68.2%' }}</div>
+        <div class="stat-label">Tỷ lệ quay lại mua hàng</div>
+        <div class="stat-value">{{ $returnRate ?? '0%' }}</div>
     </div>
 </div>
 
@@ -383,7 +379,7 @@
             </div>
             <div style="background-color: var(--info-light); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
                 <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">KHÁCH HÀNG MỚI</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--info); margin-top: 4px;">{{ number_format($newUsersThisMonth > 0 ? $newUsersThisMonth : 120) }}</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--info); margin-top: 4px;">{{ number_format($newUsersThisMonth) }}</div>
                 <div style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 2px;"><i class="fa-solid fa-arrow-trend-up"></i> +15.4%</div>
             </div>
         </div>

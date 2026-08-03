@@ -659,17 +659,42 @@ class ReportController extends Controller
     {
         $totalCustomers = User::where('role', 'user')->count();
         
-        $newCustomers = User::where('role', 'user')
+        // Khách mua hàng lần đầu tiên (có đúng 1 đơn hàng thanh toán thành công)
+        $newCustomers = DB::table('orders')
+            ->where('payment_status', 'paid')
+            ->where('order_status', '!=', 'cancelled')
             ->whereBetween('created_at', [$start, $end])
-            ->count();
+            ->whereIn('user_id', function ($q) use ($end) {
+                $q->select('user_id')
+                    ->from('orders')
+                    ->where('payment_status', 'paid')
+                    ->where('order_status', '!=', 'cancelled')
+                    ->where('created_at', '<=', $end)
+                    ->groupBy('user_id')
+                    ->havingRaw('COUNT(id) = 1');
+            })
+            ->distinct('user_id')
+            ->count('user_id');
 
         $lengthSeconds = max(1, $end->getTimestamp() - $start->getTimestamp());
         $prevEnd = $start->copy();
         $prevStart = $start->copy()->subSeconds($lengthSeconds);
         
-        $prevNew = User::where('role', 'user')
+        $prevNew = DB::table('orders')
+            ->where('payment_status', 'paid')
+            ->where('order_status', '!=', 'cancelled')
             ->whereBetween('created_at', [$prevStart, $prevEnd])
-            ->count();
+            ->whereIn('user_id', function ($q) use ($prevEnd) {
+                $q->select('user_id')
+                    ->from('orders')
+                    ->where('payment_status', 'paid')
+                    ->where('order_status', '!=', 'cancelled')
+                    ->where('created_at', '<=', $prevEnd)
+                    ->groupBy('user_id')
+                    ->havingRaw('COUNT(id) = 1');
+            })
+            ->distinct('user_id')
+            ->count('user_id');
 
         $orderedStats = DB::table('orders')
             ->where('payment_status', 'paid')
@@ -681,15 +706,22 @@ class ReportController extends Controller
         $uniqueUsers = (int) ($orderedStats->unique_users ?? 0);
         $totalSpent = (float) ($orderedStats->total_spent ?? 0);
 
+        // Khách mua từ lần thứ 2 trở lên
         $returningUsers = DB::table('orders')
-            ->select('user_id')
             ->where('payment_status', 'paid')
             ->where('order_status', '!=', 'cancelled')
             ->whereBetween('created_at', [$start, $end])
-            ->groupBy('user_id')
-            ->havingRaw('COUNT(id) >= 2')
-            ->get()
-            ->count();
+            ->whereIn('user_id', function ($q) use ($end) {
+                $q->select('user_id')
+                    ->from('orders')
+                    ->where('payment_status', 'paid')
+                    ->where('order_status', '!=', 'cancelled')
+                    ->where('created_at', '<=', $end)
+                    ->groupBy('user_id')
+                    ->havingRaw('COUNT(id) >= 2');
+            })
+            ->distinct('user_id')
+            ->count('user_id');
 
         $returningRate = $uniqueUsers > 0 ? ($returningUsers / $uniqueUsers) * 100 : 0;
         $avgSpent = $uniqueUsers > 0 ? $totalSpent / $uniqueUsers : 0;
@@ -706,14 +738,20 @@ class ReportController extends Controller
         $prevAvgSpent = $prevUniqueUsers > 0 ? $prevTotalSpent / $prevUniqueUsers : 0;
 
         $prevReturningUsers = DB::table('orders')
-            ->select('user_id')
             ->where('payment_status', 'paid')
             ->where('order_status', '!=', 'cancelled')
             ->whereBetween('created_at', [$prevStart, $prevEnd])
-            ->groupBy('user_id')
-            ->havingRaw('COUNT(id) >= 2')
-            ->get()
-            ->count();
+            ->whereIn('user_id', function ($q) use ($prevEnd) {
+                $q->select('user_id')
+                    ->from('orders')
+                    ->where('payment_status', 'paid')
+                    ->where('order_status', '!=', 'cancelled')
+                    ->where('created_at', '<=', $prevEnd)
+                    ->groupBy('user_id')
+                    ->havingRaw('COUNT(id) >= 2');
+            })
+            ->distinct('user_id')
+            ->count('user_id');
         $prevReturningRate = $prevUniqueUsers > 0 ? ($prevReturningUsers / $prevUniqueUsers) * 100 : 0;
 
         $topCustomers = $this->topCustomersList($start, $end);
@@ -1122,7 +1160,7 @@ class ReportController extends Controller
             ->get();
 
         return $orders->map(function ($order) {
-            $customerName = $order->user ? $order->user->name : ($order->billing_name ?: 'Khách vãng lai');
+            $customerName = $order->user ? $order->user->name : ($order->recipient_name ?: 'Khách vãng lai');
             
             $itemsList = $order->items->map(function ($oi) {
                 $pName = $oi->productVariant && $oi->productVariant->product ? $oi->productVariant->product->name : 'Sản phẩm';
