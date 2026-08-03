@@ -18,13 +18,14 @@
 
         body {
             margin: 0 auto;
+            height: 100vh;
             color: #1f2937;
             font: 12px/1.45 Arial, sans-serif;
         }
 
         .receipt {
             width: 100%;
-            max-width: 130mm;
+            max-width: 150mm;
             margin: 0 auto;
         }
 

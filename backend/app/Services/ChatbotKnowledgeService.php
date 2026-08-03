@@ -21,6 +21,8 @@ class ChatbotKnowledgeService
             ->when($query !== '', function ($builder) use ($query): void {
                 $builder->where(function ($nested) use ($query): void {
                     $nested->where('title', 'like', "%{$query}%")
+                        ->orWhere('summary', 'like', "%{$query}%")
+                        ->orWhere('questions', 'like', "%{$query}%")
                         ->orWhere('content', 'like', "%{$query}%");
                 });
             })
@@ -31,7 +33,9 @@ class ChatbotKnowledgeService
                 'id' => $article->id,
                 'title' => $article->title,
                 'category' => $article->category,
-                'excerpt' => Str::limit(trim(strip_tags($article->content)), 700),
+                'summary' => $article->summary,
+                'questions' => $article->questions ?? [],
+                'excerpt' => Str::limit(trim(strip_tags($article->summary ?: $article->content)), 700),
                 'published_at' => $article->published_at?->toDateString(),
             ])
             ->all();

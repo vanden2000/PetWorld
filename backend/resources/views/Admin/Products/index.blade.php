@@ -29,7 +29,6 @@
     .product-header-container h1 {
         font-size: 1.8rem;
         font-weight: 800;
-        color: var(--theme-text-dark);
         letter-spacing: -0.5px;
     }
 

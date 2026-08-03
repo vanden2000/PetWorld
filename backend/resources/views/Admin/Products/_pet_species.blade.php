@@ -4,15 +4,15 @@
     <p>Thông tin dùng cho bộ lọc cửa hàng và chatbot.</p>
     <div class="product-species-options">@forelse($petSpecies ?? [] as $species)<input
         id="classification-species-{{ $species->id }}" type="checkbox" name="pet_species_ids[]"
-        value="{{ $species->id }}" @checked(in_array($species->id, $speciesSelected))><label data-species-slug="{{ $species->slug }}"
-        for="classification-species-{{ $species->id }}"><i
+        value="{{ $species->id }}" @checked(in_array($species->id, $speciesSelected))><label
+        data-species-slug="{{ $species->slug }}" for="classification-species-{{ $species->id }}"><i
             class="fa-solid fa-paw"></i><span>{{ $species->name }}</span><b><i
     class="fa-solid fa-check"></i></b></label>@empty<span class="slug-field-note">Chưa có loài. Hãy chạy
                     migration để tạo Mèo và Chó.</span>@endforelse</div>
 </div>
 <style>
     .product-species-field {
-        margin-top: 16px !important
+        margin-top: 16px !important;
     }
 
     .product-species-field>p {

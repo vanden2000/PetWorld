@@ -49,14 +49,11 @@ export default function BlogComments({ blogSlug, initialComments = [] }) {
     setSuccess("");
 
     try {
-      const newComment = await postBlogComment(blogSlug, content.trim());
-      if (newComment) {
-        setComments((prev) => [newComment, ...prev]);
-        setContent("");
-        setSuccess("Gửi bình luận thành công!");
-        // Tự động tắt thông báo sau 3s
-        setTimeout(() => setSuccess(""), 3000);
-      }
+      const response = await postBlogComment(blogSlug, content.trim());
+      setContent("");
+      setSuccess(response?.message || "Bình luận đã được gửi và đang chờ duyệt.");
+      // Tự động tắt thông báo sau 3s
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err.message || "Không thể gửi bình luận. Vui lòng thử lại!");
     } finally {

@@ -645,7 +645,7 @@
 
     .header-title-block p {
         font-size: 0.95rem;
-        color: var(--primary);
+        color: var(--text-muted);
         margin-top: 4px;
     }
 

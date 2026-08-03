@@ -320,6 +320,30 @@
         border-radius: 4px;
         font-size: 0.76rem;
     }
+
+    /* Nhãn biến thể dưới tên sản phẩm ("S / Đỏ", "Hộp / 3kg"…) */
+    .variant-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 4px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        background: #fff4ec;
+        color: var(--primary);
+        border: 1px solid rgba(255, 120, 45, 0.2);
+    }
+    .variant-chip i {
+        font-size: 0.68rem;
+    }
+    .variant-chip.is-default {
+        background: #f1f5f9;
+        color: var(--text-muted);
+        border-color: var(--border-color);
+        font-weight: 500;
+    }
 </style>
 @endsection
 
@@ -614,13 +638,26 @@
             // 5. Render low stock products table
             const tableBody = document.getElementById('stock-table-body');
             tableBody.innerHTML = '';
+
+            if (!data.items || data.items.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 32px; color: var(--text-muted); font-weight: 500;">
+                            Không có sản phẩm nào sắp hết hoặc đã hết hàng.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
             data.items.forEach(item => {
                 tableBody.innerHTML += `
                     <tr>
                         <td>
                             <div>
                                 <strong style="color: var(--text-main); display: block; font-weight: 700;">${item.name}</strong>
-                                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">${item.variant}</span>
+                                <span class="variant-chip ${item.hasVariant ? '' : 'is-default'}">
+                                    ${item.hasVariant ? '<i class="fa-solid fa-layer-group"></i>' : ''} ${item.variant}
+                                </span>
                             </div>
                         </td>
                         <td><span class="slug-text">${item.sku}</span></td>
