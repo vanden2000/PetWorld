@@ -39,6 +39,21 @@
             font-size: 0.95rem;
             color: var(--text-main);
         }
+        .knowledge-preview { border: 1px solid #f3d8c7; border-radius: 12px; padding: 20px; background: #fffdfa; }
+        .knowledge-preview h4 { display:flex; align-items:center; gap:8px; margin:0 0 14px; color:var(--text-main); font-size:.95rem; }
+        .knowledge-preview h4 i { color:#ff782d; }
+        .knowledge-preview-status { display:inline-flex; margin-bottom:12px; padding:5px 9px; border-radius:999px; background:#fff1e8; color:#b95008; font-size:.75rem; font-weight:800; }
+        .knowledge-preview-label { margin:12px 0 4px; color:var(--text-muted); font-size:.72rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+        .knowledge-preview-value { color:var(--text-main); font-size:.88rem; line-height:1.5; white-space:pre-wrap; }
+        .knowledge-question-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+        .knowledge-question-row .form-control { flex:1; }
+        .knowledge-question-remove { flex:none; width:38px; height:38px; border:1px solid #f4caca; border-radius:8px; background:#fffafa; color:#dc2626; cursor:pointer; }
+        .knowledge-add-question { display:inline-flex; align-items:center; gap:6px; margin-top:2px; padding:8px 11px; border:1px solid #f3d8c7; border-radius:8px; background:#fff; color:#b95008; font:inherit; font-size:.84rem; font-weight:700; cursor:pointer; }
+        .knowledge-publish-check { border:1px solid #f3d8c7; border-radius:12px; padding:16px 20px; background:#fffaf5; }
+        .knowledge-publish-check h4 { margin:0 0 9px; color:#8f4b20; font-size:.9rem; }
+        .knowledge-publish-check ul { margin:0; padding-left:18px; color:#8f4b20; font-size:.84rem; line-height:1.55; }
+        .knowledge-publish-check.is-ready { border-color:#b8ead3; background:#f4fbf7; }
+        .knowledge-publish-check.is-ready h4, .knowledge-publish-check.is-ready ul { color:#16734a; }
     </style>
 @endsection
 
@@ -94,6 +109,13 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="summary">Tóm tắt cho chatbot</label>
+                    <textarea class="form-control @error('summary') is-invalid @enderror" id="summary" name="summary" rows="4" maxlength="1000" placeholder="Tóm tắt câu trả lời chính mà chatbot nên ưu tiên...">{{ old('summary', $article->summary) }}</textarea>
+                    <div class="species-help" style="margin-top:6px;">Nêu ý chính, điều kiện hoặc mốc thời gian quan trọng trong 1–3 câu.</div>
+                    @error('summary')<div class="error-message">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="form-group">
                     <label for="category">Nhóm kiến thức <span class="required" style="color: #d93025;">*</span></label>
                     <select class="form-control @error('category') is-invalid @enderror" id="category" name="category" required>
                         @foreach(['shipping'=>'Giao hàng','payment'=>'Thanh toán','returns'=>'Đổi trả','voucher'=>'Voucher','contact'=>'Liên hệ'] as $value=>$label)
@@ -105,12 +127,32 @@
                     @enderror
                 </div>
 
-                <div class="form-group" style="margin-bottom: 0;">
+                <div class="form-group">
                     <label for="content">Nội dung đã kiểm duyệt <span class="required" style="color: #d93025;">*</span></label>
                     <textarea class="form-control @error('content') is-invalid @enderror" id="content" name="content" rows="16" required placeholder="Nhập nội dung quy định chi tiết để chatbot trả lời khách hàng..." style="resize: vertical; font-family: inherit; line-height: 1.6;">{{ old('content', $article->content) }}</textarea>
                     @error('content')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>Câu hỏi khách thường hỏi</label>
+                    <div id="knowledge-questions">
+                        @forelse(old('questions', $article->questions ?? []) as $question)
+                            <div class="knowledge-question-row">
+                                <input type="text" class="form-control" name="questions[]" value="{{ $question }}" maxlength="200" placeholder="Ví dụ: Bao lâu thì tôi nhận được đơn hàng?">
+                                <button type="button" class="knowledge-question-remove" aria-label="Xóa câu hỏi" title="Xóa câu hỏi"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        @empty
+                            <div class="knowledge-question-row">
+                                <input type="text" class="form-control" name="questions[]" maxlength="200" placeholder="Ví dụ: Bao lâu thì tôi nhận được đơn hàng?">
+                                <button type="button" class="knowledge-question-remove" aria-label="Xóa câu hỏi" title="Xóa câu hỏi"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        @endforelse
+                    </div>
+                    <button type="button" id="knowledge-add-question" class="knowledge-add-question"><i class="fa-solid fa-plus"></i> Thêm câu hỏi</button>
+                    <div class="species-help" style="margin-top:8px;">Mỗi câu hỏi là một cách khách có thể diễn đạt cùng một nhu cầu.</div>
+                    @error('questions.*')<div class="error-message">{{ $message }}</div>@enderror
                 </div>
             </div>
         </div>
@@ -148,6 +190,26 @@
                 </div>
             </div>
 
+            <aside class="knowledge-preview" aria-live="polite">
+                <h4><i class="fa-solid fa-robot"></i> Chatbot sẽ nhận</h4>
+                <div class="knowledge-preview-status" id="knowledge-preview-status"></div>
+                <div class="knowledge-preview-label">Tiêu đề</div>
+                <div class="knowledge-preview-value" id="knowledge-preview-title">{{ old('title', $article->title) ?: 'Chưa có tiêu đề' }}</div>
+                <div class="knowledge-preview-label">Nhóm kiến thức</div>
+                <div class="knowledge-preview-value" id="knowledge-preview-category"></div>
+                <div class="knowledge-preview-label">Tóm tắt</div>
+                <div class="knowledge-preview-value" id="knowledge-preview-summary">{{ old('summary', $article->summary) ?: 'Chưa có tóm tắt' }}</div>
+                <div class="knowledge-preview-label">Câu hỏi nhận diện</div>
+                <div class="knowledge-preview-value" id="knowledge-preview-questions">Chưa có câu hỏi</div>
+                <div class="knowledge-preview-label">Nội dung</div>
+                <div class="knowledge-preview-value" id="knowledge-preview-content">{{ old('content', $article->content) ?: 'Chưa có nội dung' }}</div>
+            </aside>
+
+            <aside class="knowledge-publish-check" id="knowledge-publish-check" hidden aria-live="polite">
+                <h4 id="knowledge-publish-check-title"></h4>
+                <ul id="knowledge-publish-check-list"></ul>
+            </aside>
+
             <!-- Tips Card -->
             <div style="background-color: #fff9e6; border: 1px solid #ffeeba; border-radius: 12px; padding: 20px;">
                 <h4 style="color: #856404; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
@@ -162,4 +224,88 @@
         </div>
     </div>
 </form>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const title = document.getElementById('title');
+    const category = document.getElementById('category');
+    const content = document.getElementById('content');
+    const summary = document.getElementById('summary');
+    const statusInputs = document.querySelectorAll('input[name="status"]');
+    const previewStatus = document.getElementById('knowledge-preview-status');
+    const previewTitle = document.getElementById('knowledge-preview-title');
+    const previewCategory = document.getElementById('knowledge-preview-category');
+    const previewSummary = document.getElementById('knowledge-preview-summary');
+    const previewQuestions = document.getElementById('knowledge-preview-questions');
+    const previewContent = document.getElementById('knowledge-preview-content');
+    const publishCheck = document.getElementById('knowledge-publish-check');
+    const publishCheckTitle = document.getElementById('knowledge-publish-check-title');
+    const publishCheckList = document.getElementById('knowledge-publish-check-list');
+
+    const syncPreview = () => {
+        const status = document.querySelector('input[name="status"]:checked')?.value || 'draft';
+        const statusLabels = {
+            published: 'Đang dùng bởi chatbot',
+            draft: 'Bản nháp · Chatbot không dùng',
+            archived: 'Đã lưu trữ · Chatbot không dùng',
+        };
+        const text = content?.value.trim() || 'Chưa có nội dung';
+        const summaryText = summary?.value.trim() || 'Chưa có tóm tắt';
+        const questionTexts = [...document.querySelectorAll('input[name="questions[]"]')]
+            .map((input) => input.value.trim())
+            .filter(Boolean);
+
+        previewStatus.textContent = statusLabels[status];
+        previewTitle.textContent = title?.value.trim() || 'Chưa có tiêu đề';
+        previewCategory.textContent = category?.selectedOptions[0]?.textContent || 'Chưa chọn nhóm';
+        previewSummary.textContent = summaryText;
+        previewQuestions.textContent = questionTexts.length ? questionTexts.map((question) => `• ${question}`).join('\n') : 'Chưa có câu hỏi';
+        previewContent.textContent = text.length > 420 ? `${text.slice(0, 420)}…` : text;
+
+        if (status !== 'published') {
+            publishCheck.hidden = true;
+            return;
+        }
+
+        const warnings = [];
+        if (text.length < 100) warnings.push('Nội dung dưới 100 ký tự, chatbot có thể trả lời thiếu thông tin.');
+        if (!summary?.value.trim()) warnings.push('Chưa có tóm tắt để chatbot ưu tiên câu trả lời chính.');
+        if (!questionTexts.length) warnings.push('Chưa có câu hỏi nhận diện, chatbot có thể khó tìm đúng bài này.');
+        publishCheck.hidden = false;
+        publishCheck.classList.toggle('is-ready', warnings.length === 0);
+        publishCheckTitle.textContent = warnings.length ? 'Kiểm tra trước khi xuất bản' : 'Sẵn sàng để chatbot sử dụng';
+        publishCheckList.innerHTML = warnings.length ? warnings.map((warning) => `<li>${warning}</li>`).join('') : '<li>Đủ nội dung, tóm tắt và câu hỏi nhận diện.</li>';
+    };
+
+    [title, category, content, summary].forEach((field) => field?.addEventListener('input', syncPreview));
+    category?.addEventListener('change', syncPreview);
+    statusInputs.forEach((input) => input.addEventListener('change', syncPreview));
+    syncPreview();
+
+    const questions = document.getElementById('knowledge-questions');
+    const addQuestion = document.getElementById('knowledge-add-question');
+    const questionRow = () => {
+        const row = document.createElement('div');
+        row.className = 'knowledge-question-row';
+        row.innerHTML = '<input type="text" class="form-control" name="questions[]" maxlength="200" placeholder="Ví dụ: Bao lâu thì tôi nhận được đơn hàng?"><button type="button" class="knowledge-question-remove" aria-label="Xóa câu hỏi" title="Xóa câu hỏi"><i class="fa-solid fa-trash-can"></i></button>';
+        return row;
+    };
+    addQuestion?.addEventListener('click', () => questions?.appendChild(questionRow()));
+    questions?.addEventListener('input', syncPreview);
+    questions?.addEventListener('click', (event) => {
+        const removeButton = event.target.closest('.knowledge-question-remove');
+        if (!removeButton) return;
+        const rows = questions.querySelectorAll('.knowledge-question-row');
+        if (rows.length === 1) {
+            rows[0].querySelector('input').value = '';
+            syncPreview();
+            return;
+        }
+        removeButton.closest('.knowledge-question-row').remove();
+        syncPreview();
+    });
+});
+</script>
 @endsection

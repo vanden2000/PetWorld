@@ -26,7 +26,7 @@
     }
 
     .variant-page-head h1 {
-        color: var(--variant-text);
+        color: var(--primary);
         font-size: 1.8rem;
         font-weight: 800;
     }

@@ -8,7 +8,7 @@
         flex-wrap: wrap;
         margin-bottom: 22px;
     }
-    .pl-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--text-main); }
+    .pl-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--primary); }
     .pl-header p { color: var(--text-muted); margin-top: 6px; font-size: 0.9rem; }
     .pl-header-actions { display: flex; align-items: center; gap: 10px; }
 
@@ -21,7 +21,7 @@
         border-radius: 10px;
         border: 1px solid var(--border-color);
         background: var(--surface-color);
-        color: var(--text-main);
+        color: var(--primary);
         font-family: inherit;
         font-size: 0.87rem;
         font-weight: 700;
@@ -30,7 +30,7 @@
         transition: var(--transition);
         white-space: nowrap;
     }
-    .pl-btn:hover { border-color: #cfd9d4; background: #fbfdfc; }
+    .pl-btn:hover { border-color: var(--primary); background: #fbfdfc; }
     .pl-btn-primary {
         background: var(--primary);
         border-color: var(--primary);

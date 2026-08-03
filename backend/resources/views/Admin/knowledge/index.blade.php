@@ -73,21 +73,8 @@
             box-shadow: 0 0 0 3px rgba(255, 120, 45, 0.1);
         }
 
-        .btn-filter-submit {
-            background-color: #1f2e2a;
-            color: #ffffff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .btn-filter-submit:hover {
-            background-color: #2c3f3a;
-        }
+        .knowledge-filter-select { min-width: 180px; height: 40px; padding: 0 12px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff; color: var(--text-main); font: inherit; font-size: .9rem; }
+        .knowledge-filter-select:focus { outline: none; border-color: #ff782d; box-shadow: 0 0 0 3px rgba(255, 120, 45, .12); }
 
         .badge-status {
             display: inline-flex;
@@ -149,7 +136,7 @@
 <!-- Dashboard Header Nav Bar -->
 <div class="dashboard-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
     <div class="header-title-block">
-        <h1 style="color: var(--text-main); font-weight: 700; font-size: 1.75rem;">Kiến thức chatbot</h1>
+        <h1 style=" font-weight: 700; font-size: 1.75rem;">Kiến thức chatbot</h1>
         <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.95rem;">Chỉ các bài viết có trạng thái xuất bản mới được chatbot sử dụng để trả lời người dùng.</p>
     </div>
     <div class="header-actions">
@@ -168,15 +155,24 @@
 
 <!-- Search & Filter Bar -->
 <div class="categories-filter-bar">
-    <form action="{{ route('admin.knowledge') }}" method="GET" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; width: 100%;">
+    <form action="{{ route('admin.knowledge') }}" method="GET" id="knowledge-filter-form" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; width: 100%;">
         <div class="search-wrapper">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" name="search" class="search-input-field" placeholder="Tìm kiếm bài viết theo tiêu đề..." value="{{ $search }}">
+            <input type="text" id="knowledge-search" name="search" class="search-input-field" placeholder="Tiêu đề hoặc nội dung..." value="{{ $filters['search'] ?? '' }}" autocomplete="off">
         </div>
-        <button type="submit" class="btn-filter-submit">Lọc</button>
-        @if($search)
-            <a href="{{ route('admin.knowledge') }}" class="btn-cancel" style="padding: 9px 16px;">Xóa bộ lọc</a>
-        @endif
+        <select name="category" id="knowledge-category" class="knowledge-filter-select" aria-label="Lọc theo nhóm kiến thức">
+            <option value="">Tất cả nhóm</option>
+            @foreach(['shipping'=>'Giao hàng','payment'=>'Thanh toán','returns'=>'Đổi trả','voucher'=>'Voucher','contact'=>'Liên hệ'] as $value => $label)
+                <option value="{{ $value }}" @selected(($filters['category'] ?? '') === $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <select name="status" id="knowledge-status" class="knowledge-filter-select" aria-label="Lọc theo trạng thái chatbot">
+            <option value="">Tất cả trạng thái</option>
+            <option value="published" @selected(($filters['status'] ?? '') === 'published')>Đang dùng bởi chatbot</option>
+            <option value="draft" @selected(($filters['status'] ?? '') === 'draft')>Bản nháp</option>
+            <option value="archived" @selected(($filters['status'] ?? '') === 'archived')>Đã lưu trữ</option>
+        </select>
+        <a href="{{ route('admin.knowledge') }}" class="btn-cancel" style="padding: 9px 16px;">Xóa lọc</a>
     </form>
 </div>
 
@@ -189,7 +185,7 @@
                     <th style="padding: 16px 24px; text-align: left;">Tiêu đề bài viết</th>
                     <th style="padding: 16px 24px; text-align: left;">Nhóm kiến thức</th>
                     <th style="padding: 16px 24px; text-align: left;">Trạng thái</th>
-                    <th style="padding: 16px 24px; text-align: center;">Phiên bản</th>
+                    <th style="padding: 16px 24px; text-align: center;">Lần cập nhật</th>
                     <th style="padding: 16px 24px; text-align: left;">Ngày cập nhật</th>
                     <th style="padding: 16px 24px; text-align: right;">Hành động</th>
                 </tr>
@@ -207,17 +203,17 @@
                         </td>
                         <td style="padding: 16px 24px;">
                             @if($article->status === 'published')
-                                <span class="badge-status active"><span class="dot"></span>Xuất bản</span>
+                                <span class="badge-status active"><span class="dot"></span>Đang dùng bởi chatbot</span>
                             @elseif($article->status === 'draft')
-                                <span class="badge-status draft"><span class="dot"></span>Lưu nháp</span>
+                                <span class="badge-status draft"><span class="dot"></span>Bản nháp · Không dùng</span>
                             @else
                                 <span class="badge-status draft" style="background-color: #fce8e6; color: #c5221f;">
-                                    <span class="dot" style="background-color: #c5221f;"></span>Lưu trữ
+                                    <span class="dot" style="background-color: #c5221f;"></span>Đã lưu trữ · Không dùng
                                 </span>
                             @endif
                         </td>
                         <td style="padding: 16px 24px; text-align: center;">
-                            <span style="font-weight: 600; color: var(--text-muted);">v{{ $article->version }}</span>
+                            <span style="font-weight: 600; color: var(--text-muted);">Lần {{ $article->version }}</span>
                         </td>
                         <td style="padding: 16px 24px;">
                             <span style="color: var(--text-muted); font-size: 0.9rem;">
@@ -245,4 +241,21 @@
 <div style="margin-top: 16px;">
     {{ $articles->links('pagination::bootstrap-4') }}
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('knowledge-filter-form');
+    const searchInput = document.getElementById('knowledge-search');
+    let searchTimer;
+
+    document.getElementById('knowledge-category')?.addEventListener('change', () => form?.submit());
+    document.getElementById('knowledge-status')?.addEventListener('change', () => form?.submit());
+    searchInput?.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => form?.submit(), 450);
+    });
+});
+</script>
 @endsection
