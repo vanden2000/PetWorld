@@ -847,8 +847,9 @@ class ReportController extends Controller
             ->where('o.payment_status', 'paid')
             ->where('o.order_status', '!=', 'cancelled')
             ->whereBetween('o.created_at', [$start, $end])
-            ->groupBy('p.id', 'p.name', 'c.name', 'b.name', 'p.slug')
+            ->groupBy('pv.id', 'p.id', 'p.name', 'c.name', 'b.name', 'p.slug')
             ->selectRaw('
+                oi.product_variant_id,
                 p.id as product_id,
                 p.name as name,
                 p.slug as slug,
@@ -861,9 +862,24 @@ class ReportController extends Controller
             ->limit(10)
             ->get();
 
-        $totalUnits = (int) $rows->sum('units');
+        // Calculate actual total units sold in this period across all items
+        $totalUnits = (int) DB::table('order_items as oi')
+            ->join('orders as o', 'o.id', '=', 'oi.order_id')
+            ->where('o.payment_status', 'paid')
+            ->where('o.order_status', '!=', 'cancelled')
+            ->whereBetween('o.created_at', [$start, $end])
+            ->sum('oi.quantity');
 
-        $topProduct = $rows->first();
+        // Eager load the variants and their values to get display_name
+        $variantIds = $rows->pluck('product_variant_id')->all();
+        $variants = \App\Models\ProductVariant::with('variantValues')->whereIn('id', $variantIds)->get()->keyBy('id');
+
+        $topProductRow = $rows->first();
+        $topProductVariantName = 'N/A';
+        if ($topProductRow) {
+            $topV = $variants->get($topProductRow->product_variant_id);
+            $topProductVariantName = $topProductRow->name . ($topV && $topV->display_name ? ' (' . $topV->display_name . ')' : '');
+        }
         
         $topCatRow = DB::table('order_items as oi')
             ->join('orders as o', 'o.id', '=', 'oi.order_id')
@@ -902,7 +918,10 @@ class ReportController extends Controller
             ->whereBetween('o.created_at', [$prevStart, $prevEnd])
             ->sum('oi.quantity');
 
-        $sellers = $rows->map(function ($row, $index) {
+        $sellers = $rows->map(function ($row, $index) use ($variants) {
+            $variant = $variants->get($row->product_variant_id);
+            $variantName = $variant ? $variant->display_name : '';
+
             $imageRow = DB::table('images')
                 ->where('product_id', $row->product_id)
                 ->orderByDesc('is_primary')
@@ -918,6 +937,7 @@ class ReportController extends Controller
             return [
                 'rank' => $index + 1,
                 'name' => $row->name,
+                'variant' => $variantName,
                 'cat' => $row->cat,
                 'brand' => $row->brand,
                 'units' => (int) $row->units,
@@ -956,7 +976,7 @@ class ReportController extends Controller
         return [
             'totalSold' => number_format($totalUnits, 0, ',', '.') . ' sản phẩm',
             'soldTrend' => $this->trend($totalUnits, $prevSold),
-            'topProduct' => $topProduct ? $topProduct->name : 'N/A',
+            'topProduct' => $topProductVariantName,
             'topCategory' => $topCatRow ? $topCatRow->name : 'N/A',
             'topBrand' => $topBrandRow ? $topBrandRow->name : 'N/A',
             'sellers' => $sellers,
@@ -1043,8 +1063,8 @@ class ReportController extends Controller
                 'sku' => $variant->sku,
                 'cat' => ($variant->product && $variant->product->category) ? $variant->product->category->name : 'Khác',
                 'stock' => (int) $variant->quantity,
-                'status' => $variant->quantity == 0 ? 'HẾT HÀNG' : 'SẮP HẾT',
-                'statusClass' => $variant->quantity == 0 ? 'badge-cancelled' : 'badge-pending',
+                'status' => $variant->quantity == 0 ? 'HẾT HÀNG' : 'SẮP HẾT HÀNG',
+                'statusClass' => $variant->quantity == 0 ? 'badge-cancelled' : 'badge-cancelled',
             ];
         })->all();
 

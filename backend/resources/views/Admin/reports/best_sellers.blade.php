@@ -663,7 +663,10 @@
                         <td>
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <img src="${prod.image}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=120&auto=format&fit=crop'">
-                                <strong style="color: var(--text-main); font-weight: 700;">${prod.name}</strong>
+                                <div style="display: flex; flex-direction: column;">
+                                    <strong style="color: var(--text-main); font-weight: 700;">${prod.name}</strong>
+                                    ${prod.variant ? `<span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500; margin-top: 2px;">Phân loại: ${prod.variant}</span>` : ''}
+                                </div>
                             </div>
                         </td>
                         <td>
