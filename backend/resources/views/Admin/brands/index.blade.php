@@ -248,7 +248,6 @@
 
     <div class="dashboard-header brand-admin-header" style="margin-bottom: 24px;">
         <div class="header-title-block">
-            <div style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Quản lý / Thương hiệu</div>
             <h1>Thương hiệu</h1>
             <p>Quản lý danh sách đối tác và các thương hiệu sản phẩm của hệ thống PetWorld.</p>
         </div>
@@ -309,10 +308,6 @@
 
         <!-- Actions -->
         <div class="filter-col orders-filter-actions" style="display: flex; gap: 10px; margin-top: auto; padding-bottom: 2px;">
-            <button class="btn-dark-slate" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer;">
-                <i class="fa-solid fa-filter"></i>
-                <span>Lọc</span>
-            </button>
             <a href="{{ route('admin.brands') }}" class="btn-clear-filters" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 7px; box-sizing: border-box; padding: 0;">
                 Xóa lọc
             </a>

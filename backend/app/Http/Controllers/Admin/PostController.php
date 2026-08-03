@@ -18,8 +18,12 @@ class PostController extends Controller
         $authorId = $request->input('author_id', 'all');
         $status = $request->input('status', 'all');
         $sort = $request->input('sort', 'latest');
+        $allowedSorts = ['latest', 'oldest', 'most_viewed', 'most_commented'];
 
-        $posts = Blog::query()
+        // Chỉ chấp nhận các giá trị sắp xếp mà giao diện hỗ trợ.
+        $sort = in_array($sort, $allowedSorts, true) ? $sort : 'latest';
+
+        $postsQuery = Blog::query()
             ->with(['category:id,name,slug', 'author:id,name'])
             ->withCount('comments')
             ->when($search, function ($query, string $search) {
@@ -32,12 +36,16 @@ class PostController extends Controller
             })
             ->when($categoryId !== 'all', fn ($query) => $query->where('blog_category_id', $categoryId))
             ->when($authorId !== 'all', fn ($query) => $query->where('user_id', $authorId))
-            ->when(in_array($status, ['active', 'inactive'], true), fn ($query) => $query->where('status', $status))
-            ->when($sort === 'oldest', fn ($query) => $query->oldest())
-            // 'popular' giu lai de khong hong link loc cu cua nhanh develop
-            ->when(in_array($sort, ['most_viewed', 'popular'], true), fn ($query) => $query->orderByDesc('view_count'))
-            ->when($sort === 'most_commented', fn ($query) => $query->orderByDesc('comments_count'))
-            ->when(! in_array($sort, ['oldest', 'most_viewed', 'popular', 'most_commented'], true), fn ($query) => $query->latest())
+            ->when(in_array($status, ['active', 'inactive'], true), fn ($query) => $query->where('status', $status));
+
+        match ($sort) {
+            'oldest' => $postsQuery->orderBy('created_at')->orderBy('id'),
+            'most_viewed' => $postsQuery->orderByDesc('view_count')->orderByDesc('created_at')->orderByDesc('id'),
+            'most_commented' => $postsQuery->orderByDesc('comments_count')->orderByDesc('created_at')->orderByDesc('id'),
+            default => $postsQuery->orderByDesc('created_at')->orderByDesc('id'),
+        };
+
+        $posts = $postsQuery
             ->paginate(10)
             ->withQueryString();
 
