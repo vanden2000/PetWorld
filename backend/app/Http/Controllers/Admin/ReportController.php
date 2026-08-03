@@ -14,6 +14,9 @@ class ReportController extends Controller
     /** Bảng màu cho danh mục (theo màu chủ đạo + phối bổ trợ). */
     private const CATEGORY_PALETTE = ['#ff782d', '#4b6b60', '#825736', '#2563eb', '#9333ea', '#0d9488', '#bdc7c2'];
 
+    /** Số khách hàng hiển thị trong bảng "chi tiêu nhiều nhất". */
+    private const TOP_CUSTOMERS_LIMIT = 8;
+
     public function revenue()
     {
         $now = Carbon::now();
@@ -714,7 +717,6 @@ class ReportController extends Controller
         $prevReturningRate = $prevUniqueUsers > 0 ? ($prevReturningUsers / $prevUniqueUsers) * 100 : 0;
 
         $topCustomers = $this->topCustomersList($start, $end);
-        $ranks = $this->customerRanksDistribution($topCustomers);
         $table = $this->newCustomersTableRows($start, $end, $bucket);
 
         return [
@@ -727,7 +729,6 @@ class ReportController extends Controller
             'spent' => $this->money($avgSpent),
             'spentTrend' => $this->trend($avgSpent, $prevAvgSpent),
             'customers' => $topCustomers,
-            'ranks' => $ranks,
             'chart' => array_map(
                 fn (array $row): array => ['label' => $row['time'], 'value' => $row['count']],
                 array_reverse($table)
@@ -735,6 +736,11 @@ class ReportController extends Controller
         ];
     }
 
+    /**
+     * Top khách chi tiêu nhiều nhất trong kỳ.
+     * 'share' là tỷ trọng trên tổng chi tiêu của TOÀN BỘ khách trong kỳ (không phải trên top),
+     * 'barWidth' chuẩn hóa theo khách đứng đầu để mắt so sánh nhanh giữa các dòng.
+     */
     private function topCustomersList(Carbon $start, Carbon $end): array
     {
         $rows = DB::table('orders as o')
@@ -745,55 +751,29 @@ class ReportController extends Controller
             ->groupBy('u.id', 'u.name', 'u.email')
             ->selectRaw('u.name as name, u.email as email, COUNT(o.id) as count, SUM(o.total_amount) as total_spent')
             ->orderByDesc('total_spent')
-            ->limit(10)
             ->get();
 
-        return $rows->map(function ($row) {
-            $spent = (float) $row->total_spent;
-            if ($spent >= 10000000) {
-                $rank = 'VIP';
-                $rankClass = 'member-vip';
-            } elseif ($spent >= 5000000) {
-                $rank = 'Gold';
-                $rankClass = 'member-gold';
-            } elseif ($spent >= 1000000) {
-                $rank = 'Silver';
-                $rankClass = 'member-silver';
-            } else {
-                $rank = 'Member';
-                $rankClass = 'member-normal';
-            }
+        // Tổng chi tiêu tính trên mọi khách trong kỳ, lấy trước khi cắt top.
+        $periodSpent = (float) $rows->sum('total_spent');
+        $topSpent = (float) ($rows->first()->total_spent ?? 0);
 
-            return [
-                'name' => $row->name,
-                'email' => $row->email,
-                'count' => (int) $row->count,
-                'totalSpent' => $this->money($spent),
-                'totalSpentRaw' => $spent,
-                'rank' => $rank,
-                'rankClass' => $rankClass,
-            ];
-        })->all();
-    }
+        return $rows->take(self::TOP_CUSTOMERS_LIMIT)
+            ->values()
+            ->map(function ($row, $index) use ($periodSpent, $topSpent): array {
+                $spent = (float) $row->total_spent;
 
-    private function customerRanksDistribution(array $topCustomers): array
-    {
-        $vip = 0;
-        $gold = 0;
-        $silver = 0;
-        $total = count($topCustomers);
-
-        foreach ($topCustomers as $c) {
-            if ($c['rank'] === 'VIP') $vip++;
-            elseif ($c['rank'] === 'Gold') $gold++;
-            else $silver++;
-        }
-
-        return [
-            ['name' => 'VIP', 'count' => $vip, 'percentage' => ($total > 0 ? round($vip / $total * 100) : 0) . '%', 'color' => '#ff782d'],
-            ['name' => 'GOLD', 'count' => $gold, 'percentage' => ($total > 0 ? round($gold / $total * 100) : 0) . '%', 'color' => '#f59e0b'],
-            ['name' => 'SILVER', 'count' => $silver, 'percentage' => ($total > 0 ? round($silver / $total * 100) : 0) . '%', 'color' => '#94a3b8'],
-        ];
+                return [
+                    'position' => $index + 1,
+                    'name' => $row->name,
+                    'email' => $row->email,
+                    'count' => (int) $row->count,
+                    'totalSpent' => $this->money($spent),
+                    'totalSpentRaw' => $spent,
+                    'share' => $this->percent($periodSpent > 0 ? $spent / $periodSpent * 100 : 0),
+                    'barWidth' => $topSpent > 0 ? round($spent / $topSpent * 100, 1) : 0,
+                ];
+            })
+            ->all();
     }
 
     private function newCustomersTableRows(Carbon $start, Carbon $end, string $bucket): array
@@ -1037,9 +1017,13 @@ class ReportController extends Controller
             ->get();
 
         $items = $variants->map(function ($variant) {
+            $label = $variant->display_name;
+
             return [
                 'name' => $variant->product ? $variant->product->name : 'Sản phẩm',
-                'variant' => $variant->display_name ?: 'Mặc định',
+                'variant' => $label ?: 'Mặc định',
+                // Phân biệt biến thể thật với SKU không có thuộc tính, để UI hiển thị khác nhau.
+                'hasVariant' => $label !== '',
                 'sku' => $variant->sku,
                 'cat' => ($variant->product && $variant->product->category) ? $variant->product->category->name : 'Khác',
                 'stock' => (int) $variant->quantity,

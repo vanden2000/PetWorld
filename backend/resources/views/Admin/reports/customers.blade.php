@@ -149,26 +149,13 @@
         line-height: 1.2;
     }
 
-    /* Grid layout for charts */
-    .grid-order-split {
-        display: grid;
-        grid-template-columns: 1.8fr 1.2fr;
-        gap: 24px;
-        margin-top: 24px;
-    }
-    @media (max-width: 1100px) {
-        .grid-order-split {
-            grid-template-columns: 1fr;
-        }
-    }
-
     .dashboard-card {
         background: #ffffff;
         border: 1px solid var(--border-color);
         border-radius: 16px;
         box-shadow: var(--shadow-subtle);
         padding: 24px;
-        margin-top: 0;
+        margin-top: 24px;
     }
     .card-header-styled {
         display: flex;
@@ -188,68 +175,6 @@
         position: relative;
         height: 280px;
         width: 100%;
-    }
-
-    .chart-container-category {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-    }
-    .category-canvas-wrapper {
-        position: relative;
-        height: 180px;
-        width: 180px;
-    }
-
-    /* Status indicators list */
-    .status-legend-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-    }
-    .legend-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 8px;
-        border-bottom: 1px dashed var(--border-color);
-    }
-    .legend-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-    .legend-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .legend-color {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        display: inline-block;
-        flex-shrink: 0;
-    }
-    .legend-name {
-        font-weight: 600;
-        font-size: 0.86rem;
-        color: var(--text-main);
-    }
-    .legend-percentage {
-        font-size: 0.72rem;
-        color: var(--text-muted);
-        background: #f1f5f9;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-weight: 700;
-    }
-    .legend-value {
-        font-weight: 700;
-        font-size: 0.88rem;
-        color: var(--text-main);
-        white-space: nowrap;
     }
 
     /* Detailed Table */
@@ -298,29 +223,50 @@
         background: #fff8f3;
     }
 
-    .badge-member {
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        display: inline-block;
-        white-space: nowrap;
-    }
-    .member-vip {
-        background-color: #fef3c7;
-        color: #d97706;
-        border: 1px solid #fcd34d;
-    }
-    .member-gold {
-        background-color: #fffbeb;
-        color: #b45309;
-        border: 1px solid #fef3c7;
-    }
-    .member-silver {
-        background-color: #f3f4f6;
+    .rank-position {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #f3f4f6;
         color: #4b5563;
-        border: 1px solid #e5e7eb;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+    .rank-position.is-top {
+        background: #fff4ec;
+        color: var(--primary);
+        border: 1px solid rgba(255, 120, 45, 0.25);
+    }
+
+    /* Tỷ trọng chi tiêu: thanh bar so với khách đứng đầu + số % trên tổng kỳ */
+    .share-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .share-track {
+        flex: 1;
+        height: 6px;
+        min-width: 48px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        overflow: hidden;
+    }
+    .share-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--primary);
+    }
+    .share-text {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        min-width: 42px;
+        text-align: right;
+        white-space: nowrap;
     }
 </style>
 @endsection
@@ -330,7 +276,7 @@
 <div class="dashboard-header" style="margin-bottom: 24px;">
     <div class="header-title-block">
         <h1 style="font-size: 1.8rem; font-weight: 800;">Thống kê <span style="color: var(--primary);">Khách hàng</span></h1>
-        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Xem thông tin tăng trưởng số lượng tài khoản, tỷ lệ giữ chân khách hàng và danh sách khách hàng VIP.</p>
+        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Xem thông tin tăng trưởng số lượng tài khoản, tỷ lệ giữ chân khách hàng và top khách hàng chi tiêu nhiều nhất.</p>
     </div>
     
     <div class="header-actions">
@@ -411,47 +357,31 @@
     </div>
 </div>
 
-<div class="grid-order-split">
-    <!-- Customer Registration Trend Area Chart -->
-    <div class="dashboard-card">
-        <div class="card-header-styled">
-            <span class="card-title-styled">Biểu đồ tăng trưởng khách hàng</span>
-        </div>
-        <div class="chart-container-time">
-            <canvas id="customer-trend-chart"></canvas>
-        </div>
+<!-- Customer Registration Trend Chart -->
+<div class="dashboard-card">
+    <div class="card-header-styled">
+        <span class="card-title-styled">Biểu đồ tăng trưởng khách hàng</span>
     </div>
-
-    <!-- Doughnut Chart showing Member Rank Distribution -->
-    <div class="dashboard-card">
-        <div class="card-header-styled">
-            <span class="card-title-styled">Cơ cấu hạng thành viên</span>
-        </div>
-        <div class="chart-container-category">
-            <div class="category-canvas-wrapper">
-                <canvas id="member-rank-chart"></canvas>
-            </div>
-            <div class="status-legend-list" id="status-legend-list">
-                <!-- Dynamically loaded legend -->
-            </div>
-        </div>
+    <div class="chart-container-time">
+        <canvas id="customer-trend-chart"></canvas>
     </div>
 </div>
 
-<!-- Detailed VIP Spending Table (Fills space cleanly) -->
+<!-- Top khách hàng theo chi tiêu -->
 <div class="detail-table-card">
     <div class="card-header-styled">
-        <span class="card-title-styled"><i class="fa-solid fa-crown" style="color: var(--primary); margin-right: 6px;"></i> Danh sách khách hàng VIP chi tiêu nhiều nhất</span>
+        <span class="card-title-styled"><i class="fa-solid fa-crown" style="color: var(--primary); margin-right: 6px;"></i> Top khách hàng chi tiêu nhiều nhất</span>
     </div>
     <div class="pl-table-scroll">
         <table class="orders-table">
             <thead>
                 <tr>
-                    <th style="width: 30%;">KHÁCH HÀNG</th>
-                    <th style="width: 25%;">EMAIL</th>
-                    <th style="width: 15%;">SỐ ĐƠN MUA</th>
-                    <th style="width: 15%;">TỔNG CHI TIÊU</th>
-                    <th style="width: 15%;">HẠNG THÀNH VIÊN</th>
+                    <th style="width: 6%;">#</th>
+                    <th style="width: 26%;">KHÁCH HÀNG</th>
+                    <th style="width: 24%;">EMAIL</th>
+                    <th style="width: 12%;">SỐ ĐƠN MUA</th>
+                    <th style="width: 16%;">TỔNG CHI TIÊU</th>
+                    <th style="width: 16%;">TỶ TRỌNG</th>
                 </tr>
             </thead>
             <tbody id="customers-table-body">
@@ -486,7 +416,6 @@
         const mockData = @json($periods);
 
         let trendChartInstance = null;
-        let rankChartInstance = null;
 
         function setTrend(id, trend) {
             const el = document.getElementById(id);
@@ -574,54 +503,6 @@
             });
         }
 
-        // Render member rank distribution doughnut chart
-        function renderRankChart(ranks) {
-            const ctx = document.getElementById('member-rank-chart').getContext('2d');
-            if (rankChartInstance) {
-                rankChartInstance.destroy();
-            }
-
-            // Exclude ranks with 0 members if today
-            const activeRanks = ranks.filter(r => r.count > 0);
-            
-            const labels = activeRanks.map(r => r.name);
-            const values = activeRanks.map(r => r.count);
-            const colors = activeRanks.map(r => r.color);
-
-            rankChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: colors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff',
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#1e293b',
-                            titleFont: { family: 'Outfit, Inter, sans-serif', size: 12, weight: 'bold' },
-                            bodyFont: { family: 'Outfit, Inter, sans-serif', size: 12 },
-                            padding: 10,
-                            callbacks: {
-                                label: function(context) {
-                                    return ' ' + context.label + ': ' + Number(context.raw).toLocaleString('vi-VN') + ' thành viên';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
         // Render page elements
         function updatePage(filter) {
             const data = mockData[filter];
@@ -639,34 +520,28 @@
             setTrend('returning-trend', data.returningTrend);
             setTrend('spent-trend', data.spentTrend);
 
-            // 3. Render ranks legend
-            const legendList = document.getElementById('status-legend-list');
-            legendList.innerHTML = '';
-            data.ranks.forEach(rank => {
-                legendList.innerHTML += `
-                    <div class="legend-item">
-                        <div class="legend-left">
-                            <span class="legend-color" style="background-color: ${rank.color};"></span>
-                            <span class="legend-name">${rank.name}</span>
-                            <span class="legend-percentage">${rank.percentage}</span>
-                        </div>
-                        <span class="legend-value">${rank.count} TV</span>
-                    </div>
-                `;
-            });
-
-            // 4. Render customer growth chart
+            // 3. Render customer growth chart
             renderTrendChart(data.chart);
 
-            // 5. Render member rank distribution chart
-            renderRankChart(data.ranks);
-
-            // 6. Render customers VIP table rows
+            // 4. Render top spending customers table
             const tableBody = document.getElementById('customers-table-body');
             tableBody.innerHTML = '';
+
+            if (!data.customers.length) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                            Chưa có khách hàng phát sinh chi tiêu trong kỳ này.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
             data.customers.forEach(cust => {
                 tableBody.innerHTML += `
                     <tr>
+                        <td><span class="rank-position ${cust.position <= 3 ? 'is-top' : ''}">${cust.position}</span></td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #fff4ec; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255, 120, 45, 0.15);">
@@ -678,7 +553,12 @@
                         <td style="color: var(--text-muted);">${cust.email}</td>
                         <td style="font-weight: 600; color: var(--text-main);">${cust.count} đơn</td>
                         <td style="font-weight: 700; color: var(--primary);">${cust.totalSpent}</td>
-                        <td><span class="badge-member ${cust.rankClass}">${cust.rank}</span></td>
+                        <td>
+                            <div class="share-cell">
+                                <div class="share-track"><div class="share-fill" style="width: ${cust.barWidth}%;"></div></div>
+                                <span class="share-text">${cust.share}</span>
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
