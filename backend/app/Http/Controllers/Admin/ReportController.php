@@ -397,12 +397,21 @@ class ReportController extends Controller
             ')
             ->get();
 
+        $grossRevenue = (float) $rows->sum('revenue');
+        $netRevenue = (float) DB::table('orders')
+            ->where('payment_status', 'paid')
+            ->where('order_status', '!=', 'cancelled')
+            ->whereBetween('created_at', [$start, $end])
+            ->sum('total_amount');
+
+        $factor = $grossRevenue > 0 ? ($netRevenue / $grossRevenue) : 1.0;
+
         $totalProfit = 0;
         $categoriesData = [];
 
         foreach ($rows as $row) {
-            $rev = (float) $row->revenue;
-            $cst = (float) $row->cost;
+            $rev = (float) $row->revenue * $factor;
+            $cst = (float) $row->cost * $factor;
             $prof = $rev - $cst;
             $totalProfit += $prof;
 
@@ -509,9 +518,18 @@ class ReportController extends Controller
                 ->get();
         }
 
-        return $rows->map(function ($row) use ($bucket): array {
-            $rev = (float) $row->revenue;
-            $cst = (float) $row->cost;
+        $grossRevenue = (float) $rows->sum('revenue');
+        $netRevenue = (float) DB::table('orders')
+            ->where('payment_status', 'paid')
+            ->where('order_status', '!=', 'cancelled')
+            ->whereBetween('created_at', [$start, $end])
+            ->sum('total_amount');
+
+        $factor = $grossRevenue > 0 ? ($netRevenue / $grossRevenue) : 1.0;
+
+        return $rows->map(function ($row) use ($bucket, $factor): array {
+            $rev = (float) $row->revenue * $factor;
+            $cst = (float) $row->cost * $factor;
             $prof = $rev - $cst;
             $marg = $rev > 0 ? ($prof / $rev) * 100 : 0;
 
@@ -1086,7 +1104,7 @@ class ReportController extends Controller
                 'cat' => ($variant->product && $variant->product->category) ? $variant->product->category->name : 'Khác',
                 'stock' => (int) $variant->quantity,
                 'status' => $variant->quantity == 0 ? 'HẾT HÀNG' : 'SẮP HẾT HÀNG',
-                'statusClass' => $variant->quantity == 0 ? 'badge-cancelled' : 'badge-cancelled',
+                'statusClass' => $variant->quantity == 0 ? 'badge-cancelled' : 'badge-pending',
             ];
         })->all();
 

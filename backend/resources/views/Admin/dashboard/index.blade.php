@@ -374,13 +374,19 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
             <div style="background-color: var(--primary-light); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
                 <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">TỔNG KHÁCH HÀNG</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-top: 4px;">{{ number_format($totalUsersCount > 0 ? $totalUsersCount : 1350) }}</div>
-                <div style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 2px;"><i class="fa-solid fa-arrow-trend-up"></i> +6.2%</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-top: 4px;">{{ number_format($totalUsersCount) }}</div>
+                <div style="font-size: 0.75rem; color: {{ ($totalUsersGrowth ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}; font-weight: 600; margin-top: 2px;">
+                    <i class="fa-solid {{ ($totalUsersGrowth ?? 0) >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }}"></i> 
+                    {{ ($totalUsersGrowth ?? 0) >= 0 ? '+' : '' }}{{ number_format($totalUsersGrowth ?? 0, 1) }}%
+                </div>
             </div>
             <div style="background-color: var(--info-light); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
                 <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">KHÁCH HÀNG MỚI</div>
                 <div style="font-size: 1.5rem; font-weight: 700; color: var(--info); margin-top: 4px;">{{ number_format($newUsersThisMonth) }}</div>
-                <div style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 2px;"><i class="fa-solid fa-arrow-trend-up"></i> +15.4%</div>
+                <div style="font-size: 0.75rem; color: {{ ($newUsersGrowth ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}; font-weight: 600; margin-top: 2px;">
+                    <i class="fa-solid {{ ($newUsersGrowth ?? 0) >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' }}"></i> 
+                    {{ ($newUsersGrowth ?? 0) >= 0 ? '+' : '' }}{{ number_format($newUsersGrowth ?? 0, 1) }}%
+                </div>
             </div>
         </div>
 
@@ -459,20 +465,9 @@
                             </td>
                         </tr>
                     @empty
-                        @php
-                            $firstProductId = \App\Models\Product::first()?->id ?? 1;
-                        @endphp
                         <tr>
-                            <td>
-                                <div>
-                                    <strong>Pate Royal Canin Mini Puppy</strong>
-                                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Lon 195g</span>
-                                </div>
-                            </td>
-                            <td style="font-weight: 700; color: var(--danger);">0 SP</td>
-                            <td><span class="badge-status status-cancelled">HẾT HÀNG</span></td>
-                            <td style="text-align: right; white-space: nowrap;">
-                                <a href="{{ route('admin.products.edit', $firstProductId) }}" class="btn-action-stock" style="text-decoration: none; display: inline-block;">Nhập hàng</a>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 0.85rem;">
+                                Không có sản phẩm nào sắp hết kho.
                             </td>
                         </tr>
                     @endforelse
