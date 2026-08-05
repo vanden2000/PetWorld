@@ -85,7 +85,8 @@ export async function getProductDetail(slug) {
       throw new Error(`Product detail API trả về ${res.status}`);
     }
 
-    return await res.json();
+    const json = await res.json();
+    return json?.data ?? null;
   } catch (error) {
     console.error(`[getProductDetail] Không lấy được sản phẩm "${slug}":`, error);
     return null;
