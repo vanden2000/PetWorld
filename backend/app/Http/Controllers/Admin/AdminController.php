@@ -238,6 +238,31 @@ class AdminController extends Controller
             ->distinct('user_id')
             ->count('user_id');
 
+        $prevUsersCount = User::query()->where('role', '!=', 'admin')->where('created_at', '<=', $startDate)->count();
+        $totalUsersGrowth = $prevUsersCount > 0 
+            ? (($totalUsersCount - $prevUsersCount) / $prevUsersCount * 100) 
+            : ($totalUsersCount > 0 ? 100.0 : 0.0);
+
+        $prevNewUsers = DB::table('orders')
+            ->where('payment_status', 'paid')
+            ->where('order_status', '!=', 'cancelled')
+            ->whereBetween('created_at', [$prevStart, $prevEnd])
+            ->whereIn('user_id', function ($q) use ($prevEnd) {
+                $q->select('user_id')
+                    ->from('orders')
+                    ->where('payment_status', 'paid')
+                    ->where('order_status', '!=', 'cancelled')
+                    ->where('created_at', '<=', $prevEnd)
+                    ->groupBy('user_id')
+                    ->havingRaw('COUNT(id) = 1');
+            })
+            ->distinct('user_id')
+            ->count('user_id');
+
+        $newUsersGrowth = $prevNewUsers > 0 
+            ? (($newUsersThisMonth - $prevNewUsers) / $prevNewUsers * 100) 
+            : ($newUsersThisMonth > 0 ? 100.0 : 0.0);
+
         // -------------------------------------------------------------
         // 3. DANH SÁCH BẢNG PHỤ THỜI GIAN THỰC
         // -------------------------------------------------------------
@@ -299,11 +324,19 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        // Top Khách hàng chi tiêu
-        $topCustomers = Order::query()
-            ->select('recipient_name', DB::raw('COUNT(id) as total_orders'), DB::raw('SUM(total_amount) as total_spent'))
-            ->where('order_status', '!=', 'cancelled')
-            ->groupBy('recipient_name')
+        // Top Khách hàng chi tiêu (Bao gồm cả thành viên mới chưa mua đơn nào)
+        $topCustomers = DB::table('users as u')
+            ->leftJoin('orders as o', function ($join) {
+                $join->on('o.user_id', '=', 'u.id')
+                    ->where('o.order_status', '!=', 'cancelled');
+            })
+            ->where('u.role', '!=', 'admin')
+            ->groupBy('u.id', 'u.name')
+            ->select(
+                'u.name as recipient_name',
+                DB::raw('COUNT(o.id) as total_orders'),
+                DB::raw('COALESCE(SUM(o.total_amount), 0) as total_spent')
+            )
             ->orderByDesc('total_spent')
             ->limit(5)
             ->get();
@@ -378,7 +411,9 @@ class AdminController extends Controller
             'returnRateGrowth',
             'avgOrderValue',
             'totalUsersCount',
+            'totalUsersGrowth',
             'newUsersThisMonth',
+            'newUsersGrowth',
             'recentOrders',
             'bestSellers',
             'lowStockProducts',
