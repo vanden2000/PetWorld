@@ -210,13 +210,6 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{{ route('admin.reports.profit') }}"
-                                class="submenu-item-link {{ request()->routeIs('admin.reports.profit') ? 'active' : '' }}">
-                                <i class="fa-solid fa-money-bill-trend-up"></i>
-                                <span>Lợi Nhuận</span>
-                            </a>
-                        </li>
-                        <li>
                             <a href="{{ route('admin.reports.order-status') }}"
                                 class="submenu-item-link {{ request()->routeIs('admin.reports.order-status') ? 'active' : '' }}">
                                 <i class="fa-solid fa-chart-pie"></i>
@@ -235,20 +228,6 @@
                                 class="submenu-item-link {{ request()->routeIs('admin.reports.best-sellers') ? 'active' : '' }}">
                                 <i class="fa-solid fa-fire"></i>
                                 <span>Sản Phẩm Bán Chạy</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('admin.reports.low-stock') }}"
-                                class="submenu-item-link {{ request()->routeIs('admin.reports.low-stock') ? 'active' : '' }}">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
-                                <span>Sắp Hết Hàng</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('admin.reports.latest-orders') }}"
-                                class="submenu-item-link {{ request()->routeIs('admin.reports.latest-orders') ? 'active' : '' }}">
-                                <i class="fa-solid fa-clock"></i>
-                                <span>Đơn Hàng Mới Nhất</span>
                             </a>
                         </li>
                     </ul>

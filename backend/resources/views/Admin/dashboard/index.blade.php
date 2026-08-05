@@ -427,7 +427,7 @@
     <div class="dashboard-card" style="margin-top: 0; width: 100%;">
         <div class="card-header-styled">
             <span class="card-title-styled">Sản phẩm sắp hết hàng</span>
-            <a href="{{ route('admin.reports.low-stock') }}" class="support-link" style="font-size: 0.8rem; font-weight: 600;">XEM BÁO CÁO KHO</a>
+            <a href="{{ route('admin.products') }}" class="support-link" style="font-size: 0.8rem; font-weight: 600;">QUẢN LÝ SẢN PHẨM</a>
         </div>
         
         <div class="table-container">

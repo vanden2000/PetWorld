@@ -311,6 +311,7 @@
     .badge-completed { background: rgba(16, 185, 129, 0.08); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.15); }
     .badge-shipping { background: rgba(59, 130, 246, 0.08); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.15); }
     .badge-pending { background: rgba(245, 158, 11, 0.08); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.15); }
+    .badge-confirmed { background: rgba(139, 92, 246, 0.08); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.15); }
     .badge-cancelled { background: rgba(239, 68, 68, 0.08); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.15); }
 </style>
 @endsection
@@ -336,9 +337,10 @@
                 <a href="#" class="filter-option active" data-value="30days">30 ngày trước</a>
             </div>
         </div>
-        <button class="btn-export" onclick="alert('Đang tải xuống báo cáo...')">
-            <i class="fa-solid fa-download"></i>
-        </button>
+        <a class="btn-export" id="export-btn" href="{{ route('admin.reports.export', 'order-status') }}?period=30days"
+           title="Xuất báo cáo ra Excel">
+            <i class="fa-solid fa-file-excel"></i>
+        </a>
     </div>
 </div>
 
@@ -677,12 +679,20 @@
                 const val = this.getAttribute('data-value');
                 filterLabel.innerText = this.innerText.toUpperCase();
                 updatePage(val);
+                syncExportLink(val);
                 filterMenu.style.display = 'none';
             });
         });
 
         // Trigger initial page render (30 Days default)
+        // Nút xuất Excel luôn theo đúng kỳ đang xem.
+        function syncExportLink(period) {
+            const btn = document.getElementById('export-btn');
+            if (btn) btn.href = btn.href.split('?')[0] + '?period=' + period;
+        }
+
         updatePage('30days');
+        syncExportLink('30days');
     });
 </script>
 @endsection
