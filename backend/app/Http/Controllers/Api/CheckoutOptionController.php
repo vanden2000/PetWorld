@@ -18,10 +18,14 @@ class CheckoutOptionController extends Controller
         $shippingMethods = ShippingMethod::query()
             ->where('status', 'active')
             ->orderBy('id')
-            ->get(['id', 'name', 'shipping_fee'])
+            ->get(['id', 'code', 'name', 'provider', 'fee_mode', 'description', 'shipping_fee'])
             ->map(fn (ShippingMethod $method): array => [
                 'id' => $method->id,
+                'code' => $method->code,
                 'name' => $method->name,
+                'provider' => $method->provider,
+                'fee_mode' => $method->fee_mode,
+                'description' => $method->description,
                 'shipping_fee' => (float) $method->shipping_fee,
             ])
             ->all();

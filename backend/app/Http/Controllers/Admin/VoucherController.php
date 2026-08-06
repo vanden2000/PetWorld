@@ -45,8 +45,12 @@ class VoucherController extends Controller
     {
         $data = $request->validate([
             'code' => ['required', 'string', 'max:50', 'unique:vouchers,code'],
+            'applies_to' => ['required', Rule::in(['product', 'shipping', 'order'])],
+            'is_automatic' => ['nullable', 'boolean'],
+            'shipping_method_code' => ['nullable', Rule::in(['standard', 'ghn_express'])],
             'usage_limit' => ['required', 'integer', 'min:0'],
             'discount_value' => ['required', 'numeric', 'min:0'],
+            'max_shipping_discount' => ['nullable', 'numeric', 'min:0'],
             'min_order_value' => ['required', 'numeric', 'min:0'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
@@ -63,6 +67,11 @@ class VoucherController extends Controller
             'end_date.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
         ]);
 
+        $data['is_automatic'] = $request->boolean('is_automatic');
+        if ($data['applies_to'] !== 'shipping') {
+            $data['shipping_method_code'] = null;
+            $data['max_shipping_discount'] = null;
+        }
         Voucher::create($data);
 
         return redirect()->route('admin.vouchers')
@@ -87,8 +96,12 @@ class VoucherController extends Controller
 
         $data = $request->validate([
             'code' => ['required', 'string', 'max:50', Rule::unique('vouchers', 'code')->ignore($voucher->id)],
+            'applies_to' => ['required', Rule::in(['product', 'shipping', 'order'])],
+            'is_automatic' => ['nullable', 'boolean'],
+            'shipping_method_code' => ['nullable', Rule::in(['standard', 'ghn_express'])],
             'usage_limit' => ['required', 'integer', 'min:0'],
             'discount_value' => ['required', 'numeric', 'min:0'],
+            'max_shipping_discount' => ['nullable', 'numeric', 'min:0'],
             'min_order_value' => ['required', 'numeric', 'min:0'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
@@ -104,6 +117,12 @@ class VoucherController extends Controller
             'end_date.required' => 'Vui lòng chọn ngày kết thúc.',
             'end_date.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
         ]);
+
+        $data['is_automatic'] = $request->boolean('is_automatic');
+        if ($data['applies_to'] !== 'shipping') {
+            $data['shipping_method_code'] = null;
+            $data['max_shipping_discount'] = null;
+        }
 
         $usedOrders = $voucher->orders()
             ->where('order_status', '<>', 'cancelled')

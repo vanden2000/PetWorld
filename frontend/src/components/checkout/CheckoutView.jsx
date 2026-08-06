@@ -28,6 +28,7 @@ import {
   renewPayment,
   buildSepayQrUrl,
   getAvailableVouchers,
+  getShippingQuote,
 } from "@/lib/checkout";
 import { cancelOrder } from "@/lib/auth";
 import AddressLocationFields from "@/components/auth/AddressLocationFields";
@@ -94,6 +95,8 @@ const EMPTY_ADDRESS = {
   ward: "",
   district: "",
   province: "",
+  ghn_district_id: "",
+  ghn_ward_code: "",
   is_default: false,
 };
 
@@ -110,6 +113,8 @@ export default function CheckoutView() {
 
   const [options, setOptions] = useState({ shipping_methods: [], payment_methods: [] });
   const [shippingMethodId, setShippingMethodId] = useState(null);
+  const [shippingQuote, setShippingQuote] = useState(null);
+  const [shippingQuoteLoading, setShippingQuoteLoading] = useState(false);
   const [paymentMethodId, setPaymentMethodId] = useState(null);
 
   const [addresses, setAddresses] = useState([]);
@@ -276,7 +281,22 @@ export default function CheckoutView() {
 
   const subtotal = items.reduce((sum, line) => sum + line.price * line.quantity, 0);
   const shippingMethod = options.shipping_methods.find((m) => m.id === shippingMethodId);
-  const shipping = items.length ? shippingMethod?.shipping_fee ?? 0 : 0;
+  const shipping = items.length ? shippingQuote?.shipping_fee ?? 0 : 0;
+
+  useEffect(() => {
+    if (!selectedAddressId || !shippingMethod?.code || !items.length || items.some((line) => !line.variantId)) {
+      return;
+    }
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      setShippingQuoteLoading(true);
+      getShippingQuote({ address_id: selectedAddressId, shipping_method_code: shippingMethod.code, items: items.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })) })
+        .then((result) => { if (active) setShippingQuote(result.ok ? result.data?.quote ?? null : null); })
+        .finally(() => { if (active) setShippingQuoteLoading(false); });
+    });
+    return () => { active = false; };
+  }, [selectedAddressId, shippingMethod?.code, items]);
 
   const voucherKey = buyNowItem ? "petworld_buynow_applied_voucher" : "petworld_cart_applied_voucher";
 
@@ -366,7 +386,7 @@ export default function CheckoutView() {
   const handleSaveAddress = async () => {
     const { recipient_name, recipient_phone, address_line, ward, province } = addressForm;
     if (!recipient_name || !recipient_phone || !address_line || !ward || !province) {
-      alert("Vui lòng nhập đầy đủ thông tin địa chỉ.");
+      toastError("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện và Phường/Xã trước khi lưu địa chỉ.");
       return;
     }
     setSavingAddress(true);
@@ -818,9 +838,9 @@ export default function CheckoutView() {
               <label key={method.id} className={`co-ship-option ${shippingMethodId === method.id ? "active" : ""}`}>
                 <input type="radio" name="shipping" checked={shippingMethodId === method.id} onChange={() => setShippingMethodId(method.id)} />
                 <div>
-                  <strong>{method.name}</strong>
+                  <strong>{method.name}</strong>{method.description && <small>{method.description}</small>}
                 </div>
-                <span className="co-ship-fee">{formatPrice(method.shipping_fee)}</span>
+                <span className="co-ship-fee">{shippingMethodId === method.id && shippingQuoteLoading ? "Đang tính..." : shippingMethodId === method.id && shippingQuote ? formatPrice(shippingQuote.shipping_fee) : method.fee_mode === "live_quote" ? "Theo địa chỉ" : "Chọn để tính"}</span>
               </label>
             ))}
           </section>
@@ -880,8 +900,14 @@ export default function CheckoutView() {
           </div>
           <div className="co-summary-row">
             <span>Phí vận chuyển</span>
-            <span>{formatPrice(shipping)}</span>
+            <span>{shippingQuoteLoading ? "Đang tính..." : formatPrice(shipping)}</span>
           </div>
+          {shippingQuote?.shipping_discount > 0 && (
+            <div className="co-summary-row co-summary-discount">
+              <span>{shippingQuote.shipping_promotion?.name || "Hỗ trợ phí vận chuyển"}</span>
+              <span className="co-discount-amount">-{formatPrice(shippingQuote.shipping_discount)}</span>
+            </div>
+          )}
           {items.length > 0 && shipping === 0 && (
             <div className="co-freeship-badge">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.2 14.2-3.5-3.5 1.4-1.4 2.1 2.1 4.9-4.9 1.4 1.4-6.3 6.3Z" /></svg>

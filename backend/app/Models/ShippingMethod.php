@@ -13,8 +13,12 @@ class ShippingMethod extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'code',
         'name',
+        'provider',
         'shipping_fee',
+        'fee_mode',
+        'description',
         'status',
     ];
 

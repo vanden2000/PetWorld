@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { formatPrice, resolveProductImage, useImageFallback } from "@/lib/format";
 import WishlistButton from "@/components/product/WishlistButton";
@@ -53,10 +54,14 @@ export default function ProductCard({
       <WishlistButton product={product} />
 
       <Link href={href} className="product-img-wrapper">
-        <img
+        <Image
           src={resolveProductImage(product.image)}
           alt={product.image_alt || product.name}
           className="product-img"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+          quality={75}
+          // Card ảnh không cần tải ngay; Next sẽ tạo srcset đúng theo kích thước màn hình.
           loading="lazy"
           decoding="async"
           onError={useImageFallback}

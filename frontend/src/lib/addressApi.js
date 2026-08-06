@@ -1,26 +1,22 @@
-const API_ROOT = "https://provinces.open-api.vn/api";
+import { API_BASE_URL } from "@/lib/api";
+import { authHeaders } from "@/lib/auth";
 
 async function request(path) {
-  const response = await fetch(`${API_ROOT}${path}`, { headers: { Accept: "application/json" } });
+  const response = await fetch(`${API_BASE_URL}/api/shipping/ghn/${path}`, { headers: { Accept: "application/json", ...authHeaders() } });
   if (!response.ok) throw new Error(`Province API returned ${response.status}`);
   return response.json();
 }
 
-export const DEFAULT_ADDRESS_VERSION = process.env.NEXT_PUBLIC_ADDRESS_API_VERSION === "v1" ? "v1" : "v2";
-
-export function getProvinces(version = DEFAULT_ADDRESS_VERSION) {
-  return request(`/${version}/p/`);
+export async function getProvinces() {
+  return (await request("provinces"))?.data?.provinces ?? [];
 }
 
-export async function getDistricts(provinceCode) {
-  if (!provinceCode) return [];
-  const province = await request(`/v1/p/${provinceCode}?depth=2`);
-  return province.districts || [];
+export async function getDistricts(provinceId) {
+  if (!provinceId) return [];
+  return (await request(`districts?province_id=${provinceId}`))?.data?.districts ?? [];
 }
 
-export async function getWards(parentCode, version = DEFAULT_ADDRESS_VERSION) {
-  if (!parentCode) return [];
-  if (version === "v2") return request(`/v2/w/?province=${parentCode}`);
-  const district = await request(`/v1/d/${parentCode}?depth=2`);
-  return district.wards || [];
+export async function getWards(districtId) {
+  if (!districtId) return [];
+  return (await request(`wards?district_id=${districtId}`))?.data?.wards ?? [];
 }

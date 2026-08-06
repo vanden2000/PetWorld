@@ -215,6 +215,15 @@
 <form action="{{ route('admin.vouchers.update', $voucher->id) }}" method="POST" id="voucherEditForm">
     @csrf
     @method('PUT')
+    <div class="form-card" style="margin-bottom: 24px;">
+        <div class="form-card-title"><i class="fa-solid fa-truck"></i><span>Loại ưu đãi</span></div>
+        <div class="form-group-row" style="margin-bottom: 0;">
+            <div class="form-group"><label for="applies_to">Áp dụng cho</label><select class="form-control" id="applies_to" name="applies_to"><option value="product" {{ old('applies_to', $voucher->applies_to ?? 'product') === 'product' ? 'selected' : '' }}>Giảm tiền sản phẩm</option><option value="shipping" {{ old('applies_to', $voucher->applies_to) === 'shipping' ? 'selected' : '' }}>Giảm phí vận chuyển</option></select></div>
+            <div class="form-group shipping-only"><label for="shipping_method_code">Phương thức giao</label><select class="form-control" id="shipping_method_code" name="shipping_method_code"><option value="">Cả Standard và GHN</option><option value="standard" {{ old('shipping_method_code', $voucher->shipping_method_code) === 'standard' ? 'selected' : '' }}>Chỉ Standard</option><option value="ghn_express" {{ old('shipping_method_code', $voucher->shipping_method_code) === 'ghn_express' ? 'selected' : '' }}>Chỉ GHN nhanh</option></select></div>
+            <div class="form-group shipping-only"><label><input type="checkbox" name="is_automatic" value="1" {{ old('is_automatic', $voucher->is_automatic) ? 'checked' : '' }}> Tự động áp dụng khi đủ điều kiện</label></div>
+            <div class="form-group shipping-only"><label for="max_shipping_discount">Hỗ trợ ship tối đa (đ)</label><input class="form-control" type="number" min="0" name="max_shipping_discount" id="max_shipping_discount" value="{{ old('max_shipping_discount', $voucher->max_shipping_discount) }}"></div>
+        </div>
+    </div>
     
     <!-- Dashboard Header Nav Bar -->
     <div class="dashboard-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
@@ -387,6 +396,10 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const codeInput = document.getElementById('code');
+        const typeInput = document.getElementById('applies_to');
+        const shippingFields = document.querySelectorAll('.shipping-only');
+        const toggleShippingFields = () => shippingFields.forEach((field) => field.style.display = typeInput.value === 'shipping' ? '' : 'none');
+        if (typeInput) { typeInput.addEventListener('change', toggleShippingFields); toggleShippingFields(); }
         const editForm = document.getElementById('voucherEditForm');
         const confirmModal = document.getElementById('confirmModal');
         const btnCancelModal = document.getElementById('btnCancelModal');

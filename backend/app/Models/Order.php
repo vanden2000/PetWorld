@@ -15,7 +15,9 @@ class Order extends Model
     protected $fillable = [
         'payment_code',
         'voucher_id',
+        'shipping_voucher_id',
         'shipping_method_id',
+        'shipping_method_code',
         'payment_method_id',
         'address_id',
         'user_id',
@@ -24,6 +26,9 @@ class Order extends Model
         'recipient_address',
         'delivery_area',
         'shipping_fee',
+        'shipping_weight_grams',
+        'shipping_fee_original',
+        'shipping_discount',
         'discount_amount',
         'order_status',
         'total_amount',
@@ -34,6 +39,9 @@ class Order extends Model
 
     protected $casts = [
         'shipping_fee' => 'decimal:2',
+        'shipping_weight_grams' => 'integer',
+        'shipping_fee_original' => 'decimal:2',
+        'shipping_discount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'expires_at' => 'datetime',
@@ -58,6 +66,11 @@ class Order extends Model
     public function voucher(): BelongsTo
     {
         return $this->belongsTo(Voucher::class);
+    }
+
+    public function shippingVoucher(): BelongsTo
+    {
+        return $this->belongsTo(Voucher::class, 'shipping_voucher_id');
     }
 
     public function shippingMethod(): BelongsTo

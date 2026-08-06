@@ -20,7 +20,7 @@ const iconPaths = {
   camera: <><path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v10H2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="4"/></>,
 };
 const Icon = ({ name }) => <svg className="profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{iconPaths[name]}</svg>;
-const emptyAddress = { recipient_name: "", recipient_phone: "", address_line: "", ward: "", district: "", province: "", is_default: false };
+const emptyAddress = { recipient_name: "", recipient_phone: "", address_line: "", ward: "", district: "", province: "", ghn_district_id: "", ghn_ward_code: "", is_default: false };
 
 export default function AccountView() {
   const router = useRouter();

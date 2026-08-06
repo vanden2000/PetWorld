@@ -53,6 +53,27 @@ return [
         'pickup_phone' => env('GHTK_PICKUP_PHONE'),
     ],
 
+    'ghn' => [
+        'api_token' => env('GHN_TOKEN'),
+        'shop_id' => env('GHN_SHOP_ID'),
+        'base_url' => rtrim((string) env('GHN_BASE_URL', 'https://dev-online-gateway.ghn.vn'), '/'),
+        'timeout' => (int) env('GHN_TIMEOUT', 15),
+        'from_name' => env('GHN_FROM_NAME'),
+        'from_phone' => env('GHN_FROM_PHONE'),
+        'from_address' => env('GHN_FROM_ADDRESS'),
+        'from_ward_name' => env('GHN_FROM_WARD_NAME'),
+        'from_district_name' => env('GHN_FROM_DISTRICT_NAME'),
+        'from_province_name' => env('GHN_FROM_PROVINCE_NAME'),
+        'from_district_id' => env('GHN_FROM_DISTRICT_ID'),
+        'from_ward_code' => env('GHN_FROM_WARD_CODE'),
+        'required_note' => env('GHN_REQUIRED_NOTE', 'KHONGCHOXEMHANG'),
+        'payment_type_id' => (int) env('GHN_PAYMENT_TYPE_ID', 1),
+        'service_type_id' => (int) env('GHN_SERVICE_TYPE_ID', 2),
+        'length' => (int) env('GHN_PACKAGE_LENGTH', 20),
+        'width' => (int) env('GHN_PACKAGE_WIDTH', 20),
+        'height' => (int) env('GHN_PACKAGE_HEIGHT', 10),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Google AI Studio / Gemini

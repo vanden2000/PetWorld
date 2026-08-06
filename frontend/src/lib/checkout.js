@@ -52,6 +52,10 @@ export async function createOrder(payload) {
   return postJson("/api/orders", payload);
 }
 
+export async function getShippingQuote(payload) {
+  return postJson("/api/shipping/quote", payload);
+}
+
 /**
  * Lấy danh sách voucher khả dụng kèm theo trạng thái áp dụng dựa trên subtotal.
  */

@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Mail\OrderStatusMail;
 use App\Models\Order;
 use App\Models\ProductVariant;
+use App\Models\Shipment;
+use App\Services\GhnShipmentService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -171,8 +173,24 @@ class OrderController extends Controller
             return back()->with('error', 'Vui lòng chọn trạng thái cần cập nhật.');
         }
 
+        $ghnShipment = null;
         try {
-            $updatedOrder = DB::transaction(function () use ($order, $data): Order {
+            if (($data['order_status'] ?? null) === 'shipping'
+                && $order->order_status === 'confirmed'
+                && $order->shipping_method_code === 'ghn_express'
+                && ! $order->shipment?->tracking_code) {
+                $ghnShipment = app(GhnShipmentService::class)->create($order);
+            }
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return back()->with('error', 'Không thể tạo vận đơn GHN. Đơn vẫn đang ở trạng thái đã xác nhận.');
+        }
+
+        try {
+            $updatedOrder = DB::transaction(function () use ($order, $data, $ghnShipment): Order {
                 $lockedOrder = Order::query()
                     ->with('items')
                     ->whereKey($order->id)
@@ -213,6 +231,21 @@ class OrderController extends Controller
 
                 if ($updates !== []) {
                     $lockedOrder->update($updates);
+                }
+
+                if ($ghnShipment !== null) {
+                    Shipment::updateOrCreate(
+                        ['order_id' => $lockedOrder->id],
+                        [
+                            'provider' => 'ghn',
+                            'tracking_code' => $ghnShipment['tracking_code'],
+                            'weight_grams' => $lockedOrder->shipping_weight_grams,
+                            'shipping_fee' => $ghnShipment['fee'],
+                            'cod_amount' => $ghnShipment['cod_amount'],
+                            'status' => 'ready_to_pick',
+                            'provider_payload' => $ghnShipment['payload'],
+                        ],
+                    );
                 }
 
                 return $lockedOrder->refresh();
@@ -315,7 +348,9 @@ class OrderController extends Controller
                 'user:id,name,email',
                 'paymentMethod:id,name',
                 'shippingMethod:id,name',
+                'shipment:id,order_id,provider,tracking_code,status',
                 'voucher:id,code,discount_value',
+                'shippingVoucher:id,code,name',
                 'items.productVariant.product.primaryImage',
                 'items.productVariant.variantValues.variantType',
                 'sepayTransactions' => fn ($query) => $query->latest(),

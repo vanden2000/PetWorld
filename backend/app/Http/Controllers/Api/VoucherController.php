@@ -23,6 +23,8 @@ class VoucherController extends Controller
         // Lấy tất cả các voucher đang hoạt động
         $vouchers = Voucher::query()
             ->where('status', 'active')
+            ->where('applies_to', 'product')
+            ->where('is_automatic', false)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->orderBy('min_order_value', 'asc')
