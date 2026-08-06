@@ -312,6 +312,34 @@
     .rank-2 { background-color: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
     .rank-3 { background-color: #ffebd8; color: #ff782d; border: 1px solid #ffd0a8; }
     .rank-other { background-color: #ffffff; color: var(--text-muted); border: 1px solid var(--border-color); }
+
+    /* Hàng sản phẩm mở rộng được + các hàng biến thể con */
+    .seller-row.is-expandable { cursor: pointer; }
+    .seller-row.is-expandable:hover { background-color: rgba(255, 120, 45, 0.04); }
+
+    .expand-caret {
+        margin-left: auto;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+    }
+    .seller-row.expanded .expand-caret { transform: rotate(180deg); }
+
+    .variant-count-chip {
+        display: inline-block;
+        margin-left: 4px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: rgba(255, 120, 45, 0.1);
+        color: #ff782d;
+        font-size: 0.68rem;
+        font-weight: 700;
+    }
+
+    .variant-row { display: none; background-color: #fafbfc; }
+    .variant-row.is-visible { display: table-row; }
+    .variant-row td { font-size: 0.82rem; padding-top: 8px; padding-bottom: 8px; }
     
     .badge-category {
         font-size: 0.72rem;
@@ -349,9 +377,10 @@
                 <a href="#" class="filter-option active" data-value="30days">30 ngày trước</a>
             </div>
         </div>
-        <button class="btn-export" onclick="alert('Đang tải xuống báo cáo...')">
-            <i class="fa-solid fa-download"></i>
-        </button>
+        <a class="btn-export" id="export-btn" href="{{ route('admin.reports.export', 'best-sellers') }}?period=30days"
+           title="Xuất báo cáo ra Excel">
+            <i class="fa-solid fa-file-excel"></i>
+        </a>
     </div>
 </div>
 
@@ -655,8 +684,26 @@
                 if (prod.rank === 2) rankClass = 'rank-2';
                 if (prod.rank === 3) rankClass = 'rank-3';
 
+                const variants = prod.variants || [];
+                const expandable = variants.length > 1;
+
+                const variantRowsHtml = variants.map(v => `
+                    <tr class="variant-row">
+                        <td></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px; padding-left: 56px;">
+                                <i class="fa-solid fa-turn-up fa-rotate-90" style="color: var(--text-muted); font-size: 0.7rem;"></i>
+                                <span style="color: var(--text-main); font-weight: 600;">${v.name}</span>
+                            </div>
+                        </td>
+                        <td colspan="2"></td>
+                        <td style="font-weight: 600; color: var(--text-main);">${Number(v.units).toLocaleString('vi-VN')} SP</td>
+                        <td style="font-weight: 600; color: var(--primary);">${v.revenue}</td>
+                    </tr>
+                `).join('');
+
                 tableBody.innerHTML += `
-                    <tr>
+                    <tr class="seller-row ${expandable ? 'is-expandable' : ''}" data-rank="${prod.rank}">
                         <td>
                             <div class="best-seller-rank ${rankClass}">${prod.rank}</div>
                         </td>
@@ -665,8 +712,9 @@
                                 <img src="${prod.image}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=120&auto=format&fit=crop'">
                                 <div style="display: flex; flex-direction: column;">
                                     <strong style="color: var(--text-main); font-weight: 700;">${prod.name}</strong>
-                                    ${prod.variant ? `<span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500; margin-top: 2px;">Phân loại: ${prod.variant}</span>` : ''}
+                                    ${prod.variant ? `<span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500; margin-top: 2px;">Phân loại: ${prod.variant}${expandable ? ` <span class="variant-count-chip">+${variants.length - 1} biến thể</span>` : ''}</span>` : ''}
                                 </div>
+                                ${expandable ? '<i class="fa-solid fa-chevron-down expand-caret"></i>' : ''}
                             </div>
                         </td>
                         <td>
@@ -676,7 +724,20 @@
                         <td style="font-weight: 700; color: var(--text-main);">${Number(prod.units).toLocaleString('vi-VN')} SP</td>
                         <td style="font-weight: 700; color: var(--primary);">${prod.revenue}</td>
                     </tr>
+                    ${expandable ? variantRowsHtml : ''}
                 `;
+            });
+
+            // Nhấn vào hàng sản phẩm để xổ/thu các biến thể bên dưới.
+            tableBody.querySelectorAll('.seller-row.is-expandable').forEach(row => {
+                row.addEventListener('click', () => {
+                    row.classList.toggle('expanded');
+                    let next = row.nextElementSibling;
+                    while (next && next.classList.contains('variant-row')) {
+                        next.classList.toggle('is-visible');
+                        next = next.nextElementSibling;
+                    }
+                });
             });
         }
 
@@ -690,12 +751,20 @@
                 const val = this.getAttribute('data-value');
                 filterLabel.innerText = this.innerText.toUpperCase();
                 updatePage(val);
+                syncExportLink(val);
                 filterMenu.style.display = 'none';
             });
         });
 
         // Trigger initial page render
+        // Nút xuất Excel luôn theo đúng kỳ đang xem.
+        function syncExportLink(period) {
+            const btn = document.getElementById('export-btn');
+            if (btn) btn.href = btn.href.split('?')[0] + '?period=' + period;
+        }
+
         updatePage('30days');
+        syncExportLink('30days');
     });
 </script>
 @endsection

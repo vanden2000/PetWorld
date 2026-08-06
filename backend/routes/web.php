@@ -201,6 +201,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Reports/Statistics routes
     Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/export/{type}', [ReportController::class, 'export'])
+            ->whereIn('type', ['revenue', 'order-status', 'customers', 'best-sellers'])
+            ->name('export');
         Route::get('/revenue', [ReportController::class, 'revenue'])->name('revenue');
         Route::get('/profit', [ReportController::class, 'profit'])->name('profit');
         Route::get('/order-status', [ReportController::class, 'orderStatus'])->name('order-status');

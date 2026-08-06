@@ -324,11 +324,13 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        // Top Khách hàng chi tiêu (Bao gồm cả thành viên mới chưa mua đơn nào)
+        // Top Khách hàng chi tiêu theo thời gian lọc
         $topCustomers = DB::table('users as u')
-            ->leftJoin('orders as o', function ($join) {
+            ->join('orders as o', function ($join) use ($startDate, $now) {
                 $join->on('o.user_id', '=', 'u.id')
-                    ->where('o.order_status', '!=', 'cancelled');
+                    ->where('o.order_status', '!=', 'cancelled')
+                    ->where('o.payment_status', '=', 'paid')
+                    ->whereBetween('o.created_at', [$startDate, $now]);
             })
             ->where('u.role', '!=', 'admin')
             ->groupBy('u.id', 'u.name')
@@ -337,9 +339,31 @@ class AdminController extends Controller
                 DB::raw('COUNT(o.id) as total_orders'),
                 DB::raw('COALESCE(SUM(o.total_amount), 0) as total_spent')
             )
+            ->havingRaw('total_spent > 0')
             ->orderByDesc('total_spent')
             ->limit(5)
             ->get();
+
+        // Nếu chưa có khách hàng chi tiêu trong kỳ, lấy top 5 khách hàng chi tiêu nhiều nhất tổng quan
+        if ($topCustomers->isEmpty()) {
+            $topCustomers = DB::table('users as u')
+                ->join('orders as o', function ($join) {
+                    $join->on('o.user_id', '=', 'u.id')
+                        ->where('o.order_status', '!=', 'cancelled')
+                        ->where('o.payment_status', '=', 'paid');
+                })
+                ->where('u.role', '!=', 'admin')
+                ->groupBy('u.id', 'u.name')
+                ->select(
+                    'u.name as recipient_name',
+                    DB::raw('COUNT(o.id) as total_orders'),
+                    DB::raw('COALESCE(SUM(o.total_amount), 0) as total_spent')
+                )
+                ->havingRaw('total_spent > 0')
+                ->orderByDesc('total_spent')
+                ->limit(5)
+                ->get();
+        }
 
         // Cơ cấu tỷ trọng Danh mục
         $categoryRevenueDb = DB::table('order_items')

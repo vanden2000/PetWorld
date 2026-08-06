@@ -148,7 +148,7 @@ class ReportController extends Controller
                 ->get();
         } else { // week
             $rows = $base
-                ->selectRaw('YEARWEEK(created_at, 3) as yw, MIN(DATE(created_at)) as wk_start, MAX(DATE(created_at)) as wk_end, COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as net, COALESCE(SUM(discount_amount), 0) as discount')
+                ->selectRaw('YEARWEEK(created_at, 3) as yw, COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as net, COALESCE(SUM(discount_amount), 0) as discount')
                 ->groupByRaw('YEARWEEK(created_at, 3)')
                 ->orderByRaw('YEARWEEK(created_at, 3) DESC')
                 ->get();
@@ -164,7 +164,7 @@ class ReportController extends Controller
             } elseif ($bucket === 'day') {
                 $label = Carbon::parse($row->day)->format('d/m');
             } else {
-                $label = 'Tuần ' . Carbon::parse($row->wk_start)->format('d/m') . '–' . Carbon::parse($row->wk_end)->format('d/m');
+                $label = $this->weekLabel($row->yw);
             }
 
             return [
@@ -193,6 +193,21 @@ class ReportController extends Controller
             'pct' => ($up ? '+' : '−') . number_format(abs($pct), 1, ',', '.') . '%',
             'up' => $up,
         ];
+    }
+
+    /**
+     * Nhãn tuần ISO (thứ Hai–Chủ Nhật) dựng từ YEARWEEK, không phụ thuộc ngày
+     * có đơn sớm/muộn nhất nên tuần chỉ có một đơn vẫn hiện đủ 7 ngày.
+     */
+    private function weekLabel(string|int $yearWeek): string
+    {
+        $yw = (string) $yearWeek;
+        $year = (int) substr($yw, 0, 4);
+        $week = (int) substr($yw, 4);
+
+        $start = Carbon::now()->setISODate($year, $week)->startOfWeek();
+
+        return 'Tuần ' . $start->format('d/m') . '–' . $start->copy()->endOfWeek()->format('d/m');
     }
 
     private function money(float $value): string
@@ -501,8 +516,6 @@ class ReportController extends Controller
                 ->whereBetween('o.created_at', [$start, $end])
                 ->selectRaw('
                     YEARWEEK(o.created_at, 3) as yw,
-                    MIN(DATE(o.created_at)) as wk_start,
-                    MAX(DATE(o.created_at)) as wk_end,
                     SUM(oi.price * oi.quantity) as revenue,
                     SUM(oi.price * oi.quantity * (
                         CASE 
@@ -538,7 +551,7 @@ class ReportController extends Controller
             } elseif ($bucket === 'day') {
                 $label = Carbon::parse($row->day)->format('d/m');
             } else {
-                $label = 'Tuần ' . Carbon::parse($row->wk_start)->format('d/m') . '–' . Carbon::parse($row->wk_end)->format('d/m');
+                $label = $this->weekLabel($row->yw);
             }
 
             return [
@@ -611,10 +624,10 @@ class ReportController extends Controller
 
         $statusMap = [
             'completed' => ['name' => 'Hoàn tất', 'color' => '#10b981', 'badge' => 'badge-completed', 'note' => 'Hoàn thành tốt'],
-            'pending' => ['name' => 'Chờ xử lý', 'color' => '#f59e0b', 'badge' => 'badge-pending', 'note' => 'Đang chờ duyệt'],
+            'pending' => ['name' => 'Chờ xác nhận', 'color' => '#f59e0b', 'badge' => 'badge-pending', 'note' => 'Đang chờ duyệt'],
+            'confirmed' => ['name' => 'Đã xác nhận', 'color' => '#8b5cf6', 'badge' => 'badge-confirmed', 'note' => 'Đang chuẩn bị hàng'],
             'cancelled' => ['name' => 'Đã hủy', 'color' => '#ef4444', 'badge' => 'badge-cancelled', 'note' => 'Kiểm soát tốt'],
             'shipping' => ['name' => 'Đang giao', 'color' => '#3b82f6', 'badge' => 'badge-shipping', 'note' => 'Đúng tiến độ'],
-            'processing' => ['name' => 'Đang chuẩn bị', 'color' => '#8b5cf6', 'badge' => 'badge-pending', 'note' => 'Đang xử lý'],
         ];
 
         return $rows->map(function ($row) use ($total, $statusMap) {
@@ -651,7 +664,7 @@ class ReportController extends Controller
                 ->get();
         } else {
             $rows = $base
-                ->selectRaw('YEARWEEK(created_at, 3) as yw, MIN(DATE(created_at)) as wk_start, MAX(DATE(created_at)) as wk_end, COUNT(*) as count')
+                ->selectRaw('YEARWEEK(created_at, 3) as yw, COUNT(*) as count')
                 ->groupByRaw('YEARWEEK(created_at, 3)')
                 ->orderByRaw('YEARWEEK(created_at, 3) DESC')
                 ->get();
@@ -663,7 +676,7 @@ class ReportController extends Controller
             } elseif ($bucket === 'day') {
                 $label = Carbon::parse($row->day)->format('d/m');
             } else {
-                $label = 'Tuần ' . Carbon::parse($row->wk_start)->format('d/m') . '–' . Carbon::parse($row->wk_end)->format('d/m');
+                $label = $this->weekLabel($row->yw);
             }
 
             return [
@@ -850,7 +863,7 @@ class ReportController extends Controller
                 ->get();
         } else {
             $rows = $base
-                ->selectRaw('YEARWEEK(created_at, 3) as yw, MIN(DATE(created_at)) as wk_start, MAX(DATE(created_at)) as wk_end, COUNT(*) as count')
+                ->selectRaw('YEARWEEK(created_at, 3) as yw, COUNT(*) as count')
                 ->groupByRaw('YEARWEEK(created_at, 3)')
                 ->orderByRaw('YEARWEEK(created_at, 3) DESC')
                 ->get();
@@ -862,7 +875,7 @@ class ReportController extends Controller
             } elseif ($bucket === 'day') {
                 $label = Carbon::parse($row->day)->format('d/m');
             } else {
-                $label = 'Tuần ' . Carbon::parse($row->wk_start)->format('d/m') . '–' . Carbon::parse($row->wk_end)->format('d/m');
+                $label = $this->weekLabel($row->yw);
             }
 
             return [
@@ -883,20 +896,39 @@ class ReportController extends Controller
             ->where('o.payment_status', 'paid')
             ->where('o.order_status', '!=', 'cancelled')
             ->whereBetween('o.created_at', [$start, $end])
-            ->groupBy('pv.id', 'p.id', 'p.name', 'c.name', 'b.name', 'p.slug')
+            ->groupBy('p.id', 'p.name', 'c.name', 'b.name', 'p.slug')
             ->selectRaw('
-                oi.product_variant_id,
                 p.id as product_id,
                 p.name as name,
                 p.slug as slug,
                 c.name as cat,
                 COALESCE(b.name, "Khác") as brand,
+                COUNT(DISTINCT oi.product_variant_id) as variant_count,
                 SUM(oi.quantity) as units,
                 SUM(oi.price * oi.quantity) as revenue
             ')
             ->orderByDesc('units')
             ->limit(10)
             ->get();
+
+        // Chi tiết từng biến thể của các sản phẩm trên, dùng cho hàng mở rộng.
+        $variantBreakdown = DB::table('order_items as oi')
+            ->join('orders as o', 'o.id', '=', 'oi.order_id')
+            ->join('product_variants as pv', 'pv.id', '=', 'oi.product_variant_id')
+            ->where('o.payment_status', 'paid')
+            ->where('o.order_status', '!=', 'cancelled')
+            ->whereBetween('o.created_at', [$start, $end])
+            ->whereIn('pv.product_id', $rows->pluck('product_id')->all())
+            ->groupBy('pv.product_id', 'oi.product_variant_id')
+            ->selectRaw('
+                pv.product_id,
+                oi.product_variant_id,
+                SUM(oi.quantity) as units,
+                SUM(oi.price * oi.quantity) as revenue
+            ')
+            ->orderByDesc('units')
+            ->get()
+            ->groupBy('product_id');
 
         // Calculate actual total units sold in this period across all items
         $totalUnits = (int) DB::table('order_items as oi')
@@ -907,13 +939,14 @@ class ReportController extends Controller
             ->sum('oi.quantity');
 
         // Eager load the variants and their values to get display_name
-        $variantIds = $rows->pluck('product_variant_id')->all();
+        $variantIds = $variantBreakdown->flatten(1)->pluck('product_variant_id')->unique()->all();
         $variants = \App\Models\ProductVariant::with('variantValues')->whereIn('id', $variantIds)->get()->keyBy('id');
 
         $topProductRow = $rows->first();
         $topProductVariantName = 'N/A';
         if ($topProductRow) {
-            $topV = $variants->get($topProductRow->product_variant_id);
+            $topBest = optional($variantBreakdown->get($topProductRow->product_id))->first();
+            $topV = $topBest ? $variants->get($topBest->product_variant_id) : null;
             $topProductVariantName = $topProductRow->name . ($topV && $topV->display_name ? ' (' . $topV->display_name . ')' : '');
         }
         
@@ -954,9 +987,21 @@ class ReportController extends Controller
             ->whereBetween('o.created_at', [$prevStart, $prevEnd])
             ->sum('oi.quantity');
 
-        $sellers = $rows->map(function ($row, $index) use ($variants) {
-            $variant = $variants->get($row->product_variant_id);
-            $variantName = $variant ? $variant->display_name : '';
+        $sellers = $rows->map(function ($row, $index) use ($variants, $variantBreakdown) {
+            $breakdown = $variantBreakdown->get($row->product_id, collect());
+
+            $variantRows = $breakdown->map(function ($v) use ($variants): array {
+                $model = $variants->get($v->product_variant_id);
+
+                return [
+                    'name' => $model && $model->display_name ? $model->display_name : 'Mặc định',
+                    'units' => (int) $v->units,
+                    'revenue' => $this->money((float) $v->revenue),
+                ];
+            })->values()->all();
+
+            // Biến thể bán chạy nhất hiển thị ngay trên hàng chính.
+            $variantName = $variantRows[0]['name'] ?? '';
 
             $imageRow = DB::table('images')
                 ->where('product_id', $row->product_id)
@@ -974,6 +1019,8 @@ class ReportController extends Controller
                 'rank' => $index + 1,
                 'name' => $row->name,
                 'variant' => $variantName,
+                'variants' => $variantRows,
+                'variantCount' => (int) $row->variant_count,
                 'cat' => $row->cat,
                 'brand' => $row->brand,
                 'units' => (int) $row->units,
@@ -1046,7 +1093,7 @@ class ReportController extends Controller
                 ->get();
         } else {
             $rows = $base
-                ->selectRaw('YEARWEEK(o.created_at, 3) as yw, MIN(DATE(o.created_at)) as wk_start, MAX(DATE(o.created_at)) as wk_end, SUM(oi.quantity) as count')
+                ->selectRaw('YEARWEEK(o.created_at, 3) as yw, SUM(oi.quantity) as count')
                 ->groupByRaw('YEARWEEK(o.created_at, 3)')
                 ->orderByRaw('YEARWEEK(o.created_at, 3) DESC')
                 ->get();
@@ -1058,7 +1105,7 @@ class ReportController extends Controller
             } elseif ($bucket === 'day') {
                 $label = Carbon::parse($row->day)->format('d/m');
             } else {
-                $label = 'Tuần ' . Carbon::parse($row->wk_start)->format('d/m') . '–' . Carbon::parse($row->wk_end)->format('d/m');
+                $label = $this->weekLabel($row->yw);
             }
 
             return [
@@ -1259,6 +1306,171 @@ class ReportController extends Controller
                 'color' => $info['color'],
             ];
         })->all();
+    }
+
+    /** Nhãn hiển thị cho từng mốc thời gian được phép xuất. */
+    private const PERIOD_LABELS = [
+        'today' => 'Hôm nay',
+        '7days' => '7 ngày qua',
+        '30days' => '30 ngày qua',
+    ];
+
+    /**
+     * Xuất báo cáo admin ra file Excel.
+     *
+     * $type chọn loại báo cáo, $period chọn mốc thời gian (mặc định 30 ngày).
+     */
+    public function export(string $type, \Illuminate\Http\Request $request)
+    {
+        $period = $request->query('period', '30days');
+
+        if (! isset(self::PERIOD_LABELS[$period])) {
+            $period = '30days';
+        }
+
+        $now = Carbon::now();
+        [$start, $bucket] = match ($period) {
+            'today' => [$now->copy()->startOfDay(), 'hour'],
+            '7days' => [$now->copy()->subDays(6)->startOfDay(), 'day'],
+            default => [$now->copy()->subDays(29)->startOfDay(), 'week'],
+        };
+        $end = $now->copy();
+
+        [$title, $summary, $sections] = match ($type) {
+            'revenue' => $this->revenueExportData($start, $end, $bucket),
+            'order-status' => $this->orderStatusExportData($start, $end, $bucket),
+            'customers' => $this->customersExportData($start, $end, $bucket),
+            'best-sellers' => $this->bestSellersExportData($start, $end, $bucket),
+            default => abort(404),
+        };
+
+        $periodLabel = self::PERIOD_LABELS[$period]
+            . ' (' . $start->format('d/m/Y') . ' – ' . $end->format('d/m/Y') . ')';
+
+        $fileName = sprintf('bao-cao-%s-%s-%s.xlsx', $type, $period, $now->format('Ymd-Hi'));
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ReportExport($title, $periodLabel, $summary, $sections),
+            $fileName,
+        );
+    }
+
+    private function revenueExportData(Carbon $start, Carbon $end, string $bucket): array
+    {
+        $data = $this->revenueForRange($start, $end, $bucket);
+
+        $summary = [
+            'Doanh thu thuần' => $data['revenue'],
+            'Số đơn hàng' => $data['orders'],
+            'Giá trị đơn trung bình' => $data['aov'],
+            'Tỷ lệ giảm giá' => $data['discountRate'],
+        ];
+
+        $sections = [
+            [
+                'title' => 'CHI TIẾT DOANH SỐ BÁN HÀNG',
+                'headings' => ['Thời gian', 'Số đơn hàng', 'Doanh thu gộp', 'Giảm giá', 'Doanh thu thuần'],
+                'rows' => array_map(fn ($r): array => [
+                    $r['time'], $r['count'], $r['gross'], $r['discount'], $r['net'],
+                ], $data['table']),
+            ],
+            [
+                'title' => 'DOANH THU THEO DANH MỤC',
+                'headings' => ['Danh mục', 'Tỷ trọng'],
+                'rows' => array_map(fn ($c): array => [
+                    $c['name'], $c['percentage'],
+                ], $data['categories']),
+            ],
+        ];
+
+        return ['Báo cáo doanh thu', $summary, $sections];
+    }
+
+    private function orderStatusExportData(Carbon $start, Carbon $end, string $bucket): array
+    {
+        $data = $this->orderStatusForRange($start, $end, $bucket);
+
+        $summary = [
+            'Tổng đơn hàng' => $data['total'],
+            'Hoàn tất' => $data['completed'],
+            'Chờ xác nhận' => $data['pending'],
+            'Đã hủy' => $data['cancelled'],
+        ];
+
+        $sections = [
+            [
+                'title' => 'PHÂN BỔ TRẠNG THÁI ĐƠN',
+                'headings' => ['Trạng thái', 'Số đơn', 'Tỷ trọng'],
+                'rows' => array_map(fn ($s): array => [
+                    $s['name'], $s['count'], $s['percentage'],
+                ], $data['statuses']),
+            ],
+        ];
+
+        return ['Báo cáo trạng thái đơn hàng', $summary, $sections];
+    }
+
+    private function customersExportData(Carbon $start, Carbon $end, string $bucket): array
+    {
+        $data = $this->customersForRange($start, $end, $bucket);
+
+        $summary = [
+            'Tổng khách hàng' => $data['total'],
+            'Khách mới' => $data['new'],
+            'Khách quay lại' => $data['returning'],
+            'Tổng chi tiêu' => $data['spent'],
+        ];
+
+        $sections = [
+            [
+                'title' => 'KHÁCH HÀNG CHI TIÊU NHIỀU NHẤT',
+                'headings' => ['Hạng', 'Khách hàng', 'Email', 'Số đơn', 'Tổng chi tiêu', 'Tỷ trọng'],
+                'rows' => array_map(fn ($c): array => [
+                    $c['position'], $c['name'], $c['email'], $c['count'], $c['totalSpent'], $c['share'],
+                ], $data['customers']),
+            ],
+        ];
+
+        return ['Báo cáo khách hàng', $summary, $sections];
+    }
+
+    private function bestSellersExportData(Carbon $start, Carbon $end, string $bucket): array
+    {
+        $data = $this->bestSellersForRange($start, $end, $bucket);
+
+        $summary = [
+            'Tổng sản phẩm bán ra' => $data['totalSold'],
+            'Sản phẩm bán chạy nhất' => $data['topProduct'],
+            'Danh mục bán chạy nhất' => $data['topCategory'],
+            'Thương hiệu bán chạy nhất' => $data['topBrand'],
+        ];
+
+        // Mỗi sản phẩm kèm các biến thể đã bán, thụt lề để dễ đọc.
+        $rows = [];
+        foreach ($data['sellers'] as $s) {
+            $rows[] = [$s['rank'], $s['name'], $s['cat'], $s['brand'], $s['units'], $s['revenue']];
+
+            foreach ($s['variants'] ?? [] as $v) {
+                $rows[] = ['', '    → ' . $v['name'], '', '', $v['units'], $v['revenue']];
+            }
+        }
+
+        $sections = [
+            [
+                'title' => 'BẢNG XẾP HẠNG SẢN PHẨM BÁN CHẠY',
+                'headings' => ['Hạng', 'Sản phẩm', 'Danh mục', 'Thương hiệu', 'Số lượng bán', 'Tổng doanh thu'],
+                'rows' => $rows,
+            ],
+            [
+                'title' => 'TỶ TRỌNG THEO DANH MỤC',
+                'headings' => ['Danh mục', 'Số lượng', 'Tỷ trọng'],
+                'rows' => array_map(fn ($c): array => [
+                    $c['name'], $c['count'], $c['percentage'],
+                ], $data['categories']),
+            ],
+        ];
+
+        return ['Báo cáo sản phẩm bán chạy', $summary, $sections];
     }
 }
 
