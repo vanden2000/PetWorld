@@ -64,7 +64,7 @@ class ShippingQuoteService
         }
         $fee = $this->ghn->quote([
             'service_type_id' => config('services.ghn.service_type_id'),
-            'from_district_id' => config('services.ghn.from_district_id'),
+            'from_district_id' => (int) config('services.ghn.from_district_id'),
             'from_ward_code' => config('services.ghn.from_ward_code'),
             'to_district_id' => $address->ghn_district_id,
             'to_ward_code' => $address->ghn_ward_code,
@@ -91,9 +91,10 @@ class ShippingQuoteService
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->orderByDesc('discount_value')
-            ->first();
+            ->get()
+            ->first(fn (Voucher $voucher) => $voucher->canBeApplied($orderValue));
 
-        if ($promotion === null || ! $promotion->canBeApplied($orderValue)) {
+        if ($promotion === null) {
             return array_merge($quote, ['shipping_promotion' => null, 'shipping_voucher_id' => null]);
         }
 
@@ -105,7 +106,11 @@ class ShippingQuoteService
         return array_merge($quote, [
             'shipping_discount' => $discount,
             'shipping_fee' => max(0, (float) $quote['shipping_fee_original'] - $discount),
-            'shipping_promotion' => ['id' => $promotion->id, 'name' => $promotion->description ?: $promotion->code],
+            'shipping_promotion' => [
+                'id' => $promotion->id,
+                'code' => $promotion->code,
+                'name' => $promotion->description ?: $promotion->code,
+            ],
             'shipping_voucher_id' => $promotion->id,
         ]);
     }

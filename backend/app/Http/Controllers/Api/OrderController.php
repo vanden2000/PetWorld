@@ -79,7 +79,7 @@ class OrderController extends Controller
 
         $order->load([
             'shippingMethod:id,name',
-            'shippingVoucher:id,code,name',
+            'shippingVoucher:id,code,description',
             'shipment:id,order_id,provider,tracking_code,status',
             'paymentMethod:id,name',
             'items.productVariant.product.primaryImage',
@@ -113,7 +113,7 @@ class OrderController extends Controller
                         'discount' => (float) $order->shipping_discount,
                         'promotion' => $order->shippingVoucher ? [
                             'code' => $order->shippingVoucher->code,
-                            'name' => $order->shippingVoucher->name,
+                            'name' => $order->shippingVoucher->description ?: $order->shippingVoucher->code,
                         ] : null,
                         'fee' => (float) $order->shipping_fee,
                         'tracking_code' => $order->shipment?->tracking_code ?? ('PW-' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT)),
@@ -377,6 +377,8 @@ class OrderController extends Controller
             if ($request->filled('voucher_id')) {
                 $voucher = \App\Models\Voucher::query()
                     ->where('status', 'active')
+                    ->where('applies_to', 'product')
+                    ->where('is_automatic', false)
                     ->lockForUpdate() // Khóa để tránh race condition khi đếm lượt sử dụng
                     ->findOrFail($data['voucher_id']);
 
@@ -389,6 +391,25 @@ class OrderController extends Controller
                 $voucherId = $voucher->id;
                 // Số tiền giảm tối đa không vượt quá tổng phụ đơn hàng
                 $discountAmount = min((float) $voucher->discount_value, $subtotal);
+            }
+
+            if (! $request->filled('voucher_id')) {
+                $voucher = \App\Models\Voucher::query()
+                    ->where('status', 'active')
+                    ->where('applies_to', 'product')
+                    ->where('is_automatic', true)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now())
+                    ->where('min_order_value', '<=', $subtotal)
+                    ->orderByDesc('discount_value')
+                    ->lockForUpdate()
+                    ->get()
+                    ->first(fn (\App\Models\Voucher $candidate) => $candidate->canBeApplied($subtotal));
+
+                if ($voucher !== null) {
+                    $voucherId = $voucher->id;
+                    $discountAmount = min((float) $voucher->discount_value, $subtotal);
+                }
             }
 
             $shippingQuote = $shipping->quote($shippingMethod, $address, $quantities);

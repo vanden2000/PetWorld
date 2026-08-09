@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CheckoutOptionController;
 use App\Http\Controllers\Api\GhtkQuoteController;
 use App\Http\Controllers\Api\GhnLocationController;
+use App\Http\Controllers\Api\GhnWebhookController;
 use App\Http\Controllers\Api\ShippingQuoteController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
@@ -87,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/home', HomeController::class);
 Route::get('/checkout-options', CheckoutOptionController::class);
 Route::post('/webhooks/sepay', SepayWebhookController::class);
+Route::post('/webhooks/ghn', GhnWebhookController::class);
 Route::get('/blogs', [BlogController::class, 'index']);
 Route::get('/blogs/sitemap', [BlogController::class, 'sitemap']);
 Route::get('/blogs/{slug}', [BlogController::class, 'show']);

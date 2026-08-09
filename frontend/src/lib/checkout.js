@@ -74,6 +74,34 @@ export async function getAvailableVouchers(subtotal) {
   }
 }
 
+export async function getAutomaticProductVoucher(subtotal) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/vouchers?subtotal=${subtotal}`, {
+      cache: "no-store",
+      headers: { Accept: "application/json", ...authHeaders() },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data?.automatic_voucher ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getEligibleShippingPromotions(subtotal) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/vouchers?subtotal=${subtotal}`, {
+      cache: "no-store",
+      headers: { Accept: "application/json", ...authHeaders() },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json?.data?.eligible_shipping_promotions ?? [];
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Gia hạn thời gian thanh toán (tạo lại QR) cho đơn chuyển khoản còn đang chờ.
  * Giữ nguyên mã PW{id}, chỉ đẩy lại expires_at. Trả về { ok, data?, message? }.

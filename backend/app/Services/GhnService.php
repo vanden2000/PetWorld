@@ -42,6 +42,19 @@ class GhnService
 
         return (array) $response->json('data');
     }
+
+    /** @return array<string, mixed> */
+    public function orderDetail(string $orderCode): array
+    {
+        $response = $this->client()
+            ->post('/shiip/public-api/v2/shipping-order/detail', ['order_code' => $orderCode]);
+
+        if (! $response->successful() || (int) $response->json('code') !== 200) {
+            throw new RuntimeException($response->json('message') ?: 'Không thể lấy trạng thái vận đơn Giao Hàng Nhanh.');
+        }
+
+        return (array) $response->json('data');
+    }
     /** @return array<int, array<string, mixed>> */
     public function provinces(): array
     {

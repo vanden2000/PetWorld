@@ -93,6 +93,30 @@
                 @if($order->shipment?->tracking_code)
                     <h4 class="info-label">Mã vận đơn GHN</h4>
                     <p class="info-value" style="font-weight: 700; color: var(--primary);">{{ $order->shipment->tracking_code }}</p>
+
+                    @php
+                        $ghnStatusLabels = [
+                            'ready_to_pick' => 'Chờ lấy hàng',
+                            'picking' => 'Đang lấy hàng',
+                            'picked' => 'Đã lấy hàng',
+                            'storing' => 'Đang ở kho GHN',
+                            'transporting' => 'Đang luân chuyển',
+                            'sorting' => 'Đang phân loại',
+                            'delivering' => 'Đang giao cho người nhận',
+                            'delivered' => 'Đã giao thành công',
+                            'delivery_fail' => 'Giao hàng thất bại',
+                            'cancel' => 'Đã hủy',
+                            'returned' => 'Đã hoàn hàng',
+                        ];
+                        $ghnStatus = (string) $order->shipment->status;
+                    @endphp
+                    @if($ghnStatus !== '')
+                        <h4 class="info-label">GHN báo</h4>
+                        <p class="info-value" style="font-weight: 700; color: #2563eb;">
+                            <i class="fa-solid fa-satellite-dish" style="margin-right: 4px;"></i>
+                            {{ $ghnStatusLabels[$ghnStatus] ?? str_replace('_', ' ', $ghnStatus) }}
+                        </p>
+                    @endif
                 @endif
             </div>
         </div>

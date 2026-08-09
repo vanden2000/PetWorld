@@ -54,9 +54,10 @@ return [
     ],
 
     'ghn' => [
-        'api_token' => env('GHN_TOKEN'),
-        'shop_id' => env('GHN_SHOP_ID'),
-        'base_url' => rtrim((string) env('GHN_BASE_URL', 'https://dev-online-gateway.ghn.vn'), '/'),
+          'api_token' => env('GHN_TOKEN'),
+          'shop_id' => env('GHN_SHOP_ID'),
+          'webhook_secret' => env('GHN_WEBHOOK_SECRET'),
+          'base_url' => rtrim((string) env('GHN_BASE_URL', 'https://dev-online-gateway.ghn.vn'), '/'),
         'timeout' => (int) env('GHN_TIMEOUT', 15),
         'from_name' => env('GHN_FROM_NAME'),
         'from_phone' => env('GHN_FROM_PHONE'),

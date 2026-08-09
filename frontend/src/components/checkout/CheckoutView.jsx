@@ -28,6 +28,8 @@ import {
   renewPayment,
   buildSepayQrUrl,
   getAvailableVouchers,
+  getAutomaticProductVoucher,
+  getEligibleShippingPromotions,
   getShippingQuote,
 } from "@/lib/checkout";
 import { cancelOrder } from "@/lib/auth";
@@ -115,6 +117,7 @@ export default function CheckoutView() {
   const [shippingMethodId, setShippingMethodId] = useState(null);
   const [shippingQuote, setShippingQuote] = useState(null);
   const [shippingQuoteLoading, setShippingQuoteLoading] = useState(false);
+  const [shippingQuoteError, setShippingQuoteError] = useState("");
   const [paymentMethodId, setPaymentMethodId] = useState(null);
 
   const [addresses, setAddresses] = useState([]);
@@ -137,6 +140,8 @@ export default function CheckoutView() {
   const qrExpired = paymentExpiresAt !== null && nowMs >= paymentExpiresAt;
 
   const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [automaticVoucher, setAutomaticVoucher] = useState(null);
+  const [eligibleShippingPromotions, setEligibleShippingPromotions] = useState([]);
   const [vouchers, setVouchers] = useState([]);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [loadingVouchers, setLoadingVouchers] = useState(false);
@@ -291,8 +296,18 @@ export default function CheckoutView() {
     queueMicrotask(() => {
       if (!active) return;
       setShippingQuoteLoading(true);
+      setShippingQuote(null);
+      setShippingQuoteError("");
       getShippingQuote({ address_id: selectedAddressId, shipping_method_code: shippingMethod.code, items: items.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })) })
-        .then((result) => { if (active) setShippingQuote(result.ok ? result.data?.quote ?? null : null); })
+        .then((result) => {
+          if (!active) return;
+          if (result.ok && result.data?.quote) {
+            setShippingQuote(result.data.quote);
+            return;
+          }
+          const detail = Object.values(result.errors ?? {}).flat().find(Boolean);
+          setShippingQuoteError(detail || result.message || "Chưa thể tính phí vận chuyển.");
+        })
         .finally(() => { if (active) setShippingQuoteLoading(false); });
     });
     return () => { active = false; };
@@ -300,8 +315,25 @@ export default function CheckoutView() {
 
   const voucherKey = buyNowItem ? "petworld_buynow_applied_voucher" : "petworld_cart_applied_voucher";
 
-  const discount = appliedVoucher ? Math.min(parseFloat(appliedVoucher.discount_value), subtotal) : 0;
+  const activeVoucher = appliedVoucher || automaticVoucher;
+  const discount = activeVoucher ? Math.min(parseFloat(activeVoucher.discount_value), subtotal) : 0;
   const total = Math.max(0, subtotal + shipping - discount);
+
+  useEffect(() => {
+    let active = true;
+    getAutomaticProductVoucher(subtotal).then((voucher) => {
+      if (active) setAutomaticVoucher(voucher);
+    });
+    return () => { active = false; };
+  }, [subtotal]);
+
+  useEffect(() => {
+    let active = true;
+    getEligibleShippingPromotions(subtotal).then((promotions) => {
+      if (active) setEligibleShippingPromotions(promotions);
+    });
+    return () => { active = false; };
+  }, [subtotal]);
 
   // Đọc và kiểm tra tính hợp lệ của voucher từ localStorage
   useEffect(() => {
@@ -360,7 +392,7 @@ export default function CheckoutView() {
   };
 
   const handleApplyVoucher = (voucher) => {
-    if (!voucher.can_apply) return;
+    if (!voucher.can_apply || !voucher.selectable) return;
     setAppliedVoucher(voucher);
     if (typeof window !== "undefined") {
       localStorage.setItem(voucherKey, JSON.stringify(voucher));
@@ -412,6 +444,11 @@ export default function CheckoutView() {
     // Mọi dòng giỏ phải có variant id (giỏ cũ có thể thiếu) để khớp sản phẩm khi đặt.
     if (items.some((line) => !line.variantId)) {
       toastError("Có sản phẩm trong giỏ thiếu thông tin phân loại. Vui lòng xoá và thêm lại sản phẩm.");
+      return;
+    }
+
+    if (!shippingMethodId || shippingQuoteLoading || !shippingQuote) {
+      toastError(shippingQuoteError || "Vui lòng chờ tính xong phí vận chuyển trước khi đặt hàng.");
       return;
     }
 
@@ -840,7 +877,7 @@ export default function CheckoutView() {
                 <div>
                   <strong>{method.name}</strong>{method.description && <small>{method.description}</small>}
                 </div>
-                <span className="co-ship-fee">{shippingMethodId === method.id && shippingQuoteLoading ? "Đang tính..." : shippingMethodId === method.id && shippingQuote ? formatPrice(shippingQuote.shipping_fee) : method.fee_mode === "live_quote" ? "Theo địa chỉ" : "Chọn để tính"}</span>
+                <span className="co-ship-fee">{shippingMethodId === method.id && shippingQuoteLoading ? "Đang tính..." : shippingMethodId === method.id && shippingQuote ? formatPrice(shippingQuote.shipping_fee) : shippingMethodId === method.id && shippingQuoteError ? "Chưa tính được" : method.fee_mode === "live_quote" ? "Theo địa chỉ" : "Chọn để tính"}</span>
               </label>
             ))}
           </section>
@@ -900,15 +937,30 @@ export default function CheckoutView() {
           </div>
           <div className="co-summary-row">
             <span>Phí vận chuyển</span>
-            <span>{shippingQuoteLoading ? "Đang tính..." : formatPrice(shipping)}</span>
+            <span>{shippingQuoteLoading ? "Đang tính..." : shippingQuote ? formatPrice(shipping) : "Chưa tính"}</span>
           </div>
+          {shippingQuoteError && <p className="co-quote-error">{shippingQuoteError}</p>}
+          {eligibleShippingPromotions.length > 0 && (
+            <div className="co-auto-shipping-promotions">
+              <div className="co-auto-shipping-promotions-title">🎁 Ưu đãi vận chuyển</div>
+              {eligibleShippingPromotions.map((promotion) => (
+                <div className="co-auto-shipping-promotion" key={promotion.id}>
+                  <div>
+                    <strong>{promotion.code}</strong>
+                    <span>{promotion.description || `Hỗ trợ phí ship tối đa ${formatPrice(promotion.max_shipping_discount)}`}</span>
+                  </div>
+                  <em>Đủ điều kiện · sẽ tự áp dụng</em>
+                </div>
+              ))}
+            </div>
+          )}
           {shippingQuote?.shipping_discount > 0 && (
             <div className="co-summary-row co-summary-discount">
-              <span>{shippingQuote.shipping_promotion?.name || "Hỗ trợ phí vận chuyển"}</span>
+              <span>{shippingQuote.shipping_promotion?.code ? `Mã ${shippingQuote.shipping_promotion.code} · ${shippingQuote.shipping_promotion.name}` : shippingQuote.shipping_promotion?.name || "Hỗ trợ phí vận chuyển"}</span>
               <span className="co-discount-amount">-{formatPrice(shippingQuote.shipping_discount)}</span>
             </div>
           )}
-          {items.length > 0 && shipping === 0 && (
+          {items.length > 0 && shippingQuote && shipping === 0 && (
             <div className="co-freeship-badge">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.2 14.2-3.5-3.5 1.4-1.4 2.1 2.1 4.9-4.9 1.4 1.4-6.3 6.3Z" /></svg>
               Đã áp dụng miễn phí vận chuyển
@@ -917,6 +969,15 @@ export default function CheckoutView() {
 
           {/* Voucher trigger */}
           <div className="co-voucher-section">
+            {!appliedVoucher && automaticVoucher && (
+              <div className="co-voucher-applied">
+                <div className="co-voucher-applied-info">
+                  <span className="co-voucher-tag-icon">✨</span>
+                  <span className="co-voucher-code-name"><strong>{automaticVoucher.code}</strong> · Tự động áp dụng</span>
+                  <span className="co-voucher-discount-text">(-{formatPrice(discount)})</span>
+                </div>
+              </div>
+            )}
             {appliedVoucher ? (
               <div className="co-voucher-applied">
                 <div className="co-voucher-applied-info">
@@ -983,11 +1044,12 @@ export default function CheckoutView() {
                     const formattedDiscount = formatPrice(voucher.discount_value);
                     const startDateStr = new Date(voucher.start_date).toLocaleDateString('vi-VN');
                     const endDateStr = new Date(voucher.end_date).toLocaleDateString('vi-VN');
+                    const canSelect = voucher.selectable && voucher.can_apply;
                     
                     return (
                       <div 
                         key={voucher.id} 
-                        className={`co-voucher-item ${!voucher.can_apply ? 'disabled' : ''} ${appliedVoucher?.id === voucher.id ? 'selected' : ''}`}
+                        className={`co-voucher-item ${!canSelect ? 'disabled' : ''} ${appliedVoucher?.id === voucher.id ? 'selected' : ''}`}
                       >
                         <div className="co-voucher-card-left">
                           <div className="co-voucher-discount-val">-{formattedDiscount}</div>
@@ -998,14 +1060,14 @@ export default function CheckoutView() {
                           <p className="co-voucher-condition">Đơn tối thiểu: <strong>{formattedMin}</strong></p>
                           <p className="co-voucher-duration">Hạn dùng: {startDateStr} - {endDateStr}</p>
                           
-                          {!voucher.can_apply && (
+                          {!canSelect && (
                             <p className="co-voucher-warning-text">
-                              Mua thêm <strong>{formatPrice(voucher.missing_amount)}</strong> để sử dụng mã này
+                              {voucher.availability_message}{voucher.selectable && voucher.missing_amount > 0 ? <> Mua thêm <strong>{formatPrice(voucher.missing_amount)}</strong> để dùng mã này.</> : null}
                             </p>
                           )}
                           
                           <div className="co-voucher-action-btn-wrap">
-                            {voucher.can_apply ? (
+                            {canSelect ? (
                               appliedVoucher?.id === voucher.id ? (
                                 <button 
                                   type="button" 
@@ -1025,7 +1087,7 @@ export default function CheckoutView() {
                               )
                             ) : (
                               <button type="button" className="co-voucher-btn" disabled>
-                                Chưa đủ điều kiện
+                                {voucher.is_automatic ? "Tự động áp dụng" : "Chưa đủ điều kiện"}
                               </button>
                             )}
                           </div>

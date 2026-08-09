@@ -11413,6 +11413,69 @@ body {
   color: var(--text-muted);
 }
 
+.co-quote-error {
+  margin: 8px 0 0;
+  color: #c2410c;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.co-auto-shipping-promotions {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  background: #fffaf5;
+}
+
+.co-auto-shipping-promotions-title {
+  color: #c2410c;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.co-auto-shipping-promotion {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-top: 1px dashed #fed7aa;
+}
+
+.co-auto-shipping-promotion:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.co-auto-shipping-promotion strong,
+.co-auto-shipping-promotion span,
+.co-auto-shipping-promotion em {
+  display: block;
+}
+
+.co-auto-shipping-promotion strong {
+  color: #9a3412;
+  font-size: 13px;
+}
+
+.co-auto-shipping-promotion span,
+.co-auto-shipping-promotion em {
+  color: #78716c;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.co-auto-shipping-promotion em {
+  color: #15803d;
+  font-style: normal;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .co-summary-total {
   display: flex;
   justify-content: space-between;

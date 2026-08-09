@@ -350,7 +350,7 @@ class OrderController extends Controller
                 'shippingMethod:id,name',
                 'shipment:id,order_id,provider,tracking_code,status',
                 'voucher:id,code,discount_value',
-                'shippingVoucher:id,code,name',
+                'shippingVoucher:id,code,description',
                 'items.productVariant.product.primaryImage',
                 'items.productVariant.variantValues.variantType',
                 'sepayTransactions' => fn ($query) => $query->latest(),
