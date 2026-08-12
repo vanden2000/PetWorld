@@ -106,6 +106,15 @@
             @endforeach
         </select>
     </div>
+    <div class="filter-col">
+        <label class="filter-label">Vận chuyển</label>
+        <select name="shipping_method_id" class="filter-select">
+            <option value="">Tất cả</option>
+            @foreach($shippingMethods as $method)
+                <option value="{{ $method->id }}" @selected((string) ($filters['shipping_method_id'] ?? '') === (string) $method->id)>{{ $method->name }}</option>
+            @endforeach
+        </select>
+    </div>
     <div class="filter-col orders-filter-actions">
         <a href="{{ route('admin.orders') }}"  style="text-decoration:none"class="btn-clear-filters">Xoá Bộ Lọc</a>
     </div>
@@ -289,6 +298,7 @@
             <input type="hidden" name="search" value="{{ $filters['search'] ?? '' }}">
             <input type="hidden" name="payment_status" value="{{ $filters['payment_status'] ?? '' }}">
             <input type="hidden" name="order_status" value="{{ $filters['order_status'] ?? '' }}">
+            <input type="hidden" name="shipping_method_id" value="{{ $filters['shipping_method_id'] ?? '' }}">
             <input type="hidden" name="date_from" value="{{ $filters['date_from'] ?? '' }}">
             <input type="hidden" name="date_to" value="{{ $filters['date_to'] ?? '' }}">
             <div class="order-export-options">

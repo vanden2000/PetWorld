@@ -8,6 +8,7 @@ use App\Mail\OrderStatusMail;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\Shipment;
+use App\Models\ShippingMethod;
 use App\Services\GhnShipmentService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -57,6 +58,7 @@ class OrderController extends Controller
             'search' => ['nullable', 'string', 'max:80'],
             'payment_status' => ['nullable', Rule::in(array_keys(self::PAYMENT_STATUSES))],
             'order_status' => ['nullable', Rule::in(array_keys(self::ORDER_STATUSES))],
+            'shipping_method_id' => ['nullable', 'integer', Rule::exists('shipping_methods', 'id')],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
@@ -94,6 +96,7 @@ class OrderController extends Controller
             })
             ->when($filters['payment_status'] ?? null, fn ($query, string $status) => $query->where('payment_status', $status))
             ->when($filters['order_status'] ?? null, fn ($query, string $status) => $query->where('order_status', $status))
+            ->when($filters['shipping_method_id'] ?? null, fn ($query, int $methodId) => $query->where('shipping_method_id', $methodId))
             ->when($filters['date_from'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '>=', $date))
             ->when($filters['date_to'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '<=', $date))
             ->latest()
@@ -105,6 +108,7 @@ class OrderController extends Controller
             'filters' => $filters,
             'orderStatuses' => self::ORDER_STATUSES,
             'paymentStatuses' => self::PAYMENT_STATUSES,
+            'shippingMethods' => ShippingMethod::query()->orderBy('name')->get(['id', 'name']),
             'orderStatusClasses' => self::ORDER_STATUS_CLASS,
             'paymentStatusClasses' => self::PAYMENT_STATUS_CLASS,
         ]);
@@ -117,6 +121,7 @@ class OrderController extends Controller
             'search' => ['nullable', 'string', 'max:80'],
             'payment_status' => ['nullable', Rule::in(array_keys(self::PAYMENT_STATUSES))],
             'order_status' => ['nullable', Rule::in(array_keys(self::ORDER_STATUSES))],
+            'shipping_method_id' => ['nullable', 'integer', Rule::exists('shipping_methods', 'id')],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
@@ -125,7 +130,7 @@ class OrderController extends Controller
 
         if (! (clone $query)->exists()) {
             return redirect()
-                ->route('admin.orders', $request->only(['search', 'payment_status', 'order_status', 'date_from', 'date_to']))
+                ->route('admin.orders', $request->only(['search', 'payment_status', 'order_status', 'shipping_method_id', 'date_from', 'date_to']))
                 ->with('error', 'Không có đơn hàng phù hợp để xuất.');
         }
 
@@ -337,6 +342,7 @@ class OrderController extends Controller
             })
             ->when($filters['payment_status'] ?? null, fn (Builder $query, string $status) => $query->where('payment_status', $status))
             ->when($filters['order_status'] ?? null, fn (Builder $query, string $status) => $query->where('order_status', $status))
+            ->when($filters['shipping_method_id'] ?? null, fn (Builder $query, int $methodId) => $query->where('shipping_method_id', $methodId))
             ->when($filters['date_from'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '>=', $date))
             ->when($filters['date_to'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '<=', $date));
     }
