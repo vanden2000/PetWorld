@@ -374,10 +374,6 @@
             <div class="stat-icon-wrapper icon-total">
                 <i class="fa-solid fa-cart-arrow-down"></i>
             </div>
-            <div class="stat-trend trend-up" id="orders-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Tổng đơn mới phát sinh</div>
         <div class="stat-value" id="orders-val">0 đơn</div>
@@ -387,10 +383,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-revenue">
                 <i class="fa-solid fa-hand-holding-dollar"></i>
-            </div>
-            <div class="stat-trend trend-up" id="revenue-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Doanh thu từ đơn mới</div>
@@ -637,10 +629,6 @@
             document.getElementById('revenue-val').innerText = data.revenue;
             document.getElementById('aov-val').innerText = data.aov;
             document.getElementById('pending-val').innerText = data.pending;
-
-            // 2. Update trends
-            setTrend('orders-trend', data.totalTrend);
-            setTrend('revenue-trend', data.revenueTrend);
 
             // 3. Render legend list
             const legendList = document.getElementById('status-legend-list');

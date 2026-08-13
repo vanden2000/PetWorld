@@ -351,10 +351,6 @@
             <div class="stat-icon-wrapper icon-total">
                 <i class="fa-solid fa-boxes-stacked"></i>
             </div>
-            <div class="stat-trend trend-up" id="orders-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Tổng đơn hàng</div>
         <div class="stat-value" id="orders-val">0</div>
@@ -364,10 +360,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-completed">
                 <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <div class="stat-trend trend-up" id="completed-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Đơn hoàn tất</div>
@@ -379,10 +371,6 @@
             <div class="stat-icon-wrapper icon-pending">
                 <i class="fa-solid fa-truck-ramp-box"></i>
             </div>
-            <div class="stat-trend trend-down" id="pending-trend">
-                <i class="fa-solid fa-arrow-trend-down"></i>
-                <span>-0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Đang xử lý / Đang giao</div>
         <div class="stat-value" id="pending-val">0</div>
@@ -392,10 +380,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-cancelled">
                 <i class="fa-solid fa-circle-xmark"></i>
-            </div>
-            <div class="stat-trend trend-down" id="cancelled-trend">
-                <i class="fa-solid fa-arrow-trend-down"></i>
-                <span>-0.0%</span>
             </div>
         </div>
         <div class="stat-label">Đơn đã hủy</div>
@@ -620,12 +604,6 @@
             document.getElementById('completed-val').innerText = data.completed;
             document.getElementById('pending-val').innerText = data.pending;
             document.getElementById('cancelled-val').innerText = data.cancelled;
-
-            // 2. Update trend elements
-            setTrend('orders-trend', data.totalTrend);
-            setTrend('completed-trend', data.completedTrend);
-            setTrend('pending-trend', data.pendingTrend);
-            setTrend('cancelled-trend', data.cancelledTrend);
 
             // 3. Render status legend list
             const legendList = document.getElementById('status-legend-list');

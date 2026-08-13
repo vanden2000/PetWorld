@@ -335,10 +335,6 @@
             <div class="stat-icon-wrapper icon-revenue">
                 <i class="fa-solid fa-wallet"></i>
             </div>
-            <div class="stat-trend trend-up" id="revenue-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Tổng doanh thu</div>
         <div class="stat-value" id="revenue-val">0đ</div>
@@ -348,10 +344,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-orders">
                 <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <div class="stat-trend trend-up" id="orders-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Đơn hàng thành công</div>
@@ -363,10 +355,6 @@
             <div class="stat-icon-wrapper icon-aov">
                 <i class="fa-solid fa-bag-shopping"></i>
             </div>
-            <div class="stat-trend trend-up" id="aov-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Giá trị trung bình đơn</div>
         <div class="stat-value" id="aov-val">0đ</div>
@@ -376,10 +364,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-conversion">
                 <i class="fa-solid fa-percent"></i>
-            </div>
-            <div class="stat-trend trend-up" id="margin-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Tỷ lệ giảm giá TB</div>
@@ -645,12 +629,6 @@
             document.getElementById('orders-val').innerText = data.orders;
             document.getElementById('aov-val').innerText = data.aov;
             document.getElementById('margin-val').innerText = data.discountRate;
-
-            // 2. Update trend indicators
-            setTrend('revenue-trend', data.trends.revenue);
-            setTrend('orders-trend', data.trends.orders);
-            setTrend('aov-trend', data.trends.aov);
-            setTrend('margin-trend', data.trends.discount);
 
             // 3. Render categories legend list
             const categoryList = document.getElementById('category-list');

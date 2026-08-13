@@ -812,29 +812,33 @@ class ReportController extends Controller
      */
     private function topCustomersList(Carbon $start, Carbon $end): array
     {
-        $rows = DB::table('orders as o')
-            ->join('users as u', 'u.id', '=', 'o.user_id')
-            ->where('o.payment_status', 'paid')
-            ->where('o.order_status', '!=', 'cancelled')
-            ->whereBetween('o.created_at', [$start, $end])
+        $rows = DB::table('users as u')
+            ->leftJoin('orders as o', function ($join) use ($start, $end) {
+                $join->on('o.user_id', '=', 'u.id')
+                    ->where('o.payment_status', '=', 'paid')
+                    ->where('o.order_status', '!=', 'cancelled')
+                    ->whereBetween('o.created_at', [$start, $end]);
+            })
+            ->where(function ($q) {
+                $q->where('u.role', 'user')->orWhereNull('u.role');
+            })
             ->groupBy('u.id', 'u.name', 'u.email')
-            ->selectRaw('u.name as name, u.email as email, COUNT(o.id) as count, SUM(o.total_amount) as total_spent')
+            ->selectRaw('u.id as id, u.name as name, u.email as email, COUNT(o.id) as count, COALESCE(SUM(o.total_amount), 0) as total_spent')
             ->orderByDesc('total_spent')
+            ->orderBy('u.name')
             ->get();
 
-        // Tổng chi tiêu tính trên mọi khách trong kỳ, lấy trước khi cắt top.
         $periodSpent = (float) $rows->sum('total_spent');
         $topSpent = (float) ($rows->first()->total_spent ?? 0);
 
-        return $rows->take(self::TOP_CUSTOMERS_LIMIT)
-            ->values()
+        return $rows->values()
             ->map(function ($row, $index) use ($periodSpent, $topSpent): array {
                 $spent = (float) $row->total_spent;
 
                 return [
                     'position' => $index + 1,
-                    'name' => $row->name,
-                    'email' => $row->email,
+                    'name' => $row->name ?? 'Chưa cập nhật',
+                    'email' => $row->email ?? '',
                     'count' => (int) $row->count,
                     'totalSpent' => $this->money($spent),
                     'totalSpentRaw' => $spent,
@@ -908,7 +912,7 @@ class ReportController extends Controller
                 SUM(oi.price * oi.quantity) as revenue
             ')
             ->orderByDesc('units')
-            ->limit(10)
+            ->limit(5)
             ->get();
 
         // Chi tiết từng biến thể của các sản phẩm trên, dùng cho hàng mở rộng.
@@ -1008,7 +1012,21 @@ class ReportController extends Controller
                 ->orderByDesc('is_primary')
                 ->first();
 
-            $imageUrl = $imageRow ? $imageRow->image_url : null;
+            $imageUrl = null;
+            if ($imageRow && $imageRow->image_url) {
+                $path = ltrim((string) $imageRow->image_url, '/');
+                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                    $imageUrl = $path;
+                } elseif (str_starts_with($path, 'storage/') || str_starts_with($path, 'image/')) {
+                    $imageUrl = asset($path);
+                } elseif (file_exists(public_path('image/' . $path))) {
+                    $imageUrl = asset('image/' . $path);
+                } elseif (file_exists(public_path('storage/' . $path))) {
+                    $imageUrl = asset('storage/' . $path);
+                } else {
+                    $imageUrl = asset($path);
+                }
+            }
             
             $badgeClass = 'badge-food';
             if (str_contains($row->cat, 'Pate') || str_contains($row->cat, 'ướt')) $badgeClass = 'badge-pate';
@@ -1025,7 +1043,7 @@ class ReportController extends Controller
                 'brand' => $row->brand,
                 'units' => (int) $row->units,
                 'revenue' => $this->money($row->revenue),
-                'image' => $imageUrl ?: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=120&auto=format&fit=crop',
+                'image' => $imageUrl ?: asset('image/logo/logo.png'),
                 'badgeClass' => $badgeClass,
             ];
         })->all();
@@ -1417,16 +1435,14 @@ class ReportController extends Controller
         $summary = [
             'Tổng khách hàng' => $data['total'],
             'Khách mới' => $data['new'],
-            'Khách quay lại' => $data['returning'],
-            'Tổng chi tiêu' => $data['spent'],
         ];
 
         $sections = [
             [
-                'title' => 'KHÁCH HÀNG CHI TIÊU NHIỀU NHẤT',
-                'headings' => ['Hạng', 'Khách hàng', 'Email', 'Số đơn', 'Tổng chi tiêu', 'Tỷ trọng'],
+                'title' => 'DANH SÁCH THỐNG KÊ KHÁCH HÀNG',
+                'headings' => ['STT', 'Khách hàng', 'Email', 'Số đơn mua', 'Tổng chi tiêu'],
                 'rows' => array_map(fn ($c): array => [
-                    $c['position'], $c['name'], $c['email'], $c['count'], $c['totalSpent'], $c['share'],
+                    $c['position'], $c['name'], $c['email'], $c['count'], $c['totalSpent'],
                 ], $data['customers']),
             ],
         ];
@@ -1457,8 +1473,8 @@ class ReportController extends Controller
 
         $sections = [
             [
-                'title' => 'BẢNG XẾP HẠNG SẢN PHẨM BÁN CHẠY',
-                'headings' => ['Hạng', 'Sản phẩm', 'Danh mục', 'Thương hiệu', 'Số lượng bán', 'Tổng doanh thu'],
+                'title' => 'DANH SÁCH THỐNG KÊ SẢN PHẨM',
+                'headings' => ['STT', 'Sản phẩm', 'Danh mục', 'Thương hiệu', 'Số lượng bán', 'Tổng doanh thu'],
                 'rows' => $rows,
             ],
             [
