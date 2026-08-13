@@ -13,11 +13,15 @@ return new class extends Migration
             Shipment::STATUSES,
         ));
 
-        DB::statement("ALTER TABLE shipments MODIFY status ENUM({$statuses}) NOT NULL DEFAULT 'pending'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE shipments MODIFY status ENUM({$statuses}) NOT NULL DEFAULT 'pending'");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE shipments MODIFY status VARCHAR(40) NOT NULL DEFAULT 'pending'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE shipments MODIFY status VARCHAR(40) NOT NULL DEFAULT 'pending'");
+        }
     }
 };

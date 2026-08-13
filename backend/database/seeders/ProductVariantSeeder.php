@@ -55,8 +55,38 @@ class ProductVariantSeeder extends Seeder
             ['product_slug' => 'chuot-do-choi-len-cot', 'type' => 'Màu sắc', 'name' => 'Xám', 'price' => 35000, 'sale_price' => 29000, 'quantity' => 45],
         ];
 
+        // TODO(catalog): Trọng lượng vận chuyển (gram) là số ước tính gồm bao bì.
+        // Cần thay bằng số cân thực tế trước khi dùng dữ liệu này cho GHN/GHTK.
+        $shippingWeights = [
+            'royal-canin-mini-adult' => [1050, 1100, 3100, 3150],
+            'whiskas-adult-vi-ca-bien' => [1250, 1300, 3100, 3150],
+            'pate-royal-canin-mini-puppy' => [230, 2500],
+            'pate-me-o-ca-ngu' => [100, 1200],
+            'pedigree-dentastix' => [120, 420],
+            'smartheart-creamy-treat' => [80, 450],
+            'day-dat-trixie-premium' => [180, 230],
+            'bat-an-inox-trixie' => [250, 350],
+            'kong-classic' => [130, 200],
+            'bong-trixie-denta-fun' => [100, 100],
+            'xit-khu-mui-bioline' => [350, 550],
+            'sua-tam-bioline' => [350, 550],
+            'vong-co-chuong-trixie' => [80, 80],
+            'tui-van-chuyen-phi-hanh-gia' => [1200, 1200],
+            'luoc-chai-long-tu-dong-trixie' => [120],
+            'can-cau-long-vu-meo' => [60],
+            'xuong-gam-cao-su-trixie' => [140],
+            'chuot-do-choi-len-cot' => [50],
+        ];
+        $variantIndexes = [];
+
         foreach ($variants as $variant) {
             $product = Product::where('slug', $variant['product_slug'])->firstOrFail();
+            $index = $variantIndexes[$variant['product_slug']] ?? 0;
+            $weightGrams = $shippingWeights[$variant['product_slug']][$index] ?? null;
+            if ($weightGrams === null || $weightGrams <= 0) {
+                throw new \LogicException("Thiếu trọng lượng vận chuyển cho {$variant['product_slug']}.");
+            }
+            $variantIndexes[$variant['product_slug']] = $index + 1;
             $options = $variant['options'] ?? [$variant['type'] => $variant['name']];
             $sku = Str::upper(Str::slug(
                 $variant['product_slug'].'-'.implode('-', array_values($options)),
@@ -71,6 +101,7 @@ class ProductVariantSeeder extends Seeder
                 'price' => $variant['price'],
                 'sale_price' => $variant['sale_price'],
                 'quantity' => $variant['quantity'],
+                'weight_grams' => $weightGrams,
                 'status' => 'active',
             ])->save();
 
@@ -86,6 +117,53 @@ class ProductVariantSeeder extends Seeder
                 ->all();
 
             $productVariant->syncVariantValues($valueIds);
+        }
+
+        // Bốn sản phẩm này trước đây chỉ có một biến thể. Bổ sung biến thể thứ hai
+        // để catalog mẫu luôn đạt chuẩn 2–5 biến thể/sản phẩm.
+        // TODO(catalog): Rà lại tên biến thể, giá, tồn kho và trọng lượng khi có hàng thật.
+        $supplementalVariants = [
+            ['product_slug' => 'luoc-chai-long-tu-dong-trixie', 'value' => 'Lớn', 'price' => 150000, 'sale_price' => 129000, 'quantity' => 20, 'weight_grams' => 150],
+            ['product_slug' => 'can-cau-long-vu-meo', 'value' => 'Hồng', 'price' => 45000, 'sale_price' => 39000, 'quantity' => 40, 'weight_grams' => 60],
+            ['product_slug' => 'xuong-gam-cao-su-trixie', 'value' => 'L', 'price' => 150000, 'sale_price' => 129000, 'quantity' => 18, 'weight_grams' => 190],
+            ['product_slug' => 'chuot-do-choi-len-cot', 'value' => 'Trắng', 'price' => 35000, 'sale_price' => 29000, 'quantity' => 40, 'weight_grams' => 50],
+        ];
+
+        foreach ($supplementalVariants as $variant) {
+            $product = Product::where('slug', $variant['product_slug'])->firstOrFail();
+            $typeName = $product->variants()
+                ->with('variantValues.variantType')
+                ->first()?->variantValues->first()?->variantType?->name;
+
+            if ($typeName === null) {
+                throw new \LogicException("Không tìm thấy loại biến thể cho {$variant['product_slug']}.");
+            }
+
+            $sku = Str::upper(Str::slug($variant['product_slug'].'-'.$variant['value']));
+            $productVariant = ProductVariant::firstOrNew(['sku' => $sku]);
+            $productVariant->fill([
+                'product_id' => $product->id,
+                'sku' => $sku,
+                'price' => $variant['price'],
+                'sale_price' => $variant['sale_price'],
+                'quantity' => $variant['quantity'],
+                'weight_grams' => $variant['weight_grams'],
+                'status' => 'active',
+            ])->save();
+
+            $type = VariantType::where('name', $typeName)->firstOrFail();
+            $value = VariantValue::firstOrCreate(['variant_type_id' => $type->id, 'value' => $variant['value']]);
+            $productVariant->syncVariantValues([$value->id]);
+        }
+
+        $invalidProduct = Product::query()
+            ->whereIn('slug', array_unique(array_column($variants, 'product_slug')))
+            ->withCount('variants')
+            ->get()
+            ->first(fn (Product $product): bool => $product->variants_count < 2 || $product->variants_count > 5);
+
+        if ($invalidProduct !== null) {
+            throw new \LogicException("{$invalidProduct->slug} phải có từ 2 đến 5 biến thể.");
         }
     }
 }

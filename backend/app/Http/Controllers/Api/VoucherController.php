@@ -30,7 +30,7 @@ class VoucherController extends Controller
             $canApply = $voucher->canBeApplied($subtotal);
             $minOrderValue = (float) $voucher->min_order_value;
             $missingAmount = max(0.0, $minOrderValue - $subtotal);
-            $selectable = $voucher->applies_to === 'product' && ! $voucher->is_automatic;
+            $selectable = in_array($voucher->applies_to, ['product', 'shipping'], true) && ! $voucher->is_automatic;
             $availabilityMessage = $voucher->is_automatic
                 ? 'Mã tự động áp dụng khi đủ điều kiện.'
                 : ($voucher->applies_to === 'shipping'
