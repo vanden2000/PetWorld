@@ -812,29 +812,33 @@ class ReportController extends Controller
      */
     private function topCustomersList(Carbon $start, Carbon $end): array
     {
-        $rows = DB::table('orders as o')
-            ->join('users as u', 'u.id', '=', 'o.user_id')
-            ->where('o.payment_status', 'paid')
-            ->where('o.order_status', '!=', 'cancelled')
-            ->whereBetween('o.created_at', [$start, $end])
+        $rows = DB::table('users as u')
+            ->leftJoin('orders as o', function ($join) use ($start, $end) {
+                $join->on('o.user_id', '=', 'u.id')
+                    ->where('o.payment_status', '=', 'paid')
+                    ->where('o.order_status', '!=', 'cancelled')
+                    ->whereBetween('o.created_at', [$start, $end]);
+            })
+            ->where(function ($q) {
+                $q->where('u.role', 'user')->orWhereNull('u.role');
+            })
             ->groupBy('u.id', 'u.name', 'u.email')
-            ->selectRaw('u.name as name, u.email as email, COUNT(o.id) as count, SUM(o.total_amount) as total_spent')
+            ->selectRaw('u.id as id, u.name as name, u.email as email, COUNT(o.id) as count, COALESCE(SUM(o.total_amount), 0) as total_spent')
             ->orderByDesc('total_spent')
+            ->orderBy('u.name')
             ->get();
 
-        // Tổng chi tiêu tính trên mọi khách trong kỳ, lấy trước khi cắt top.
         $periodSpent = (float) $rows->sum('total_spent');
         $topSpent = (float) ($rows->first()->total_spent ?? 0);
 
-        return $rows->take(self::TOP_CUSTOMERS_LIMIT)
-            ->values()
+        return $rows->values()
             ->map(function ($row, $index) use ($periodSpent, $topSpent): array {
                 $spent = (float) $row->total_spent;
 
                 return [
                     'position' => $index + 1,
-                    'name' => $row->name,
-                    'email' => $row->email,
+                    'name' => $row->name ?? 'Chưa cập nhật',
+                    'email' => $row->email ?? '',
                     'count' => (int) $row->count,
                     'totalSpent' => $this->money($spent),
                     'totalSpentRaw' => $spent,
@@ -1417,16 +1421,14 @@ class ReportController extends Controller
         $summary = [
             'Tổng khách hàng' => $data['total'],
             'Khách mới' => $data['new'],
-            'Khách quay lại' => $data['returning'],
-            'Tổng chi tiêu' => $data['spent'],
         ];
 
         $sections = [
             [
-                'title' => 'KHÁCH HÀNG CHI TIÊU NHIỀU NHẤT',
-                'headings' => ['Hạng', 'Khách hàng', 'Email', 'Số đơn', 'Tổng chi tiêu', 'Tỷ trọng'],
+                'title' => 'DANH SÁCH THỐNG KÊ KHÁCH HÀNG',
+                'headings' => ['STT', 'Khách hàng', 'Email', 'Số đơn mua', 'Tổng chi tiêu'],
                 'rows' => array_map(fn ($c): array => [
-                    $c['position'], $c['name'], $c['email'], $c['count'], $c['totalSpent'], $c['share'],
+                    $c['position'], $c['name'], $c['email'], $c['count'], $c['totalSpent'],
                 ], $data['customers']),
             ],
         ];
