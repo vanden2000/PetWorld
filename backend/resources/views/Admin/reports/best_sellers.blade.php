@@ -391,10 +391,6 @@
             <div class="stat-icon-wrapper icon-total">
                 <i class="fa-solid fa-cubes"></i>
             </div>
-            <div class="stat-trend trend-up" id="sold-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Tổng sản phẩm đã bán</div>
         <div class="stat-value" id="sold-val">0 SP</div>
@@ -649,9 +645,6 @@
             document.getElementById('top-product-val').innerText = data.topProduct;
             document.getElementById('top-category-val').innerText = data.topCategory;
             document.getElementById('top-brand-val').innerText = data.topBrand;
-
-            // 2. Update trend indicator
-            setTrend('sold-trend', data.soldTrend);
 
             // 3. Render legend list
             const legendList = document.getElementById('status-legend-list');
