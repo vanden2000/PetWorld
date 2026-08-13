@@ -421,7 +421,7 @@
 <div class="dashboard-header" style="margin-bottom: 24px;">
     <div class="header-title-block">
         <h1 style="font-size: 1.8rem; font-weight: 800;">Sản phẩm <span style="color: var(--primary);">Bán chạy</span></h1>
-        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Danh sách các sản phẩm bán chạy nhất, sản lượng bán ra và tổng giá trị mang lại cho cửa hàng.</p>
+        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Danh sách top 5 sản phẩm bán chạy nhất theo số lượng bán từ nhiều nhất đến ít dần.</p>
     </div>
     
     <div class="header-actions">
@@ -450,10 +450,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-total">
                 <i class="fa-solid fa-cubes"></i>
-            </div>
-            <div class="stat-trend trend-up" id="sold-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Tổng sản phẩm đã bán</div>
@@ -521,7 +517,7 @@
 <!-- Detailed Best Sellers Table (Clean, no extra white space) -->
 <div class="detail-table-card">
     <div class="card-header-styled">
-        <span class="card-title-styled"><i class="fa-solid fa-ranking-star" style="color: var(--primary); margin-right: 6px;"></i> Bảng xếp hạng sản phẩm bán chạy nhất</span>
+        <span class="card-title-styled"><i class="fa-solid fa-box-archive" style="color: var(--primary); margin-right: 6px;"></i> Thống kê sản phẩm</span>
     </div>
     <div class="pl-table-scroll">
         <table class="orders-table">
@@ -710,9 +706,6 @@
             document.getElementById('top-category-val').innerText = data.topCategory;
             document.getElementById('top-brand-val').innerText = data.topBrand;
 
-            // 2. Update trend indicator
-            setTrend('sold-trend', data.soldTrend);
-
             // 3. Render legend list
             const legendList = document.getElementById('status-legend-list');
             legendList.innerHTML = '';
@@ -789,7 +782,7 @@
                         </td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <img src="${prod.image}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=120&auto=format&fit=crop'">
+                                <img src="${prod.image}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='{{ asset('image/logo/logo.png') }}'">
                                 <div style="display: flex; flex-direction: column;">
                                     <strong style="color: var(--text-main); font-weight: 700;">${prod.name}</strong>
                                     ${prod.variant ? `<span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500; margin-top: 2px;">${expandable ? `${variants.length} quy cách đóng gói <span class="variant-count-chip">Xem chi tiết</span>` : `Phân loại: ${prod.variant}`}</span>` : ''}

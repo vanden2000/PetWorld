@@ -52,6 +52,10 @@ export async function createOrder(payload) {
   return postJson("/api/orders", payload);
 }
 
+export async function getShippingQuote(payload) {
+  return postJson("/api/shipping/quote", payload);
+}
+
 /**
  * Lấy danh sách voucher khả dụng kèm theo trạng thái áp dụng dựa trên subtotal.
  */
@@ -66,6 +70,34 @@ export async function getAvailableVouchers(subtotal) {
     return json?.data?.vouchers ?? [];
   } catch (error) {
     console.error("[getAvailableVouchers] Không lấy được danh sách voucher:", error);
+    return [];
+  }
+}
+
+export async function getAutomaticProductVoucher(subtotal) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/vouchers?subtotal=${subtotal}`, {
+      cache: "no-store",
+      headers: { Accept: "application/json", ...authHeaders() },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data?.automatic_voucher ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getEligibleShippingPromotions(subtotal) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/vouchers?subtotal=${subtotal}`, {
+      cache: "no-store",
+      headers: { Accept: "application/json", ...authHeaders() },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json?.data?.eligible_shipping_promotions ?? [];
+  } catch {
     return [];
   }
 }

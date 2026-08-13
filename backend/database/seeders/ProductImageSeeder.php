@@ -84,23 +84,52 @@ class ProductImageSeeder extends Seeder
                 'sua-tam-bioline-4.jpg',
             ],
             'vong-co-chuong-trixie' => [
-                'day-dat-trixie-premium.jpg',
+                'vong-co-chuong-trixie.jpg',
+                'vong-co-chuong-trixie-1.jpg',
+                'vong-co-chuong-trixie-2.jpg',
+                'vong-co-chuong-trixie-3.jpg',
             ],
             'tui-van-chuyen-phi-hanh-gia' => [
-                'bat-an-inox-trixie-2.jpg',
+                'tui-van-chuyen-phi-hanh-gia.jpg',
+                'tui-van-chuyen-phi-hanh-gia-1.jpg',
+                'tui-van-chuyen-phi-hanh-gia-2.jpg',
+                'tui-van-chuyen-phi-hanh-gia-3.jpg',
             ],
             'luoc-chai-long-tu-dong-trixie' => [
-                'bat-an-inox-trixie.jpg',
+                'luoc-chai-long-tu-dong-trixie.jpg',
+                'luoc-chai-long-tu-dong-trixie-1.jpg',
+                'luoc-chai-long-tu-dong-trixie-2.jpg',
+                'luoc-chai-long-tu-dong-trixie-3.jpg',
             ],
             'can-cau-long-vu-meo' => [
-                'bong-trixie-denta-fun.jpg',
+                'can-cau-long-vu-meo.jpg',
+                'can-cau-long-vu-meo-1.jpg',
+                'can-cau-long-vu-meo-2.jpg',
+                'can-cau-long-vu-meo-3.jpg',
             ],
             'xuong-gam-cao-su-trixie' => [
-                'kong-classic.jpg',
+                'xuong-gam-cao-su-trixie.jpg',
+                'xuong-gam-cao-su-trixie-1.jpg',
+                'xuong-gam-cao-su-trixie-2.jpg',
+                'xuong-gam-cao-su-trixie-3.jpg',
             ],
             'chuot-do-choi-len-cot' => [
-                'kong-classic-2.jpg',
+                'chuot-do-choi-len-cot.jpg',
+                'chuot-do-choi-len-cot-1.jpg',
+                'chuot-do-choi-len-cot-2.jpg',
+                'chuot-do-choi-len-cot-3.jpg',
             ],
+        ];
+
+        // Các ảnh từng gán nhầm cho 6 sản phẩm bên dưới. Chỉ xoá đúng các bản ghi này
+        // để gallery không còn ảnh trùng/sai sau khi seed lại.
+        $legacyImages = [
+            'vong-co-chuong-trixie' => ['products/day-dat-trixie-premium.jpg'],
+            'tui-van-chuyen-phi-hanh-gia' => ['products/bat-an-inox-trixie-2.jpg'],
+            'luoc-chai-long-tu-dong-trixie' => ['products/bat-an-inox-trixie.jpg'],
+            'can-cau-long-vu-meo' => ['products/bong-trixie-denta-fun.jpg'],
+            'xuong-gam-cao-su-trixie' => ['products/kong-classic.jpg'],
+            'chuot-do-choi-len-cot' => ['products/kong-classic-2.jpg'],
         ];
 
         foreach ($images as $productSlug => $imageUrls) {
@@ -121,6 +150,10 @@ class ProductImageSeeder extends Seeder
                     'is_primary' => $index === 0,
                 ])->save();
             }
+
+            ProductImage::where('product_id', $product->id)
+                ->whereIn('image_url', $legacyImages[$productSlug] ?? [])
+                ->delete();
         }
     }
 }

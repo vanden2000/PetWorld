@@ -10,6 +10,32 @@ class Shipment extends Model
 {
     use HasFactory;
 
+    public const STATUSES = [
+        'pending',
+        'ready_to_pick',
+        'picking',
+        'cancel',
+        'money_collect_picking',
+        'picked',
+        'storing',
+        'transporting',
+        'sorting',
+        'delivering',
+        'money_collect_delivering',
+        'delivered',
+        'delivery_fail',
+        'waiting_to_return',
+        'return',
+        'return_transporting',
+        'return_sorting',
+        'returning',
+        'return_fail',
+        'returned',
+        'exception',
+        'damage',
+        'lost',
+    ];
+
     protected $fillable = [
         'order_id',
         'provider',

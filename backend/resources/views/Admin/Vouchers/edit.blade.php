@@ -215,6 +215,15 @@
 <form action="{{ route('admin.vouchers.update', $voucher->id) }}" method="POST" id="voucherEditForm">
     @csrf
     @method('PUT')
+    <div class="form-card" style="margin-bottom: 24px;">
+        <div class="form-card-title"><i class="fa-solid fa-truck"></i><span>Loại ưu đãi</span></div>
+        <div class="form-group-row" style="margin-bottom: 0;">
+            <div class="form-group"><label for="applies_to">Áp dụng cho</label><select class="form-control" id="applies_to" name="applies_to"><option value="product" {{ old('applies_to', $voucher->applies_to ?? 'product') === 'product' ? 'selected' : '' }}>Giảm tiền sản phẩm</option><option value="shipping" {{ old('applies_to', $voucher->applies_to) === 'shipping' ? 'selected' : '' }}>Giảm phí vận chuyển</option></select></div>
+            <div class="form-group shipping-only"><label for="shipping_method_code">Phương thức giao</label><select class="form-control" id="shipping_method_code" name="shipping_method_code"><option value="">Cả Standard và GHN</option><option value="standard" {{ old('shipping_method_code', $voucher->shipping_method_code) === 'standard' ? 'selected' : '' }}>Chỉ Standard</option><option value="ghn_express" {{ old('shipping_method_code', $voucher->shipping_method_code) === 'ghn_express' ? 'selected' : '' }}>Chỉ GHN nhanh</option></select></div>
+            <div class="form-group shipping-only"><label><input type="checkbox" name="is_automatic" value="1" {{ old('is_automatic', $voucher->is_automatic) ? 'checked' : '' }}> Tự động áp dụng khi đủ điều kiện</label></div>
+            <div class="form-group shipping-only"><label for="max_shipping_discount">Hỗ trợ ship tối đa (đ)</label><input class="form-control" type="number" min="0" name="max_shipping_discount" id="max_shipping_discount" value="{{ old('max_shipping_discount', $voucher->max_shipping_discount) }}"></div>
+        </div>
+    </div>
     
     <!-- Dashboard Header Nav Bar -->
     <div class="dashboard-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
@@ -268,14 +277,14 @@
                 <div class="form-group-row">
                     <div class="form-group">
                         <label for="discount_value">Số tiền giảm (đ) <span class="required" style="color: #d93025;">*</span></label>
-                        <input type="number" class="form-control @error('discount_value') is-invalid @enderror" id="discount_value" name="discount_value" value="{{ old('discount_value', (int) $voucher->discount_value) }}" min="0" required placeholder="Ví dụ: 50000">
+                        <input type="text" inputmode="numeric" data-currency class="form-control @error('discount_value') is-invalid @enderror" id="discount_value" name="discount_value" value="{{ old('discount_value', (int) $voucher->discount_value) }}" required placeholder="Ví dụ: 50.000">
                         @error('discount_value')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group">
                         <label for="min_order_value">Đơn hàng tối thiểu (đ) <span class="required" style="color: #d93025;">*</span></label>
-                        <input type="number" class="form-control @error('min_order_value') is-invalid @enderror" id="min_order_value" name="min_order_value" value="{{ old('min_order_value', (int) $voucher->min_order_value) }}" min="0" required placeholder="Ví dụ: 300000">
+                        <input type="text" inputmode="numeric" data-currency class="form-control @error('min_order_value') is-invalid @enderror" id="min_order_value" name="min_order_value" value="{{ old('min_order_value', (int) $voucher->min_order_value) }}" required placeholder="Ví dụ: 300.000">
                         @error('min_order_value')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -302,14 +311,16 @@
                 <div class="form-group-row" style="margin-bottom: 0;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="start_date">Ngày bắt đầu <span class="required" style="color: #d93025;">*</span></label>
-                        <input type="datetime-local" class="form-control @error('start_date') is-invalid @enderror" id="start_date" name="start_date" value="{{ old('start_date', $voucher->start_date ? $voucher->start_date->format('Y-m-d\TH:i') : '') }}" required>
+                        <input type="hidden" id="start_date" name="start_date" value="{{ old('start_date', $voucher->start_date ? $voucher->start_date->format('Y-m-d H:i') : '') }}">
+                        <input type="text" class="form-control @error('start_date') is-invalid @enderror" id="start_date_display" data-datetime-for="start_date" value="{{ old('start_date') ? \Carbon\Carbon::parse(old('start_date'))->format('d/m/Y H:i') : ($voucher->start_date ? $voucher->start_date->format('d/m/Y H:i') : '') }}" required placeholder="dd/mm/yyyy hh:mm" inputmode="numeric" autocomplete="off">
                         @error('start_date')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="end_date">Ngày kết thúc <span class="required" style="color: #d93025;">*</span></label>
-                        <input type="datetime-local" class="form-control @error('end_date') is-invalid @enderror" id="end_date" name="end_date" value="{{ old('end_date', $voucher->end_date ? $voucher->end_date->format('Y-m-d\TH:i') : '') }}" required>
+                        <input type="hidden" id="end_date" name="end_date" value="{{ old('end_date', $voucher->end_date ? $voucher->end_date->format('Y-m-d H:i') : '') }}">
+                        <input type="text" class="form-control @error('end_date') is-invalid @enderror" id="end_date_display" data-datetime-for="end_date" value="{{ old('end_date') ? \Carbon\Carbon::parse(old('end_date'))->format('d/m/Y H:i') : ($voucher->end_date ? $voucher->end_date->format('d/m/Y H:i') : '') }}" required placeholder="dd/mm/yyyy hh:mm" inputmode="numeric" autocomplete="off">
                         @error('end_date')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -387,6 +398,69 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const codeInput = document.getElementById('code');
+        const voucherForm = document.getElementById('voucherEditForm');
+        const datetimeInputs = document.querySelectorAll('[data-datetime-for]');
+        const syncDatetime = (input) => {
+            const match = input.value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})$/);
+            const target = document.getElementById(input.dataset.datetimeFor);
+            if (!match || !target) {
+                input.setCustomValidity('Nhập ngày theo dạng dd/mm/yyyy HH:mm.');
+                return false;
+            }
+            const [, day, month, year, hour, minute] = match;
+            const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
+            if (Number.isNaN(date.getTime()) || date.getDate() !== Number(day) || date.getMonth() + 1 !== Number(month)) {
+                input.setCustomValidity('Ngày hoặc giờ không hợp lệ.');
+                return false;
+            }
+            target.value = `${year}-${month}-${day} ${hour}:${minute}`;
+            input.setCustomValidity('');
+            return true;
+        };
+        datetimeInputs.forEach((input) => input.addEventListener('input', () => syncDatetime(input)));
+        const maxShippingDiscountInput = document.getElementById('max_shipping_discount');
+        if (maxShippingDiscountInput) {
+            maxShippingDiscountInput.type = 'text';
+            maxShippingDiscountInput.inputMode = 'numeric';
+            maxShippingDiscountInput.dataset.currency = '';
+            if (/^\d+\.00$/.test(maxShippingDiscountInput.value)) {
+                maxShippingDiscountInput.value = String(Number(maxShippingDiscountInput.value));
+            }
+        }
+        const currencyInputs = document.querySelectorAll('[data-currency]');
+        const formatCurrency = (value) => {
+            const digits = String(value || '').replace(/\D/g, '');
+            return digits ? new Intl.NumberFormat('vi-VN').format(Number(digits)) : '';
+        };
+        currencyInputs.forEach((input) => {
+            input.value = formatCurrency(input.value);
+            input.addEventListener('focus', () => {
+                input.value = String(input.value || '').replace(/\D/g, '');
+                input.select();
+            });
+            input.addEventListener('input', () => { input.value = String(input.value || '').replace(/\D/g, ''); });
+            input.addEventListener('blur', () => { input.value = formatCurrency(input.value); });
+        });
+        voucherForm?.addEventListener('submit', (event) => {
+            if (![...datetimeInputs].every(syncDatetime)) {
+                event.preventDefault();
+                voucherForm.reportValidity();
+                return;
+            }
+            currencyInputs.forEach((input) => { input.value = String(input.value || '').replace(/\D/g, ''); });
+        });
+        const typeInput = document.getElementById('applies_to');
+        const automaticInput = document.querySelector('[name="is_automatic"]');
+        const automaticField = automaticInput?.closest('.shipping-only');
+        const shippingFields = Array.from(document.querySelectorAll('.shipping-only')).filter((field) => field !== automaticField);
+        const toggleShippingFields = () => {
+            shippingFields.forEach((field) => field.style.display = typeInput.value === 'shipping' ? '' : 'none');
+            automaticField?.style.setProperty('display', '', 'important');
+        };
+        if (typeInput) {
+            typeInput.addEventListener('change', toggleShippingFields);
+            toggleShippingFields();
+        }
         const editForm = document.getElementById('voucherEditForm');
         const confirmModal = document.getElementById('confirmModal');
         const btnCancelModal = document.getElementById('btnCancelModal');
@@ -421,14 +495,57 @@
 
         btnConfirmModal.addEventListener('click', function() {
             isConfirmed = true;
+            confirmModal.classList.remove('show');
+            confirmModal.style.display = 'none';
             if (editForm) {
-                editForm.submit();
+                editForm.requestSubmit();
+                isConfirmed = false;
             }
         });
 
         confirmModal.addEventListener('click', function(e) {
             if (e.target === confirmModal) {
                 btnCancelModal.click();
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('voucherEditForm');
+        if (!form) return;
+        const showToast = (message, isError = false) => {
+            document.getElementById('admin-global-toast')?.remove();
+            const toast = document.createElement('div');
+            toast.id = 'admin-global-toast';
+            toast.className = `admin-global-toast ${isError ? 'error' : 'success'}`;
+            toast.innerHTML = `<i class="fa-solid ${isError ? 'fa-triangle-exclamation' : 'fa-circle-check'}"></i><span></span><button type="button" aria-label="Đóng">&times;</button>`;
+            toast.querySelector('span').textContent = message;
+            toast.querySelector('button').addEventListener('click', () => toast.remove());
+            document.body.appendChild(toast);
+            window.setTimeout(() => toast.classList.add('is-hidden'), 3500);
+        };
+        form.addEventListener('submit', async (event) => {
+            if (event.defaultPrevented) return;
+            event.preventDefault();
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton?.setAttribute('disabled', 'disabled');
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: new FormData(form),
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    const firstError = Object.values(payload.errors || {}).flat()[0];
+                    showToast(firstError || payload.message || 'Vui lòng kiểm tra lại thông tin voucher.', true);
+                    return;
+                }
+                showToast(payload.message || 'Voucher đã được cập nhật thành công.');
+            } catch {
+                showToast('Không thể kết nối máy chủ. Vui lòng thử lại.', true);
+            } finally {
+                submitButton?.removeAttribute('disabled');
             }
         });
     });

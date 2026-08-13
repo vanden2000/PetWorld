@@ -15,8 +15,12 @@ class Voucher extends Model
 
     protected $fillable = [
         'code',
+        'applies_to',
+        'is_automatic',
+        'shipping_method_code',
         'usage_limit',
         'discount_value',
+        'max_shipping_discount',
         'description',
         'min_order_value',
         'start_date',
@@ -25,8 +29,10 @@ class Voucher extends Model
     ];
 
     protected $casts = [
+        'is_automatic' => 'boolean',
         'usage_limit' => 'integer',
         'discount_value' => 'decimal:2',
+        'max_shipping_discount' => 'decimal:2',
         'min_order_value' => 'decimal:2',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
@@ -35,6 +41,11 @@ class Voucher extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function shippingOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'shipping_voucher_id');
     }
 
     public function canBeApplied(float $orderValue, ?CarbonInterface $at = null, ?int $ignoreOrderId = null): bool
@@ -56,7 +67,11 @@ class Voucher extends Model
         $usedOrders = $this->orders()
             ->where('order_status', '<>', 'cancelled')
             ->when($ignoreOrderId, fn ($query) => $query->whereKeyNot($ignoreOrderId))
-            ->count();
+            ->count()
+            + $this->shippingOrders()
+                ->where('order_status', '<>', 'cancelled')
+                ->when($ignoreOrderId, fn ($query) => $query->whereKeyNot($ignoreOrderId))
+                ->count();
 
         return $usedOrders < (int) $this->usage_limit;
     }

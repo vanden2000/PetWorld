@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { resolveImage } from "@/lib/format";
 
@@ -20,6 +20,8 @@ function imageSource(path, version) {
 
 export default function HeroSlider({ banners = [] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const goToSlide = useCallback(
     (slideIndex) => {
       setCurrentIndex(slideIndex);
@@ -28,14 +30,22 @@ export default function HeroSlider({ banners = [] }) {
   );
 
   const goToNext = useCallback(() => {
-    if (banners.length === 0) return;
-    goToSlide((currentIndex + 1) % banners.length);
-  }, [banners.length, currentIndex, goToSlide]);
+    if (banners.length <= 1) return;
+    setCurrentIndex((index) => (index + 1) % banners.length);
+  }, [banners.length]);
 
   const goToPrev = useCallback(() => {
     if (banners.length === 0) return;
     goToSlide((currentIndex - 1 + banners.length) % banners.length);
   }, [banners.length, currentIndex, goToSlide]);
+
+  useEffect(() => {
+    if (banners.length <= 1 || isHovering || isFocused) return undefined;
+
+    // Tự chuyển banner với nhịp chậm để người dùng đủ thời gian đọc ưu đãi.
+    const timerId = window.setInterval(goToNext, 5500);
+    return () => window.clearInterval(timerId);
+  }, [banners.length, goToNext, isFocused, isHovering]);
 
   if (banners.length === 0) return null;
   const activeIndex = Math.min(currentIndex, banners.length - 1);
@@ -44,6 +54,12 @@ export default function HeroSlider({ banners = [] }) {
     <section className="homepage-section hero-slider-section">
       <div
         className="hero-slider"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        onFocusCapture={() => setIsFocused(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setIsFocused(false);
+        }}
         aria-roledescription="carousel"
         aria-label="Khuyến mãi nổi bật"
       >

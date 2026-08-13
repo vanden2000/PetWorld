@@ -45,14 +45,9 @@
     /* Stats Cards Premium Style */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 20px;
         margin-bottom: 24px;
-    }
-    @media (max-width: 1024px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
     }
     @media (max-width: 560px) {
         .stats-grid {
@@ -265,6 +260,53 @@
         text-align: right;
         white-space: nowrap;
     }
+
+    /* Pagination Styles */
+    .pagination-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .pagination-buttons {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .pagination-buttons .page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 34px;
+        padding: 0 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: #ffffff;
+        color: var(--text-main);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .pagination-buttons .page-btn:hover:not(:disabled) {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: #fff4ec;
+    }
+    .pagination-buttons .page-btn.active {
+        background: var(--primary);
+        color: #ffffff;
+        border-color: var(--primary);
+    }
+    .pagination-buttons .page-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
 </style>
 @endsection
 
@@ -273,7 +315,7 @@
 <div class="dashboard-header" style="margin-bottom: 24px;">
     <div class="header-title-block">
         <h1 style="font-size: 1.8rem; font-weight: 800;">Thống kê <span style="color: var(--primary);">Khách hàng</span></h1>
-        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Xem thông tin tăng trưởng số lượng tài khoản, tỷ lệ giữ chân khách hàng và top khách hàng chi tiêu nhiều nhất.</p>
+        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Xem thông tin tăng trưởng số lượng tài khoản và danh sách thống kê khách hàng.</p>
     </div>
     
     <div class="header-actions">
@@ -303,10 +345,6 @@
             <div class="stat-icon-wrapper icon-total">
                 <i class="fa-solid fa-users"></i>
             </div>
-            <div class="stat-trend trend-up" id="customers-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Tổng khách hàng đăng ký</div>
         <div class="stat-value" id="customers-val">0</div>
@@ -317,27 +355,9 @@
             <div class="stat-icon-wrapper icon-new">
                 <i class="fa-solid fa-user-plus"></i>
             </div>
-            <div class="stat-trend trend-up" id="new-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Khách hàng mới</div>
         <div class="stat-value" id="new-val">0</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-icon-wrapper icon-spent">
-                <i class="fa-solid fa-money-bill-wave"></i>
-            </div>
-            <div class="stat-trend trend-up" id="spent-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
-        </div>
-        <div class="stat-label">Chi tiêu trung bình/khách</div>
-        <div class="stat-value" id="spent-val">0đ</div>
     </div>
 </div>
 
@@ -351,27 +371,37 @@
     </div>
 </div>
 
-<!-- Top khách hàng theo chi tiêu -->
+<!-- Thống kê khách hàng -->
 <div class="detail-table-card">
     <div class="card-header-styled">
-        <span class="card-title-styled"><i class="fa-solid fa-crown" style="color: var(--primary); margin-right: 6px;"></i> Top khách hàng chi tiêu nhiều nhất</span>
+        <span class="card-title-styled"><i class="fa-solid fa-users" style="color: var(--primary); margin-right: 6px;"></i> Thống kê khách hàng</span>
+        <span id="customer-total-count" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;"></span>
     </div>
     <div class="pl-table-scroll">
         <table class="orders-table">
             <thead>
                 <tr>
-                    <th style="width: 6%;">#</th>
-                    <th style="width: 26%;">KHÁCH HÀNG</th>
-                    <th style="width: 24%;">EMAIL</th>
-                    <th style="width: 12%;">SỐ ĐƠN MUA</th>
-                    <th style="width: 16%;">TỔNG CHI TIÊU</th>
-                    <th style="width: 16%;">TỶ TRỌNG</th>
+                    <th style="width: 8%;">#</th>
+                    <th style="width: 32%;">KHÁCH HÀNG</th>
+                    <th style="width: 30%;">EMAIL</th>
+                    <th style="width: 15%;">SỐ ĐƠN MUA</th>
+                    <th style="width: 15%;">TỔNG CHI TIÊU</th>
                 </tr>
             </thead>
             <tbody id="customers-table-body">
                 <!-- Loaded dynamically via JS -->
             </tbody>
         </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    <div class="pagination-footer">
+        <div id="pagination-info" style="font-size: 0.88rem; color: var(--text-muted); font-weight: 500;">
+            Hiển thị 0 trên 0 khách hàng
+        </div>
+        <div id="pagination-controls" class="pagination-buttons">
+            <!-- Rendered dynamically -->
+        </div>
     </div>
 </div>
 @endsection
@@ -487,6 +517,95 @@
             });
         }
 
+        let currentFilterCustomers = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        function renderTablePage(page) {
+            currentPage = page;
+            const tableBody = document.getElementById('customers-table-body');
+            const totalCountEl = document.getElementById('customer-total-count');
+            const infoEl = document.getElementById('pagination-info');
+            const controlsEl = document.getElementById('pagination-controls');
+
+            tableBody.innerHTML = '';
+
+            const total = currentFilterCustomers.length;
+            if (totalCountEl) totalCountEl.innerText = `(Tổng ${total} khách hàng)`;
+
+            if (total === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                            Chưa có dữ liệu khách hàng trong kỳ này.
+                        </td>
+                    </tr>
+                `;
+                if (infoEl) infoEl.innerHTML = 'Hiển thị <strong>0</strong> trên <strong>0</strong> khách hàng';
+                if (controlsEl) controlsEl.innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(total / itemsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, total);
+            const pageItems = currentFilterCustomers.slice(startIndex, endIndex);
+
+            pageItems.forEach(cust => {
+                const isNoOrders = cust.count === 0;
+                tableBody.innerHTML += `
+                    <tr>
+                        <td><span class="rank-position ${cust.position <= 3 && cust.totalSpentRaw > 0 ? 'is-top' : ''}">${cust.position}</span></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #fff4ec; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255, 120, 45, 0.15);">
+                                    ${(cust.name || 'C').charAt(0).toUpperCase()}
+                                </div>
+                                <strong style="color: var(--text-main); font-weight: 700;">${cust.name}</strong>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-muted);">${cust.email || 'N/A'}</td>
+                        <td style="font-weight: 600; color: ${isNoOrders ? 'var(--text-muted)' : 'var(--text-main)'};">${cust.count} đơn</td>
+                        <td style="font-weight: 700; color: ${isNoOrders ? 'var(--text-muted)' : 'var(--primary)'};">${cust.totalSpent}</td>
+                    </tr>
+                `;
+            });
+
+            // Update Pagination Info
+            if (infoEl) infoEl.innerHTML = `Hiển thị <strong>${startIndex + 1} - ${endIndex}</strong> trên <strong>${total}</strong> khách hàng`;
+
+            // Render Pagination Buttons
+            if (controlsEl) {
+                let buttonsHtml = '';
+                
+                // Previous Button
+                buttonsHtml += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="window.goToCustomerPage(${currentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+
+                // Page numbers
+                for (let i = 1; i <= totalPages; i++) {
+                    if (totalPages <= 7 || i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+                        buttonsHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="window.goToCustomerPage(${i})">${i}</button>`;
+                    } else if (i === 2 && currentPage > 3) {
+                        buttonsHtml += `<span style="padding: 0 4px; align-self: center; color: var(--text-muted);">...</span>`;
+                    } else if (i === totalPages - 1 && currentPage < totalPages - 2) {
+                        buttonsHtml += `<span style="padding: 0 4px; align-self: center; color: var(--text-muted);">...</span>`;
+                    }
+                }
+
+                // Next Button
+                buttonsHtml += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="window.goToCustomerPage(${currentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+
+                controlsEl.innerHTML = buttonsHtml;
+            }
+        }
+
+        window.goToCustomerPage = function(page) {
+            renderTablePage(page);
+        };
+
         // Render page elements
         function updatePage(filter) {
             const data = mockData[filter];
@@ -495,55 +614,13 @@
             // 1. Update text values
             document.getElementById('customers-val').innerText = data.total;
             document.getElementById('new-val').innerText = data.new;
-            document.getElementById('spent-val').innerText = data.spent;
 
-            // 2. Update trends
-            setTrend('customers-trend', data.totalTrend);
-            setTrend('new-trend', data.newTrend);
-            setTrend('spent-trend', data.spentTrend);
-
-            // 3. Render customer growth chart
+            // 2. Render customer growth chart
             renderTrendChart(data.chart);
 
-            // 4. Render top spending customers table
-            const tableBody = document.getElementById('customers-table-body');
-            tableBody.innerHTML = '';
-
-            if (!data.customers.length) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
-                            Chưa có khách hàng phát sinh chi tiêu trong kỳ này.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            data.customers.forEach(cust => {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td><span class="rank-position ${cust.position <= 3 ? 'is-top' : ''}">${cust.position}</span></td>
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #fff4ec; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255, 120, 45, 0.15);">
-                                    ${cust.name.charAt(0).toUpperCase()}
-                                </div>
-                                <strong style="color: var(--text-main); font-weight: 700;">${cust.name}</strong>
-                            </div>
-                        </td>
-                        <td style="color: var(--text-muted);">${cust.email}</td>
-                        <td style="font-weight: 600; color: var(--text-main);">${cust.count} đơn</td>
-                        <td style="font-weight: 700; color: var(--primary);">${cust.totalSpent}</td>
-                        <td>
-                            <div class="share-cell">
-                                <div class="share-track"><div class="share-fill" style="width: ${cust.barWidth}%;"></div></div>
-                                <span class="share-text">${cust.share}</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
+            // 4. Render customers table with pagination
+            currentFilterCustomers = data.customers || [];
+            renderTablePage(1);
         }
 
         // Handle filter dropdown clicks

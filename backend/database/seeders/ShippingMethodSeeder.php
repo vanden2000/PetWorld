@@ -18,7 +18,7 @@ class ShippingMethodSeeder extends Seeder
            
         ];
 
-        foreach ($methods as $method) {
+        foreach ($methods as $index => $method) {
             // Tìm cả tên cũ không dấu để chạy lại seeder không tạo phương thức trùng.
             $shippingMethod = ShippingMethod::query()
                 ->whereIn('name', [$method['name'], $method['legacy_name']])
@@ -26,7 +26,11 @@ class ShippingMethodSeeder extends Seeder
 
             $shippingMethod->fill([
                 'name' => $method['name'],
-                'shipping_fee' => $method['shipping_fee'],
+                'code' => $index === 0 ? 'standard' : 'ghn_express',
+                'provider' => $index === 0 ? 'petworld' : 'ghn',
+                'fee_mode' => $index === 0 ? 'weight_rule' : 'live_quote',
+                'description' => $index === 0 ? '2–5 ngày · Phí theo cân nặng' : '1–2 ngày · Phí theo địa chỉ GHN',
+                'shipping_fee' => $index === 0 ? 30000 : 0,
                 'status' => 'active',
             ])->save();
         }
