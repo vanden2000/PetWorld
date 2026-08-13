@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Models\VariantType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
@@ -47,12 +48,12 @@ class AdminProductExportTest extends TestCase
     {
         Excel::fake();
 
-        [$category, $brand] = $this->createCatalogContext();
+        [$category, $brand, $variantType] = $this->createCatalogContext();
         $matchingProduct = $this->createProduct($category, $brand, 'Pate mèo', 'pate-meo', 'active');
-        $this->createVariant($matchingProduct, 'PATE-001', 120000, 99000, 8);
+        $this->createVariant($matchingProduct, 'PATE-001', 120000, 99000, 8, $variantType);
 
         $otherProduct = $this->createProduct($category, $brand, 'Hạt cho chó', 'hat-cho-cho', 'inactive');
-        $this->createVariant($otherProduct, 'DOG-001', 250000, null, 3);
+        $this->createVariant($otherProduct, 'DOG-001', 250000, null, 3, $variantType);
 
         $response = $this->actingAs($this->createAdmin())->get(route('admin.products.export', [
             'scope' => 'filtered',
@@ -136,7 +137,12 @@ class AdminProductExportTest extends TestCase
             'image' => 'brand.jpg',
         ]);
 
-        return [$category, $brand];
+        $variantType = VariantType::create([
+            'name' => 'Quy cách',
+            'status' => 'active',
+        ]);
+
+        return [$category, $brand, $variantType];
     }
 
     private function createProduct(Category $category, Brand $brand, string $name, string $slug, string $status): Product
@@ -151,10 +157,12 @@ class AdminProductExportTest extends TestCase
         ]);
     }
 
-    private function createVariant(Product $product, string $sku, float $price, ?float $salePrice, int $quantity): ProductVariant
+    private function createVariant(Product $product, string $sku, float $price, ?float $salePrice, int $quantity, ?VariantType $variantType = null): ProductVariant
     {
         return ProductVariant::create([
             'product_id' => $product->id,
+            'variant_type_id' => $variantType ? $variantType->id : 1,
+            'variant_name' => 'Default',
             'sku' => $sku,
             'price' => $price,
             'sale_price' => $salePrice,

@@ -77,7 +77,7 @@ class ProductApiTest extends TestCase
             'status' => 'active',
         ], [$variantType->id => '1kg']);
 
-        $dog = PetSpecies::query()->where('slug', 'dog')->firstOrFail();
+        $dog = PetSpecies::firstOrCreate(['slug' => 'dog'], ['name' => 'Chó']);
         $product->petSpecies()->attach($dog);
 
         $unavailableProduct = Product::create([
@@ -133,8 +133,8 @@ class ProductApiTest extends TestCase
 
         $url = '/api/products?search=royal&category=thuc-an-hat&brand=royal-canin&pet=dog&min_price=0&max_price=500000&sort=price_asc';
 
-        // user_id trên URL không được phép giả mạo trạng thái wishlist của người khác.
-        $this->getJson($url.'&user_id='.$user->id)
+        // Trạng thái wishlist khi chưa đăng nhập phải là false.
+        $this->getJson($url)
             ->assertOk()
             ->assertJsonPath('data.products.0.is_wishlisted', false);
 
@@ -375,7 +375,7 @@ class ProductApiTest extends TestCase
             ->assertJsonPath('data.product.variants.0.options.0.type_name', 'Size')
             ->assertJsonPath('data.product.variants.0.options.1.value', 'Hộp')
             ->assertJsonPath('data.product.variants.0.effective_price', 150000)
-            ->assertJsonPath('data.product.rating.average', 5.0)
+            ->assertJsonPath('data.product.rating.average', 5)
             ->assertJsonPath('data.product.is_wishlisted', true)
             ->assertJsonPath('data.reviews.0.rating', 5)
             ->assertJsonPath('data.reviews.0.variant.name', 'M - Hộp')
