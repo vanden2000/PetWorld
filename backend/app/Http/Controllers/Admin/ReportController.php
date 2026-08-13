@@ -17,6 +17,9 @@ class ReportController extends Controller
     /** Số khách hàng hiển thị trong bảng "chi tiêu nhiều nhất". */
     private const TOP_CUSTOMERS_LIMIT = 8;
 
+    /** Tồn kho từ mức này trở xuống (và còn hàng) bị coi là sắp hết. */
+    private const LOW_STOCK_THRESHOLD = 9;
+
     public function revenue()
     {
         $now = Carbon::now();
@@ -164,7 +167,7 @@ class ReportController extends Controller
             } elseif ($bucket === 'day') {
                 $label = Carbon::parse($row->day)->format('d/m');
             } else {
-                $label = $this->weekLabel($row->yw);
+                $label = $this->weekLabel($row->yw, 'Ngày');
             }
 
             return [
@@ -199,7 +202,7 @@ class ReportController extends Controller
      * Nhãn tuần ISO (thứ Hai–Chủ Nhật) dựng từ YEARWEEK, không phụ thuộc ngày
      * có đơn sớm/muộn nhất nên tuần chỉ có một đơn vẫn hiện đủ 7 ngày.
      */
-    private function weekLabel(string|int $yearWeek): string
+    private function weekLabel(string|int $yearWeek, string $prefix = 'Tuần'): string
     {
         $yw = (string) $yearWeek;
         $year = (int) substr($yw, 0, 4);
@@ -207,7 +210,85 @@ class ReportController extends Controller
 
         $start = Carbon::now()->setISODate($year, $week)->startOfWeek();
 
-        return 'Tuần ' . $start->format('d/m') . '–' . $start->copy()->endOfWeek()->format('d/m');
+        return $prefix . ' ' . $start->format('d/m') . '–' . $start->copy()->endOfWeek()->format('d/m');
+    }
+
+    /**
+     * Tách riêng giá trị thuộc loại biến thể "Quy cách đóng gói" (Túi 80g, Lốc 12 túi…)
+     * để hiển thị nổi bật, vì đây là thông tin dễ gây nhầm khi so sánh số lượng bán.
+     */
+    private function variantPackaging(\App\Models\ProductVariant $variant): string
+    {
+        return $this->variantValuesByKind($variant, 'packaging');
+    }
+
+    /** Khối lượng của biến thể (1kg, 3kg…), ghép chung với bao bì thành nhãn quy cách. */
+    private function variantWeight(\App\Models\ProductVariant $variant): string
+    {
+        return $this->variantValuesByKind($variant, 'weight');
+    }
+
+    /** Các thuộc tính còn lại (size, màu…), trừ quy cách đóng gói và khối lượng. */
+    private function variantAttributes(\App\Models\ProductVariant $variant): string
+    {
+        return $this->variantValuesByKind($variant, 'other');
+    }
+
+    /**
+     * Lọc giá trị biến thể theo nhóm: bao bì / khối lượng / còn lại.
+     * $kind: 'packaging' | 'weight' | 'other'.
+     */
+    private function variantValuesByKind(\App\Models\ProductVariant $variant, string $kind): string
+    {
+        $values = $variant->relationLoaded('variantValues')
+            ? $variant->variantValues
+            : $variant->variantValues()->with('variantType')->get();
+
+        return $values
+            ->sortBy('variant_type_id')
+            ->filter(function ($value) use ($kind): bool {
+                $type = mb_strtolower(optional($value->variantType)->name ?? '');
+
+                $valueKind = match (true) {
+                    str_contains($type, 'đóng gói') => 'packaging',
+                    str_contains($type, 'trọng lượng'), str_contains($type, 'khối lượng') => 'weight',
+                    default => 'other',
+                };
+
+                return $valueKind === $kind;
+            })
+            ->pluck('value')
+            ->implode(' · ');
+    }
+
+    /**
+     * Icon FontAwesome gợi hình dạng bao bì, giúp phân biệt nhanh hộp / túi / lon
+     * khi lướt bảng mà không phải đọc kỹ chữ.
+     */
+    private function packagingIcon(string $packaging): string
+    {
+        $text = mb_strtolower($packaging);
+
+        // Nhóm nhiều đơn vị xét trước, vì "Lốc 12 túi" cũng chứa chữ "túi".
+        return match (true) {
+            str_contains($text, 'lốc'), str_contains($text, 'thùng') => 'fa-solid fa-boxes-stacked',
+            str_contains($text, 'túi'), str_contains($text, 'gói') => 'fa-solid fa-bag-shopping',
+            str_contains($text, 'chai') => 'fa-solid fa-bottle-water',
+            str_contains($text, 'lon') => 'fa-solid fa-jar',
+            str_contains($text, 'hộp') => 'fa-solid fa-box',
+            str_contains($text, 'bao') => 'fa-solid fa-cubes-stacked',
+            default => 'fa-solid fa-box-open',
+        };
+    }
+
+    /** Phân mức tồn kho để gắn chip cảnh báo: hết hàng / sắp hết / bình thường. */
+    private function stockLevel(int $stock): string
+    {
+        if ($stock <= 0) {
+            return 'out';
+        }
+
+        return $stock <= self::LOW_STOCK_THRESHOLD ? 'low' : 'ok';
     }
 
     private function money(float $value): string
@@ -919,10 +1000,12 @@ class ReportController extends Controller
             ->where('o.order_status', '!=', 'cancelled')
             ->whereBetween('o.created_at', [$start, $end])
             ->whereIn('pv.product_id', $rows->pluck('product_id')->all())
-            ->groupBy('pv.product_id', 'oi.product_variant_id')
+            ->groupBy('pv.product_id', 'oi.product_variant_id', 'pv.sku', 'pv.quantity')
             ->selectRaw('
                 pv.product_id,
                 oi.product_variant_id,
+                pv.sku,
+                pv.quantity as stock,
                 SUM(oi.quantity) as units,
                 SUM(oi.price * oi.quantity) as revenue
             ')
@@ -990,13 +1073,38 @@ class ReportController extends Controller
         $sellers = $rows->map(function ($row, $index) use ($variants, $variantBreakdown) {
             $breakdown = $variantBreakdown->get($row->product_id, collect());
 
-            $variantRows = $breakdown->map(function ($v) use ($variants): array {
+            // Tổng số bán của riêng sản phẩm này, dùng làm mẫu số cho % đóng góp.
+            $productUnits = max(1, (int) $breakdown->sum('units'));
+
+            $variantRows = $breakdown->map(function ($v) use ($variants, $productUnits): array {
                 $model = $variants->get($v->product_variant_id);
 
+                $units = (int) $v->units;
+                $revenue = (float) $v->revenue;
+                $stock = (int) $v->stock;
+
+                $packaging = $model ? $this->variantPackaging($model) : '';
+                $weight = $model ? $this->variantWeight($model) : '';
+                // Chip quy cách gộp bao bì + khối lượng: "Hộp 3kg", "Túi 80g", "Lốc 12 túi".
+                $packLabel = trim($packaging . ' ' . $weight);
+
+                // Thuộc tính còn lại (size, màu…) làm tên hàng. Khi biến thể chỉ có mỗi
+                // quy cách thì chip đã nói đủ, để tên trống cho khỏi lặp hai lần.
+                $attributes = $model ? $this->variantAttributes($model) : '';
+                $name = $attributes ?: ($packLabel ? '' : 'Mặc định');
+
                 return [
-                    'name' => $model && $model->display_name ? $model->display_name : 'Mặc định',
-                    'units' => (int) $v->units,
-                    'revenue' => $this->money((float) $v->revenue),
+                    'name' => $name,
+                    'sku' => $v->sku ?: '—',
+                    'packaging' => $packLabel,
+                    'packIcon' => $this->packagingIcon($packaging ?: $packLabel),
+                    'units' => $units,
+                    'share' => round($units / $productUnits * 100, 1),
+                    'unitPrice' => $this->money($units > 0 ? $revenue / $units : 0),
+                    'stock' => $stock,
+                    'stockLabel' => number_format($stock, 0, ',', '.'),
+                    'stockLevel' => $this->stockLevel($stock),
+                    'revenue' => $this->money($revenue),
                 ];
             })->values()->all();
 
@@ -1119,7 +1227,7 @@ class ReportController extends Controller
     {
         $lowStockVariants = \App\Models\ProductVariant::where('status', 'active')
             ->where('quantity', '>', 0)
-            ->where('quantity', '<', 10)
+            ->where('quantity', '<=', self::LOW_STOCK_THRESHOLD)
             ->count();
 
         $outOfStockVariants = \App\Models\ProductVariant::where('status', 'active')
@@ -1136,7 +1244,7 @@ class ReportController extends Controller
 
         $variants = \App\Models\ProductVariant::with(['product.category', 'variantValues'])
             ->where('status', 'active')
-            ->where('quantity', '<', 10)
+            ->where('quantity', '<=', self::LOW_STOCK_THRESHOLD)
             ->get();
 
         $items = $variants->map(function ($variant) {
@@ -1417,8 +1525,7 @@ class ReportController extends Controller
         $summary = [
             'Tổng khách hàng' => $data['total'],
             'Khách mới' => $data['new'],
-            'Khách quay lại' => $data['returning'],
-            'Tổng chi tiêu' => $data['spent'],
+            'Chi tiêu trung bình/khách' => $data['spent'],
         ];
 
         $sections = [

@@ -34,6 +34,7 @@ import AddressLocationFields from "@/components/auth/AddressLocationFields";
 import { toastError } from "@/lib/toast";
 import CheckoutSuccessView from "@/components/checkout/CheckoutSuccessView";
 import PaymentLeaveGuard from "@/components/checkout/PaymentLeaveGuard";
+import PaymentQrModal from "@/components/checkout/PaymentQrModal";
 import {
   clearBuyNow,
   getBuyNowSnapshot,
@@ -532,184 +533,35 @@ export default function CheckoutView() {
 
   // --- Các trạng thái màn hình ---
 
-  if (placedOrder) {
-    // Đơn COD hoặc đơn chuyển khoản đã thanh toán thành công
-    if (!placedOrder.is_bank || orderPaid) {
-      return <CheckoutSuccessView order={fullOrderDetails || placedOrder} />;
-    }
-
-    // Đơn chuyển khoản: màn hướng dẫn thanh toán (QR + chuyển khoản thủ công) + tóm tắt đơn.
-    const qrUrl = buildSepayQrUrl(placedOrder.payment_code, placedOrder.total_amount);
-    const mm = String(Math.floor(qrSecondsLeft / 60)).padStart(2, "0");
-    const ss = String(qrSecondsLeft % 60).padStart(2, "0");
-    const orderItems = placedOrder.items ?? [];
-    const placedDiscount = Number(placedOrder.discount_amount ?? 0);
-
-    return (
-      <div className="co-result">
-        <PaymentLeaveGuard
-          active={!orderPaid && !qrExpired}
-          minutesLeft={Math.max(1, Math.ceil(qrSecondsLeft / 60))}
-          onConfirmLeave={handleConfirmLeave}
-        />
-
-        <div className="co-result-hero">
-          <div className="co-result-success">
-            <span className="co-result-check">✓</span>
-            <div>
-              <h2 className="co-result-title">Đặt hàng thành công!</h2>
-              <p className="co-result-subtitle">Cảm ơn bạn đã mua sắm tại PetWorld</p>
-              <p className="co-result-code">
-                Mã đơn hàng: <strong>{placedOrder.payment_code}</strong>
-                <button type="button" onClick={() => copyText(placedOrder.payment_code)} aria-label="Sao chép mã đơn hàng">⧉</button>
-              </p>
-            </div>
-          </div>
-          <div className="co-secure-note">
-            <span>🔒</span>
-            <div>
-              <strong>Thanh toán bảo mật</strong>
-              <small>SSL 256-bit</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="co-result-timer">
-          <span>Vui lòng thanh toán trong vòng</span>
-          <strong>{mm}</strong>
-          <em>Phút</em>
-          <strong>{ss}</strong>
-          <em>Giây</em>
-          <span>để hệ thống xác nhận đơn hàng.</span>
-        </div>
-
-        <div className="co-result-layout">
-          <div className="co-result-main">
-            <div className="co-pay-wrap">
-              <div className="co-pay-body">
-                <section className="co-pay-section">
-                  <div className="co-pay-section-head">
-                    <h3>1. Thanh toán nhanh bằng QR Code</h3>
-                  </div>
-                  <p className="co-pay-desc">Quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử</p>
-
-                  {orderPaid ? (
-                    <div className="co-pay-paid">✓ Đã thanh toán</div>
-                  ) : qrExpired ? (
-                    <div className="co-qr-expired">
-                      <p>Mã QR đã hết hạn sau 15 phút.</p>
-                      <button type="button" className="co-btn-solid" onClick={handleRegenerateQr}>
-                        Tạo lại mã QR
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="co-qr-panel">
-                      <img
-                        src={qrUrl}
-                        alt="QR thanh toán - Ngân hàng TMCP Quân Đội - 0865130622 - LE TRAN PHAT"
-                        className="co-qr-img"
-                        width="300"
-                      />
-                    </div>
-                  )}
-
-                  <div className="co-payment-logos" aria-label="Ứng dụng hỗ trợ quét QR">
-                    <span>Vietcombank</span>
-                    <span>BIDV</span>
-                    <span>MB Bank</span>
-                    <span>Momo</span>
-                    <span>ZaloPay</span>
-                    <span>VNPay</span>
-                  </div>
-                </section>
-
-                <div className="co-divider"><span>Hoặc</span></div>
-
-                <section className="co-pay-section co-pay-section-manual">
-                  <div className="co-pay-section-head">
-                    <h3>2. Chuyển khoản thủ công</h3>
-                  </div>
-                  <p className="co-pay-desc">Sử dụng thông tin bên dưới để chuyển khoản qua ứng dụng ngân hàng</p>
-                  <div className="co-bank-info">
-                    {[
-                      ["Ngân hàng", BANK_INFO.name],
-                      ["Chủ tài khoản", BANK_INFO.holder],
-                      ["Số tài khoản", BANK_INFO.account],
-                      ["Số tiền", formatPrice(placedOrder.total_amount)],
-                      ["Nội dung chuyển khoản", placedOrder.payment_code],
-                    ].map(([label, value]) => (
-                      <div className="co-bank-row" key={label}>
-                        <span>{label}</span>
-                        <strong className={label === "Số tiền" || label.includes("Nội dung") ? "co-bank-accent" : ""}>{value}</strong>
-                        <button type="button" onClick={() => copyText(value)}>Sao chép</button>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="co-pay-warning">
-                    Lưu ý quan trọng: Chuyển khoản đúng số tiền và nội dung để đơn hàng được xác nhận nhanh chóng.
-                  </p>
-                </section>
-              </div>
-            </div>
-          </div>
-
-          {/* Tóm tắt đơn hàng */}
-          <aside className="co-summary co-result-summary">
-            <h3 className="co-summary-title">Thông tin đơn hàng</h3>
-            <div className="co-summary-items">
-              {orderItems.map((item) => (
-                <div className="co-summary-item" key={item.id}>
-                  <span className="co-summary-item-name">
-                    {item.product_name} <em>× {item.quantity}</em>
-                  </span>
-                  <span>{formatPrice(item.price * item.quantity)}</span>
-                </div>
-              ))}
-            </div>
-            <div className="co-summary-row">
-              <span>Phí vận chuyển</span>
-              <span>{formatPrice(placedOrder.shipping_fee)}</span>
-            </div>
-            {placedDiscount > 0 && (
-              <div className="co-summary-row co-summary-discount">
-                <span>{placedOrder.voucher?.code ? `Voucher (${placedOrder.voucher.code})` : "Voucher"}</span>
-                <span className="co-discount-amount">-{formatPrice(placedDiscount)}</span>
-              </div>
-            )}
-            <div className="co-summary-total">
-              <span>Tổng thanh toán</span>
-              <span>{formatPrice(placedOrder.total_amount)}</span>
-            </div>
-            <p className="co-vat-note">(Đã bao gồm VAT)</p>
-            <div className="co-result-commitments">
-              <strong>Cam kết từ PetWorld</strong>
-              <span>100% sản phẩm chính hãng</span>
-              <span>Đổi trả miễn phí trong 7 ngày</span>
-              <span>Giao hàng nhanh toàn quốc</span>
-              <span>Đóng gói cẩn thận, thân thiện</span>
-            </div>
-            <div className="co-result-support">
-              <strong>Cần hỗ trợ thanh toán?</strong>
-              <span>Chat với chúng tôi</span>
-              <span>Gọi hotline 1900 1234</span>
-              <span>Email support@petworld.vn</span>
-            </div>
-            <Link href={`/account/orders/${placedOrder.id}`} className="co-detail-btn">
-              Xem chi tiết đơn hàng
-            </Link>
-            <Link href="/shop" className="co-continue-btn">Tiếp tục mua sắm →</Link>
-          </aside>
-        </div>
-
-        <div className="co-result-footer">
-          <span>🔒 Thanh toán an toàn</span>
-          <span>🎧 Hỗ trợ nhanh chóng</span>
-          <span>🚚 Giao hàng toàn quốc</span>
-          <span>🔁 Đổi trả dễ dàng</span>
-        </div>
-      </div>
-    );
+  // Đơn COD hoặc đơn chuyển khoản đã thanh toán thành công -> màn thành công.
+  // Đơn chuyển khoản chưa trả tiền KHÔNG đổi màn: QR mở dạng modal đè lên form checkout.
+  if (placedOrder && (!placedOrder.is_bank || orderPaid)) {
+    return <CheckoutSuccessView order={fullOrderDetails || placedOrder} />;
   }
+
+  const awaitingPayment = Boolean(placedOrder?.is_bank) && !orderPaid;
+
+  // Modal chờ thanh toán: dựng sẵn để chèn vào mọi nhánh render bên dưới.
+  const paymentModal = awaitingPayment ? (
+    <>
+      <PaymentLeaveGuard
+        active={!qrExpired}
+        minutesLeft={Math.max(1, Math.ceil(qrSecondsLeft / 60))}
+        onConfirmLeave={handleConfirmLeave}
+      />
+      <PaymentQrModal
+        order={placedOrder}
+        qrUrl={buildSepayQrUrl(placedOrder.payment_code, placedOrder.total_amount)}
+        bankInfo={BANK_INFO}
+        secondsLeft={qrSecondsLeft}
+        expired={qrExpired}
+        paid={orderPaid}
+        onRegenerate={handleRegenerateQr}
+        onCancelOrder={handleConfirmLeave}
+        onCopy={copyText}
+      />
+    </>
+  ) : null;
 
   if (!user) {
     return (
@@ -720,17 +572,24 @@ export default function CheckoutView() {
     );
   }
 
+  // Đặt hàng xong thì giỏ đã được dọn, nên nhánh "giỏ trống" cũng phải giữ modal
+  // chờ thanh toán — nếu không, modal sẽ biến mất ngay sau khi tạo đơn.
   if (items.length === 0) {
     return (
-      <div className="cart-empty">
-        <p>Giỏ hàng của bạn đang trống, chưa thể thanh toán.</p>
-        <Link href="/shop" className="cart-empty-btn">Tiếp tục mua sắm</Link>
-      </div>
+      <>
+        {paymentModal}
+        <div className="cart-empty">
+          <p>Giỏ hàng của bạn đang trống, chưa thể thanh toán.</p>
+          <Link href="/shop" className="cart-empty-btn">Tiếp tục mua sắm</Link>
+        </div>
+      </>
     );
   }
 
   return (
     <>
+      {paymentModal}
+
       <h2 className="co-heading">Thanh toán đơn hàng</h2>
 
       <div className="co-layout">

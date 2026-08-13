@@ -339,7 +339,67 @@
 
     .variant-row { display: none; background-color: #fafbfc; }
     .variant-row.is-visible { display: table-row; }
-    .variant-row td { font-size: 0.82rem; padding-top: 8px; padding-bottom: 8px; }
+    .variant-row td { font-size: 0.82rem; padding-top: 10px; padding-bottom: 10px; }
+    .variant-row + .variant-row td { border-top: 1px dashed var(--border-color); }
+
+    /* Mã SKU: dạng mã kỹ thuật, dễ đọc và dễ đối chiếu với kho. */
+    .variant-sku {
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 0.7rem;
+        letter-spacing: 0.02em;
+        color: #64748b;
+        background: #eef1f4;
+        border: 1px solid #e2e6ea;
+        border-radius: 4px;
+        padding: 1px 6px;
+        white-space: nowrap;
+    }
+
+    /* Chip quy cách đóng gói (bao bì + khối lượng), kèm icon gợi hình dạng bao bì. */
+    .variant-pack {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #3d5a50;
+        background: rgba(75, 107, 96, 0.1);
+        border: 1px solid rgba(75, 107, 96, 0.16);
+        border-radius: 999px;
+        padding: 3px 10px;
+        white-space: nowrap;
+    }
+    .variant-pack i { font-size: 0.78rem; opacity: 0.75; }
+
+    .variant-meta { font-size: 0.72rem; color: var(--text-muted); }
+
+    .stock-chip {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 2px 8px;
+        white-space: nowrap;
+    }
+    .stock-ok { background: rgba(16, 185, 129, 0.12); color: #047857; }
+    .stock-low { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+    .stock-out { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
+
+    /* Thanh tỷ trọng đóng góp của biến thể trong tổng số bán của sản phẩm. */
+    .share-bar {
+        height: 3px;
+        border-radius: 999px;
+        background: #e9edf1;
+        margin-top: 5px;
+        overflow: hidden;
+    }
+    .share-bar > span {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: var(--primary);
+    }
+    .share-pct { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
     
     .badge-category {
         font-size: 0.72rem;
@@ -687,17 +747,37 @@
                 const variants = prod.variants || [];
                 const expandable = variants.length > 1;
 
+                const stockText = { ok: 'Còn hàng', low: 'Sắp hết', out: 'Hết hàng' };
+
                 const variantRowsHtml = variants.map(v => `
                     <tr class="variant-row">
                         <td></td>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 8px; padding-left: 56px;">
-                                <i class="fa-solid fa-turn-up fa-rotate-90" style="color: var(--text-muted); font-size: 0.7rem;"></i>
-                                <span style="color: var(--text-main); font-weight: 600;">${v.name}</span>
+                            <div style="display: flex; align-items: flex-start; gap: 8px; padding-left: 56px;">
+                                <i class="fa-solid fa-turn-up fa-rotate-90" style="color: var(--text-muted); font-size: 0.7rem; margin-top: 4px;"></i>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                        ${v.name ? `<span style="color: var(--text-main); font-weight: 600;">${v.name}</span>` : ''}
+                                        ${v.packaging ? `<span class="variant-pack"><i class="${v.packIcon}"></i>${v.packaging}</span>` : ''}
+                                    </div>
+                                    <span class="variant-sku" title="Mã SKU">${v.sku}</span>
+                                </div>
                             </div>
                         </td>
-                        <td colspan="2"></td>
-                        <td style="font-weight: 600; color: var(--text-main);">${Number(v.units).toLocaleString('vi-VN')} SP</td>
+                        <td>
+                            <span class="variant-meta">Đơn giá</span><br>
+                            <span style="font-weight: 600; color: var(--text-main);">${v.unitPrice}</span>
+                        </td>
+                        <td>
+                            <span class="stock-chip stock-${v.stockLevel}" title="Tồn kho hiện tại">
+                                ${stockText[v.stockLevel]} · ${v.stockLabel}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-weight: 600; color: var(--text-main);">${Number(v.units).toLocaleString('vi-VN')} SP</span>
+                            <span class="share-pct">(${v.share.toLocaleString('vi-VN')}%)</span>
+                            <div class="share-bar"><span style="width: ${v.share}%;"></span></div>
+                        </td>
                         <td style="font-weight: 600; color: var(--primary);">${v.revenue}</td>
                     </tr>
                 `).join('');
@@ -712,7 +792,7 @@
                                 <img src="${prod.image}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=120&auto=format&fit=crop'">
                                 <div style="display: flex; flex-direction: column;">
                                     <strong style="color: var(--text-main); font-weight: 700;">${prod.name}</strong>
-                                    ${prod.variant ? `<span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500; margin-top: 2px;">Phân loại: ${prod.variant}${expandable ? ` <span class="variant-count-chip">+${variants.length - 1} biến thể</span>` : ''}</span>` : ''}
+                                    ${prod.variant ? `<span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500; margin-top: 2px;">${expandable ? `${variants.length} quy cách đóng gói <span class="variant-count-chip">Xem chi tiết</span>` : `Phân loại: ${prod.variant}`}</span>` : ''}
                                 </div>
                                 ${expandable ? '<i class="fa-solid fa-chevron-down expand-caret"></i>' : ''}
                             </div>

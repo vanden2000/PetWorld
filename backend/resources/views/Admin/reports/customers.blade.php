@@ -45,7 +45,7 @@
     /* Stats Cards Premium Style */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 20px;
         margin-bottom: 24px;
     }
@@ -81,8 +81,7 @@
         border-radius: 4px 0 0 4px;
     }
     .stat-card:nth-child(2)::before { background: #10b981; }
-    .stat-card:nth-child(3)::before { background: #f59e0b; }
-    .stat-card:nth-child(4)::before { background: #8b5cf6; }
+    .stat-card:nth-child(3)::before { background: #8b5cf6; }
 
     .stat-card:hover {
         transform: translateY(-2px);
@@ -90,8 +89,7 @@
     }
     .stat-card:first-child:hover { background: #ebf5ff; border-color: rgba(59, 130, 246, 0.2); }
     .stat-card:nth-child(2):hover { background: #f6fcf9; border-color: rgba(16, 185, 129, 0.2); }
-    .stat-card:nth-child(3):hover { background: #fffbeb; border-color: rgba(245, 158, 11, 0.2); }
-    .stat-card:nth-child(4):hover { background: #faf5ff; border-color: rgba(139, 92, 246, 0.2); }
+    .stat-card:nth-child(3):hover { background: #faf5ff; border-color: rgba(139, 92, 246, 0.2); }
 
     .stat-header {
         display: flex;
@@ -110,7 +108,6 @@
     }
     .icon-total { background: #ebf5ff; color: #3b82f6; }
     .icon-new { background: #e6f7ed; color: #10b981; }
-    .icon-returning { background: #fffbeb; color: #f59e0b; }
     .icon-spent { background: #f3e8ff; color: #8b5cf6; }
 
     .stat-card:hover .stat-icon-wrapper {
@@ -331,20 +328,6 @@
 
     <div class="stat-card">
         <div class="stat-header">
-            <div class="stat-icon-wrapper icon-returning">
-                <i class="fa-solid fa-user-check"></i>
-            </div>
-            <div class="stat-trend trend-up" id="returning-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
-        </div>
-        <div class="stat-label">Tỷ lệ khách hàng quay lại</div>
-        <div class="stat-value" id="returning-val">0%</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-header">
             <div class="stat-icon-wrapper icon-spent">
                 <i class="fa-solid fa-money-bill-wave"></i>
             </div>
@@ -512,13 +495,11 @@
             // 1. Update text values
             document.getElementById('customers-val').innerText = data.total;
             document.getElementById('new-val').innerText = data.new;
-            document.getElementById('returning-val').innerText = data.returning;
             document.getElementById('spent-val').innerText = data.spent;
 
             // 2. Update trends
             setTrend('customers-trend', data.totalTrend);
             setTrend('new-trend', data.newTrend);
-            setTrend('returning-trend', data.returningTrend);
             setTrend('spent-trend', data.spentTrend);
 
             // 3. Render customer growth chart
