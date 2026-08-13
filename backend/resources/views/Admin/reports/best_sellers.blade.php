@@ -361,7 +361,7 @@
 <div class="dashboard-header" style="margin-bottom: 24px;">
     <div class="header-title-block">
         <h1 style="font-size: 1.8rem; font-weight: 800;">Sản phẩm <span style="color: var(--primary);">Bán chạy</span></h1>
-        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Danh sách các sản phẩm bán chạy nhất, sản lượng bán ra và tổng giá trị mang lại cho cửa hàng.</p>
+        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Danh sách top 5 sản phẩm bán chạy nhất theo số lượng bán từ nhiều nhất đến ít dần.</p>
     </div>
     
     <div class="header-actions">

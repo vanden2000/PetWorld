@@ -912,7 +912,7 @@ class ReportController extends Controller
                 SUM(oi.price * oi.quantity) as revenue
             ')
             ->orderByDesc('units')
-            ->limit(10)
+            ->limit(5)
             ->get();
 
         // Chi tiết từng biến thể của các sản phẩm trên, dùng cho hàng mở rộng.
@@ -1473,8 +1473,8 @@ class ReportController extends Controller
 
         $sections = [
             [
-                'title' => 'BẢNG XẾP HẠNG SẢN PHẨM BÁN CHẠY',
-                'headings' => ['Hạng', 'Sản phẩm', 'Danh mục', 'Thương hiệu', 'Số lượng bán', 'Tổng doanh thu'],
+                'title' => 'DANH SÁCH THỐNG KÊ SẢN PHẨM',
+                'headings' => ['STT', 'Sản phẩm', 'Danh mục', 'Thương hiệu', 'Số lượng bán', 'Tổng doanh thu'],
                 'rows' => $rows,
             ],
             [
