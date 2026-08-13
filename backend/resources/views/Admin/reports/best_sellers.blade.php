@@ -457,7 +457,7 @@
 <!-- Detailed Best Sellers Table (Clean, no extra white space) -->
 <div class="detail-table-card">
     <div class="card-header-styled">
-        <span class="card-title-styled"><i class="fa-solid fa-ranking-star" style="color: var(--primary); margin-right: 6px;"></i> Bảng xếp hạng sản phẩm bán chạy nhất</span>
+        <span class="card-title-styled"><i class="fa-solid fa-box-archive" style="color: var(--primary); margin-right: 6px;"></i> Thống kê sản phẩm</span>
     </div>
     <div class="pl-table-scroll">
         <table class="orders-table">
@@ -702,7 +702,7 @@
                         </td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <img src="${prod.image}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=120&auto=format&fit=crop'">
+                                <img src="${prod.image}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='{{ asset('image/logo/logo.png') }}'">
                                 <div style="display: flex; flex-direction: column;">
                                     <strong style="color: var(--text-main); font-weight: 700;">${prod.name}</strong>
                                     ${prod.variant ? `<span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500; margin-top: 2px;">Phân loại: ${prod.variant}${expandable ? ` <span class="variant-count-chip">+${variants.length - 1} biến thể</span>` : ''}</span>` : ''}

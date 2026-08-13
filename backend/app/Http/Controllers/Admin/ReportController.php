@@ -1012,7 +1012,21 @@ class ReportController extends Controller
                 ->orderByDesc('is_primary')
                 ->first();
 
-            $imageUrl = $imageRow ? $imageRow->image_url : null;
+            $imageUrl = null;
+            if ($imageRow && $imageRow->image_url) {
+                $path = ltrim((string) $imageRow->image_url, '/');
+                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                    $imageUrl = $path;
+                } elseif (str_starts_with($path, 'storage/') || str_starts_with($path, 'image/')) {
+                    $imageUrl = asset($path);
+                } elseif (file_exists(public_path('image/' . $path))) {
+                    $imageUrl = asset('image/' . $path);
+                } elseif (file_exists(public_path('storage/' . $path))) {
+                    $imageUrl = asset('storage/' . $path);
+                } else {
+                    $imageUrl = asset($path);
+                }
+            }
             
             $badgeClass = 'badge-food';
             if (str_contains($row->cat, 'Pate') || str_contains($row->cat, 'ướt')) $badgeClass = 'badge-pate';
@@ -1029,7 +1043,7 @@ class ReportController extends Controller
                 'brand' => $row->brand,
                 'units' => (int) $row->units,
                 'revenue' => $this->money($row->revenue),
-                'image' => $imageUrl ?: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=120&auto=format&fit=crop',
+                'image' => $imageUrl ?: asset('image/logo/logo.png'),
                 'badgeClass' => $badgeClass,
             ];
         })->all();
