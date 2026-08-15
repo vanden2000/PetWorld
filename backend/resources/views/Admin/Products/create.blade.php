@@ -163,6 +163,15 @@
             background: #fff1f1;
         }
 
+        /* Icon canh bao / thanh cong dung dau thong bao */
+        .product-save-toast-icon {
+            flex-shrink: 0;
+            align-self: flex-start;
+            margin-top: 1px;
+            font-size: 1.02rem;
+            line-height: 1.35;
+        }
+
         .product-save-toast[hidden] {
             display: none;
         }
@@ -324,6 +333,13 @@
             color: var(--theme-text-gray);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+        }
+
+        /* Dau sao do danh dau truong bat buoc nhap */
+        .required-mark {
+            color: #dc2626;
+            font-weight: 900;
+            margin-left: 2px;
         }
 
         .input-text-field {
@@ -911,8 +927,31 @@
             padding: 0 10px;
         }
 
+        /* Chu nau tren nen cam nhat truoc day bi chim (tuong phan 1.85).
+           Chu trang tren nen cam dam hon dat 3.55 - du ro cho chu dam. */
         .js-toggle-variant-visibility {
-            color: #9a6700;
+            color: #ffffff;
+            background: #e35f12;
+            border-color: #e35f12;
+        }
+
+        .variant-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Nut xoa dung tong do de tach khoi hanh dong an/hien. */
+        .btn-variant-delete {
+            color: #b42318;
+            background: #fff;
+            border-color: #f3c4bf;
+        }
+
+        .btn-variant-delete:hover {
+            color: #ffffff;
+            background: #b42318;
+            border-color: #b42318;
         }
 
         .variant-summary-grid {
@@ -983,6 +1022,9 @@
             background: transparent;
             text-align: left;
             cursor: pointer;
+            /* Button khong tu ke thua font cua body, phai khai bao lai neu khong
+               chu "Bien the moi" se dung font mac dinh cua he dieu hanh. */
+            font-family: inherit;
         }
 
         .variant-card-toggle::after {
@@ -1099,9 +1141,12 @@
             display: block;
             margin-bottom: 5px;
             color: var(--theme-text-gray);
-            font-size: .72rem;
+            /* Dong bo voi .form-field-label de nhan trong the bien the khong bi
+               chen chuc so voi nhan o phan thong tin san pham. */
+            font-size: 0.76rem;
             font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .price-format-preview {
@@ -1498,13 +1543,13 @@
 
                     <div class="form-control-row product-name-slug-row">
                         <div class="form-control-group no-margin">
-                            <label for="name" class="form-field-label">Tên Sản Phẩm</label>
+                            <label for="name" class="form-field-label">Tên Sản Phẩm <span class="required-mark">*</span></label>
                             <input type="text" id="name" name="name" class="input-text-field" required
                                 placeholder="Ví dụ: Thức ăn hạt Royal Canin cho chó con"
                                 value="{{ old('name', $product->name) }}">
                         </div>
                         <div class="form-control-group no-margin">
-                            <label for="slug" class="form-field-label">Slug</label>
+                            <label for="slug" class="form-field-label">Slug <span class="required-mark">*</span></label>
                             <div class="slug-input-wrap">
                                 <input type="text" id="slug" name="slug" class="input-text-field" required maxlength="180"
                                     placeholder="thuc-an-hat-royal-canin" value="{{ old('slug', $product->slug) }}">
@@ -1604,7 +1649,7 @@
                 <div class="form-card">
                     <div class="form-card-title">
                         <i class="fa-regular fa-image"></i>
-                        <span>Hình Ảnh <small id="image-count"
+                        <span>Hình Ảnh <span class="required-mark">*</span> <small id="image-count"
                                 style="color: var(--theme-text-gray); font-weight: 600;"></small></span>
                     </div>
 
@@ -1687,7 +1732,7 @@
                     </div>
 
                     <div class="form-control-group">
-                        <label for="category_id" class="form-field-label">Danh Mục</label>
+                        <label for="category_id" class="form-field-label">Danh Mục <span class="required-mark">*</span></label>
                         <select id="category_id" name="category_id" class="input-select-field" required>
                             <option value="" disabled>Chọn danh mục</option>
                             @foreach($categories as $category)
@@ -1699,7 +1744,7 @@
                     </div>
 
                     <div class="form-control-group no-margin">
-                        <label for="brand_id" class="form-field-label">Thương Hiệu</label>
+                        <label for="brand_id" class="form-field-label">Thương Hiệu <span class="required-mark">*</span></label>
                         <select id="brand_id" name="brand_id" class="input-select-field" required>
                             <option value="" disabled>Chọn thương hiệu</option>
                             @foreach($brands as $brand)
@@ -1869,7 +1914,19 @@
             });
 
             function showProductSaveToast(message, isError = false) {
-                productSaveToast.textContent = message;
+                // Dựng bằng DOM thay vì innerHTML để nội dung thông báo luôn được escape.
+                productSaveToast.textContent = '';
+
+                const icon = document.createElement('i');
+                icon.className = isError
+                    ? 'fa-solid fa-triangle-exclamation product-save-toast-icon'
+                    : 'fa-solid fa-circle-check product-save-toast-icon';
+                icon.setAttribute('aria-hidden', 'true');
+
+                const text = document.createElement('span');
+                text.textContent = message;
+
+                productSaveToast.append(icon, text);
                 productSaveToast.classList.toggle('error', isError);
                 productSaveToast.hidden = false;
                 clearTimeout(toastTimeout);
@@ -2059,11 +2116,20 @@
             }
 
             function showMissingFieldsToast(invalidFields) {
-                const fields = [...new Set(invalidFields.map(productFieldLabel))].slice(0, 3);
-                const remaining = invalidFields.length > 3 ? ` và ${invalidFields.length - 3} trường khác` : '';
-                showProductSaveToast(`Vui lòng nhập đủ thông tin bắt buộc: ${fields.join(', ')}${remaining}.`, true);
+                // Trường có thông báo riêng (vd: giá giảm bằng 0) thì hiện đúng câu đó,
+                // đừng gộp vào câu "nhập đủ thông tin bắt buộc" gây khó hiểu.
+                const custom = invalidFields.find(field => field.validationMessage && !field.validity.valueMissing);
 
-                const firstInvalid = invalidFields[0];
+                if (custom) {
+                    showProductSaveToast(custom.validationMessage, true);
+                } else {
+                    const fields = [...new Set(invalidFields.map(productFieldLabel))].slice(0, 3);
+                    const remaining = invalidFields.length > 3 ? ` và ${invalidFields.length - 3} trường khác` : '';
+                    showProductSaveToast(`Vui lòng nhập đủ thông tin bắt buộc: ${fields.join(', ')}${remaining}.`, true);
+                }
+
+                // Cuộn tới đúng ô vừa được nhắc tên trong thông báo.
+                const firstInvalid = custom || invalidFields[0];
                 const variantCard = firstInvalid.closest('.variant-editor-card');
                 if (variantCard) setVariantCardOpen(variantCard, true);
 
@@ -2460,9 +2526,17 @@
 
                 const price = Number(priceInput.value);
                 const salePrice = salePriceInput.value === '' ? null : Number(salePriceInput.value);
-                const invalid = salePrice !== null && Number.isFinite(price) && salePrice >= price;
-                salePriceInput.setCustomValidity(invalid ? 'Giá giảm phải nhỏ hơn giá bán.' : '');
-                salePriceInput.classList.toggle('is-invalid', invalid);
+
+                // Số 0 (hoặc âm) vi phạm ràng buộc DB: để trống mới là "không giảm giá".
+                let message = '';
+                if (salePrice !== null && salePrice <= 0) {
+                    message = 'Giá giảm phải lớn hơn 0. Để trống ô này nếu không giảm giá.';
+                } else if (salePrice !== null && Number.isFinite(price) && salePrice >= price) {
+                    message = 'Giá giảm phải nhỏ hơn giá bán.';
+                }
+
+                salePriceInput.setCustomValidity(message);
+                salePriceInput.classList.toggle('is-invalid', message !== '');
             }
 
             function updateVariantSummary() {
@@ -2537,7 +2611,7 @@
                     </div>
                     <div class="variant-card-details">
                     <div class="variant-card-field" style="margin-top: 14px;">
-                        <label>Thuộc tính</label>
+                        <label>Thuộc tính <span class="required-mark">*</span></label>
                         <input type="hidden" name="variants[${index}][id]" value="${initial.id || ''}">
                         <div class="variant-option-picker">
                             <select class="cell-input-small js-variant-type">${typeOptions()}</select>
@@ -2548,19 +2622,22 @@
                         <div class="variant-hidden-values"></div>
                     </div>
                     <div class="variant-card-field" style="margin-top: 14px;">
-                        <label>SKU</label>
+                        <label>SKU <span class="required-mark">*</span></label>
                         <input type="text" name="variants[${index}][sku]" value="${sku}" class="cell-input-small js-variant-sku" placeholder="Tự tạo từ tên sản phẩm và thuộc tính" required>
                         <small class="variant-sku-hint js-variant-sku-hint">SKU tự tạo từ tên sản phẩm và thuộc tính.</small>
                     </div>
                     <div class="variant-price-grid">
-                        <div class="variant-card-field"><label>Giá bán</label><input type="number" name="variants[${index}][price]" value="${price}" class="cell-input-small js-variant-price" step="1000" min="0" required><small class="price-format-preview js-variant-price-preview"></small></div>
-                        <div class="variant-card-field"><label>Giá giảm</label><input type="number" name="variants[${index}][sale_price]" value="${salePrice || ''}" class="cell-input-small js-variant-sale-price" step="1000" min="0"><small class="price-format-preview js-variant-sale-price-preview"></small></div>
-                        <div class="variant-card-field"><label>Tồn kho</label><input type="number" name="variants[${index}][quantity]" value="${quantity}" class="cell-input-small js-variant-quantity" min="0" required></div>
+                        <div class="variant-card-field"><label>Giá bán <span class="required-mark">*</span></label><input type="number" name="variants[${index}][price]" value="${price}" class="cell-input-small js-variant-price" step="1000" min="1000" max="1000000000" required><small class="price-format-preview js-variant-price-preview"></small></div>
+                        <div class="variant-card-field"><label>Giá giảm</label><input type="number" name="variants[${index}][sale_price]" value="${salePrice || ''}" class="cell-input-small js-variant-sale-price" step="any" max="1000000000" placeholder="Để trống nếu không giảm"><small class="price-format-preview js-variant-sale-price-preview"></small></div>
+                        <div class="variant-card-field"><label>Tồn kho <span class="required-mark">*</span></label><input type="number" name="variants[${index}][quantity]" value="${quantity}" class="cell-input-small js-variant-quantity" min="0" max="100000" required></div>
                         <div class="variant-card-field"><label>Cân nặng ship (g)</label><input type="number" name="variants[${index}][weight_grams]" value="${weightGrams}" class="cell-input-small js-variant-weight" min="0" max="50000" step="1" placeholder="Ví dụ: 30"></div>
                     </div>
                     <div class="variant-card-footer">
                         <label class="variant-visibility-toggle"><input type="checkbox" class="js-variant-visible" name="variants[${index}][visible]" value="1" ${active ? 'checked' : ''}> Hiển thị cho khách</label>
-                        <button type="button" class="btn-variant-mini js-toggle-variant-visibility" title="Ẩn biến thể khỏi khách hàng"><i class="fa-solid fa-eye-slash"></i><span>Ẩn</span></button>
+                        <div class="variant-card-actions">
+                            <button type="button" class="btn-variant-mini btn-variant-delete js-remove-variant" title="Xoá biến thể này khỏi sản phẩm"><i class="fa-solid fa-trash-can"></i><span>Xoá</span></button>
+                            <button type="button" class="btn-variant-mini js-toggle-variant-visibility" title="Ẩn biến thể khỏi khách hàng"><i class="fa-solid fa-eye-slash"></i><span>Ẩn</span></button>
+                        </div>
                     </div>
                     </div>
                 `;
@@ -2674,6 +2751,19 @@
                     visibleInput.checked = !visibleInput.checked;
                     updateVariantCard(row);
                     updateVariantSummary();
+                }
+
+                if (event.target.closest('.js-remove-variant')) {
+                    const label = row.querySelector('.js-variant-title')?.textContent?.trim() || 'biến thể này';
+                    if (!confirm(`Xoá ${label}? Thao tác này chỉ có hiệu lực sau khi bạn lưu sản phẩm.`)) return;
+
+                    // Không cần đánh số lại: Laravel nhận mảng thưa (variants[0], variants[2]...)
+                    // và syncSubmittedVariants chỉ duyệt các phần tử thực sự được gửi lên.
+                    row.remove();
+                    updateVariantsEmptyState();
+                    validateVariantSkus();
+                    updateVariantSummary();
+                    updateProductAttributesOverview();
                 }
             });
 

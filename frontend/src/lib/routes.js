@@ -9,6 +9,8 @@ export const ROUTES = {
   aboutUs: "/about-us",
   news: "/news",
   newsDetail: (slug) => `/news/${slug}`,
+  knowledge: "/chinh-sach",
+  knowledgeDetail: (slug) => `/chinh-sach/${slug}`,
   contact: "/contact",
   cart: "/cart",
   checkout: "/checkout",

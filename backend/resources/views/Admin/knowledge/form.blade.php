@@ -2,7 +2,10 @@
 @section('title', $article->exists ? 'Sửa kiến thức chatbot' : 'Thêm kiến thức chatbot')
 
 @section('styles')
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
     <style>
+        .knowledge-quill-editor { min-height: 420px; background: #fff; border-radius: 8px; }
+        .knowledge-quill-editor .ql-editor { min-height: 380px; font-size: 0.92rem; line-height: 1.6; }
         .error-message {
             color: #d93025;
             font-size: 0.85rem;
@@ -118,7 +121,7 @@
                 <div class="form-group">
                     <label for="category">Nhóm kiến thức <span class="required" style="color: #d93025;">*</span></label>
                     <select class="form-control @error('category') is-invalid @enderror" id="category" name="category" required>
-                        @foreach(['shipping'=>'Giao hàng','payment'=>'Thanh toán','returns'=>'Đổi trả','voucher'=>'Voucher','contact'=>'Liên hệ'] as $value=>$label)
+                        @foreach(\App\Models\KnowledgeArticle::CATEGORIES as $value=>$label)
                             <option value="{{ $value }}" @selected(old('category',$article->category)===$value)>{{ $label }}</option>
                         @endforeach
                     </select>
@@ -129,7 +132,9 @@
 
                 <div class="form-group">
                     <label for="content">Nội dung đã kiểm duyệt <span class="required" style="color: #d93025;">*</span></label>
-                    <textarea class="form-control @error('content') is-invalid @enderror" id="content" name="content" rows="16" required placeholder="Nhập nội dung quy định chi tiết để chatbot trả lời khách hàng..." style="resize: vertical; font-family: inherit; line-height: 1.6;">{{ old('content', $article->content) }}</textarea>
+                    <textarea id="content" name="content" required hidden>{{ old('content', $article->content) }}</textarea>
+                    <div id="knowledge-editor" class="knowledge-quill-editor"></div>
+                    <div class="species-help" style="margin-top:6px;">Soạn nội dung dạng HTML. Nội dung này hiển thị trên trang chính sách/hướng dẫn và là nguồn trả lời chính sách của chatbot.</div>
                     @error('content')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -227,6 +232,7 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const title = document.getElementById('title');
@@ -234,6 +240,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const content = document.getElementById('content');
     const summary = document.getElementById('summary');
     const statusInputs = document.querySelectorAll('input[name="status"]');
+
+    /* Trình soạn thảo HTML (Quill) — đồng bộ về textarea ẩn #content. */
+    const stripHtml = (html) => {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html ?? '';
+        return tmp.textContent || '';
+    };
+    const quill = new Quill('#knowledge-editor', {
+        theme: 'snow',
+        placeholder: 'Nhập nội dung quy định chi tiết (tiêu đề, đoạn văn, danh sách)...',
+        modules: {
+            toolbar: [
+                [{ header: [2, 3, 4, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                ['blockquote', 'code-block'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                [{ align: [] }],
+                ['link', 'clean'],
+            ],
+        },
+    });
+    if (content?.value.trim()) {
+        quill.clipboard.dangerouslyPasteHTML(content.value);
+    }
     const previewStatus = document.getElementById('knowledge-preview-status');
     const previewTitle = document.getElementById('knowledge-preview-title');
     const previewCategory = document.getElementById('knowledge-preview-category');
@@ -251,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
             draft: 'Bản nháp · Chatbot không dùng',
             archived: 'Đã lưu trữ · Chatbot không dùng',
         };
-        const text = content?.value.trim() || 'Chưa có nội dung';
+        const text = stripHtml(content?.value || '').trim() || 'Chưa có nội dung';
         const summaryText = summary?.value.trim() || 'Chưa có tóm tắt';
         const questionTexts = [...document.querySelectorAll('input[name="questions[]"]')]
             .map((input) => input.value.trim())
@@ -279,9 +309,12 @@ document.addEventListener('DOMContentLoaded', () => {
         publishCheckList.innerHTML = warnings.length ? warnings.map((warning) => `<li>${warning}</li>`).join('') : '<li>Đủ nội dung, tóm tắt và câu hỏi nhận diện.</li>';
     };
 
-    [title, category, content, summary].forEach((field) => field?.addEventListener('input', syncPreview));
+    [title, category, summary].forEach((field) => field?.addEventListener('input', syncPreview));
     category?.addEventListener('change', syncPreview);
     statusInputs.forEach((input) => input.addEventListener('change', syncPreview));
+    const syncContent = () => { content.value = quill.getSemanticHTML(); };
+    quill.on('text-change', () => { syncContent(); syncPreview(); });
+    document.querySelector('form')?.addEventListener('submit', syncContent);
     syncPreview();
 
     const questions = document.getElementById('knowledge-questions');
