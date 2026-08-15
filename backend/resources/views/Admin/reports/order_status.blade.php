@@ -311,6 +311,7 @@
     .badge-completed { background: rgba(16, 185, 129, 0.08); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.15); }
     .badge-shipping { background: rgba(59, 130, 246, 0.08); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.15); }
     .badge-pending { background: rgba(245, 158, 11, 0.08); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.15); }
+    .badge-confirmed { background: rgba(139, 92, 246, 0.08); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.15); }
     .badge-cancelled { background: rgba(239, 68, 68, 0.08); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.15); }
 </style>
 @endsection
@@ -336,9 +337,10 @@
                 <a href="#" class="filter-option active" data-value="30days">30 ngày trước</a>
             </div>
         </div>
-        <button class="btn-export" onclick="alert('Đang tải xuống báo cáo...')">
-            <i class="fa-solid fa-download"></i>
-        </button>
+        <a class="btn-export" id="export-btn" href="{{ route('admin.reports.export', 'order-status') }}?period=30days"
+           title="Xuất báo cáo ra Excel">
+            <i class="fa-solid fa-file-excel"></i>
+        </a>
     </div>
 </div>
 
@@ -348,10 +350,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-total">
                 <i class="fa-solid fa-boxes-stacked"></i>
-            </div>
-            <div class="stat-trend trend-up" id="orders-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Tổng đơn hàng</div>
@@ -363,10 +361,6 @@
             <div class="stat-icon-wrapper icon-completed">
                 <i class="fa-solid fa-circle-check"></i>
             </div>
-            <div class="stat-trend trend-up" id="completed-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Đơn hoàn tất</div>
         <div class="stat-value" id="completed-val">0</div>
@@ -377,10 +371,6 @@
             <div class="stat-icon-wrapper icon-pending">
                 <i class="fa-solid fa-truck-ramp-box"></i>
             </div>
-            <div class="stat-trend trend-down" id="pending-trend">
-                <i class="fa-solid fa-arrow-trend-down"></i>
-                <span>-0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Đang xử lý / Đang giao</div>
         <div class="stat-value" id="pending-val">0</div>
@@ -390,10 +380,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-cancelled">
                 <i class="fa-solid fa-circle-xmark"></i>
-            </div>
-            <div class="stat-trend trend-down" id="cancelled-trend">
-                <i class="fa-solid fa-arrow-trend-down"></i>
-                <span>-0.0%</span>
             </div>
         </div>
         <div class="stat-label">Đơn đã hủy</div>
@@ -471,81 +457,8 @@
             filterMenu.style.display = 'none';
         });
 
-        // Mock data dictionary with charts coordinate values
-        const mockData = {
-            today: {
-                total: "102 đơn",
-                totalTrend: { pct: "+14,2%", up: true },
-                completed: "95 đơn",
-                completedTrend: { pct: "+16,5%", up: true },
-                pending: "5 đơn",
-                pendingTrend: { pct: "-2,1%", up: false },
-                cancelled: "2 đơn",
-                cancelledTrend: { pct: "-1,5%", up: false },
-                statuses: [
-                    { name: "Hoàn tất", count: 95, percentage: "93,1%", color: "#10b981", badge: "badge-completed", note: "Hoạt động xuất sắc", noteUp: true },
-                    { name: "Đang giao", count: 3, percentage: "2,9%", color: "#3b82f6", badge: "badge-shipping", note: "Giao nhận ổn định", noteUp: true },
-                    { name: "Chờ xử lý", count: 2, percentage: "2,0%", color: "#f59e0b", badge: "badge-pending", note: "Đang chờ giải quyết", noteUp: false },
-                    { name: "Đã hủy", count: 2, percentage: "2,0%", color: "#ef4444", badge: "badge-cancelled", note: "Tỷ lệ rất thấp (Tốt)", noteUp: true }
-                ],
-                chart: [
-                    { label: "00:00", value: 4 },
-                    { label: "04:00", value: 1 },
-                    { label: "08:00", value: 18 },
-                    { label: "12:00", value: 25 },
-                    { label: "16:00", value: 32 },
-                    { label: "20:00", value: 16 },
-                    { label: "23:00", value: 6 }
-                ]
-            },
-            "7days": {
-                total: "732 đơn",
-                totalTrend: { pct: "+9,8%", up: true },
-                completed: "680 đơn",
-                completedTrend: { pct: "+11,2%", up: true },
-                pending: "35 đơn",
-                pendingTrend: { pct: "-4,5%", up: false },
-                cancelled: "17 đơn",
-                cancelledTrend: { pct: "-0,8%", up: false },
-                statuses: [
-                    { name: "Hoàn tất", count: 680, percentage: "92,9%", color: "#10b981", badge: "badge-completed", note: "Tỷ lệ hoàn thành cao", noteUp: true },
-                    { name: "Đang giao", count: 20, percentage: "2,7%", color: "#3b82f6", badge: "badge-shipping", note: "Vận chuyển nhanh", noteUp: true },
-                    { name: "Chờ xử lý", count: 15, percentage: "2,1%", color: "#f59e0b", badge: "badge-pending", note: "Đang xử lý trong ngày", noteUp: true },
-                    { name: "Đã hủy", count: 17, percentage: "2,3%", color: "#ef4444", badge: "badge-cancelled", note: "Kiểm soát tốt", noteUp: true }
-                ],
-                chart: [
-                    { label: "26/07", value: 92 },
-                    { label: "27/07", value: 105 },
-                    { label: "28/07", value: 118 },
-                    { label: "29/07", value: 98 },
-                    { label: "30/07", value: 125 },
-                    { label: "31/07", value: 110 },
-                    { label: "01/08", value: 84 }
-                ]
-            },
-            "30days": {
-                total: "3.452 đơn",
-                totalTrend: { pct: "+8,2%", up: true },
-                completed: "3.120 đơn",
-                completedTrend: { pct: "+12,4%", up: true },
-                pending: "242 đơn",
-                pendingTrend: { pct: "-5,4%", up: false },
-                cancelled: "90 đơn",
-                cancelledTrend: { pct: "-2,1%", up: false },
-                statuses: [
-                    { name: "Hoàn tất", count: 3120, percentage: "90,4%", color: "#10b981", badge: "badge-completed", note: "Tăng trưởng rất tốt", noteUp: true },
-                    { name: "Đang giao", count: 150, percentage: "4,3%", color: "#3b82f6", badge: "badge-shipping", note: "Đúng tiến độ", noteUp: true },
-                    { name: "Chờ xử lý", count: 92, percentage: "2,7%", color: "#f59e0b", badge: "badge-pending", note: "Lượng tồn đọng thấp", noteUp: true },
-                    { name: "Đã hủy", count: 90, percentage: "2,6%", color: "#ef4444", badge: "badge-cancelled", note: "Giảm so với tháng trước", noteUp: true }
-                ],
-                chart: [
-                    { label: "Tuần 1", value: 780 },
-                    { label: "Tuần 2", value: 890 },
-                    { label: "Tuần 3", value: 950 },
-                    { label: "Tuần 4", value: 832 }
-                ]
-            }
-        };
+        // Real data from database passed from controller
+        const mockData = @json($periods);
 
         let trendChartInstance = null;
         let statusChartInstance = null;
@@ -692,12 +605,6 @@
             document.getElementById('pending-val').innerText = data.pending;
             document.getElementById('cancelled-val').innerText = data.cancelled;
 
-            // 2. Update trend elements
-            setTrend('orders-trend', data.totalTrend);
-            setTrend('completed-trend', data.completedTrend);
-            setTrend('pending-trend', data.pendingTrend);
-            setTrend('cancelled-trend', data.cancelledTrend);
-
             // 3. Render status legend list
             const legendList = document.getElementById('status-legend-list');
             legendList.innerHTML = '';
@@ -750,12 +657,20 @@
                 const val = this.getAttribute('data-value');
                 filterLabel.innerText = this.innerText.toUpperCase();
                 updatePage(val);
+                syncExportLink(val);
                 filterMenu.style.display = 'none';
             });
         });
 
         // Trigger initial page render (30 Days default)
+        // Nút xuất Excel luôn theo đúng kỳ đang xem.
+        function syncExportLink(period) {
+            const btn = document.getElementById('export-btn');
+            if (btn) btn.href = btn.href.split('?')[0] + '?period=' + period;
+        }
+
         updatePage('30days');
+        syncExportLink('30days');
     });
 </script>
 @endsection

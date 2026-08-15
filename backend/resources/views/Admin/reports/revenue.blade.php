@@ -321,9 +321,10 @@
                 <a href="#" class="filter-option active" data-value="30days">30 ngày trước</a>
             </div>
         </div>
-        <button class="btn-export" onclick="alert('Đang tải xuống báo cáo...')">
-            <i class="fa-solid fa-download"></i>
-        </button>
+        <a class="btn-export" id="export-btn" href="{{ route('admin.reports.export', 'revenue') }}?period=30days"
+           title="Xuất báo cáo ra Excel">
+            <i class="fa-solid fa-file-excel"></i>
+        </a>
     </div>
 </div>
 
@@ -333,10 +334,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-revenue">
                 <i class="fa-solid fa-wallet"></i>
-            </div>
-            <div class="stat-trend trend-up" id="revenue-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Tổng doanh thu</div>
@@ -348,10 +345,6 @@
             <div class="stat-icon-wrapper icon-orders">
                 <i class="fa-solid fa-circle-check"></i>
             </div>
-            <div class="stat-trend trend-up" id="orders-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Đơn hàng thành công</div>
         <div class="stat-value" id="orders-val">0 đơn</div>
@@ -362,10 +355,6 @@
             <div class="stat-icon-wrapper icon-aov">
                 <i class="fa-solid fa-bag-shopping"></i>
             </div>
-            <div class="stat-trend trend-up" id="aov-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Giá trị trung bình đơn</div>
         <div class="stat-value" id="aov-val">0đ</div>
@@ -375,10 +364,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-conversion">
                 <i class="fa-solid fa-percent"></i>
-            </div>
-            <div class="stat-trend trend-up" id="margin-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Tỷ lệ giảm giá TB</div>
@@ -513,22 +498,17 @@
             gradient.addColorStop(1, 'rgba(255, 120, 45, 0.005)');
 
             timeChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
                         label: 'Doanh thu thực tế',
                         data: values,
+                        backgroundColor: '#ff782d',
                         borderColor: '#ff782d',
-                        borderWidth: 3,
-                        backgroundColor: gradient,
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: '#ff782d',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
+                        borderRadius: 6,
+                        maxBarThickness: 46,
+                        borderWidth: 0,
                         pointHitRadius: 10
                     }]
                 },
@@ -650,12 +630,6 @@
             document.getElementById('aov-val').innerText = data.aov;
             document.getElementById('margin-val').innerText = data.discountRate;
 
-            // 2. Update trend indicators
-            setTrend('revenue-trend', data.trends.revenue);
-            setTrend('orders-trend', data.trends.orders);
-            setTrend('aov-trend', data.trends.aov);
-            setTrend('margin-trend', data.trends.discount);
-
             // 3. Render categories legend list
             const categoryList = document.getElementById('category-list');
             categoryList.innerHTML = '';
@@ -712,12 +686,20 @@
                 const val = this.getAttribute('data-value');
                 filterLabel.innerText = this.innerText.toUpperCase();
                 updatePage(val);
+                syncExportLink(val);
                 filterMenu.style.display = 'none';
             });
         });
 
+        // Nút xuất Excel luôn theo đúng kỳ đang xem.
+        function syncExportLink(period) {
+            const btn = document.getElementById('export-btn');
+            if (btn) btn.href = btn.href.split('?')[0] + '?period=' + period;
+        }
+
         // Trigger initial page render (30 Days default)
         updatePage('30days');
+        syncExportLink('30days');
     });
 </script>
 @endsection

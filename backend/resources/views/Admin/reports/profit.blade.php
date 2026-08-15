@@ -334,10 +334,6 @@
             <div class="stat-icon-wrapper icon-revenue">
                 <i class="fa-solid fa-wallet"></i>
             </div>
-            <div class="stat-trend trend-up" id="revenue-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Tổng doanh thu thực tế</div>
         <div class="stat-value" id="revenue-val">0đ</div>
@@ -347,10 +343,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-cost">
                 <i class="fa-solid fa-receipt"></i>
-            </div>
-            <div class="stat-trend trend-up" id="cost-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Giá vốn ước tính</div>
@@ -362,10 +354,6 @@
             <div class="stat-icon-wrapper icon-profit">
                 <i class="fa-solid fa-money-bill-trend-up"></i>
             </div>
-            <div class="stat-trend trend-up" id="profit-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Lợi nhuận gộp thực tế</div>
         <div class="stat-value" id="profit-val">0đ</div>
@@ -375,10 +363,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-margin">
                 <i class="fa-solid fa-percent"></i>
-            </div>
-            <div class="stat-trend trend-up" id="margin-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Biên lợi nhuận gộp</div>
@@ -510,35 +494,27 @@
             const profits = chartData.map(d => d.profit);
 
             comparisonChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
                         {
                             label: 'Doanh thu',
                             data: revenues,
+                            backgroundColor: '#ff782d',
                             borderColor: '#ff782d',
-                            borderWidth: 3,
-                            backgroundColor: 'transparent',
-                            tension: 0.35,
-                            pointBackgroundColor: '#ff782d',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
+                            borderRadius: 6,
+                            maxBarThickness: 46,
+                            borderWidth: 0
                         },
                         {
                             label: 'Lợi nhuận gộp',
                             data: profits,
+                            backgroundColor: '#10b981',
                             borderColor: '#10b981',
-                            borderWidth: 3,
-                            backgroundColor: 'transparent',
-                            tension: 0.35,
-                            pointBackgroundColor: '#10b981',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6
+                            borderRadius: 6,
+                            maxBarThickness: 46,
+                            borderWidth: 0
                         }
                     ]
                 },
@@ -668,12 +644,6 @@
             document.getElementById('cost-val').innerText = data.cost;
             document.getElementById('profit-val').innerText = data.profit;
             document.getElementById('margin-val').innerText = data.margin;
-
-            // 2. Update trends
-            setTrend('revenue-trend', data.trends.revenue);
-            setTrend('cost-trend', data.trends.cost);
-            setTrend('profit-trend', data.trends.profit);
-            setTrend('margin-trend', data.trends.margin);
 
             // 3. Render category profit legend list
             const categoryList = document.getElementById('category-list');

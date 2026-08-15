@@ -107,6 +107,20 @@
     .btn-action-stock:hover {
         background-color: var(--primary-hover);
     }
+
+    @media (min-width: 1201px) {
+        .stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    .orders-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .orders-table tbody tr:hover {
+        background-color: rgba(255, 120, 45, 0.04);
+    }
 </style>
 @endsection
 
@@ -139,13 +153,9 @@
             <div class="stat-icon-wrapper icon-revenue">
                 <i class="fa-solid fa-wallet"></i>
             </div>
-            <div class="stat-trend trend-up">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+{{ number_format(abs($revenueGrowth), 1) }}%</span>
-            </div>
         </div>
         <div class="stat-label">Tổng doanh thu</div>
-        <div class="stat-value">{{ number_format($totalRevenueAllTime > 0 ? $totalRevenueAllTime : 1284000000, 0, ',', '.') }}đ</div>
+        <div class="stat-value">{{ number_format($totalRevenueAllTime, 0, ',', '.') }}đ</div>
     </div>
 
     <!-- Stat 2: Orders -->
@@ -154,13 +164,9 @@
             <div class="stat-icon-wrapper icon-orders">
                 <i class="fa-solid fa-truck"></i>
             </div>
-            <div class="stat-trend trend-up">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+{{ number_format(abs($ordersGrowth), 1) }}%</span>
-            </div>
         </div>
         <div class="stat-label">Tổng đơn hàng</div>
-        <div class="stat-value">{{ number_format($totalOrders > 0 ? $totalOrders : 3452, 0, ',', '.') }}</div>
+        <div class="stat-value">{{ number_format($totalOrders, 0, ',', '.') }}</div>
     </div>
 
     <!-- Stat 3: AOV -->
@@ -169,28 +175,9 @@
             <div class="stat-icon-wrapper icon-aov">
                 <i class="fa-solid fa-bag-shopping"></i>
             </div>
-            <div class="stat-trend trend-up">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+{{ number_format(abs($aovGrowth ?? 3.2), 1) }}%</span>
-            </div>
         </div>
         <div class="stat-label">Giá trị đơn hàng TB</div>
         <div class="stat-value">{{ number_format($avgOrderValue, 0, ',', '.') }}đ</div>
-    </div>
-
-    <!-- Stat 4: Conversion Rate -->
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-icon-wrapper icon-conversion">
-                <i class="fa-solid fa-rotate"></i>
-            </div>
-            <div class="stat-trend trend-up">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+4.2%</span>
-            </div>
-        </div>
-        <div class="stat-label">Tỷ lệ quay lại</div>
-        <div class="stat-value">{{ $returnRate ?? '68.2%' }}</div>
     </div>
 </div>
 
@@ -371,20 +358,34 @@
     <!-- Customer Metrics Card -->
     <div class="dashboard-card" style="margin-top: 0; width: 100%;">
         <div class="card-header-styled">
-            <span class="card-title-styled">Thống kê Khách hàng</span>
-            <a href="{{ route('admin.reports.customers') }}" class="support-link" style="font-size: 0.8rem; font-weight: 600;">CHI TIẾT</a>
+            <span class="card-title-styled">
+                <i class="fa-solid fa-users-gear" style="color: var(--primary); margin-right: 6px;"></i>
+                Thống kê Khách hàng
+            </span>
+            <a href="{{ route('admin.reports.customers') }}" class="support-link" style="font-size: 0.8rem; font-weight: 600;">CHI TIẾT <i class="fa-solid fa-angle-right" style="font-size: 0.75rem;"></i></a>
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
-            <div style="background-color: var(--primary-light); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
-                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">TỔNG KHÁCH HÀNG</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-top: 4px;">{{ number_format($totalUsersCount > 0 ? $totalUsersCount : 1350) }}</div>
-                <div style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 2px;"><i class="fa-solid fa-arrow-trend-up"></i> +6.2%</div>
+            <!-- Card 1: Tổng khách hàng -->
+            <div style="background-color: var(--primary-light); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color); position: relative;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Tổng khách hàng</div>
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255, 120, 45, 0.15); display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                        <i class="fa-solid fa-users" style="font-size: 0.95rem;"></i>
+                    </div>
+                </div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-top: 4px;">{{ number_format($totalUsersCount) }}</div>
             </div>
-            <div style="background-color: var(--info-light); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
-                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">KHÁCH HÀNG MỚI</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--info); margin-top: 4px;">{{ number_format($newUsersThisMonth > 0 ? $newUsersThisMonth : 120) }}</div>
-                <div style="font-size: 0.75rem; color: var(--success); font-weight: 600; margin-top: 2px;"><i class="fa-solid fa-arrow-trend-up"></i> +15.4%</div>
+
+            <!-- Card 2: Khách hàng mới -->
+            <div style="background-color: var(--info-light); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color); position: relative;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Khách hàng mới</div>
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; color: var(--info);">
+                        <i class="fa-solid fa-user-plus" style="font-size: 0.95rem;"></i>
+                    </div>
+                </div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: var(--info); margin-top: 4px;">{{ number_format($newUsersThisMonth) }}</div>
             </div>
         </div>
 
@@ -392,28 +393,60 @@
             <table class="orders-table">
                 <thead>
                     <tr>
-                        <th>TÊN KHÁCH HÀNG</th>
-                        <th>ĐƠN MUA</th>
-                        <th style="text-align: right;">CHI TIÊU</th>
+                        <th style="width: 50%;">TÊN KHÁCH HÀNG</th>
+                        <th style="width: 25%; text-align: center;">ĐƠN MUA</th>
+                        <th style="width: 25%; text-align: right;">CHI TIÊU</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($topCustomers as $customer)
+                    @php
+                        $avatarColors = [
+                            ['bg' => '#fef3c7', 'color' => '#d97706', 'border' => '#fcd34d'],
+                            ['bg' => '#e0f2fe', 'color' => '#0284c7', 'border' => '#bae6fd'],
+                            ['bg' => '#f3e8ff', 'color' => '#7c3aed', 'border' => '#ddd6fe'],
+                            ['bg' => '#d1fae5', 'color' => '#059669', 'border' => '#a7f3d0'],
+                            ['bg' => '#ffe4e6', 'color' => '#e11d48', 'border' => '#fecdd3'],
+                        ];
+                    @endphp
+                    @forelse($topCustomers as $index => $customer)
+                        @php
+                            $styleScheme = $avatarColors[$index % count($avatarColors)];
+                            $initial = mb_strtoupper(mb_substr($customer->recipient_name ?? 'K', 0, 1));
+                        @endphp
                         <tr>
                             <td>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="width: 26px; height: 26px; border-radius: 50%; background-color: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem;">
-                                        {{ mb_substr($customer->recipient_name, 0, 1) }}
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 0.75rem; font-weight: 800; width: 18px; text-align: center; color: {{ $index === 0 ? '#d97706' : ($index === 1 ? '#0284c7' : ($index === 2 ? '#7c3aed' : 'var(--text-muted)')) }};">
+                                        #{{ $index + 1 }}
+                                    </span>
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background-color: {{ $styleScheme['bg'] }}; color: {{ $styleScheme['color'] }}; border: 1px solid {{ $styleScheme['border'] }}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">
+                                        {{ $initial }}
                                     </div>
-                                    <strong style="color: var(--text-main); font-size: 0.85rem;">{{ $customer->recipient_name }}</strong>
+                                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 6px;">
+                                        <strong style="color: var(--text-main); font-size: 0.85rem;">{{ $customer->recipient_name }}</strong>
+                                        @if($customer->total_spent >= 1000000)
+                                            <span style="font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: #fef3c7; color: #b45309; font-weight: 700; border: 1px solid #fcd34d;">VIP</span>
+                                        @elseif($customer->total_orders >= 2)
+                                            <span style="font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: #e0f2fe; color: #0369a1; font-weight: 600; border: 1px solid #bae6fd;">Khách quen</span>
+                                        @else
+                                            <span style="font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: #f3f4f6; color: #4b5563; font-weight: 500; border: 1px solid #e5e7eb;">Mới</span>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
-                            <td style="font-size: 0.85rem;">{{ $customer->total_orders }} đơn</td>
-                            <td style="font-weight: 700; color: var(--success); font-size: 0.85rem; text-align: right;">{{ number_format($customer->total_spent, 0, ',', '.') }}đ</td>
+                            <td style="font-size: 0.85rem; text-align: center; font-weight: 600; color: var(--text-main);">
+                                {{ $customer->total_orders }} đơn
+                            </td>
+                            <td style="font-weight: 700; color: var(--success); font-size: 0.85rem; text-align: right;">
+                                {{ number_format($customer->total_spent, 0, ',', '.') }}đ
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 16px;">Đang cập nhật danh sách...</td>
+                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                                <i class="fa-solid fa-users-slash" style="font-size: 1.5rem; color: var(--border-color); display: block; margin-bottom: 8px;"></i>
+                                Chưa có dữ liệu khách hàng chi tiêu trong kỳ này
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -425,7 +458,7 @@
     <div class="dashboard-card" style="margin-top: 0; width: 100%;">
         <div class="card-header-styled">
             <span class="card-title-styled">Sản phẩm sắp hết hàng</span>
-            <a href="{{ route('admin.reports.low-stock') }}" class="support-link" style="font-size: 0.8rem; font-weight: 600;">XEM BÁO CÁO KHO</a>
+            <a href="{{ route('admin.products') }}" class="support-link" style="font-size: 0.8rem; font-weight: 600;">QUẢN LÝ SẢN PHẨM</a>
         </div>
         
         <div class="table-container">
@@ -463,20 +496,9 @@
                             </td>
                         </tr>
                     @empty
-                        @php
-                            $firstProductId = \App\Models\Product::first()?->id ?? 1;
-                        @endphp
                         <tr>
-                            <td>
-                                <div>
-                                    <strong>Pate Royal Canin Mini Puppy</strong>
-                                    <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Lon 195g</span>
-                                </div>
-                            </td>
-                            <td style="font-weight: 700; color: var(--danger);">0 SP</td>
-                            <td><span class="badge-status status-cancelled">HẾT HÀNG</span></td>
-                            <td style="text-align: right; white-space: nowrap;">
-                                <a href="{{ route('admin.products.edit', $firstProductId) }}" class="btn-action-stock" style="text-decoration: none; display: inline-block;">Nhập hàng</a>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 0.85rem;">
+                                Không có sản phẩm nào sắp hết kho.
                             </td>
                         </tr>
                     @endforelse

@@ -10,7 +10,7 @@
 }
 
 .about-serif-title {
-  font-family: var(--font-playfair), Georgia, serif;
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
   font-weight: 700;
   font-size: 2.2rem;
   color: #1e1e24;
@@ -41,9 +41,9 @@
 }
 
 .about-main-title {
-  font-family: var(--font-playfair), Georgia, serif;
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
   font-size: 3rem;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.25;
   color: #1e1e24;
   margin-bottom: 20px;
@@ -51,8 +51,8 @@
 
 .about-main-title span {
   color: #ff782d;
-  font-style: italic;
-  font-weight: 400;
+  font-style: normal;
+  font-weight: 800;
 }
 
 .about-intro-text {
@@ -101,11 +101,11 @@
 }
 
 .founder-signature-img {
-  font-family: var(--font-caveat), cursive;
-  font-size: 2.5rem;
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
   color: #ff782d;
   user-select: none;
-  transform: rotate(-3deg);
 }
 
 .founder-photo-box {
@@ -131,14 +131,24 @@
 .vision-mission-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 50px;
+  gap: 40px;
+}
+
+.vision-mission-col {
+  background-color: #ffffff;
+  padding: 40px;
+  border-radius: 16px;
+  border: 1px solid #ebdcd0;
+  box-shadow: 0 10px 30px rgba(235, 220, 208, 0.25);
+  display: flex;
+  flex-direction: column;
 }
 
 .vision-mission-col h3 {
-  font-family: var(--font-playfair), Georgia, serif;
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
   font-size: 1.8rem;
   color: #1e1e24;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .vision-mission-col ul {
@@ -167,18 +177,32 @@
 .values-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
+  gap: 30px;
+  align-items: stretch;
 }
 
 .value-col {
+  background-color: #ffffff;
+  padding: 30px 24px;
+  border-radius: 16px;
+  border: 1px solid #ebdcd0;
+  box-shadow: 0 10px 30px rgba(235, 220, 208, 0.25);
+  display: flex;
+  flex-direction: column;
   text-align: left;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.value-col:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(235, 220, 208, 0.45);
 }
 
 .value-num {
   font-size: 1.5rem;
   font-weight: 700;
   color: #ff782d;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   display: block;
 }
 
@@ -186,30 +210,56 @@
   font-size: 1.15rem;
   font-weight: 800;
   color: #1e1e24;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
 }
 
 .value-desc {
-  font-size: 0.98rem;
+  font-size: 0.94rem;
   color: #5b5550;
   line-height: 1.6;
+  margin-top: 8px;
 }
 
 /* 5. Minimalist Team Grid (Circular Avatars, Clean Text) */
 .team-list-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 40px;
+  gap: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
   text-align: center;
+  align-items: stretch;
+}
+
+.team-list-grid > div {
+  background-color: #ffffff;
+  padding: 30px 20px;
+  border-radius: 16px;
+  border: 1px solid #ebdcd0;
+  box-shadow: 0 10px 30px rgba(235, 220, 208, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.team-list-grid > div:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(235, 220, 208, 0.45);
 }
 
 .team-avatar-box {
-  width: 140px;
-  height: 140px;
-  margin: 0 auto 20px auto;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px auto;
   border-radius: 50%;
   overflow: hidden;
   background-color: #ffebe0;
+  border: 3px solid #ff782d;
 }
 
 .team-avatar-img {
@@ -222,7 +272,7 @@
   font-size: 1.2rem;
   font-weight: 800;
   color: #1e1e24;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .team-role {
@@ -231,13 +281,18 @@
   color: #ff782d;
   font-weight: 700;
   letter-spacing: 1px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .team-desc {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   color: #5b5550;
   line-height: 1.6;
+  margin-top: 8px;
 }
 
 .team-pet-footnote {
@@ -295,8 +350,9 @@
 }
 
 .cta-title-minimal {
-  font-family: var(--font-playfair), Georgia, serif;
+  font-family: var(--font-inter), "Inter", system-ui, sans-serif;
   font-size: 2rem;
+  font-weight: 800;
   color: #1e1e24;
   margin-bottom: 12px;
 }
@@ -325,6 +381,66 @@
   background-color: #e9661c;
 }
 
+/* 6. Tech Stack Section */
+.tech-stack-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  align-items: stretch;
+}
+
+.tech-stack-card {
+  background-color: #ffffff;
+  padding: 24px 12px;
+  border-radius: 16px;
+  border: 1px solid #ebdcd0;
+  box-shadow: 0 10px 30px rgba(235, 220, 208, 0.25);
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tech-stack-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(235, 220, 208, 0.4);
+}
+
+.tech-stack-card h4 {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1e1e24;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #ff782d;
+  padding-bottom: 8px;
+  white-space: nowrap;
+}
+
+.tech-stack-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tech-stack-card li {
+  font-size: 0.88rem;
+  color: #5b5550;
+  line-height: 1.6;
+  margin-bottom: 10px;
+  position: relative;
+  padding-left: 12px;
+}
+
+.tech-stack-card li::before {
+  content: "›";
+  position: absolute;
+  left: 0;
+  color: #ff782d;
+  font-weight: bold;
+}
+
 /* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
@@ -336,10 +452,13 @@
   .values-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .tech-stack-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
-  .founder-story-grid, .vision-mission-grid, .values-grid, .team-list-grid {
+  .founder-story-grid, .vision-mission-grid, .values-grid, .team-list-grid, .tech-stack-grid {
     grid-template-columns: 1fr;
     gap: 40px;
   }

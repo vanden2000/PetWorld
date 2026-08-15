@@ -7,6 +7,9 @@ use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CheckoutOptionController;
 use App\Http\Controllers\Api\GhtkQuoteController;
+use App\Http\Controllers\Api\GhnLocationController;
+use App\Http\Controllers\Api\GhnWebhookController;
+use App\Http\Controllers\Api\ShippingQuoteController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PetSpeciesController;
@@ -54,6 +57,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Sổ địa chỉ giao hàng
     Route::apiResource('addresses', AddressController::class)->except(['show']);
+    Route::get('/shipping/ghn/provinces', [GhnLocationController::class, 'provinces']);
+    Route::get('/shipping/ghn/districts', [GhnLocationController::class, 'districts']);
+    Route::get('/shipping/ghn/wards', [GhnLocationController::class, 'wards']);
+    Route::post('/shipping/quote', ShippingQuoteController::class)->middleware('throttle:20,1');
     Route::post('/shipping/ghtk/quote', GhtkQuoteController::class)->middleware('throttle:20,1');
 
     // Đơn hàng
@@ -62,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}', [OrderController::class, 'show']);
     Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     Route::post('/orders/{order}/renew-payment', [OrderController::class, 'renewPayment']);
+    Route::get('/orders/{order}/payment-status', [OrderController::class, 'paymentStatus']);
     Route::post('/orders/{order}/check-sepay-payment', [OrderController::class, 'checkSepayPayment']);
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::get('/wishlist', [WishlistController::class, 'index']);
@@ -80,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/home', HomeController::class);
 Route::get('/checkout-options', CheckoutOptionController::class);
 Route::post('/webhooks/sepay', SepayWebhookController::class);
+Route::post('/webhooks/ghn', GhnWebhookController::class);
 Route::get('/blogs', [BlogController::class, 'index']);
 Route::get('/blogs/sitemap', [BlogController::class, 'sitemap']);
 Route::get('/blogs/{slug}', [BlogController::class, 'show']);

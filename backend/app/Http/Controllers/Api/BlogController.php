@@ -86,6 +86,7 @@ class BlogController extends Controller
         $comments = $blog->comments()
             ->visible()
             ->with('user')
+            ->where('status', 'approved')
             ->latest()
             ->get()
             ->map(fn (BlogComment $comment): array => [
@@ -260,22 +261,15 @@ class BlogController extends Controller
         $comment = $blog->comments()->create([
             'user_id' => $request->user()->id,
             'content' => $request->input('content'),
+            'status' => 'pending',
         ]);
-
-        $comment->load('user');
 
         return response()->json([
             'data' => [
                 'id' => $comment->id,
-                'content' => $comment->content,
-                'created_at' => $comment->created_at?->toDateTimeString(),
-                'user' => [
-                    'id' => $comment->user->id,
-                    'name' => $comment->user->name,
-                    'avatar' => $comment->user->avatar,
-                ]
+                'status' => $comment->status,
             ],
-            'message' => 'Gửi bình luận thành công!'
+            'message' => 'Bình luận đã được gửi và đang chờ duyệt.'
         ], 201);
     }
 }

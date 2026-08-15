@@ -59,14 +59,15 @@ class AddressController extends Controller
             'recipient_phone' => ['required', 'string', 'max:20', 'regex:/^(0|\+84)(3|5|7|8|9)[0-9]{8}$/'],
             'address_line' => ['required', 'string', 'max:255'],
             'ward' => ['required', 'string', 'max:100'],
+            'district' => ['required', 'string', 'max:100'],
             'province' => ['required', 'string', 'max:100'],
+            'ghn_district_id' => ['required', 'integer', 'min:1'],
+            'ghn_ward_code' => ['required', 'string', 'max:20'],
             'is_default' => ['sometimes', 'boolean'],
         ]);
 
         // Địa chỉ 2 cấp (Tỉnh/Thành + Phường/Xã): không dùng cấp quận/huyện,
         // nhưng cột district NOT NULL nên luôn lưu chuỗi rỗng.
-        $data['district'] = '';
-
         return $data;
     }
 

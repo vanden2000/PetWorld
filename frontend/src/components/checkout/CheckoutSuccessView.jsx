@@ -21,6 +21,8 @@ const normalizeOrder = (order) => {
       recipientAddress: order.recipient.address,
       shippingMethod: order.shipping?.method || "Giao hàng tiêu chuẩn",
       shippingFee: order.shipping?.fee ?? 0,
+      shippingDiscount: order.shipping?.discount ?? 0,
+      shippingPromotion: order.shipping?.promotion?.name || order.shipping?.promotion?.code || null,
       paymentMethod: order.payment?.method || "Chuyển khoản ngân hàng",
       subtotal: order.payment?.subtotal ?? 0,
       discountAmount: order.payment?.discount ?? 0,
@@ -52,6 +54,8 @@ const normalizeOrder = (order) => {
     recipientAddress: order.recipient_address,
     shippingMethod: order.shipping_method_name || "Giao hàng tiêu chuẩn",
     shippingFee: Number(order.shipping_fee ?? 0),
+    shippingDiscount: Number(order.shipping_discount ?? 0),
+    shippingPromotion: null,
     discountAmount: Number(order.discount_amount ?? 0),
     totalAmount: Number(order.total_amount ?? 0),
     subtotal: subtotal,
@@ -245,6 +249,12 @@ export default function CheckoutSuccessView({ order }) {
                 <span>Phí vận chuyển</span>
                 <span>{formatPrice(normalized.shippingFee)}</span>
               </div>
+              {normalized.shippingDiscount > 0 && (
+                <div className="pricing-row discount">
+                  <span>Ưu đãi vận chuyển{normalized.shippingPromotion ? ` (${normalized.shippingPromotion})` : ""}</span>
+                  <span>-{formatPrice(normalized.shippingDiscount)}</span>
+                </div>
+              )}
               {normalized.discountAmount > 0 && (
                 <div className="pricing-row discount">
                   <span>Giảm giá voucher</span>

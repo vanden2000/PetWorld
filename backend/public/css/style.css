@@ -645,7 +645,7 @@
 
     .header-title-block p {
         font-size: 0.95rem;
-        color: var(--primary);
+        color: var(--text-muted);
         margin-top: 4px;
     }
 
@@ -1422,7 +1422,7 @@
         padding: 20px 24px;
         margin-bottom: 24px;
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr auto;
+        grid-template-columns: 1fr 1fr 1fr 1fr auto;
         gap: 20px;
         align-items: flex-end;
         box-shadow: var(--shadow-subtle);
@@ -1806,6 +1806,7 @@
         transition: var(--transition);
         letter-spacing: 0.05em;
         text-transform: uppercase;
+        text-decoration: none;
     }
 
     .btn-outline-print:hover {

@@ -315,13 +315,13 @@ export default function Header() {
                           onClick={() => handleMarkAsRead(noti.id, noti.action_url)}
                         >
                           <div className={`noti-icon-box ${noti.icon || "info"}`}>
-                            {noti.icon === "gift" && "🎁"}
+                            {/* {noti.icon === "gift" && "🎁"}
                             {noti.icon === "truck" && "🚚"}
                             {noti.icon === "check-circle" && "✅"}
                             {noti.icon === "x-circle" && "❌"}
                             {noti.icon === "clock" && "🕒"}
-                            {noti.icon === "smile" && "😊"}
-                            {(!noti.icon || noti.icon === "info") && "ℹ️"}
+                            {noti.icon === "smile" && "😊"} */}
+                            {(!noti.icon || noti.icon === "info") && "ℹ️"} 
                           </div>
                           <div className="noti-content">
                             <div className="noti-title">{noti.title}</div>

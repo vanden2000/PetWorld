@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Blog;
 use App\Models\BlogComment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,41 +12,76 @@ class BlogCommentController extends Controller
 {
     public function index(Request $request)
     {
-        $filters = $request->validate([
-            'search' => ['nullable', 'string', 'max:100'],
-            'blog_id' => ['nullable', 'integer', 'exists:blogs,id'],
-            'status' => ['nullable', Rule::in(['visible', 'hidden'])],
-        ]);
+        $search = $request->input('search');
+        $blogId = $request->input('blog_id');
+        $status = $request->input('status', 'pending');
+        $allowedStatuses = ['all', 'pending', 'approved', 'hidden', 'deleted'];
+
+        $status = in_array($status, $allowedStatuses, true) ? $status : 'pending';
 
         $comments = BlogComment::query()
             ->with(['user:id,name,email', 'blog:id,title,slug'])
-            ->when($filters['search'] ?? null, fn ($query, string $search) => $query->where(function ($nested) use ($search) {
-                $nested->where('content', 'like', "%{$search}%")
-                    ->orWhereHas('user', fn ($user) => $user->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"))
-                    ->orWhereHas('blog', fn ($blog) => $blog->where('title', 'like', "%{$search}%"));
-            }))
-            ->when($filters['blog_id'] ?? null, fn ($query, int $blogId) => $query->where('blog_id', $blogId))
-            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('is_hidden', $status === 'hidden'))
+            ->when($search, function ($query, string $search) {
+                $query->where(function ($nested) use ($search) {
+                    $nested->where('content', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn ($user) => $user->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"))
+                        ->orWhereHas('blog', fn ($blog) => $blog->where('title', 'like', "%{$search}%"));
+                });
+            })
+            ->when($blogId, function ($query) use ($blogId) {
+                $query->where('blog_id', $blogId);
+            })
+            ->when($status === 'deleted', fn ($query) => $query->onlyTrashed())
+            ->when(in_array($status, ['pending', 'approved', 'hidden'], true), fn ($query) => $query->where('status', $status))
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
-        $blogOptions = Blog::query()->orderBy('title')->pluck('title', 'id');
-        $selectedBlog = ($filters['blog_id'] ?? null) ? $blogOptions->get($filters['blog_id']) : null;
+        $selectedBlog = $blogId ? \App\Models\Blog::find($blogId) : null;
+        $commentCounts = BlogComment::query()
+            ->when($blogId, fn ($query) => $query->where('blog_id', $blogId))
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
 
-        return view('admin.BlogComments.index', compact('comments', 'filters', 'blogOptions', 'selectedBlog'));
+        $deletedCount = BlogComment::onlyTrashed()
+            ->when($blogId, fn ($query) => $query->where('blog_id', $blogId))
+            ->count();
+        $commentCounts->put('deleted', $deletedCount);
+
+        return view('admin.BlogComments.index', compact('comments', 'search', 'blogId', 'status', 'selectedBlog', 'commentCounts'));
     }
 
-    public function updateVisibility(Request $request, BlogComment $comment): RedirectResponse
+    public function updateStatus(Request $request, BlogComment $comment): RedirectResponse
     {
         $data = $request->validate([
-            'is_hidden' => ['required', 'boolean'],
+            'status' => ['required', Rule::in(['approved', 'hidden'])],
         ]);
 
-        $comment->update(['is_hidden' => $data['is_hidden']]);
+        $comment->update(['status' => $data['status']]);
 
-        return back()->with('success', $data['is_hidden']
-            ? 'Đã ẩn bình luận khỏi bài viết.'
-            : 'Đã hiển thị lại bình luận trên bài viết.');
+        return back()->with('success', 'Đã cập nhật trạng thái bình luận.');
+    }
+
+    public function destroy(BlogComment $comment): RedirectResponse
+    {
+        $comment->delete();
+        return back()->with('success', 'Đã chuyển bình luận vào mục đã xóa.');
+    }
+
+    public function restore(int $comment): RedirectResponse
+    {
+        $deletedComment = BlogComment::onlyTrashed()->findOrFail($comment);
+        $deletedComment->restore();
+
+        return back()->with('success', 'Đã khôi phục bình luận.');
+    }
+
+    public function forceDestroy(int $comment): RedirectResponse
+    {
+        $deletedComment = BlogComment::onlyTrashed()->findOrFail($comment);
+        $deletedComment->forceDelete();
+
+        return back()->with('success', 'Đã xóa vĩnh viễn bình luận.');
     }
 }

@@ -45,14 +45,9 @@
     /* Stats Cards Premium Style */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 20px;
         margin-bottom: 24px;
-    }
-    @media (max-width: 1024px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
     }
     @media (max-width: 560px) {
         .stats-grid {
@@ -149,26 +144,13 @@
         line-height: 1.2;
     }
 
-    /* Grid layout for charts */
-    .grid-order-split {
-        display: grid;
-        grid-template-columns: 1.8fr 1.2fr;
-        gap: 24px;
-        margin-top: 24px;
-    }
-    @media (max-width: 1100px) {
-        .grid-order-split {
-            grid-template-columns: 1fr;
-        }
-    }
-
     .dashboard-card {
         background: #ffffff;
         border: 1px solid var(--border-color);
         border-radius: 16px;
         box-shadow: var(--shadow-subtle);
         padding: 24px;
-        margin-top: 0;
+        margin-top: 24px;
     }
     .card-header-styled {
         display: flex;
@@ -188,68 +170,6 @@
         position: relative;
         height: 280px;
         width: 100%;
-    }
-
-    .chart-container-category {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-    }
-    .category-canvas-wrapper {
-        position: relative;
-        height: 180px;
-        width: 180px;
-    }
-
-    /* Status indicators list */
-    .status-legend-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-    }
-    .legend-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 8px;
-        border-bottom: 1px dashed var(--border-color);
-    }
-    .legend-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-    .legend-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .legend-color {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        display: inline-block;
-        flex-shrink: 0;
-    }
-    .legend-name {
-        font-weight: 600;
-        font-size: 0.86rem;
-        color: var(--text-main);
-    }
-    .legend-percentage {
-        font-size: 0.72rem;
-        color: var(--text-muted);
-        background: #f1f5f9;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-weight: 700;
-    }
-    .legend-value {
-        font-weight: 700;
-        font-size: 0.88rem;
-        color: var(--text-main);
-        white-space: nowrap;
     }
 
     /* Detailed Table */
@@ -298,29 +218,97 @@
         background: #fff8f3;
     }
 
-    .badge-member {
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.75rem;
+    .rank-position {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #f3f4f6;
+        color: #4b5563;
+        font-size: 0.78rem;
         font-weight: 700;
-        text-transform: uppercase;
-        display: inline-block;
+    }
+    .rank-position.is-top {
+        background: #fff4ec;
+        color: var(--primary);
+        border: 1px solid rgba(255, 120, 45, 0.25);
+    }
+
+    /* Tỷ trọng chi tiêu: thanh bar so với khách đứng đầu + số % trên tổng kỳ */
+    .share-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .share-track {
+        flex: 1;
+        height: 6px;
+        min-width: 48px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        overflow: hidden;
+    }
+    .share-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: var(--primary);
+    }
+    .share-text {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        min-width: 42px;
+        text-align: right;
         white-space: nowrap;
     }
-    .member-vip {
-        background-color: #fef3c7;
-        color: #d97706;
-        border: 1px solid #fcd34d;
+
+    /* Pagination Styles */
+    .pagination-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
+        gap: 12px;
     }
-    .member-gold {
-        background-color: #fffbeb;
-        color: #b45309;
-        border: 1px solid #fef3c7;
+    .pagination-buttons {
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
-    .member-silver {
-        background-color: #f3f4f6;
-        color: #4b5563;
-        border: 1px solid #e5e7eb;
+    .pagination-buttons .page-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 34px;
+        padding: 0 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: #ffffff;
+        color: var(--text-main);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .pagination-buttons .page-btn:hover:not(:disabled) {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: #fff4ec;
+    }
+    .pagination-buttons .page-btn.active {
+        background: var(--primary);
+        color: #ffffff;
+        border-color: var(--primary);
+    }
+    .pagination-buttons .page-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
     }
 </style>
 @endsection
@@ -330,7 +318,7 @@
 <div class="dashboard-header" style="margin-bottom: 24px;">
     <div class="header-title-block">
         <h1 style="font-size: 1.8rem; font-weight: 800;">Thống kê <span style="color: var(--primary);">Khách hàng</span></h1>
-        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Xem thông tin tăng trưởng số lượng tài khoản, tỷ lệ giữ chân khách hàng và danh sách khách hàng VIP.</p>
+        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Xem thông tin tăng trưởng số lượng tài khoản và danh sách thống kê khách hàng.</p>
     </div>
     
     <div class="header-actions">
@@ -346,9 +334,10 @@
                 <a href="#" class="filter-option active" data-value="30days">30 ngày trước</a>
             </div>
         </div>
-        <button class="btn-export" onclick="alert('Đang tải xuống báo cáo...')">
-            <i class="fa-solid fa-download"></i>
-        </button>
+        <a class="btn-export" id="export-btn" href="{{ route('admin.reports.export', 'customers') }}?period=30days"
+           title="Xuất báo cáo ra Excel">
+            <i class="fa-solid fa-file-excel"></i>
+        </a>
     </div>
 </div>
 
@@ -358,10 +347,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-total">
                 <i class="fa-solid fa-users"></i>
-            </div>
-            <div class="stat-trend trend-up" id="customers-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Tổng khách hàng đăng ký</div>
@@ -373,91 +358,53 @@
             <div class="stat-icon-wrapper icon-new">
                 <i class="fa-solid fa-user-plus"></i>
             </div>
-            <div class="stat-trend trend-up" id="new-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
         </div>
         <div class="stat-label">Khách hàng mới</div>
         <div class="stat-value" id="new-val">0</div>
     </div>
+</div>
 
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-icon-wrapper icon-returning">
-                <i class="fa-solid fa-user-check"></i>
-            </div>
-            <div class="stat-trend trend-up" id="returning-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
-        </div>
-        <div class="stat-label">Tỷ lệ khách hàng quay lại</div>
-        <div class="stat-value" id="returning-val">0%</div>
+<!-- Customer Registration Trend Chart -->
+<div class="dashboard-card">
+    <div class="card-header-styled">
+        <span class="card-title-styled">Biểu đồ tăng trưởng khách hàng</span>
     </div>
-
-    <div class="stat-card">
-        <div class="stat-header">
-            <div class="stat-icon-wrapper icon-spent">
-                <i class="fa-solid fa-money-bill-wave"></i>
-            </div>
-            <div class="stat-trend trend-up" id="spent-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
-            </div>
-        </div>
-        <div class="stat-label">Chi tiêu trung bình/khách</div>
-        <div class="stat-value" id="spent-val">0đ</div>
+    <div class="chart-container-time">
+        <canvas id="customer-trend-chart"></canvas>
     </div>
 </div>
 
-<div class="grid-order-split">
-    <!-- Customer Registration Trend Area Chart -->
-    <div class="dashboard-card">
-        <div class="card-header-styled">
-            <span class="card-title-styled">Biểu đồ tăng trưởng khách hàng</span>
-        </div>
-        <div class="chart-container-time">
-            <canvas id="customer-trend-chart"></canvas>
-        </div>
-    </div>
-
-    <!-- Doughnut Chart showing Member Rank Distribution -->
-    <div class="dashboard-card">
-        <div class="card-header-styled">
-            <span class="card-title-styled">Cơ cấu hạng thành viên</span>
-        </div>
-        <div class="chart-container-category">
-            <div class="category-canvas-wrapper">
-                <canvas id="member-rank-chart"></canvas>
-            </div>
-            <div class="status-legend-list" id="status-legend-list">
-                <!-- Dynamically loaded legend -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Detailed VIP Spending Table (Fills space cleanly) -->
+<!-- Thống kê khách hàng -->
 <div class="detail-table-card">
     <div class="card-header-styled">
-        <span class="card-title-styled"><i class="fa-solid fa-crown" style="color: var(--primary); margin-right: 6px;"></i> Danh sách khách hàng VIP chi tiêu nhiều nhất</span>
+        <span class="card-title-styled"><i class="fa-solid fa-users" style="color: var(--primary); margin-right: 6px;"></i> Thống kê khách hàng</span>
+        <span id="customer-total-count" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;"></span>
     </div>
     <div class="pl-table-scroll">
         <table class="orders-table">
             <thead>
                 <tr>
-                    <th style="width: 30%;">KHÁCH HÀNG</th>
-                    <th style="width: 25%;">EMAIL</th>
+                    <th style="width: 8%;">#</th>
+                    <th style="width: 32%;">KHÁCH HÀNG</th>
+                    <th style="width: 30%;">EMAIL</th>
                     <th style="width: 15%;">SỐ ĐƠN MUA</th>
                     <th style="width: 15%;">TỔNG CHI TIÊU</th>
-                    <th style="width: 15%;">HẠNG THÀNH VIÊN</th>
                 </tr>
             </thead>
             <tbody id="customers-table-body">
                 <!-- Loaded dynamically via JS -->
             </tbody>
         </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    <div class="pagination-footer">
+        <div id="pagination-info" style="font-size: 0.88rem; color: var(--text-muted); font-weight: 500;">
+            Hiển thị 0 trên 0 khách hàng
+        </div>
+        <div id="pagination-controls" class="pagination-buttons">
+            <!-- Rendered dynamically -->
+        </div>
     </div>
 </div>
 @endsection
@@ -482,99 +429,10 @@
             filterMenu.style.display = 'none';
         });
 
-        // Mock data dictionary with chart coordinates
-        const mockData = {
-            today: {
-                total: "1.250",
-                totalTrend: { pct: "+0,2%", up: true },
-                new: "5 thành viên",
-                newTrend: { pct: "+2,4%", up: true },
-                returning: "64,2%",
-                returningTrend: { pct: "+0,5%", up: true },
-                spent: "982.000đ",
-                spentTrend: { pct: "+0,1%", up: true },
-                customers: [
-                    { name: "Nguyễn Văn A", email: "vana@gmail.com", count: 2, totalSpent: "2.500.000đ", rank: "Gold", rankClass: "member-gold" },
-                    { name: "Trần Thị B", email: "thib@gmail.com", count: 1, totalSpent: "1.200.000đ", rank: "Silver", rankClass: "member-silver" },
-                    { name: "Lê Văn C", email: "vanc@gmail.com", count: 1, totalSpent: "850.000đ", rank: "Silver", rankClass: "member-silver" }
-                ],
-                ranks: [
-                    { name: "VIP", count: 0, percentage: "0%", color: "#ff782d" },
-                    { name: "GOLD", count: 1, percentage: "33,3%", color: "#f59e0b" },
-                    { name: "SILVER", count: 2, percentage: "66,7%", color: "#94a3b8" }
-                ],
-                chart: [
-                    { label: "00:00", value: 0 },
-                    { label: "04:00", value: 0 },
-                    { label: "08:00", value: 2 },
-                    { label: "12:00", value: 1 },
-                    { label: "16:00", value: 2 },
-                    { label: "20:00", value: 0 },
-                    { label: "23:00", value: 0 }
-                ]
-            },
-            "7days": {
-                total: "1.268",
-                totalTrend: { pct: "+1,5%", up: true },
-                new: "28 thành viên",
-                newTrend: { pct: "+5,8%", up: true },
-                returning: "66,5%",
-                returningTrend: { pct: "+1,2%", up: true },
-                spent: "986.000đ",
-                spentTrend: { pct: "+1,0%", up: true },
-                customers: [
-                    { name: "Phạm Minh D", email: "minhd@gmail.com", count: 5, totalSpent: "8.400.000đ", rank: "VIP", rankClass: "member-vip" },
-                    { name: "Nguyễn Văn A", email: "vana@gmail.com", count: 4, totalSpent: "5.100.000đ", rank: "Gold", rankClass: "member-gold" },
-                    { name: "Trần Thị B", email: "thib@gmail.com", count: 3, totalSpent: "3.200.000đ", rank: "Gold", rankClass: "member-gold" },
-                    { name: "Lê Văn C", email: "vanc@gmail.com", count: 2, totalSpent: "1.700.000đ", rank: "Silver", rankClass: "member-silver" }
-                ],
-                ranks: [
-                    { name: "VIP", count: 1, percentage: "25,0%", color: "#ff782d" },
-                    { name: "GOLD", count: 2, percentage: "50,0%", color: "#f59e0b" },
-                    { name: "SILVER", count: 1, percentage: "25,0%", color: "#94a3b8" }
-                ],
-                chart: [
-                    { label: "26/07", value: 4 },
-                    { label: "27/07", value: 5 },
-                    { label: "28/07", value: 3 },
-                    { label: "29/07", value: 6 },
-                    { label: "30/07", value: 5 },
-                    { label: "31/07", value: 3 },
-                    { label: "01/08", value: 2 }
-                ]
-            },
-            "30days": {
-                total: "1.350",
-                totalTrend: { pct: "+6,2%", up: true },
-                new: "120 thành viên",
-                newTrend: { pct: "+15,4%", up: true },
-                returning: "68,2%",
-                returningTrend: { pct: "+4,2%", up: true },
-                spent: "998.000đ",
-                spentTrend: { pct: "+3,2%", up: true },
-                customers: [
-                    { name: "Phạm Minh D", email: "minhd@gmail.com", count: 18, totalSpent: "32.400.000đ", rank: "VIP", rankClass: "member-vip" },
-                    { name: "Nguyễn Văn A", email: "vana@gmail.com", count: 12, totalSpent: "15.300.000đ", rank: "Gold", rankClass: "member-gold" },
-                    { name: "Trần Thị B", email: "thib@gmail.com", count: 9, totalSpent: "11.200.000đ", rank: "Gold", rankClass: "member-gold" },
-                    { name: "Lê Hoàng C", email: "hoangc@gmail.com", count: 6, totalSpent: "8.900.000đ", rank: "Silver", rankClass: "member-silver" },
-                    { name: "Vũ Văn E", email: "vane@gmail.com", count: 5, totalSpent: "5.500.000đ", rank: "Silver", rankClass: "member-silver" }
-                ],
-                ranks: [
-                    { name: "VIP", count: 1, percentage: "20,0%", color: "#ff782d" },
-                    { name: "GOLD", count: 2, percentage: "40,0%", color: "#f59e0b" },
-                    { name: "SILVER", count: 2, percentage: "40,0%", color: "#94a3b8" }
-                ],
-                chart: [
-                    { label: "Tuần 1", value: 25 },
-                    { label: "Tuần 2", value: 32 },
-                    { label: "Tuần 3", value: 38 },
-                    { label: "Tuần 4", value: 25 }
-                ]
-            }
-        };
+        // Real data from database passed from controller
+        const mockData = @json($periods);
 
         let trendChartInstance = null;
-        let rankChartInstance = null;
 
         function setTrend(id, trend) {
             const el = document.getElementById(id);
@@ -662,53 +520,94 @@
             });
         }
 
-        // Render member rank distribution doughnut chart
-        function renderRankChart(ranks) {
-            const ctx = document.getElementById('member-rank-chart').getContext('2d');
-            if (rankChartInstance) {
-                rankChartInstance.destroy();
+        let currentFilterCustomers = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+
+        function renderTablePage(page) {
+            currentPage = page;
+            const tableBody = document.getElementById('customers-table-body');
+            const totalCountEl = document.getElementById('customer-total-count');
+            const infoEl = document.getElementById('pagination-info');
+            const controlsEl = document.getElementById('pagination-controls');
+
+            tableBody.innerHTML = '';
+
+            const total = currentFilterCustomers.length;
+            if (totalCountEl) totalCountEl.innerText = `(Tổng ${total} khách hàng)`;
+
+            if (total === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                            Chưa có dữ liệu khách hàng trong kỳ này.
+                        </td>
+                    </tr>
+                `;
+                if (infoEl) infoEl.innerHTML = 'Hiển thị <strong>0</strong> trên <strong>0</strong> khách hàng';
+                if (controlsEl) controlsEl.innerHTML = '';
+                return;
             }
 
-            // Exclude ranks with 0 members if today
-            const activeRanks = ranks.filter(r => r.count > 0);
-            
-            const labels = activeRanks.map(r => r.name);
-            const values = activeRanks.map(r => r.count);
-            const colors = activeRanks.map(r => r.color);
+            const totalPages = Math.ceil(total / itemsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
 
-            rankChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: colors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff',
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#1e293b',
-                            titleFont: { family: 'Outfit, Inter, sans-serif', size: 12, weight: 'bold' },
-                            bodyFont: { family: 'Outfit, Inter, sans-serif', size: 12 },
-                            padding: 10,
-                            callbacks: {
-                                label: function(context) {
-                                    return ' ' + context.label + ': ' + Number(context.raw).toLocaleString('vi-VN') + ' thành viên';
-                                }
-                            }
-                        }
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, total);
+            const pageItems = currentFilterCustomers.slice(startIndex, endIndex);
+
+            pageItems.forEach(cust => {
+                const isNoOrders = cust.count === 0;
+                tableBody.innerHTML += `
+                    <tr>
+                        <td><span class="rank-position ${cust.position <= 3 && cust.totalSpentRaw > 0 ? 'is-top' : ''}">${cust.position}</span></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #fff4ec; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255, 120, 45, 0.15);">
+                                    ${(cust.name || 'C').charAt(0).toUpperCase()}
+                                </div>
+                                <strong style="color: var(--text-main); font-weight: 700;">${cust.name}</strong>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-muted);">${cust.email || 'N/A'}</td>
+                        <td style="font-weight: 600; color: ${isNoOrders ? 'var(--text-muted)' : 'var(--text-main)'};">${cust.count} đơn</td>
+                        <td style="font-weight: 700; color: ${isNoOrders ? 'var(--text-muted)' : 'var(--primary)'};">${cust.totalSpent}</td>
+                    </tr>
+                `;
+            });
+
+            // Update Pagination Info
+            if (infoEl) infoEl.innerHTML = `Hiển thị <strong>${startIndex + 1} - ${endIndex}</strong> trên <strong>${total}</strong> khách hàng`;
+
+            // Render Pagination Buttons
+            if (controlsEl) {
+                let buttonsHtml = '';
+                
+                // Previous Button
+                buttonsHtml += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="window.goToCustomerPage(${currentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+
+                // Page numbers
+                for (let i = 1; i <= totalPages; i++) {
+                    if (totalPages <= 7 || i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+                        buttonsHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="window.goToCustomerPage(${i})">${i}</button>`;
+                    } else if (i === 2 && currentPage > 3) {
+                        buttonsHtml += `<span style="padding: 0 4px; align-self: center; color: var(--text-muted);">...</span>`;
+                    } else if (i === totalPages - 1 && currentPage < totalPages - 2) {
+                        buttonsHtml += `<span style="padding: 0 4px; align-self: center; color: var(--text-muted);">...</span>`;
                     }
                 }
-            });
+
+                // Next Button
+                buttonsHtml += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="window.goToCustomerPage(${currentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+
+                controlsEl.innerHTML = buttonsHtml;
+            }
         }
+
+        window.goToCustomerPage = function(page) {
+            renderTablePage(page);
+        };
 
         // Render page elements
         function updatePage(filter) {
@@ -718,58 +617,13 @@
             // 1. Update text values
             document.getElementById('customers-val').innerText = data.total;
             document.getElementById('new-val').innerText = data.new;
-            document.getElementById('returning-val').innerText = data.returning;
-            document.getElementById('spent-val').innerText = data.spent;
 
-            // 2. Update trends
-            setTrend('customers-trend', data.totalTrend);
-            setTrend('new-trend', data.newTrend);
-            setTrend('returning-trend', data.returningTrend);
-            setTrend('spent-trend', data.spentTrend);
-
-            // 3. Render ranks legend
-            const legendList = document.getElementById('status-legend-list');
-            legendList.innerHTML = '';
-            data.ranks.forEach(rank => {
-                legendList.innerHTML += `
-                    <div class="legend-item">
-                        <div class="legend-left">
-                            <span class="legend-color" style="background-color: ${rank.color};"></span>
-                            <span class="legend-name">${rank.name}</span>
-                            <span class="legend-percentage">${rank.percentage}</span>
-                        </div>
-                        <span class="legend-value">${rank.count} TV</span>
-                    </div>
-                `;
-            });
-
-            // 4. Render customer growth chart
+            // 2. Render customer growth chart
             renderTrendChart(data.chart);
 
-            // 5. Render member rank distribution chart
-            renderRankChart(data.ranks);
-
-            // 6. Render customers VIP table rows
-            const tableBody = document.getElementById('customers-table-body');
-            tableBody.innerHTML = '';
-            data.customers.forEach(cust => {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #fff4ec; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255, 120, 45, 0.15);">
-                                    ${cust.name.charAt(0).toUpperCase()}
-                                </div>
-                                <strong style="color: var(--text-main); font-weight: 700;">${cust.name}</strong>
-                            </div>
-                        </td>
-                        <td style="color: var(--text-muted);">${cust.email}</td>
-                        <td style="font-weight: 600; color: var(--text-main);">${cust.count} đơn</td>
-                        <td style="font-weight: 700; color: var(--primary);">${cust.totalSpent}</td>
-                        <td><span class="badge-member ${cust.rankClass}">${cust.rank}</span></td>
-                    </tr>
-                `;
-            });
+            // 4. Render customers table with pagination
+            currentFilterCustomers = data.customers || [];
+            renderTablePage(1);
         }
 
         // Handle filter dropdown clicks
@@ -782,12 +636,20 @@
                 const val = this.getAttribute('data-value');
                 filterLabel.innerText = this.innerText.toUpperCase();
                 updatePage(val);
+                syncExportLink(val);
                 filterMenu.style.display = 'none';
             });
         });
 
         // Trigger initial page render
+        // Nút xuất Excel luôn theo đúng kỳ đang xem.
+        function syncExportLink(period) {
+            const btn = document.getElementById('export-btn');
+            if (btn) btn.href = btn.href.split('?')[0] + '?period=' + period;
+        }
+
         updatePage('30days');
+        syncExportLink('30days');
     });
 </script>
 @endsection

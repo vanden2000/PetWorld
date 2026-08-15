@@ -26,28 +26,50 @@ class SepayPaymentReconciler
             return $order;
         }
 
-        return DB::transaction(function () use ($order): Order {
+        $fresh = $order->fresh() ?? $order;
+
+        if ($fresh->payment_status === 'paid') {
+            return $fresh;
+        }
+
+        if ($fresh->order_status !== 'pending' || $fresh->payment_status !== 'unpaid') {
+            return $fresh;
+        }
+
+        // Đơn quá hạn: hủy + hoàn kho, không cần hỏi SePay.
+        if ($fresh->expires_at !== null && $fresh->expires_at->isPast()) {
+            return DB::transaction(function () use ($order): Order {
+                $lockedOrder = Order::query()
+                    ->whereKey($order->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($lockedOrder->order_status === 'pending' && $lockedOrder->payment_status === 'unpaid') {
+                    $lockedOrder->restockAndMarkCancelled();
+                }
+
+                return $lockedOrder->refresh();
+            });
+        }
+
+        // Gọi SePay NGOÀI transaction: request này mất vài giây, giữ khóa dòng đơn
+        // suốt thời gian đó sẽ chặn mọi thao tác khác trên cùng đơn (hủy đơn,
+        // webhook), trong khi frontend lại poll mỗi 4 giây.
+        $transaction = $this->findTransactionForOrder($fresh);
+
+        if ($transaction === null) {
+            return $fresh;
+        }
+
+        // Có giao dịch khớp: giờ mới khóa dòng để ghi, và kiểm tra lại trạng thái
+        // vì đơn có thể vừa bị hủy hoặc vừa được webhook đánh dấu đã trả.
+        return DB::transaction(function () use ($order, $transaction): Order {
             $lockedOrder = Order::query()
                 ->whereKey($order->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($lockedOrder->payment_status === 'paid') {
-                return $lockedOrder;
-            }
-
             if ($lockedOrder->order_status !== 'pending' || $lockedOrder->payment_status !== 'unpaid') {
-                return $lockedOrder;
-            }
-
-            if ($lockedOrder->expires_at !== null && $lockedOrder->expires_at->isPast()) {
-                $lockedOrder->restockAndMarkCancelled();
-                return $lockedOrder->refresh();
-            }
-
-            $transaction = $this->findTransactionForOrder($lockedOrder);
-
-            if ($transaction === null) {
                 return $lockedOrder;
             }
 

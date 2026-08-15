@@ -122,7 +122,7 @@
             <div class="custom-admin-select-options">
                 <div class="custom-admin-select-option {{ $status === 'all' ? 'selected' : '' }}" data-value="all">Tất cả</div>
                 <div class="custom-admin-select-option {{ $status === 'active' ? 'selected' : '' }}" data-value="active">Đang xuất bản</div>
-                <div class="custom-admin-select-option {{ $status === 'draft' ? 'selected' : '' }}" data-value="draft">Bản nháp</div>
+                <div class="custom-admin-select-option {{ $status === 'inactive' ? 'selected' : '' }}" data-value="inactive">Bản nháp</div>
             </div>
         </div>
     </div>
@@ -137,9 +137,9 @@
             </div>
             <input type="hidden" name="sort" id="sort" value="{{ $sort }}">
             <div class="custom-admin-select-options">
-                <div class="custom-admin-select-option {{ $sort === 'newest' ? 'selected' : '' }}" data-value="newest">Mới nhất</div>
+                <div class="custom-admin-select-option {{ $sort === 'latest' ? 'selected' : '' }}" data-value="latest">Mới nhất</div>
                 <div class="custom-admin-select-option {{ $sort === 'oldest' ? 'selected' : '' }}" data-value="oldest">Cũ nhất</div>
-                <div class="custom-admin-select-option {{ in_array($sort, ['most_viewed', 'popular']) ? 'selected' : '' }}" data-value="popular">Xem nhiều nhất</div>
+                <div class="custom-admin-select-option {{ $sort === 'most_viewed' ? 'selected' : '' }}" data-value="most_viewed">Xem nhiều nhất</div>
                 <div class="custom-admin-select-option {{ $sort === 'most_commented' ? 'selected' : '' }}" data-value="most_commented">Bình luận nhiều nhất</div>
             </div>
         </div>

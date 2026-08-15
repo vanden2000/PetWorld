@@ -312,6 +312,34 @@
     .rank-2 { background-color: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
     .rank-3 { background-color: #ffebd8; color: #ff782d; border: 1px solid #ffd0a8; }
     .rank-other { background-color: #ffffff; color: var(--text-muted); border: 1px solid var(--border-color); }
+
+    /* Hàng sản phẩm mở rộng được + các hàng biến thể con */
+    .seller-row.is-expandable { cursor: pointer; }
+    .seller-row.is-expandable:hover { background-color: rgba(255, 120, 45, 0.04); }
+
+    .expand-caret {
+        margin-left: auto;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+    }
+    .seller-row.expanded .expand-caret { transform: rotate(180deg); }
+
+    .variant-count-chip {
+        display: inline-block;
+        margin-left: 4px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: rgba(255, 120, 45, 0.1);
+        color: #ff782d;
+        font-size: 0.68rem;
+        font-weight: 700;
+    }
+
+    .variant-row { display: none; background-color: #fafbfc; }
+    .variant-row.is-visible { display: table-row; }
+    .variant-row td { font-size: 0.82rem; padding-top: 8px; padding-bottom: 8px; }
     
     .badge-category {
         font-size: 0.72rem;
@@ -333,7 +361,7 @@
 <div class="dashboard-header" style="margin-bottom: 24px;">
     <div class="header-title-block">
         <h1 style="font-size: 1.8rem; font-weight: 800;">Sản phẩm <span style="color: var(--primary);">Bán chạy</span></h1>
-        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Danh sách các sản phẩm bán chạy nhất, sản lượng bán ra và tổng giá trị mang lại cho cửa hàng.</p>
+        <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Danh sách top 5 sản phẩm bán chạy nhất theo số lượng bán từ nhiều nhất đến ít dần.</p>
     </div>
     
     <div class="header-actions">
@@ -349,9 +377,10 @@
                 <a href="#" class="filter-option active" data-value="30days">30 ngày trước</a>
             </div>
         </div>
-        <button class="btn-export" onclick="alert('Đang tải xuống báo cáo...')">
-            <i class="fa-solid fa-download"></i>
-        </button>
+        <a class="btn-export" id="export-btn" href="{{ route('admin.reports.export', 'best-sellers') }}?period=30days"
+           title="Xuất báo cáo ra Excel">
+            <i class="fa-solid fa-file-excel"></i>
+        </a>
     </div>
 </div>
 
@@ -361,10 +390,6 @@
         <div class="stat-header">
             <div class="stat-icon-wrapper icon-total">
                 <i class="fa-solid fa-cubes"></i>
-            </div>
-            <div class="stat-trend trend-up" id="sold-trend">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-                <span>+0.0%</span>
             </div>
         </div>
         <div class="stat-label">Tổng sản phẩm đã bán</div>
@@ -432,7 +457,7 @@
 <!-- Detailed Best Sellers Table (Clean, no extra white space) -->
 <div class="detail-table-card">
     <div class="card-header-styled">
-        <span class="card-title-styled"><i class="fa-solid fa-ranking-star" style="color: var(--primary); margin-right: 6px;"></i> Bảng xếp hạng sản phẩm bán chạy nhất</span>
+        <span class="card-title-styled"><i class="fa-solid fa-box-archive" style="color: var(--primary); margin-right: 6px;"></i> Thống kê sản phẩm</span>
     </div>
     <div class="pl-table-scroll">
         <table class="orders-table">
@@ -474,88 +499,8 @@
             filterMenu.style.display = 'none';
         });
 
-        // Mock data dictionary with correct Unsplash images for products and chart coords
-        const mockData = {
-            today: {
-                totalSold: "185 sản phẩm",
-                soldTrend: { pct: "+14,2%", up: true },
-                topProduct: "Pate Whiskas mèo lớn",
-                topCategory: "Pate / Thức ăn ướt",
-                topBrand: "Whiskas",
-                sellers: [
-                    { rank: 1, name: "Pate Whiskas vị cá ngừ", cat: "Pate / Thức ăn ướt", brand: "Whiskas", units: 48, revenue: "720.000đ", image: "https://images.unsplash.com/photo-1569591159212-b02ea8a9f239?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-pate" },
-                    { rank: 2, name: "Royal Canin Mother & Babycat", cat: "Thức ăn hạt", brand: "Royal Canin", units: 32, revenue: "14.500.000đ", image: "https://images.unsplash.com/photo-1589733901241-5e8a40070c2e?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-food" },
-                    { rank: 3, name: "Xương gặm KONG Classic Red", cat: "Đồ chơi", brand: "KONG", units: 15, revenue: "4.800.000đ", image: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-toys" }
-                ],
-                categories: [
-                    { name: "Pate / Thức ăn ướt", count: 48, percentage: "50,5%", color: "#8b5cf6" },
-                    { name: "Thức ăn hạt", count: 32, percentage: "33,7%", color: "#ff782d" },
-                    { name: "Đồ chơi", count: 15, percentage: "15,8%", color: "#f59e0b" }
-                ],
-                chart: [
-                    { label: "00:00", value: 5 },
-                    { label: "04:00", value: 1 },
-                    { label: "08:00", value: 34 },
-                    { label: "12:00", value: 52 },
-                    { label: "16:00", value: 68 },
-                    { label: "20:00", value: 20 },
-                    { label: "23:00", value: 5 }
-                ]
-            },
-            "7days": {
-                totalSold: "1.240 sản phẩm",
-                soldTrend: { pct: "+9,8%", up: true },
-                topProduct: "Royal Canin Mother & Babycat",
-                topCategory: "Thức ăn hạt",
-                topBrand: "Royal Canin",
-                sellers: [
-                    { rank: 1, name: "Royal Canin Mother & Babycat", cat: "Thức ăn hạt", brand: "Royal Canin", units: 148, revenue: "64.800.000đ", image: "https://images.unsplash.com/photo-1589733901241-5e8a40070c2e?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-food" },
-                    { rank: 2, name: "Máy lọc nước tự động PETKIT", cat: "Phụ kiện", brand: "PETKIT", units: 82, revenue: "72.980.000đ", image: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-accessories" },
-                    { rank: 3, name: "Pate Whiskas vị cá ngừ", cat: "Pate / Thức ăn ướt", brand: "Whiskas", units: 120, revenue: "1.800.000đ", image: "https://images.unsplash.com/photo-1569591159212-b02ea8a9f239?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-pate" },
-                    { rank: 4, name: "Xương gặm KONG Classic Red", cat: "Đồ chơi", brand: "KONG", units: 45, revenue: "14.400.000đ", image: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-toys" }
-                ],
-                categories: [
-                    { name: "Thức ăn hạt", count: 148, percentage: "37,5%", color: "#ff782d" },
-                    { name: "Pate / Thức ăn ướt", count: 120, percentage: "30,4%", color: "#8b5cf6" },
-                    { name: "Phụ kiện", count: 82, percentage: "20,8%", color: "#3b82f6" },
-                    { name: "Đồ chơi", count: 45, percentage: "11,4%", color: "#f59e0b" }
-                ],
-                chart: [
-                    { label: "26/07", value: 160 },
-                    { label: "27/07", value: 185 },
-                    { label: "28/07", value: 210 },
-                    { label: "29/07", value: 168 },
-                    { label: "30/07", value: 245 },
-                    { label: "31/07", value: 172 },
-                    { label: "01/08", value: 100 }
-                ]
-            },
-            "30days": {
-                totalSold: "5.820 sản phẩm",
-                soldTrend: { pct: "+10,2%", up: true },
-                topProduct: "Royal Canin Mother & Babycat",
-                topCategory: "Thức ăn hạt",
-                topBrand: "Royal Canin",
-                sellers: [
-                    { rank: 1, name: "Royal Canin Mother & Babycat", cat: "Thức ăn hạt", brand: "Royal Canin", units: 612, revenue: "275.400.000đ", image: "https://images.unsplash.com/photo-1589733901241-5e8a40070c2e?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-food" },
-                    { rank: 2, name: "Máy lọc nước tự động PETKIT", cat: "Phụ kiện", brand: "PETKIT", units: 312, revenue: "277.680.000đ", image: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-accessories" },
-                    { rank: 3, name: "Xương gặm KONG Classic Red", cat: "Đồ chơi", brand: "KONG", units: 549, revenue: "175.680.000đ", image: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-toys" },
-                    { rank: 4, name: "Đệm nằm nhung cao cấp", cat: "Vật dụng", brand: "Khác", units: 420, revenue: "504.000.000đ", image: "https://images.unsplash.com/photo-1591584596983-2c70d4948a3c?q=80&w=150&auto=format&fit=crop", badgeClass: "badge-pate" }
-                ],
-                categories: [
-                    { name: "Thức ăn hạt", count: 612, percentage: "32,4%", color: "#ff782d" },
-                    { name: "Đồ chơi", count: 549, percentage: "29,0%", color: "#f59e0b" },
-                    { name: "Vật dụng", count: 420, percentage: "22,2%", color: "#8b5cf6" },
-                    { name: "Phụ kiện", count: 312, percentage: "16,5%", color: "#3b82f6" }
-                ],
-                chart: [
-                    { label: "Tuần 1", value: 1250 },
-                    { label: "Tuần 2", value: 1450 },
-                    { label: "Tuần 3", value: 1620 },
-                    { label: "Tuần 4", value: 1500 }
-                ]
-            }
-        };
+        // Real data from database passed from controller
+        const mockData = @json($periods);
 
         let trendChartInstance = null;
         let categoryChartInstance = null;
@@ -701,9 +646,6 @@
             document.getElementById('top-category-val').innerText = data.topCategory;
             document.getElementById('top-brand-val').innerText = data.topBrand;
 
-            // 2. Update trend indicator
-            setTrend('sold-trend', data.soldTrend);
-
             // 3. Render legend list
             const legendList = document.getElementById('status-legend-list');
             legendList.innerHTML = '';
@@ -735,15 +677,37 @@
                 if (prod.rank === 2) rankClass = 'rank-2';
                 if (prod.rank === 3) rankClass = 'rank-3';
 
+                const variants = prod.variants || [];
+                const expandable = variants.length > 1;
+
+                const variantRowsHtml = variants.map(v => `
+                    <tr class="variant-row">
+                        <td></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px; padding-left: 56px;">
+                                <i class="fa-solid fa-turn-up fa-rotate-90" style="color: var(--text-muted); font-size: 0.7rem;"></i>
+                                <span style="color: var(--text-main); font-weight: 600;">${v.name}</span>
+                            </div>
+                        </td>
+                        <td colspan="2"></td>
+                        <td style="font-weight: 600; color: var(--text-main);">${Number(v.units).toLocaleString('vi-VN')} SP</td>
+                        <td style="font-weight: 600; color: var(--primary);">${v.revenue}</td>
+                    </tr>
+                `).join('');
+
                 tableBody.innerHTML += `
-                    <tr>
+                    <tr class="seller-row ${expandable ? 'is-expandable' : ''}" data-rank="${prod.rank}">
                         <td>
                             <div class="best-seller-rank ${rankClass}">${prod.rank}</div>
                         </td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <img src="${prod.image}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=120&auto=format&fit=crop'">
-                                <strong style="color: var(--text-main); font-weight: 700;">${prod.name}</strong>
+                                <img src="${prod.image}" alt="${prod.name}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.src='{{ asset('image/logo/logo.png') }}'">
+                                <div style="display: flex; flex-direction: column;">
+                                    <strong style="color: var(--text-main); font-weight: 700;">${prod.name}</strong>
+                                    ${prod.variant ? `<span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500; margin-top: 2px;">Phân loại: ${prod.variant}${expandable ? ` <span class="variant-count-chip">+${variants.length - 1} biến thể</span>` : ''}</span>` : ''}
+                                </div>
+                                ${expandable ? '<i class="fa-solid fa-chevron-down expand-caret"></i>' : ''}
                             </div>
                         </td>
                         <td>
@@ -753,7 +717,20 @@
                         <td style="font-weight: 700; color: var(--text-main);">${Number(prod.units).toLocaleString('vi-VN')} SP</td>
                         <td style="font-weight: 700; color: var(--primary);">${prod.revenue}</td>
                     </tr>
+                    ${expandable ? variantRowsHtml : ''}
                 `;
+            });
+
+            // Nhấn vào hàng sản phẩm để xổ/thu các biến thể bên dưới.
+            tableBody.querySelectorAll('.seller-row.is-expandable').forEach(row => {
+                row.addEventListener('click', () => {
+                    row.classList.toggle('expanded');
+                    let next = row.nextElementSibling;
+                    while (next && next.classList.contains('variant-row')) {
+                        next.classList.toggle('is-visible');
+                        next = next.nextElementSibling;
+                    }
+                });
             });
         }
 
@@ -767,12 +744,20 @@
                 const val = this.getAttribute('data-value');
                 filterLabel.innerText = this.innerText.toUpperCase();
                 updatePage(val);
+                syncExportLink(val);
                 filterMenu.style.display = 'none';
             });
         });
 
         // Trigger initial page render
+        // Nút xuất Excel luôn theo đúng kỳ đang xem.
+        function syncExportLink(period) {
+            const btn = document.getElementById('export-btn');
+            if (btn) btn.href = btn.href.split('?')[0] + '?period=' + period;
+        }
+
         updatePage('30days');
+        syncExportLink('30days');
     });
 </script>
 @endsection

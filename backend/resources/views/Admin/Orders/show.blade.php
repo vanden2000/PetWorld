@@ -90,6 +90,34 @@
                     <i class="fa-solid fa-truck-fast" style="color: var(--primary); margin-right: 4px;"></i>
                     {{ $order->shippingMethod?->name ?? 'Chưa xác định' }}
                 </p>
+                @if($order->shipment?->tracking_code)
+                    <h4 class="info-label">Mã vận đơn GHN</h4>
+                    <p class="info-value" style="font-weight: 700; color: var(--primary);">{{ $order->shipment->tracking_code }}</p>
+
+                    @php
+                        $ghnStatusLabels = [
+                            'ready_to_pick' => 'Chờ lấy hàng',
+                            'picking' => 'Đang lấy hàng',
+                            'picked' => 'Đã lấy hàng',
+                            'storing' => 'Đang ở kho GHN',
+                            'transporting' => 'Đang luân chuyển',
+                            'sorting' => 'Đang phân loại',
+                            'delivering' => 'Đang giao cho người nhận',
+                            'delivered' => 'Đã giao thành công',
+                            'delivery_fail' => 'Giao hàng thất bại',
+                            'cancel' => 'Đã hủy',
+                            'returned' => 'Đã hoàn hàng',
+                        ];
+                        $ghnStatus = (string) $order->shipment->status;
+                    @endphp
+                    @if($ghnStatus !== '')
+                        <h4 class="info-label">GHN báo</h4>
+                        <p class="info-value" style="font-weight: 700; color: #2563eb;">
+                            <i class="fa-solid fa-satellite-dish" style="margin-right: 4px;"></i>
+                            {{ $ghnStatusLabels[$ghnStatus] ?? str_replace('_', ' ', $ghnStatus) }}
+                        </p>
+                    @endif
+                @endif
             </div>
         </div>
 
@@ -260,6 +288,12 @@
                 <span>Giảm giá {{ $order->voucher?->code ? '(' . $order->voucher->code . ')' : '' }}</span>
                 <span style="font-weight: 600; color: #c5221f;">-{{ number_format((float) $order->discount_amount, 0, ',', '.') }}đ</span>
             </div>
+            @if((float) $order->shipping_discount > 0)
+                <div class="summary-row">
+                    <span>Ưu đãi vận chuyển{{ $order->shippingVoucher?->code ? ' (' . $order->shippingVoucher->code . ')' : '' }}</span>
+                    <span style="font-weight: 600; color: #c5221f;">-{{ number_format((float) $order->shipping_discount, 0, ',', '.') }}đ</span>
+                </div>
+            @endif
             <div class="summary-row total-row">
                 <span>Tổng tiền</span>
                 <span style="color: #0d9488; font-size: 1.15rem;">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</span>

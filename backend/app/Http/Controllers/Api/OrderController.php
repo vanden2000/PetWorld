@@ -10,6 +10,7 @@ use App\Models\PaymentMethod;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
 use App\Services\SepayPaymentReconciler;
+use App\Services\ShippingQuoteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -78,6 +79,8 @@ class OrderController extends Controller
 
         $order->load([
             'shippingMethod:id,name',
+            'shippingVoucher:id,code,description',
+            'shipment:id,order_id,provider,tracking_code,status',
             'paymentMethod:id,name',
             'items.productVariant.product.primaryImage',
             'items.productVariant.variantValues.variantType',
@@ -104,8 +107,17 @@ class OrderController extends Controller
                     ],
                     'shipping' => [
                         'method' => $order->shippingMethod?->name,
+                        'method_code' => $order->shipping_method_code,
+                        'weight_grams' => $order->shipping_weight_grams,
+                        'fee_original' => (float) ($order->shipping_fee_original ?? $order->shipping_fee),
+                        'discount' => (float) $order->shipping_discount,
+                        'promotion' => $order->shippingVoucher ? [
+                            'code' => $order->shippingVoucher->code,
+                            'name' => $order->shippingVoucher->description ?: $order->shippingVoucher->code,
+                        ] : null,
                         'fee' => (float) $order->shipping_fee,
-                        'tracking_code' => 'PW-' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT),
+                        'tracking_code' => $order->shipment?->tracking_code ?? ('PW-' . str_pad((string) $order->id, 6, '0', STR_PAD_LEFT)),
+                        'status' => $order->shipment?->status,
                     ],
                     'payment' => [
                         'method' => $order->paymentMethod?->name,
@@ -158,12 +170,17 @@ class OrderController extends Controller
         });
         // lấy user sở hữu đơn hàng
         $cancelledOrder->load('user');
-        try {
-            Mail::to($cancelledOrder->user->email)
-                ->send(new OrderStatusMail($cancelledOrder));
-        } catch (Throwable $exception) {
-            report($exception);
-        }
+
+        // Gửi sau khi đã trả response: SMTP mất ~4s, để trong request thì khách
+        // bấm hủy phải ngồi chờ (và server dev đơn tiến trình bị chặn theo).
+        dispatch(function () use ($cancelledOrder): void {
+            try {
+                Mail::to($cancelledOrder->user->email)
+                    ->send(new OrderStatusMail($cancelledOrder));
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        })->afterResponse();
 
         return response()->json([
             'message' => 'Đã hủy đơn hàng thành công.',
@@ -221,6 +238,31 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Đọc nhanh trạng thái thanh toán từ DB, KHÔNG gọi API SePay.
+     *
+     * Dùng cho vòng poll dày của màn chờ thanh toán: webhook SePay mới là đường
+     * xác nhận chính, còn đối soát qua API (checkSepayPayment) chỉ chạy thưa để
+     * vá trường hợp webhook không tới. Endpoint này chỉ đọc, không ghi.
+     */
+    public function paymentStatus(Request $request, Order $order): JsonResponse
+    {
+        abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
+
+        return response()->json([
+            'data' => [
+                'order' => [
+                    'id' => $order->id,
+                    'payment_code' => $order->payment_code,
+                    'payment_status' => $order->payment_status,
+                    'status' => $order->order_status,
+                    'expires_at' => $order->expires_at?->toIso8601String(),
+                    'updated_at' => $order->updated_at?->toIso8601String(),
+                ],
+            ],
+        ]);
+    }
+
     public function checkSepayPayment(Request $request, Order $order, SepayPaymentReconciler $reconciler): JsonResponse
     {
         abort_unless((int) $order->user_id === (int) $request->user()->id, 404);
@@ -245,7 +287,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, ShippingQuoteService $shipping): JsonResponse
     {
         $data = $request->validate([
             'address_id' => ['required', 'integer'],
@@ -276,7 +318,7 @@ class OrderController extends Controller
         $paymentMethod = PaymentMethod::findOrFail($data['payment_method_id']);
         $isBankTransfer = str_contains(mb_strtolower($paymentMethod->name), 'chuyển khoản');
 
-        $order = DB::transaction(function () use ($request, $data, $address, $shippingMethod, $isBankTransfer): Order {
+        $order = DB::transaction(function () use ($request, $data, $address, $shippingMethod, $isBankTransfer, $shipping): Order {
             $quantities = [];
             foreach ($data['items'] as $item) {
                 // Gộp số lượng nếu client gửi trùng variant.
@@ -335,6 +377,8 @@ class OrderController extends Controller
             if ($request->filled('voucher_id')) {
                 $voucher = \App\Models\Voucher::query()
                     ->where('status', 'active')
+                    ->where('applies_to', 'product')
+                    ->where('is_automatic', false)
                     ->lockForUpdate() // Khóa để tránh race condition khi đếm lượt sử dụng
                     ->findOrFail($data['voucher_id']);
 
@@ -349,11 +393,33 @@ class OrderController extends Controller
                 $discountAmount = min((float) $voucher->discount_value, $subtotal);
             }
 
-            $shippingFee = (float) $shippingMethod->shipping_fee;
+            if (! $request->filled('voucher_id')) {
+                $voucher = \App\Models\Voucher::query()
+                    ->where('status', 'active')
+                    ->where('applies_to', 'product')
+                    ->where('is_automatic', true)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now())
+                    ->where('min_order_value', '<=', $subtotal)
+                    ->orderByDesc('discount_value')
+                    ->lockForUpdate()
+                    ->get()
+                    ->first(fn (\App\Models\Voucher $candidate) => $candidate->canBeApplied($subtotal));
+
+                if ($voucher !== null) {
+                    $voucherId = $voucher->id;
+                    $discountAmount = min((float) $voucher->discount_value, $subtotal);
+                }
+            }
+
+            $shippingQuote = $shipping->quote($shippingMethod, $address, $quantities);
+            $shippingFee = (float) $shippingQuote['shipping_fee'];
 
             $order = $request->user()->orders()->create([
                 'voucher_id' => $voucherId,
+                'shipping_voucher_id' => $shippingQuote['shipping_voucher_id'],
                 'shipping_method_id' => $shippingMethod->id,
+                'shipping_method_code' => $shippingQuote['method_code'],
                 'payment_method_id' => $data['payment_method_id'],
                 'address_id' => $address->id,
                 'recipient_name' => $address->recipient_name,
@@ -361,6 +427,9 @@ class OrderController extends Controller
                 'recipient_address' => $this->composeAddress($address),
                 'delivery_area' => $address->province,
                 'shipping_fee' => $shippingFee,
+                'shipping_weight_grams' => $shippingQuote['weight_grams'],
+                'shipping_fee_original' => $shippingQuote['shipping_fee_original'],
+                'shipping_discount' => $shippingQuote['shipping_discount'],
                 'discount_amount' => $discountAmount,
                 'order_status' => 'pending',
                 'total_amount' => max(0.0, $subtotal + $shippingFee - $discountAmount),
@@ -430,6 +499,9 @@ class OrderController extends Controller
             'recipient_phone' => $order->recipient_phone,
             'recipient_address' => $order->recipient_address,
             'shipping_fee' => (float) $order->shipping_fee,
+            'shipping_fee_original' => (float) ($order->shipping_fee_original ?? $order->shipping_fee),
+            'shipping_discount' => (float) $order->shipping_discount,
+            'shipping_method_code' => $order->shipping_method_code,
             'discount_amount' => (float) $order->discount_amount,
             'total_amount' => (float) $order->total_amount,
             'order_status' => $order->order_status,

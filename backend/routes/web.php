@@ -108,7 +108,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/reviews/{review}/status', [ReviewController::class, 'updateStatus'])->name('reviews.status.update');
 
     Route::get('/blog-comments', [BlogCommentController::class, 'index'])->name('blog-comments');
-    Route::patch('/blog-comments/{comment}/visibility', [BlogCommentController::class, 'updateVisibility'])->name('blog-comments.visibility');
+    Route::patch('/blog-comments/{comment}/status', [BlogCommentController::class, 'updateStatus'])->name('blog-comments.status');
+    Route::patch('/blog-comments/{comment}/restore', [BlogCommentController::class, 'restore'])->name('blog-comments.restore');
+    Route::delete('/blog-comments/{comment}/force', [BlogCommentController::class, 'forceDestroy'])->name('blog-comments.force-destroy');
+    Route::delete('/blog-comments/{comment}', [BlogCommentController::class, 'destroy'])->name('blog-comments.destroy');
 
     Route::get('/posts', [PostController::class, 'index'])->name('posts');
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
@@ -198,6 +201,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Reports/Statistics routes
     Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/export/{type}', [ReportController::class, 'export'])
+            ->whereIn('type', ['revenue', 'order-status', 'customers', 'best-sellers'])
+            ->name('export');
         Route::get('/revenue', [ReportController::class, 'revenue'])->name('revenue');
         Route::get('/profit', [ReportController::class, 'profit'])->name('profit');
         Route::get('/order-status', [ReportController::class, 'orderStatus'])->name('order-status');
@@ -214,4 +220,3 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::match(['POST', 'GET'], '/home-sections/reset', [HomeSectionController::class, 'resetDefaults'])->name('home-sections.reset');
 
 });
-

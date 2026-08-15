@@ -179,9 +179,19 @@
                             <td>{{ ($vouchers->currentPage() - 1) * $vouchers->perPage() + $index + 1 }}</td>
                             <td>
                                 <strong style="color: var(--primary); font-size: 1.05rem; letter-spacing: 0.5px;">{{ $voucher->code }}</strong>
+                                @if($voucher->is_automatic)
+                                    <div style="margin-top: 6px;">
+                                        <span style="display: inline-block; padding: 3px 7px; border-radius: 999px; background: #fff3e8; color: #d95f12; font-size: 0.72rem; font-weight: 800;">TỰ ĐỘNG · {{ $voucher->applies_to === 'shipping' ? 'SHIP' : 'GIẢM GIÁ' }}</span>
+                                    </div>
+                                @endif
                             </td>
                             <td>
                                 <span style="font-size: 0.9rem; color: var(--text-main);">{{ $voucher->description ?? 'Không có mô tả' }}</span>
+                                @if($voucher->applies_to === 'shipping')
+                                    <div style="margin-top: 5px; color: var(--text-muted); font-size: 0.78rem;">
+                                        Hỗ trợ tối đa: {{ number_format((float) ($voucher->max_shipping_discount ?? $voucher->discount_value), 0, ',', '.') }}đ
+                                    </div>
+                                @endif
                             </td>
                             <td>
                                 <strong style="color: #137333;">{{ number_format($voucher->discount_value, 0, ',', '.') }}đ</strong>
@@ -191,10 +201,10 @@
                             </td>
                             <td>
                                 @if($voucher->usage_limit === 0)
-                                    <span style="color: var(--text-muted); font-style: italic;">Vô hạn (Đã dùng: {{ $voucher->orders_count }})</span>
+                                    <span style="color: var(--text-muted); font-style: italic;">Vô hạn (Đã dùng: {{ $voucher->orders_count + $voucher->shipping_orders_count }})</span>
                                 @else
-                                    <span style="font-weight: 500; color: {{ $voucher->orders_count >= $voucher->usage_limit ? 'var(--danger)' : 'var(--success)' }}">
-                                        {{ $voucher->orders_count }} / {{ $voucher->usage_limit }} lượt
+                                    <span style="font-weight: 500; color: {{ ($voucher->orders_count + $voucher->shipping_orders_count) >= $voucher->usage_limit ? 'var(--danger)' : 'var(--success)' }}">
+                                        {{ $voucher->orders_count + $voucher->shipping_orders_count }} / {{ $voucher->usage_limit }} lượt
                                     </span>
                                 @endif
                             </td>

@@ -23,6 +23,8 @@ class VoucherController extends Controller
         $vouchers = Voucher::query()
             ->withCount(['orders' => function ($q) {
                 $q->where('order_status', '<>', 'cancelled');
+            }, 'shippingOrders' => function ($q) {
+                $q->where('order_status', '<>', 'cancelled');
             }])
             ->orderBy('id', 'desc')
             ->paginate(10);
@@ -43,10 +45,16 @@ class VoucherController extends Controller
      */
     public function store(Request $request)
     {
+        $this->normalizeCurrencyInputs($request);
+
         $data = $request->validate([
             'code' => ['required', 'string', 'max:50', 'unique:vouchers,code'],
+            'applies_to' => ['required', Rule::in(['product', 'shipping', 'order'])],
+            'is_automatic' => ['nullable', 'boolean'],
+            'shipping_method_code' => ['nullable', Rule::in(['standard', 'ghn_express'])],
             'usage_limit' => ['required', 'integer', 'min:0'],
             'discount_value' => ['required', 'numeric', 'min:0'],
+            'max_shipping_discount' => ['nullable', 'numeric', 'min:0', 'max:5000000'],
             'min_order_value' => ['required', 'numeric', 'min:0'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
@@ -63,7 +71,16 @@ class VoucherController extends Controller
             'end_date.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
         ]);
 
+        $data['is_automatic'] = $request->boolean('is_automatic');
+        if ($data['applies_to'] !== 'shipping') {
+            $data['shipping_method_code'] = null;
+            $data['max_shipping_discount'] = null;
+        }
         Voucher::create($data);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Voucher đã được tạo thành công.']);
+        }
 
         return redirect()->route('admin.vouchers')
             ->with('success', 'Voucher đã được tạo thành công.');
@@ -84,11 +101,16 @@ class VoucherController extends Controller
     public function update(Request $request, $id)
     {
         $voucher = Voucher::findOrFail($id);
+        $this->normalizeCurrencyInputs($request);
 
         $data = $request->validate([
             'code' => ['required', 'string', 'max:50', Rule::unique('vouchers', 'code')->ignore($voucher->id)],
+            'applies_to' => ['required', Rule::in(['product', 'shipping', 'order'])],
+            'is_automatic' => ['nullable', 'boolean'],
+            'shipping_method_code' => ['nullable', Rule::in(['standard', 'ghn_express'])],
             'usage_limit' => ['required', 'integer', 'min:0'],
             'discount_value' => ['required', 'numeric', 'min:0'],
+            'max_shipping_discount' => ['nullable', 'numeric', 'min:0', 'max:5000000'],
             'min_order_value' => ['required', 'numeric', 'min:0'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
@@ -104,6 +126,12 @@ class VoucherController extends Controller
             'end_date.required' => 'Vui lòng chọn ngày kết thúc.',
             'end_date.after_or_equal' => 'Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.',
         ]);
+
+        $data['is_automatic'] = $request->boolean('is_automatic');
+        if ($data['applies_to'] !== 'shipping') {
+            $data['shipping_method_code'] = null;
+            $data['max_shipping_discount'] = null;
+        }
 
         $usedOrders = $voucher->orders()
             ->where('order_status', '<>', 'cancelled')
@@ -126,8 +154,28 @@ class VoucherController extends Controller
 
         $voucher->update($data);
 
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Voucher đã được cập nhật thành công.']);
+        }
+
         return redirect()->route('admin.vouchers')
             ->with('success', 'Voucher đã được cập nhật thành công.');
+    }
+
+    private function normalizeCurrencyInputs(Request $request): void
+    {
+        $normalized = [];
+        foreach (['discount_value', 'min_order_value', 'max_shipping_discount'] as $field) {
+            if (! $request->filled($field)) {
+                continue;
+            }
+
+            $normalized[$field] = preg_replace('/\D/', '', (string) $request->input($field));
+        }
+
+        if ($normalized !== []) {
+            $request->merge($normalized);
+        }
     }
 
     /**

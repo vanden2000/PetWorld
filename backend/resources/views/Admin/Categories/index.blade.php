@@ -580,7 +580,7 @@
     <!-- Header Block -->
     <div class="dashboard-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
         <div class="header-title-block">
-            <h1 style="color: var(--text-main); font-weight: 700; font-size: 1.75rem; margin: 0;">Danh mục</h1>
+            <h1 style=" font-weight: 700; font-size: 1.75rem; margin: 0;">Danh mục</h1>
             <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">Quản lý phân cấp danh mục sản phẩm để
                 tăng khả năng tìm kiếm và tối ưu hiệu suất SEO của cửa hàng.</p>
         </div>

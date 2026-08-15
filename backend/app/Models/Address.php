@@ -20,12 +20,15 @@ class Address extends Model
         'ward',
         'district',
         'province',
+        'ghn_district_id',
+        'ghn_ward_code',
         'is_default',
         'status',
     ];
 
     protected $casts = [
         'is_default' => 'boolean',
+        'ghn_district_id' => 'integer',
     ];
 
     protected static function booted(): void
