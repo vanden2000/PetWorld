@@ -9,10 +9,10 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1.5rem;
-        background: #ffffff;
+        background: var(--surface-color);
         padding: 1.25rem 1.5rem;
         border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        box-shadow: var(--shadow-subtle);
     }
     .page-title {
         display: flex;
@@ -20,21 +20,21 @@
         gap: 0.75rem;
         font-size: 1.25rem;
         font-weight: 700;
-        color: #1e293b;
+        color: var(--text-main);
         margin: 0;
     }
     .page-title i {
-        color: #4f46e5;
+        color: var(--primary);
         font-size: 1.4rem;
-        background: #eef2ff;
+        background: rgba(255, 122, 0, 0.1);
         padding: 0.5rem;
         border-radius: 8px;
     }
     .card {
-        background: #ffffff;
+        background: var(--surface-color);
         border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-subtle);
         overflow: hidden;
     }
     .table-custom {
@@ -42,25 +42,25 @@
         border-collapse: collapse;
     }
     .table-custom th {
-        background: #f8fafc;
+        background: var(--bg-color);
         padding: 1rem 1.25rem;
         font-size: 0.85rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #64748b;
-        border-bottom: 1px solid #e2e8f0;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
         text-align: left;
     }
     .table-custom td {
         padding: 1rem 1.25rem;
         vertical-align: middle;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--border-color);
         font-size: 0.925rem;
-        color: #334155;
+        color: var(--text-main);
     }
     .table-custom tr:hover {
-        background-color: #f8fafc;
+        background-color: #fff7f0;
     }
     .badge-key {
         display: inline-block;
@@ -68,21 +68,21 @@
         font-size: 0.75rem;
         padding: 0.2rem 0.5rem;
         border-radius: 4px;
-        background: #f1f5f9;
-        color: #475569;
+        background: var(--bg-color);
+        color: var(--text-muted);
         margin-top: 0.25rem;
     }
     .form-control-sm {
         padding: 0.4rem 0.6rem;
         font-size: 0.875rem;
-        border: 1px solid #cbd5e1;
+        border: 1px solid var(--border-color);
         border-radius: 6px;
-        transition: border-color 0.2s;
+        transition: var(--transition);
     }
     .form-control-sm:focus {
-        border-color: #6366f1;
+        border-color: var(--primary);
         outline: none;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.15);
     }
     .switch {
         position: relative;
@@ -99,7 +99,7 @@
         position: absolute;
         cursor: pointer;
         top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #cbd5e1;
+        background-color: #d6dad8;
         transition: .3s;
         border-radius: 24px;
     }
@@ -115,13 +115,13 @@
         border-radius: 50%;
     }
     input:checked + .slider {
-        background-color: #10b981;
+        background-color: var(--primary);
     }
     input:checked + .slider:before {
         transform: translateX(20px);
     }
     .btn-save {
-        background: #4f46e5;
+        background: var(--primary);
         color: #ffffff;
         padding: 0.6rem 1.25rem;
         border-radius: 8px;
@@ -134,27 +134,28 @@
         transition: background 0.2s;
     }
     .btn-save:hover {
-        background: #4338ca;
+        background: var(--primary-hover);
     }
     .btn-reset {
-        background: #f1f5f9;
-        color: #64748b;
+        background: var(--bg-color);
+        color: var(--text-muted);
         padding: 0.6rem 1rem;
         border-radius: 8px;
         font-weight: 600;
-        border: 1px solid #cbd5e1;
+        border: 1px solid var(--border-color);
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        transition: all 0.2s;
+        transition: var(--transition);
     }
     .btn-reset:hover {
-        background: #e2e8f0;
-        color: #334155;
+        background: rgba(255, 122, 0, 0.1);
+        color: var(--primary);
+        border-color: var(--primary);
     }
     .alert-success {
-        background: #ecfdf5;
+        background: var(--success-light);
         border: 1px solid #a7f3d0;
         color: #065f46;
         padding: 1rem;
@@ -236,7 +237,7 @@
                                 <input type="number" name="sections[{{ $index }}][order]" value="{{ $section->order }}" class="form-control-sm" style="width: 60px; text-align: center;" min="1" max="99">
                             </td>
                             <td>
-                                <strong style="color: #1e293b; display: block;">{{ $section->name }}</strong>
+                                <strong style="color: var(--text-main); display: block;">{{ $section->name }}</strong>
                                 <span class="badge-key">key: {{ $section->key }}</span>
                             </td>
                             <td>
@@ -247,11 +248,11 @@
                                     <input type="number" name="sections[{{ $index }}][limit]" value="{{ $section->limit }}" class="form-control-sm" style="width: 80px;" min="1" max="100">
                                 @else
                                     <input type="hidden" name="sections[{{ $index }}][limit]" value="">
-                                    <span style="color: #94a3b8; font-size: 0.85rem;">(Mặc định)</span>
+                                    <span style="color: var(--text-muted); font-size: 0.85rem;">(Mặc định)</span>
                                 @endif
                             </td>
                             <td style="text-align: center;">
-                                <button type="button" onclick="document.getElementById('toggle-form-{{ $section->id }}').submit();" style="background: none; border: none; cursor: pointer; color: {{ $section->is_active ? '#ef4444' : '#10b981' }}; font-size: 0.875rem; font-weight: 600;" title="{{ $section->is_active ? 'Bấm để Tắt' : 'Bấm để Bật' }}">
+                                <button type="button" onclick="document.getElementById('toggle-form-{{ $section->id }}').submit();" style="background: none; border: none; cursor: pointer; color: {{ $section->is_active ? 'var(--danger)' : 'var(--primary)' }}; font-size: 0.875rem; font-weight: 600;" title="{{ $section->is_active ? 'Bấm để Tắt' : 'Bấm để Bật' }}">
                                     @if($section->is_active)
                                         <i class="fa-solid fa-eye-slash"></i> Tắt
                                     @else

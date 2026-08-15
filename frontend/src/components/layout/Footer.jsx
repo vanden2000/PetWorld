@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { resolveBackendImage } from "@/lib/format";
+import { ROUTES } from "@/lib/routes";
 
 // Dấu chân thú cưng dùng làm hoa văn nền mờ phía sau footer.
 const PAW_PATH =
@@ -8,10 +9,10 @@ const PAW_PATH =
 const PAW_CLASSES = ["paw-1", "paw-2", "paw-3", "paw-4", "paw-5", "paw-6", "paw-7", "paw-8"];
 
 const CUSTOMER_CARE_LINKS = [
-  "Chính sách đổi trả",
-  "Hướng dẫn mua hàng",
-  "Điều khoản bảo mật",
-  "Tra cứu đơn hàng",
+  { label: "Chính sách đổi trả", href: "/chinh-sach/quy-trinh-yeu-cau-doi-tra" },
+  { label: "Hướng dẫn mua hàng", href: "/chinh-sach/huong-dan-giao-hang-petworld" },
+  { label: "Điều khoản bảo mật", href: ROUTES.privacy },
+  { label: "Tra cứu đơn hàng", href: ROUTES.orders },
 ];
 
 const ABOUT_LINKS = [
@@ -118,10 +119,10 @@ export default function Footer() {
         <div className="footer-col">
           <h3 className="footer-title">Chăm Sóc Khách Hàng</h3>
           <ul className="footer-links-list">
-            {CUSTOMER_CARE_LINKS.map((label) => (
-              <li key={label}>
-                <Link href="#" className="footer-link">
-                  {label}
+            {CUSTOMER_CARE_LINKS.map((item) => (
+              <li key={item.label}>
+                <Link href={item.href} className="footer-link">
+                  {item.label}
                 </Link>
               </li>
             ))}
