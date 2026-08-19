@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1130" viewBox="0 0 1600 1130" role="img" aria-labelledby="title desc">
+  <title id="title">Cấu trúc thư mục Back-end PetWorld</title>
+  <desc id="desc">Sơ đồ thư mục backend Laravel cho hệ thống PetWorld.</desc>
+  <style>
+    .bg{fill:#f8fafc}.title{font:700 34px Arial,sans-serif;fill:#7c2d12}.sub{font:400 18px Arial,sans-serif;fill:#475569}.node{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.root{fill:#9a3412;stroke:#9a3412}.group{fill:#ffedd5;stroke:#fb923c}.folder{fill:#fff7ed;stroke:#fdba74}.file{fill:#ffffff;stroke:#d1d5db}.head{font:700 19px Arial,sans-serif;fill:#0f172a}.roottext{font:700 21px Arial,sans-serif;fill:#fff}.text{font:400 16px Arial,sans-serif;fill:#334155}.small{font:400 14px Arial,sans-serif;fill:#64748b}.line{stroke:#94a3b8;stroke-width:2;fill:none}
+  </style>
+  <rect class="bg" width="1600" height="1130"/>
+  <text class="title" x="65" y="65">CẤU TRÚC THƯ MỤC DỰ ÁN BACK-END PETWORLD</text>
+  <text class="sub" x="65" y="100">Laravel 10 • REST API • Laravel Blade Admin • MySQL</text>
+
+  <rect class="node root" x="650" y="135" width="300" height="58" rx="10"/>
+  <text class="roottext" x="690" y="172">backend/</text>
+  <path class="line" d="M800 193V230M135 230H1475M135 230V265M390 230V265M655 230V265M935 230V265M1215 230V265M1475 230V265"/>
+
+  <rect class="node group" x="55" y="265" width="165" height="58" rx="8"/><text class="head" x="80" y="300">app/</text><text class="small" x="80" y="348">Nghiệp vụ lõi</text>
+  <rect class="node group" x="300" y="265" width="175" height="58" rx="8"/><text class="head" x="325" y="300">config/</text><text class="small" x="325" y="348">Cấu hình dịch vụ</text>
+  <rect class="node group" x="555" y="265" width="200" height="58" rx="8"/><text class="head" x="580" y="300">database/</text><text class="small" x="580" y="348">Schema và seed data</text>
+  <rect class="node group" x="835" y="265" width="200" height="58" rx="8"/><text class="head" x="860" y="300">resources/</text><text class="small" x="860" y="348">Blade views, mail</text>
+  <rect class="node group" x="1115" y="265" width="200" height="58" rx="8"/><text class="head" x="1140" y="300">routes/</text><text class="small" x="1140" y="348">Web và API routes</text>
+  <rect class="node folder" x="1395" y="265" width="160" height="58" rx="8"/><text class="head" x="1420" y="300">storage/</text><text class="small" x="1420" y="348">Logs, files</text>
+
+  <path class="line" d="M137 323V385M35 385H715M35 385V420M205 385V420M375 385V420M545 385V420M715 385V420"/>
+  <rect class="node folder" x="25" y="420" width="150" height="52" rx="8"/><text class="text" x="43" y="452">Http/</text>
+  <rect class="node folder" x="195" y="420" width="150" height="52" rx="8"/><text class="text" x="213" y="452">Models/</text>
+  <rect class="node folder" x="365" y="420" width="150" height="52" rx="8"/><text class="text" x="383" y="452">Services/</text>
+  <rect class="node folder" x="535" y="420" width="150" height="52" rx="8"/><text class="text" x="553" y="452">Console/</text>
+  <rect class="node folder" x="705" y="420" width="150" height="52" rx="8"/><text class="text" x="723" y="452">Mail/</text>
+
+  <rect class="node folder" x="25" y="495" width="150" height="52" rx="8"/><text class="text" x="43" y="527">Observers/</text>
+  <rect class="node folder" x="195" y="495" width="150" height="52" rx="8"/><text class="text" x="213" y="527">Notifications/</text>
+  <rect class="node folder" x="365" y="495" width="150" height="52" rx="8"/><text class="text" x="383" y="527">Providers/</text>
+  <rect class="node folder" x="535" y="495" width="150" height="52" rx="8"/><text class="text" x="553" y="527">Exports/</text>
+  <rect class="node folder" x="705" y="495" width="150" height="52" rx="8"/><text class="text" x="723" y="527">Queries/ Support/</text>
+
+  <path class="line" d="M100 472V570M25 570H345M25 570V605M185 570V605M345 570V605"/>
+  <rect class="node folder" x="20" y="605" width="150" height="52" rx="8"/><text class="text" x="38" y="637">Controllers/</text>
+  <rect class="node folder" x="180" y="605" width="150" height="52" rx="8"/><text class="text" x="198" y="637">Middleware/</text>
+  <rect class="node folder" x="340" y="605" width="150" height="52" rx="8"/><text class="text" x="358" y="637">Resources/</text>
+  <rect class="node folder" x="20" y="680" width="150" height="52" rx="8"/><text class="text" x="38" y="712">Admin/</text>
+  <rect class="node folder" x="180" y="680" width="150" height="52" rx="8"/><text class="text" x="198" y="712">Api/</text>
+  <text class="small" x="20" y="765">Admin: dashboard, catalog, orders, reports</text>
+  <text class="small" x="20" y="790">API: auth, products, checkout, chat, webhooks</text>
+
+  <rect class="node file" x="365" y="605" width="300" height="61" rx="8"/>
+  <text class="head" x="385" y="634">Services nghiệp vụ</text>
+  <text class="small" x="385" y="656">SePay • GHN • GHTK • Chatbot • Shipping</text>
+  <rect class="node file" x="365" y="685" width="300" height="61" rx="8"/>
+  <text class="head" x="385" y="714">Models dữ liệu</text>
+  <text class="small" x="385" y="736">User • Product • Order • Blog • Voucher…</text>
+
+  <path class="line" d="M655 323V385M555 385H785M555 385V420M670 385V420M785 385V420"/>
+  <rect class="node folder" x="540" y="420" width="135" height="52" rx="8"/><text class="text" x="558" y="452">migrations/</text>
+  <rect class="node folder" x="690" y="420" width="135" height="52" rx="8"/><text class="text" x="708" y="452">seeders/</text>
+  <rect class="node file" x="540" y="495" width="285" height="61" rx="8"/>
+  <text class="head" x="560" y="524">Migrations</text><text class="small" x="560" y="546">Tạo bảng và quan hệ MySQL</text>
+  <rect class="node file" x="540" y="575" width="285" height="61" rx="8"/>
+  <text class="head" x="560" y="604">Seeders</text><text class="small" x="560" y="626">Dữ liệu mẫu, sản phẩm, voucher</text>
+
+  <path class="line" d="M935 323V385M835 385H1035M835 385V420M1035 385V420"/>
+  <rect class="node folder" x="825" y="420" width="195" height="52" rx="8"/><text class="text" x="843" y="452">views/Admin/</text>
+  <rect class="node folder" x="825" y="495" width="195" height="52" rx="8"/><text class="text" x="843" y="527">views/emails/</text>
+  <text class="small" x="825" y="580">Giao diện Blade quản trị</text>
+  <text class="small" x="825" y="605">Template email đơn hàng, OTP</text>
+
+  <path class="line" d="M1215 323V385M1115 385H1315M1115 385V420M1215 385V420M1315 385V420"/>
+  <rect class="node file" x="1100" y="420" width="135" height="52" rx="8"/><text class="text" x="1118" y="452">api.php</text>
+  <rect class="node file" x="1250" y="420" width="135" height="52" rx="8"/><text class="text" x="1268" y="452">web.php</text>
+  <rect class="node file" x="1400" y="420" width="135" height="52" rx="8"/><text class="text" x="1418" y="452">console.php</text>
+  <text class="small" x="1100" y="500">REST API cho Next.js</text>
+  <text class="small" x="1250" y="525">Admin Blade và login</text>
+
+  <rect class="node file" x="1395" y="585" width="160" height="58" rx="8"/><text class="text" x="1413" y="617">logs/</text>
+  <rect class="node file" x="1395" y="663" width="160" height="58" rx="8"/><text class="text" x="1413" y="695">app/public/</text>
+  <text class="small" x="1395" y="750">Log hệ thống và ảnh upload</text>
+
+  <rect x="65" y="960" width="1470" height="95" rx="12" fill="#ffedd5" stroke="#fdba74"/>
+  <text class="head" x="95" y="995">Nguyên tắc tổ chức</text>
+  <text class="text" x="95" y="1025">Controllers nhận request • Services chứa nghiệp vụ/tích hợp • Models thao tác dữ liệu • Routes định tuyến • Migrations quản lý cấu trúc CSDL.</text>
+</svg>
