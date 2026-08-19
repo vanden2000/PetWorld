@@ -14,7 +14,7 @@ class KnowledgeArticleController extends Controller
     {
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
-            'category' => ['nullable', Rule::in(['shipping', 'payment', 'returns', 'voucher', 'contact'])],
+            'category' => ['nullable', Rule::in(KnowledgeArticle::categoryKeys())],
             'status' => ['nullable', Rule::in(['draft', 'published', 'archived'])],
         ]);
         $search = trim((string) ($filters['search'] ?? ''));
@@ -52,7 +52,7 @@ class KnowledgeArticleController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'summary' => ['nullable', 'string', 'max:1000'],
-            'category' => ['required', 'in:shipping,payment,returns,voucher,contact'],
+            'category' => ['required', 'in:' . implode(',', KnowledgeArticle::categoryKeys())],
             'content' => ['required', 'string'],
             'questions' => ['nullable', 'array', 'max:10'],
             'questions.*' => ['nullable', 'string', 'max:200'],

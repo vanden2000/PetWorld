@@ -111,7 +111,10 @@ class PostController extends Controller
             'content' => ['required', 'string'],
             'image' => ['required', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
             'cover_alt' => ['nullable', 'string', 'max:255'],
+            'canonical_url' => ['nullable', 'url', 'max:255'],
+            'noindex' => ['nullable', 'boolean'],
             'status' => ['required', 'in:active,inactive'],
+            'published_at' => ['nullable', 'date'],
         ], [
             'title.required' => 'Vui lòng nhập tiêu đề bài viết.',
             'title.unique' => 'Tiêu đề bài viết này đã tồn tại.',
@@ -120,6 +123,8 @@ class PostController extends Controller
             'blog_category_id.required' => 'Vui lòng chọn danh mục bài viết.',
             'blog_category_id.exists' => 'Danh mục bài viết không hợp lệ.',
             'description.required' => 'Vui lòng nhập mô tả ngắn.',
+            'canonical_url.url' => 'Đường dẫn canonical phải là một URL hợp lệ (bắt đầu bằng http:// hoặc https://).',
+            'published_at.date' => 'Ngày xuất bản không hợp lệ.',
             'content.required' => 'Vui lòng nhập nội dung bài viết.',
             'image.required' => 'Vui lòng tải lên ảnh bìa cho bài viết.',
             'image.file' => 'Ảnh bìa phải là định dạng tệp tin.',
@@ -146,6 +151,7 @@ class PostController extends Controller
             'view_count' => 0,
             'image' => $imagePath,
             'status' => $request->input('status'),
+            'published_at' => $request->input('published_at') ?: now(),
         ]);
 
         if ($request->expectsJson()) {
@@ -183,7 +189,10 @@ class PostController extends Controller
             'content' => ['required', 'string'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
             'cover_alt' => ['nullable', 'string', 'max:255'],
+            'canonical_url' => ['nullable', 'url', 'max:255'],
+            'noindex' => ['nullable', 'boolean'],
             'status' => ['required', 'in:active,inactive'],
+            'published_at' => ['nullable', 'date'],
         ], [
             'title.required' => 'Vui lòng nhập tiêu đề bài viết.',
             'title.unique' => 'Tiêu đề bài viết này đã tồn tại.',
@@ -192,6 +201,8 @@ class PostController extends Controller
             'blog_category_id.required' => 'Vui lòng chọn danh mục bài viết.',
             'blog_category_id.exists' => 'Danh mục bài viết không hợp lệ.',
             'description.required' => 'Vui lòng nhập mô tả ngắn.',
+            'canonical_url.url' => 'Đường dẫn canonical phải là một URL hợp lệ (bắt đầu bằng http:// hoặc https://).',
+            'published_at.date' => 'Ngày xuất bản không hợp lệ.',
             'content.required' => 'Vui lòng nhập nội dung bài viết.',
             'image.file' => 'Ảnh bìa phải là định dạng tệp tin.',
             'image.mimes' => 'Ảnh bìa chỉ hỗ trợ JPG, JPEG, PNG, GIF, WEBP.',
@@ -218,6 +229,7 @@ class PostController extends Controller
             'content' => $request->input('content'),
             'image' => $imagePath,
             'status' => $request->input('status'),
+            'published_at' => $request->input('published_at') ?: $post->published_at ?: $post->created_at,
         ]);
 
         if ($request->expectsJson()) {
@@ -282,6 +294,8 @@ class PostController extends Controller
             'secondary_keywords' => $keywords ?: null,
             'search_intent' => $request->input('search_intent') ?: null,
             'cover_alt' => $this->cleanSeoValue($request->input('cover_alt')),
+            'canonical_url' => $this->cleanSeoValue($request->input('canonical_url')),
+            'noindex' => $request->boolean('noindex'),
         ];
     }
 

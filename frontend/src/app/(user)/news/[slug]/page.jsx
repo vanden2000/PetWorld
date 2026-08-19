@@ -21,18 +21,20 @@ export async function generateMetadata({ params }) {
   const title = blog.seo_title || `${blog.title} | PetWorld`;
   const description = blog.meta_description || blog.description || "Cẩm nang chăm sóc thú cưng từ PetWorld.";
   const image = blog.image ? resolveBlogImage(blog.image) : undefined;
-  const canonical = absoluteUrl(`/news/${blog.slug}`);
+  const canonical = absoluteUrl(blog.canonical_url || `/news/${blog.slug}`);
 
   return {
     title,
     description,
     alternates: { canonical },
+    robots: blog.noindex ? { index: false, follow: true } : undefined,
     openGraph: {
       type: "article",
       url: canonical,
       title,
       description,
-      publishedTime: blog.created_at,
+      publishedTime: blog.published_at || blog.created_at,
+      modifiedTime: blog.modified_at || undefined,
       authors: blog.author?.name ? [blog.author.name] : undefined,
       images: image ? [{ url: image, alt: blog.cover_alt || blog.title }] : [],
     },
@@ -61,7 +63,7 @@ export default async function BlogDetailPage({ params }) {
   const { blog, related_blogs = [] } = data;
   const recentBlogs = (listData.blogs ?? []).filter((item) => item.slug !== slug).slice(0, 4);
   const categories = listData.categories ?? [];
-  const canonicalUrl = absoluteUrl(`/news/${blog.slug}`);
+  const canonicalUrl = absoluteUrl(blog.canonical_url || `/news/${blog.slug}`);
   const articleImage = blog.image ? resolveBlogImage(blog.image) : null;
   const articleJsonLd = {
     "@context": "https://schema.org",
@@ -69,8 +71,8 @@ export default async function BlogDetailPage({ params }) {
     headline: blog.title,
     description: blog.meta_description || blog.description || undefined,
     image: articleImage ? [articleImage] : undefined,
-    datePublished: blog.created_at || undefined,
-    dateModified: blog.updated_at || blog.created_at || undefined,
+    datePublished: blog.published_at || blog.created_at || undefined,
+    dateModified: blog.modified_at || blog.published_at || blog.created_at || undefined,
     author: {
       "@type": "Person",
       name: blog.author?.name || "PetWorld",

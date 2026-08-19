@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CheckoutOptionController;
 use App\Http\Controllers\Api\GhtkQuoteController;
 use App\Http\Controllers\Api\GhnLocationController;
 use App\Http\Controllers\Api\GhnWebhookController;
+use App\Http\Controllers\Api\KnowledgeController;
 use App\Http\Controllers\Api\ShippingQuoteController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
@@ -92,6 +93,9 @@ Route::post('/webhooks/ghn', GhnWebhookController::class);
 Route::get('/blogs', [BlogController::class, 'index']);
 Route::get('/blogs/sitemap', [BlogController::class, 'sitemap']);
 Route::get('/blogs/{slug}', [BlogController::class, 'show']);
+Route::get('/knowledge', [KnowledgeController::class, 'index']);
+Route::get('/knowledge/sitemap', [KnowledgeController::class, 'sitemap']);
+Route::get('/knowledge/{slug}', [KnowledgeController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/pet-species', [PetSpeciesController::class, 'index']);
 // đã xem gần đây

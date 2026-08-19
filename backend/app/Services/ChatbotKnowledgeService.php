@@ -11,7 +11,7 @@ class ChatbotKnowledgeService
     public function search(array $filters): array
     {
         $query = trim((string) ($filters['query'] ?? ''));
-        $category = in_array($filters['category'] ?? null, ['shipping', 'payment', 'returns', 'voucher', 'contact'], true)
+        $category = in_array($filters['category'] ?? null, KnowledgeArticle::categoryKeys(), true)
             ? $filters['category']
             : null;
 

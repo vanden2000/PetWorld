@@ -218,6 +218,15 @@
                     </div>
                     @error('status') <span class="pe-error">{{ $message }}</span> @enderror
 
+                    {{-- blogs.published_at --}}
+                    <div class="pe-field" style="margin-top: 14px;">
+                        <label class="pe-label" for="published_at">Ngày xuất bản</label>
+                        <input type="datetime-local" id="published_at" name="published_at" class="pe-input"
+                               value="{{ old('published_at', ($post->published_at ?: ($isEdit ? $post->created_at : now()))?->format('Y-m-d\TH:i')) }}">
+                        <div class="pe-help">Hiển thị trên bài viết và gửi cho Google qua schema Article.</div>
+                        @error('published_at') <span class="pe-error">{{ $message }}</span> @enderror
+                    </div>
+
                     <div class="pe-actions" style="margin-top: 18px;">
                         <button type="submit" class="pe-btn pe-btn-primary pe-btn-block" id="pe-submit">
                             <i class="fa-solid fa-circle-check"></i>

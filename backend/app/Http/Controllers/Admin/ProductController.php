@@ -25,6 +25,18 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
+    /**
+     * Trần giá 1 tỷ đồng: cột DB là decimal(12,2) nên chứa được nhiều hơn,
+     * nhưng chặn ở mức hợp lý để bắt lỗi gõ thừa số 0 ngay khi nhập.
+     */
+    private const MAX_PRICE = 1000000000;
+
+    /** Tồn kho tối đa mỗi biến thể. */
+    private const MAX_QUANTITY = 100000;
+
+    /** Cân nặng tối đa: 50kg, đủ cho bao thức ăn lớn nhất. */
+    private const MAX_WEIGHT_GRAMS = 50000;
+
     public function __construct(private readonly ProductDescriptionSanitizer $descriptionSanitizer)
     {
     }
@@ -324,6 +336,7 @@ class ProductController extends Controller
         $firstVariant = $product->variants->first();
         $validated = $this->validateProduct($request, $firstVariant?->id, $product);
         $this->validateSpeciesLifeStages($validated);
+        $this->ensureCreateProductHasImage($request, $product);
         $imageChanges = $this->validateImageChanges($request, $product);
         $slug = $this->uniqueSlug($validated['slug'] ?? $validated['name'], $product->id);
 
@@ -360,7 +373,7 @@ class ProductController extends Controller
                 $variantData = [
                     'sku' => $validated['sku'],
                     'price' => $validated['price'],
-                    'sale_price' => $validated['sale_price'] ?? null,
+                    'sale_price' => $this->normalizeSalePrice($validated['sale_price'] ?? null),
                     'quantity' => $validated['quantity'],
                     'weight_grams' => $validated['weight_grams'] ?? 0,
                     'status' => 'active',
@@ -413,9 +426,11 @@ class ProductController extends Controller
             'sku' => $baseRequirement . '|string|max:255|unique:product_variants,sku' . ($variantId ? ',' . $variantId : ''),
             'category_id' => 'required|exists:categories,id',
             'brand_id' => 'required|exists:brands,id',
-            'price' => $baseRequirement . '|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0|lt:price',
-            'quantity' => $baseRequirement . '|integer|min:0',
+            'price' => $baseRequirement . '|numeric|min:1000|max:' . self::MAX_PRICE,
+            // Giá giảm phải > 0: ô để trống mới là "không giảm giá" (xem normalizeSalePrice).
+            'sale_price' => 'nullable|numeric|min:1|lt:price|max:' . self::MAX_PRICE,
+            'quantity' => $baseRequirement . '|integer|min:0|max:' . self::MAX_QUANTITY,
+            'weight_grams' => 'nullable|integer|min:0|max:' . self::MAX_WEIGHT_GRAMS,
             'description' => 'nullable|string',
             'short_description' => 'nullable|string|max:500',
             'focus_keyword' => 'nullable|string|max:120',
@@ -434,10 +449,10 @@ class ProductController extends Controller
             'variants' => 'nullable|array',
             'variants.*.id' => 'nullable|integer|exists:product_variants,id',
             'variants.*.sku' => 'nullable|string|max:255',
-            'variants.*.price' => 'nullable|numeric|min:0',
-            'variants.*.sale_price' => 'nullable|numeric|min:0',
-            'variants.*.quantity' => 'nullable|integer|min:0',
-            'variants.*.weight_grams' => 'nullable|integer|min:0|max:50000',
+            'variants.*.price' => 'nullable|numeric|min:1000|max:' . self::MAX_PRICE,
+            'variants.*.sale_price' => 'nullable|numeric|min:1|max:' . self::MAX_PRICE,
+            'variants.*.quantity' => 'nullable|integer|min:0|max:' . self::MAX_QUANTITY,
+            'variants.*.weight_grams' => 'nullable|integer|min:0|max:' . self::MAX_WEIGHT_GRAMS,
             'variants.*.visible' => 'nullable|in:1',
             'variants.*.value_ids' => 'nullable|array',
             'variants.*.value_ids.*' => 'integer|exists:variant_values,id',
@@ -455,7 +470,7 @@ class ProductController extends Controller
             'image_alt_texts.*' => 'nullable|string|max:255',
             'new_image_alt_texts' => 'nullable|array',
             'new_image_alt_texts.*' => 'nullable|string|max:255',
-        ]);
+        ], $this->productValidationMessages());
 
         foreach ($request->input('variants', []) as $index => $variant) {
             $salePrice = $variant['sale_price'] ?? null;
@@ -465,6 +480,14 @@ class ProductController extends Controller
             if ($sku !== '' && ($price === null || $price === '' || ! array_key_exists('quantity', $variant) || $variant['quantity'] === '')) {
                 throw ValidationException::withMessages([
                     "variants.{$index}" => 'Mỗi biến thể có SKU phải có giá bán và tồn kho.',
+                ]);
+            }
+
+            // Số 0 nghĩa là "không giảm giá" nhưng lại vi phạm CHECK constraint của DB,
+            // nên phải báo lỗi rõ ràng thay vì để câu INSERT nổ.
+            if ($salePrice !== null && $salePrice !== '' && (float) $salePrice <= 0) {
+                throw ValidationException::withMessages([
+                    "variants.{$index}.sale_price" => 'Giá giảm phải lớn hơn 0. Để trống ô này nếu biến thể không giảm giá.',
                 ]);
             }
 
@@ -528,14 +551,31 @@ class ProductController extends Controller
         return $validated;
     }
 
-    private function ensureCreateProductHasImage(Request $request): void
+    /**
+     * Sản phẩm luôn phải còn ít nhất một ảnh.
+     *
+     * Khi tạo mới ($product = null) thì chỉ xét ảnh vừa tải lên. Khi sửa thì
+     * cộng thêm ảnh cũ chưa bị đánh dấu xoá, để không cho gỡ sạch ảnh.
+     */
+    private function ensureCreateProductHasImage(Request $request, ?Product $product = null): void
     {
         if (count($request->file('images', [])) > 0) {
             return;
         }
 
+        if ($product) {
+            $deletedIds = array_filter((array) $request->input('deleted_image_ids', []));
+            $remaining = $product->images()
+                ->when($deletedIds, fn($query) => $query->whereKeyNot($deletedIds))
+                ->count();
+
+            if ($remaining > 0) {
+                return;
+            }
+        }
+
         throw ValidationException::withMessages([
-            'images' => 'Sản phẩm mới cần có ít nhất một ảnh.',
+            'images' => 'Sản phẩm cần có ít nhất một ảnh. Vui lòng tải lên ảnh trước khi lưu.',
         ]);
     }
 
@@ -582,7 +622,7 @@ class ProductController extends Controller
                 $product->variants()->create([
                     'sku' => $fallback['sku'],
                     'price' => $fallback['price'],
-                    'sale_price' => $fallback['sale_price'] ?? null,
+                    'sale_price' => $this->normalizeSalePrice($fallback['sale_price'] ?? null),
                     'quantity' => $fallback['quantity'],
                     'weight_grams' => $fallback['weight_grams'] ?? 0,
                     'status' => 'active',
@@ -593,9 +633,8 @@ class ProductController extends Controller
         }
 
         foreach ($variants as $variantInput) {
-            $salePrice = $variantInput['sale_price'] ?? null;
             $price = $variantInput['price'] ?? $fallback['price'];
-            $salePrice = $salePrice === '' ? null : $salePrice;
+            $salePrice = $this->normalizeSalePrice($variantInput['sale_price'] ?? null);
 
             $data = [
                 'sku' => $variantInput['sku'],
@@ -620,6 +659,102 @@ class ProductController extends Controller
             $variant = $product->variants()->create($data);
             $variant->syncVariantValues($this->cleanVariantValueIds($variantInput['value_ids'] ?? []));
         }
+
+        $this->removeVariantsMissingFromForm($product, $variants);
+    }
+
+    /**
+     * Xoá các biến thể đã bị gỡ khỏi biểu mẫu.
+     *
+     * Biến thể từng phát sinh đơn hàng thì không xoá được (khoá ngoại order_items
+     * là RESTRICT, và xoá đi sẽ mất lịch sử đơn) — chuyển sang ẩn để không còn
+     * bán ra nhưng đơn cũ vẫn tra cứu được. Sản phẩm luôn phải còn ít nhất 1 biến thể.
+     */
+    private function removeVariantsMissingFromForm(Product $product, \Illuminate\Support\Collection $submitted): void
+    {
+        $keptIds = $submitted->pluck('id')->filter()->map(fn($id): int => (int) $id)->all();
+
+        $removable = $product->variants()
+            ->when($keptIds, fn($query) => $query->whereKeyNot($keptIds))
+            ->get();
+
+        if ($removable->isEmpty()) {
+            return;
+        }
+
+        // Không cho gỡ sạch: sản phẩm phải còn ít nhất một biến thể để bán.
+        if ($product->variants()->count() === $removable->count()) {
+            throw ValidationException::withMessages([
+                'variants' => 'Sản phẩm phải còn ít nhất một biến thể.',
+            ]);
+        }
+
+        foreach ($removable as $variant) {
+            if ($variant->orderItems()->exists()) {
+                $variant->update(['status' => 'inactive']);
+                continue;
+            }
+
+            $variant->variantValues()->detach();
+            $variant->delete();
+        }
+    }
+
+    /**
+     * Thông báo lỗi tiếng Việt cho các trường số của sản phẩm/biến thể.
+     * `:index` trong key `variants.*` được Laravel thay bằng số thứ tự dòng.
+     */
+    private function productValidationMessages(): array
+    {
+        $maxPrice = number_format(self::MAX_PRICE, 0, ',', '.');
+        $maxQuantity = number_format(self::MAX_QUANTITY, 0, ',', '.');
+        $maxWeight = number_format(self::MAX_WEIGHT_GRAMS, 0, ',', '.');
+
+        return [
+            'name.required' => 'Vui lòng nhập tên sản phẩm.',
+            'category_id.required' => 'Vui lòng chọn danh mục.',
+            'brand_id.required' => 'Vui lòng chọn thương hiệu.',
+            'sku.required' => 'Vui lòng nhập mã SKU.',
+            'sku.unique' => 'Mã SKU này đã tồn tại, vui lòng dùng mã khác.',
+
+            'price.required' => 'Vui lòng nhập giá bán.',
+            'price.min' => 'Giá bán tối thiểu là 1.000đ.',
+            'price.max' => "Giá bán tối đa là {$maxPrice}đ.",
+
+            'sale_price.min' => 'Giá giảm phải lớn hơn 0. Để trống ô này nếu không giảm giá.',
+            'sale_price.lt' => 'Giá giảm phải nhỏ hơn giá bán.',
+            'sale_price.max' => "Giá giảm tối đa là {$maxPrice}đ.",
+
+            'quantity.required' => 'Vui lòng nhập số lượng tồn kho.',
+            'quantity.min' => 'Tồn kho không được là số âm.',
+            'quantity.max' => "Tồn kho tối đa là {$maxQuantity}.",
+
+            'weight_grams.max' => "Cân nặng tối đa là {$maxWeight}g (50kg).",
+
+            'variants.*.price.min' => 'Giá bán của biến thể tối thiểu là 1.000đ.',
+            'variants.*.price.max' => "Giá bán của biến thể tối đa là {$maxPrice}đ.",
+            'variants.*.sale_price.min' => 'Giá giảm phải lớn hơn 0. Để trống ô này nếu biến thể không giảm giá.',
+            'variants.*.sale_price.max' => "Giá giảm của biến thể tối đa là {$maxPrice}đ.",
+            'variants.*.quantity.min' => 'Tồn kho của biến thể không được là số âm.',
+            'variants.*.quantity.max' => "Tồn kho của biến thể tối đa là {$maxQuantity}.",
+            'variants.*.weight_grams.max' => "Cân nặng của biến thể tối đa là {$maxWeight}g (50kg).",
+        ];
+    }
+
+    /**
+     * Chuẩn hóa giá giảm trước khi ghi DB.
+     *
+     * Ô để trống, số 0 hay số âm đều mang nghĩa "không giảm giá" -> lưu NULL.
+     * Bắt buộc phải làm vì CHECK constraint `product_variants_sale_price_valid`
+     * chỉ chấp nhận NULL hoặc giá trị > 0 và nhỏ hơn price.
+     */
+    private function normalizeSalePrice(mixed $salePrice): ?float
+    {
+        if ($salePrice === null || $salePrice === '') {
+            return null;
+        }
+
+        return (float) $salePrice > 0 ? (float) $salePrice : null;
     }
 
     private function hasSubmittedVariants(Request $request): bool

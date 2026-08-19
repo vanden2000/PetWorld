@@ -25,12 +25,17 @@ class Blog extends Model
         'view_count',
         'image',
         'cover_alt',
+        'canonical_url',
+        'noindex',
         'status',
+        'published_at',
     ];
 
     protected $casts = [
         'view_count' => 'integer',
         'secondary_keywords' => 'array',
+        'noindex' => 'boolean',
+        'published_at' => 'datetime',
     ];
 
     public function category(): BelongsTo

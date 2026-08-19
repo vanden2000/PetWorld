@@ -162,7 +162,7 @@
         </div>
         <select name="category" id="knowledge-category" class="knowledge-filter-select" aria-label="Lọc theo nhóm kiến thức">
             <option value="">Tất cả nhóm</option>
-            @foreach(['shipping'=>'Giao hàng','payment'=>'Thanh toán','returns'=>'Đổi trả','voucher'=>'Voucher','contact'=>'Liên hệ'] as $value => $label)
+            @foreach(\App\Models\KnowledgeArticle::CATEGORIES as $value => $label)
                 <option value="{{ $value }}" @selected(($filters['category'] ?? '') === $value)>{{ $label }}</option>
             @endforeach
         </select>
@@ -198,7 +198,7 @@
                         </td>
                         <td style="padding: 16px 24px;">
                             <span class="badge-category">
-                                {{ ['shipping'=>'Giao hàng','payment'=>'Thanh toán','returns'=>'Đổi trả','voucher'=>'Voucher','contact'=>'Liên hệ'][$article->category] ?? $article->category }}
+                                {{ \App\Models\KnowledgeArticle::CATEGORIES[$article->category] ?? $article->category }}
                             </span>
                         </td>
                         <td style="padding: 16px 24px;">

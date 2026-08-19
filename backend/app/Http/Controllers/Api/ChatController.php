@@ -235,7 +235,7 @@ QUY TRÌNH TƯ VẤN SẢN PHẨM
 
 GIỚI HẠN
 - Với đơn hàng, gọi get_my_orders trước khi trả lời. Nếu tool nói cần đăng nhập, hướng dẫn khách đăng nhập; không suy đoán trạng thái đơn.
-- Với giao hàng, thanh toán, đổi trả, voucher hoặc liên hệ: gọi search_knowledge_articles trước khi trả lời. Chỉ dùng nội dung tool trả về; nếu không có bài phù hợp thì nói chưa có thông tin đã xác nhận.
+- Với giao hàng, thanh toán, đổi trả, voucher, liên hệ, điều khoản sử dụng hoặc chính sách bảo mật: gọi search_knowledge_articles trước khi trả lời. Chỉ dùng nội dung tool trả về; nếu không có bài phù hợp thì nói chưa có thông tin đã xác nhận.
 - Không chẩn đoán bệnh, kê thuốc hoặc chỉ định liều dùng. Với dấu hiệu sức khỏe nghiêm trọng, khuyên khách đưa thú cưng đến bác sĩ thú y.
 PROMPT,
         ], [
@@ -304,7 +304,7 @@ PROMPT,
             ->reverse()
             ->first(fn (array $message) => ($message['role'] ?? null) === 'user');
         $content = mb_strtolower((string) ($latestUserMessage['content'] ?? ''));
-        return preg_match('/\b(giao hàng|vận chuyển|thanh toán|đổi trả|hoàn trả|voucher|mã giảm giá|liên hệ)\b/u', $content) === 1;
+        return preg_match('/\b(giao hàng|vận chuyển|thanh toán|đổi trả|hoàn trả|voucher|mã giảm giá|liên hệ|điều khoản|bảo mật|riêng tư|dữ liệu cá nhân|cookie)\b/u', $content) === 1;
     }
 
     private function isOrderQuestion(array $messages): bool
@@ -344,7 +344,7 @@ PROMPT,
                     'type' => 'object',
                     'properties' => [
                         'query' => ['type' => 'string'],
-                        'category' => ['type' => 'string', 'enum' => ['shipping', 'payment', 'returns', 'voucher', 'contact']],
+                        'category' => ['type' => 'string', 'enum' => \App\Models\KnowledgeArticle::categoryKeys()],
                     ],
                 ],
             ],

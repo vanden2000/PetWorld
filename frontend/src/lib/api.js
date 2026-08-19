@@ -138,6 +138,51 @@ export async function getBlogDetail(slug) {
 }
 
 /**
+ * Lấy danh sách bài kiến thức (chính sách/hướng dẫn) từ `GET /api/knowledge`.
+ * Cùng nguồn với chatbot: chỉ bài đã xuất bản mới được trả về.
+ * `params` nhận searchParams của trang (category, search).
+ */
+export async function getKnowledgeList(params = {}) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/knowledge${buildQuery(params)}`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Knowledge API trả về ${res.status}`);
+    }
+
+    const json = await res.json();
+    return json?.data ?? {};
+  } catch (error) {
+    console.error("[getKnowledgeList] Không lấy được danh sách bài kiến thức:", error);
+    return {};
+  }
+}
+
+/**
+ * Lấy chi tiết một bài kiến thức từ `GET /api/knowledge/{slug}`.
+ * Trả về null nếu không tìm thấy/lỗi để trang gọi notFound().
+ */
+export async function getKnowledgeDetail(slug) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/knowledge/${encodeURIComponent(slug)}`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Knowledge detail API trả về ${res.status}`);
+    }
+
+    const json = await res.json();
+    return json?.data ?? null;
+  } catch (error) {
+    console.error(`[getKnowledgeDetail] Không lấy được bài kiến thức "${slug}":`, error);
+    return null;
+  }
+}
+
+/**
  * Gửi bình luận mới cho bài viết từ `POST /api/blogs/{slug}/comments`.
  */
 export async function postBlogComment(slug, content) {

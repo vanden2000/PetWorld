@@ -84,6 +84,7 @@ class BlogController extends Controller
             ->all();
 
         $comments = $blog->comments()
+            ->visible()
             ->with('user')
             ->where('status', 'approved')
             ->latest()
@@ -157,9 +158,13 @@ class BlogController extends Controller
             'search_intent' => $blog->search_intent,
             'image' => $blog->image,
             'cover_alt' => $blog->cover_alt,
+            'canonical_url' => $blog->canonical_url,
+            'noindex' => (bool) $blog->noindex,
             'view_count' => $blog->view_count,
             'created_at' => $blog->created_at?->toDateTimeString(),
             'updated_at' => $blog->updated_at?->toDateTimeString(),
+            'published_at' => ($blog->published_at ?: $blog->created_at)?->toIso8601String(),
+            'modified_at' => $blog->updated_at?->toIso8601String(),
             'category' => [
                 'id' => $blog->category->id,
                 'name' => $blog->category->name,
