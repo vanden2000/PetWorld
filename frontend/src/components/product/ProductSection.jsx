@@ -25,19 +25,32 @@ export default function ProductSection({
   isSlider = false,
   showSoldCount = false,
   showSale = true,
+  hasLoadMore = false,
+  initialCount = 5,
+  loadMoreStep = 5,
 }) {
+  const [visibleCount, setVisibleCount] = useState(initialCount);
+
+  useEffect(() => {
+    setVisibleCount(initialCount);
+  }, [products.length, initialCount]);
+
   if (!products.length) return null;
 
-  const visibleProducts = products.slice(0, limit);
+  const isActuallySlider = isSlider && !hasLoadMore;
+  const currentLimit = hasLoadMore ? visibleCount : limit;
+  const visibleProducts = products.slice(0, currentLimit);
 
-  if (!isSlider) {
+  if (!isActuallySlider) {
     return (
       <section className="homepage-section">
         <div className="section-header">
           <h2 className="section-title">{title}</h2>
-          <Link href={viewAllHref} className="view-all-link">
-            xem tất cả ➔
-          </Link>
+          {!hasLoadMore && (
+            <Link href={viewAllHref} className="view-all-link">
+              xem tất cả ➔
+            </Link>
+          )}
         </div>
 
         <div className={GRID_CLASS[columns] || GRID_CLASS[5]}>
@@ -51,6 +64,18 @@ export default function ProductSection({
             />
           ))}
         </div>
+
+        {hasLoadMore && visibleCount < products.length && (
+          <div className="load-more-container">
+            <button
+              type="button"
+              className="load-more-btn"
+              onClick={() => setVisibleCount((prev) => Math.min(prev + loadMoreStep, products.length))}
+            >
+              Xem thêm
+            </button>
+          </div>
+        )}
       </section>
     );
   }

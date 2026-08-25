@@ -29,8 +29,12 @@ class OrderSeeder extends Seeder
                 'payment_status' => 'paid',
                 'note' => 'Giao giờ hành chính.',
                 'items' => [
-                    ['variant' => 'royal-canin-mini-adult', 'quantity' => 1],
-                    ['variant' => 'day-dat-trixie-premium', 'quantity' => 1],
+                    ['variant' => 'royal-canin-mini-adult', 'quantity' => 15],
+                    ['variant' => 'day-dat-trixie-premium', 'quantity' => 12],
+                    ['variant' => 'pate-royal-canin-mini-puppy', 'quantity' => 13],
+                    ['variant' => 'pedigree-dentastix', 'quantity' => 16],
+                    ['variant' => 'smartheart-creamy-treat', 'quantity' => 12],
+                    ['variant' => 'bat-an-inox-trixie', 'quantity' => 11],
                 ],
             ],
             [
@@ -42,8 +46,11 @@ class OrderSeeder extends Seeder
                 'payment_status' => 'paid',
                 'note' => null,
                 'items' => [
-                    ['variant' => 'whiskas-adult-vi-ca-bien', 'quantity' => 2],
-                    ['variant' => 'pate-me-o-ca-ngu', 'quantity' => 6],
+                    ['variant' => 'whiskas-adult-vi-ca-bien', 'quantity' => 11],
+                    ['variant' => 'pate-me-o-ca-ngu', 'quantity' => 14],
+                    ['variant' => 'kong-classic', 'quantity' => 15],
+                    ['variant' => 'bong-trixie-denta-fun', 'quantity' => 13],
+                    ['variant' => 'xit-khu-mui-bioline', 'quantity' => 14],
                 ],
             ],
             [
@@ -51,12 +58,15 @@ class OrderSeeder extends Seeder
                 'voucher_code' => null,
                 'shipping_method' => 'Giao hàng tiêu chuẩn',
                 'payment_method' => 'Chuyển khoản ngân hàng',
-                'order_status' => 'shipping',
+                'order_status' => 'completed',
                 'payment_status' => 'paid',
                 'note' => 'Gọi trước khi giao.',
                 'items' => [
-                    ['variant' => 'smartheart-creamy-treat', 'quantity' => 2],
-                    ['variant' => 'sua-tam-bioline', 'quantity' => 1],
+                    ['variant' => 'sua-tam-bioline', 'quantity' => 12],
+                    ['variant' => 'vong-co-chuong-trixie', 'quantity' => 11],
+                    ['variant' => 'tui-van-chuyen-phi-hanh-gia', 'quantity' => 15],
+                    ['variant' => 'luoc-chai-long-tu-dong-trixie', 'quantity' => 13],
+                    ['variant' => 'can-cau-long-vu-meo', 'quantity' => 14],
                 ],
             ],
         ];

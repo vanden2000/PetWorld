@@ -35,9 +35,10 @@ class HomeController extends Controller
 
             // Đặt truy vấn trong callback để lần cache hit có thể bỏ qua hoàn toàn phần database.
             $featuredProducts = $this->productCardQuery()
+                ->having('sold_quantity', '>', 10)
                 ->orderByDesc('sold_quantity')
                 ->orderByDesc('products.id')
-                ->limit($limits['featured_products'] ?? 8)
+                ->limit(15)
                 ->get();
 
             $saleProducts = $this->productCardQuery()
