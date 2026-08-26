@@ -228,7 +228,6 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  max-width: 1000px;
   margin: 0 auto;
   text-align: center;
   align-items: stretch;
@@ -319,10 +318,9 @@
 }
 
 .trust-logo-img {
-  height: 32px;
   max-width: 100px;
   object-fit: contain;
-  filter: grayscale(100%) opacity(35%);
+  /* filter: grayscale(100%) opacity(35%); */
   transition: all 0.3s ease;
 }
 
@@ -336,7 +334,6 @@
   font-size: 0.88rem;
   color: #8c857e;
   line-height: 1.6;
-  max-width: 600px;
   margin: 0 auto;
 }
 
@@ -386,7 +383,6 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  max-width: 1000px;
   margin: 0 auto;
   align-items: stretch;
 }

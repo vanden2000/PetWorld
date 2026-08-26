@@ -148,6 +148,9 @@ class ProductImageSeeder extends Seeder
                 $image->fill([
                     'image_url' => $imagePath,
                     'is_primary' => $index === 0,
+                    'sort_order' => $index,
+                    // TODO(catalog): Có thể thay bằng alt mô tả cụ thể góc chụp/bao bì nếu ảnh được cập nhật.
+                    'alt_text' => $product->name . ($index === 0 ? ' - ảnh sản phẩm' : ' - hình ảnh ' . ($index + 1)),
                 ])->save();
             }
 

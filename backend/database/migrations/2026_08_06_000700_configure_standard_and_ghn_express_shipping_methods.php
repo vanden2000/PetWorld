@@ -7,7 +7,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE shipping_methods MODIFY fee_mode ENUM('live_quote', 'weight_rule', 'fixed', 'unavailable') NOT NULL DEFAULT 'fixed'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE shipping_methods MODIFY fee_mode ENUM('live_quote', 'weight_rule', 'fixed', 'unavailable') NOT NULL DEFAULT 'fixed'");
+        }
 
         $methods = DB::table('shipping_methods')->whereNull('code')->orderBy('id')->get();
 
@@ -30,6 +32,8 @@ return new class extends Migration
     {
         DB::table('shipping_methods')->where('code', 'standard')->update(['code' => null, 'provider' => null, 'fee_mode' => 'fixed', 'description' => null, 'shipping_fee' => 30000]);
         DB::table('shipping_methods')->where('code', 'ghn_express')->update(['code' => null, 'provider' => null, 'fee_mode' => 'fixed', 'description' => null, 'shipping_fee' => 45000]);
-        DB::statement("ALTER TABLE shipping_methods MODIFY fee_mode ENUM('live_quote', 'fixed', 'unavailable') NOT NULL DEFAULT 'fixed'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE shipping_methods MODIFY fee_mode ENUM('live_quote', 'fixed', 'unavailable') NOT NULL DEFAULT 'fixed'");
+        }
     }
 };

@@ -15,7 +15,7 @@ class ShippingQuoteService
     }
 
     /** @param array<int, int> $quantities */
-    public function quote(ShippingMethod $method, Address $address, array $quantities): array
+    public function quote(ShippingMethod $method, Address $address, array $quantities, ?int $shippingVoucherId = null): array
     {
         $variants = ProductVariant::query()
             ->with('product:id,status')
@@ -44,7 +44,7 @@ class ShippingQuoteService
             default => throw ValidationException::withMessages(['shipping_method' => ['Phương thức giao hàng chưa được hỗ trợ.']]),
         };
 
-        return $this->applyAutomaticShippingPromotion($quote, $orderValue, $method->code);
+        return $this->applyShippingPromotion($quote, $orderValue, $method->code, $shippingVoucherId);
     }
 
     private function standardQuote(int $weightGrams): array
@@ -78,15 +78,27 @@ class ShippingQuoteService
         return ['method_code' => 'ghn_express', 'weight_grams' => $weightGrams, 'shipping_fee_original' => $total, 'shipping_discount' => 0, 'shipping_fee' => $total, 'description' => '1–2 ngày · Phí theo địa chỉ GHN'];
     }
 
-    private function applyAutomaticShippingPromotion(array $quote, float $orderValue, string $methodCode): array
+    private function applyShippingPromotion(array $quote, float $orderValue, string $methodCode, ?int $shippingVoucherId): array
     {
+        if ($shippingVoucherId !== null) {
+            $promotion = Voucher::query()
+                ->whereKey($shippingVoucherId)
+                ->where('applies_to', 'shipping')
+                ->where('is_automatic', false)
+                ->first();
+
+            if ($promotion === null || ! $this->matchesShippingMethod($promotion, $methodCode) || ! $promotion->canBeApplied($orderValue)) {
+                throw ValidationException::withMessages(['shipping_voucher_id' => ['Mã giảm phí vận chuyển không hợp lệ hoặc không đủ điều kiện.']]);
+            }
+
+            return $this->applyPromotion($quote, $promotion);
+        }
+
         $promotion = Voucher::query()
             ->where('status', 'active')
             ->where('applies_to', 'shipping')
             ->where('is_automatic', true)
-            ->where(function ($query) use ($methodCode): void {
-                $query->whereNull('shipping_method_code')->orWhere('shipping_method_code', $methodCode);
-            })
+            ->where(fn ($query) => $query->whereNull('shipping_method_code')->orWhere('shipping_method_code', $methodCode))
             ->where('min_order_value', '<=', $orderValue)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
@@ -98,6 +110,16 @@ class ShippingQuoteService
             return array_merge($quote, ['shipping_promotion' => null, 'shipping_voucher_id' => null]);
         }
 
+        return $this->applyPromotion($quote, $promotion);
+    }
+
+    private function matchesShippingMethod(Voucher $voucher, string $methodCode): bool
+    {
+        return $voucher->shipping_method_code === null || $voucher->shipping_method_code === $methodCode;
+    }
+
+    private function applyPromotion(array $quote, Voucher $promotion): array
+    {
         $cap = $promotion->max_shipping_discount !== null
             ? (float) $promotion->max_shipping_discount
             : (float) $promotion->discount_value;

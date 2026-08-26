@@ -141,11 +141,13 @@ export default function CheckoutView() {
   const qrExpired = paymentExpiresAt !== null && nowMs >= paymentExpiresAt;
 
   const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [appliedShippingVoucher, setAppliedShippingVoucher] = useState(null);
   const [automaticVoucher, setAutomaticVoucher] = useState(null);
   const [eligibleShippingPromotions, setEligibleShippingPromotions] = useState([]);
   const [vouchers, setVouchers] = useState([]);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [loadingVouchers, setLoadingVouchers] = useState(false);
+  const [voucherCodeInput, setVoucherCodeInput] = useState("");
 
   // Tải phương thức giao/thanh toán (public).
   useEffect(() => {
@@ -299,7 +301,7 @@ export default function CheckoutView() {
       setShippingQuoteLoading(true);
       setShippingQuote(null);
       setShippingQuoteError("");
-      getShippingQuote({ address_id: selectedAddressId, shipping_method_code: shippingMethod.code, items: items.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })) })
+      getShippingQuote({ address_id: selectedAddressId, shipping_method_code: shippingMethod.code, shipping_voucher_id: appliedShippingVoucher?.id, items: items.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })) })
         .then((result) => {
           if (!active) return;
           if (result.ok && result.data?.quote) {
@@ -312,7 +314,7 @@ export default function CheckoutView() {
         .finally(() => { if (active) setShippingQuoteLoading(false); });
     });
     return () => { active = false; };
-  }, [selectedAddressId, shippingMethod?.code, items]);
+  }, [selectedAddressId, shippingMethod?.code, items, appliedShippingVoucher?.id]);
 
   const voucherKey = buyNowItem ? "petworld_buynow_applied_voucher" : "petworld_cart_applied_voucher";
 
@@ -394,11 +396,30 @@ export default function CheckoutView() {
 
   const handleApplyVoucher = (voucher) => {
     if (!voucher.can_apply || !voucher.selectable) return;
-    setAppliedVoucher(voucher);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(voucherKey, JSON.stringify(voucher));
+    if (voucher.applies_to === "shipping") {
+      setAppliedShippingVoucher(voucher);
+    } else {
+      setAppliedVoucher(voucher);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(voucherKey, JSON.stringify(voucher));
+      }
     }
+    setVoucherCodeInput("");
     setShowVoucherModal(false);
+  };
+
+  const handleApplyVoucherCode = () => {
+    const code = voucherCodeInput.trim().toUpperCase();
+    const voucher = vouchers.find((item) => item.code.toUpperCase() === code);
+    if (!voucher) {
+      toastError("Mã voucher không tồn tại hoặc đã hết hiệu lực.");
+      return;
+    }
+    if (!voucher.can_apply || !voucher.selectable) {
+      toastError(voucher.availability_message || "Mã voucher chưa đủ điều kiện sử dụng.");
+      return;
+    }
+    handleApplyVoucher(voucher);
   };
 
   const handleRemoveVoucher = () => {
@@ -407,6 +428,8 @@ export default function CheckoutView() {
       localStorage.removeItem(voucherKey);
     }
   };
+
+  const handleRemoveShippingVoucher = () => setAppliedShippingVoucher(null);
 
   const selectedPayment = options.payment_methods.find((m) => m.id === paymentMethodId);
   const isBankTransfer = (selectedPayment?.name ?? "").toLowerCase().includes("chuyển khoản");
@@ -466,6 +489,7 @@ export default function CheckoutView() {
       shipping_method_id: shippingMethodId,
       payment_method_id: paymentMethodId,
       voucher_id: appliedVoucher?.id,
+      shipping_voucher_id: appliedShippingVoucher?.id,
       note: "",
       items: items.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })),
     });
@@ -479,6 +503,9 @@ export default function CheckoutView() {
           localStorage.removeItem(voucherKey);
         }
       }
+      if (result.errors && result.errors.shipping_voucher_id) {
+        setAppliedShippingVoucher(null);
+      }
       return;
     }
 
@@ -488,6 +515,7 @@ export default function CheckoutView() {
       clearCart();
     }
     setAppliedVoucher(null);
+    setAppliedShippingVoucher(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem(voucherKey);
     }
@@ -828,6 +856,15 @@ export default function CheckoutView() {
 
           {/* Voucher trigger */}
           <div className="co-voucher-section">
+            {appliedShippingVoucher && (
+              <div className="co-voucher-applied">
+                <div className="co-voucher-applied-info">
+                  <span className="co-voucher-tag-icon">🚚</span>
+                  <span className="co-voucher-code-name"><strong>{appliedShippingVoucher.code}</strong> · Giảm phí vận chuyển</span>
+                </div>
+                <button type="button" className="co-voucher-remove-btn" onClick={handleRemoveShippingVoucher}>Gỡ</button>
+              </div>
+            )}
             {!appliedVoucher && automaticVoucher && (
               <div className="co-voucher-applied">
                 <div className="co-voucher-applied-info">
@@ -889,6 +926,18 @@ export default function CheckoutView() {
               <button type="button" className="co-modal-close" onClick={() => setShowVoucherModal(false)}>×</button>
             </div>
             <div className="co-modal-body">
+              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                <input
+                  type="text"
+                  value={voucherCodeInput}
+                  onChange={(event) => setVoucherCodeInput(event.target.value.toUpperCase())}
+                  onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); handleApplyVoucherCode(); } }}
+                  placeholder="Nhập mã voucher"
+                  aria-label="Mã voucher"
+                  style={{ flex: 1, minWidth: 0, height: 40, padding: "0 12px", border: "1px solid var(--border-color)", borderRadius: 8, font: "inherit" }}
+                />
+                <button type="button" className="co-voucher-btn active" onClick={handleApplyVoucherCode}>Áp dụng</button>
+              </div>
               {loadingVouchers ? (
                 <div className="co-loading-wrap">
                   <span className="co-spinner" aria-hidden="true"></span>

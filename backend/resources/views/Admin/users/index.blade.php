@@ -323,6 +323,24 @@
             color: #7c3aed;
         }
 
+        .user-action.verify:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .user-action.reset-password:hover {
+            border-color: #d97706;
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+        .user-action.revoke-sessions:hover {
+            border-color: #dc2626;
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
         .users-alert {
             display: flex;
             align-items: center;
@@ -572,8 +590,36 @@
                         <td>{{ $user->created_at?->format('d/m/Y') }}</td>
                         <td>@if((int) $user->id !== (int) auth()->id())
                             <div class="user-actions">
+                                @if($user->role === 'user' && ! $user->email_verified_at && $user->status !== 'blocked')
+                                    <form class="js-user-action" method="POST"
+                                        action="{{ route('admin.users.verification.resend', $user) }}"
+                                        data-title="Gửi lại email xác thực?"
+                                        data-message="Email xác thực sẽ được gửi đến {{ preg_replace('/^(.{2}).*(@.*)$/u', '$1***$2', $user->email) }}."
+                                        data-submit="Gửi email">@csrf<button class="user-action verify" type="submit"
+                                            title="Gửi lại email xác thực" aria-label="Gửi lại email xác thực"><i
+                                                class="fa-solid fa-envelope-circle-check"></i></button></form>
+                                @endif
+                                @if($user->role === 'user' && $user->email_verified_at && $user->status === 'active')
+                                    <form class="js-user-action" method="POST"
+                                        action="{{ route('admin.users.password-reset-otp.send', $user) }}"
+                                        data-title="Gửi mã đặt lại mật khẩu?"
+                                        data-message="Mã OTP đặt lại mật khẩu sẽ được gửi đến {{ preg_replace('/^(.{2}).*(@.*)$/u', '$1***$2', $user->email) }}. Admin không thể xem mật khẩu mới của khách."
+                                        data-submit="Gửi mã OTP">@csrf<button class="user-action reset-password" type="submit"
+                                            title="Gửi mã đặt lại mật khẩu" aria-label="Gửi mã đặt lại mật khẩu"><i
+                                                class="fa-solid fa-key"></i></button></form>
+                                @endif
+                                @if($user->role === 'user')
+                                    <form class="js-user-action" method="POST"
+                                        action="{{ route('admin.users.sessions.revoke', $user) }}"
+                                        data-title="Đăng xuất khỏi tất cả thiết bị?"
+                                        data-message="Khách hàng sẽ phải đăng nhập lại trên mọi thiết bị đang sử dụng."
+                                        data-submit="Xác nhận đăng xuất" data-requires-reason="true">@csrf @method('DELETE')<button
+                                            class="user-action revoke-sessions" type="submit" title="Đăng xuất tất cả thiết bị"
+                                            aria-label="Đăng xuất tất cả thiết bị"><i class="fa-solid fa-right-from-bracket"></i></button></form>
+                                @endif
                                 <form class="js-user-action" method="POST"
-                                    action="{{ route('admin.users.status.update', $user) }}"
+                                    action="{{ $user->role === 'user' && $user->status === 'blocked' ? route('admin.users.unblock', $user) : route('admin.users.status.update', $user) }}"
+                                    data-requires-reason="{{ $user->role === 'user' && $user->status === 'blocked' ? 'true' : 'false' }}"
                                     data-title="{{ $user->status === 'active' ? 'Khóa tài khoản?' : 'Mở khóa tài khoản?' }}"
                                     data-message="{{ $user->status === 'active' ? 'Tài khoản sẽ không thể đăng nhập cho đến khi được mở khóa.' : 'Tài khoản sẽ có thể đăng nhập và sử dụng lại.' }}"
                                     data-submit="{{ $user->status === 'active' ? 'Xác nhận khóa' : 'Xác nhận mở khóa' }}">
@@ -625,8 +671,13 @@
             <p id="user-confirm-message"></p>
             <form method="POST" id="user-confirm-form">
                 @csrf
-                @method('PATCH')
+                <input type="hidden" name="_method" id="user-confirm-method" value="PATCH">
                 <span id="user-confirm-payload"></span>
+                <div id="user-confirm-reason-wrap" hidden style="margin-top:16px">
+                    <label for="user-confirm-reason" style="display:block;margin-bottom:6px;color:var(--text-main);font-size:.82rem;font-weight:700">Lý do</label>
+                    <textarea id="user-confirm-reason" name="reason" rows="3" maxlength="1000"
+                        placeholder="Ví dụ: Khách báo mất điện thoại" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border-color);border-radius:8px;font:inherit;resize:vertical"></textarea>
+                </div>
                 <div class="user-confirm-actions">
                     <button class="user-confirm-cancel" type="button" id="user-confirm-cancel">Hủy</button>
                     <button class="user-confirm-submit" type="submit" id="user-confirm-submit">Xác nhận</button>
@@ -646,11 +697,17 @@
             const submit = document.getElementById('user-confirm-submit');
             const payload = document.getElementById('user-confirm-payload');
             const cancel = document.getElementById('user-confirm-cancel');
+            const method = document.getElementById('user-confirm-method');
+            const reasonWrap = document.getElementById('user-confirm-reason-wrap');
+            const reason = document.getElementById('user-confirm-reason');
             let trigger = null;
 
             function closeModal() {
                 modal.hidden = true;
                 modal.setAttribute('aria-hidden', 'true');
+                reason.value = '';
+                reason.required = false;
+                reasonWrap.hidden = true;
                 trigger?.querySelector('button')?.focus();
             }
 
@@ -662,6 +719,10 @@
                     title.textContent = form.dataset.title;
                     message.textContent = form.dataset.message;
                     submit.textContent = form.dataset.submit;
+                    method.value = form.querySelector('input[name="_method"]')?.value || 'POST';
+                    reasonWrap.hidden = form.dataset.requiresReason !== 'true';
+                    reason.required = form.dataset.requiresReason === 'true';
+                    reason.value = '';
                     payload.innerHTML = '';
                     form.querySelectorAll('input[type="hidden"]').forEach(function (input) {
                         if (input.name !== '_token' && input.name !== '_method') {

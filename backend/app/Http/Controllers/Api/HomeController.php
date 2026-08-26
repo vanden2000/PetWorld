@@ -277,19 +277,20 @@ class HomeController extends Controller
                     ->orderByDesc('sold_quantity')
                     ->orderByDesc('view_count')
                     ->orderByDesc('id')
-                    ->limit(8)
                     ->get();
 
                 // Nếu danh mục có sản phẩm khuyến mãi thì dùng saleProducts; nếu không có sản phẩm khuyến mãi thì dùng sản phẩm bán chạy của danh mục.
-                $products = $saleProducts->isNotEmpty()
-                    ? $saleProducts
-                    : $this->productCardQuery()
-                        ->where('category_id', $category->id)
-                        ->orderByDesc('sold_quantity')
-                        ->orderByDesc('view_count')
-                        ->orderByDesc('id')
-                        ->limit(8)
-                        ->get();
+                $products = $this->formatProducts($saleProducts);
+                $averageDiscountPercent = collect($products)
+                    ->map(function (array $product): float {
+                        $displayPrice = (float) ($product['price_range']['display'] ?? 0);
+                        $compareAtPrice = (float) ($product['price_range']['compare_at'] ?? 0);
+
+                        return $compareAtPrice > $displayPrice && $displayPrice > 0
+                            ? (($compareAtPrice - $displayPrice) / $compareAtPrice) * 100
+                            : 0;
+                    })
+                    ->avg() ?? 0;
 
                 return [
                     'category' => [
@@ -298,10 +299,19 @@ class HomeController extends Controller
                         'slug' => $category->slug,
                         'image' => $category->image,
                     ],
-                    'products' => $this->formatProducts($products),
+                    'sale_product_count' => count($products),
+                    'total_sold_quantity' => (int) $saleProducts->sum('sold_quantity'),
+                    'average_discount_percent' => round($averageDiscountPercent, 2),
+                    'products' => $products,
                 ];
             })
             ->filter(fn(array $group): bool => count($group['products']) > 0)
+            ->sort(function (array $left, array $right): int {
+                return $right['sale_product_count'] <=> $left['sale_product_count']
+                    ?: $right['total_sold_quantity'] <=> $left['total_sold_quantity']
+                    ?: $right['average_discount_percent'] <=> $left['average_discount_percent']
+                    ?: $left['category']['id'] <=> $right['category']['id'];
+            })
             ->values()
             ->all();
     }

@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
+use App\Models\Voucher;
 use App\Services\SepayPaymentReconciler;
 use App\Services\ShippingQuoteService;
 use Illuminate\Http\JsonResponse;
@@ -298,6 +299,7 @@ class OrderController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'note' => ['nullable', 'string', 'max:1000'],
             'voucher_id' => ['nullable', 'integer', 'exists:vouchers,id'],
+            'shipping_voucher_id' => ['nullable', 'integer', 'exists:vouchers,id'],
         ], [
             'address_id.required' => 'Vui lòng chọn địa chỉ giao hàng.',
             'shipping_method_id.required' => 'Vui lòng chọn phương thức vận chuyển.',
@@ -412,7 +414,12 @@ class OrderController extends Controller
                 }
             }
 
-            $shippingQuote = $shipping->quote($shippingMethod, $address, $quantities);
+            $manualShippingVoucherId = $data['shipping_voucher_id'] ?? null;
+            if ($manualShippingVoucherId !== null) {
+                Voucher::query()->whereKey($manualShippingVoucherId)->lockForUpdate()->firstOrFail();
+            }
+
+            $shippingQuote = $shipping->quote($shippingMethod, $address, $quantities, $manualShippingVoucherId);
             $shippingFee = (float) $shippingQuote['shipping_fee'];
 
             $order = $request->user()->orders()->create([

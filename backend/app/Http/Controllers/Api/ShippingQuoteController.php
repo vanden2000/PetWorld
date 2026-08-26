@@ -15,6 +15,7 @@ class ShippingQuoteController extends Controller
         $data = $request->validate([
             'address_id' => ['required', 'integer'],
             'shipping_method_code' => ['required', 'string', 'max:40'],
+            'shipping_voucher_id' => ['nullable', 'integer', 'exists:vouchers,id'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.variant_id' => ['required', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -36,7 +37,7 @@ class ShippingQuoteController extends Controller
 
         return response()->json([
             'data' => [
-                'quote' => $shipping->quote($method, $address, $quantities),
+                'quote' => $shipping->quote($method, $address, $quantities, $data['shipping_voucher_id'] ?? null),
             ],
         ]);
     }

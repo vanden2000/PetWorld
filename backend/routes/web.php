@@ -186,6 +186,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])
         ->name('users.status.update');
 
+    Route::post('/users/{user}/resend-verification', [UserController::class, 'resendVerification'])
+        ->name('users.verification.resend');
+
+    Route::post('/users/{user}/send-password-reset-otp', [UserController::class, 'sendPasswordResetOtp'])
+        ->name('users.password-reset-otp.send');
+
+    Route::delete('/users/{user}/sessions', [UserController::class, 'revokeSessions'])
+        ->name('users.sessions.revoke');
+
+    Route::patch('/users/{user}/unblock', [UserController::class, 'unblock'])
+        ->name('users.unblock');
+
     Route::patch('/users/{user}/grant-admin', [UserController::class, 'grantAdmin'])
         ->name('users.grant-admin');
 
