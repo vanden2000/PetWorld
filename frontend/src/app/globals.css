@@ -10366,7 +10366,7 @@ body {
   opacity: 0.8;
 }
 
-/* Tóm tắt đơn hàng */
+/* Tóm tắt sản phẩm trong giỏ hàng */
 .cart-summary {
   background-color: #ffffff;
   border: 1px solid #eef2f6;
@@ -10400,6 +10400,13 @@ body {
 .cart-summary-row span:last-child {
   color: var(--text-dark);
   font-weight: 600;
+}
+
+.cart-summary-note {
+  margin: 4px 0 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .cart-summary-row.discount span:first-child,
