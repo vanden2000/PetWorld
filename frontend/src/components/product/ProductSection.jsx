@@ -31,10 +31,6 @@ export default function ProductSection({
 }) {
   const [visibleCount, setVisibleCount] = useState(initialCount);
 
-  useEffect(() => {
-    setVisibleCount(initialCount);
-  }, [products.length, initialCount]);
-
   if (!products.length) return null;
 
   const isActuallySlider = isSlider && !hasLoadMore;
@@ -65,14 +61,18 @@ export default function ProductSection({
           ))}
         </div>
 
-        {hasLoadMore && visibleCount < products.length && (
+        {hasLoadMore && products.length > initialCount && (
           <div className="load-more-container">
             <button
               type="button"
               className="load-more-btn"
-              onClick={() => setVisibleCount((prev) => Math.min(prev + loadMoreStep, products.length))}
+              onClick={() => setVisibleCount((prev) => (
+                prev >= products.length
+                  ? initialCount
+                  : Math.min(prev + loadMoreStep, products.length)
+              ))}
             >
-              Xem thêm
+              {visibleCount >= products.length ? "Thu gọn" : "Xem thêm"}
             </button>
           </div>
         )}

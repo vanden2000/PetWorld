@@ -25,6 +25,7 @@ export default function ProductCard({
   badge,
   showSoldCount = false,
   showSale = true,
+  salePresentation = false,
 }) {
   // Trang chủ trả về `price_range`, còn /api/products trả về `price`; nhận cả hai.
   const priceRange = product.price_range || product.price || {};
@@ -40,11 +41,18 @@ export default function ProductCard({
     : null;
   const oldPrice =
     rawOldPrice != null && Number(rawOldPrice) > Number(currentPrice) ? rawOldPrice : null;
+  const discountPercent = oldPrice
+    ? Math.round(((Number(oldPrice) - Number(currentPrice)) / Number(oldPrice)) * 100)
+    : null;
   const ratingCount = product.rating_count ?? product.rating?.count ?? 0;
   const ratingValue = Math.round(product.rating_average ?? product.rating?.average ?? 0);
   const href = `/shop/${product.slug}`;
   // Badge "Sale" bám theo giá gạch thật của biến thể hiển thị, không theo has_sale chung.
-  const badgeLabel = badge ?? (showSale && oldPrice != null ? "Sale" : null);
+  const badgeLabel = badge ?? (
+    salePresentation && discountPercent
+      ? `-${discountPercent}%`
+      : (showSale && oldPrice != null ? "Sale" : null)
+  );
   const soldQuantity = product.sold_quantity ?? product.soldQuantity ?? 0;
 
   return (
@@ -84,7 +92,9 @@ export default function ProductCard({
       <div className="product-footer">
         <div className="product-price">
           {oldPrice ? <span className="price-old">{formatPrice(oldPrice)}</span> : null}
-          <span className="price-current">{formatPrice(currentPrice)}</span>
+          <span className="price-current">
+            {formatPrice(currentPrice)}
+          </span>
           {showSoldCount ? (
             <span className="product-sold-count">Đã bán {soldQuantity}</span>
           ) : null}

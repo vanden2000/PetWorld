@@ -39,7 +39,7 @@ export default function CategorySection({ categories = [] }) {
       )}
 
       <div className="users-counter-banner">
-        Hơn 12.000 người dùng hoạt động mỗi ngày
+        Được cộng đồng người nuôi thú cưng tin chọn
       </div>
     </section>
   );
