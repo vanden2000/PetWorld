@@ -20,7 +20,7 @@ export default function HomeView({ initialData }) {
     sections = [],
     banners = [], categories = [], featured_products = [], new_products = [],
     new_accessories = [], products_by_categories = [], latest_blogs = [], brands = [], pet_species = [],
-    top_reviews = [],
+    top_reviews = [], active_vouchers = [],
   } = data || {};
   const newProducts = new_products.length ? new_products : featured_products;
   // Không lấy sản phẩm danh mục khác làm fallback khi danh mục phụ kiện bị tắt.
@@ -64,7 +64,7 @@ export default function HomeView({ initialData }) {
       case "accessories_promo":
         return <AccessoriesPromo key={key} products={accessoryProducts} />;
       case "shop_cta_banner":
-        return <ShopCtaBanner key={key} />;
+        return <ShopCtaBanner key={key} vouchers={active_vouchers} reviews={top_reviews} />;
       case "sale_products_tabs":
         return <BestSellingTabs key={key} groups={products_by_categories} title={customTitle || "Sản Phẩm Khuyến Mãi"} />;
       case "testimonials":

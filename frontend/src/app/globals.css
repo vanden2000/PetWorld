@@ -43,11 +43,15 @@ input,
 button,
 select,
 textarea {
+  /* Không fallback sang "Inter" cài sẵn trên máy: bản local thường thiếu glyph
+     tiếng Việt và sẽ đè lên bản Google Fonts đã nạp đủ subset vietnamese. */
   font-family:
     var(--font-inter),
-    "Inter",
+    "Segoe UI",
     system-ui,
     -apple-system,
+    "Helvetica Neue",
+    Arial,
     sans-serif;
 }
 
@@ -5368,14 +5372,178 @@ body {
   z-index: 1;
 }
 
+/* Khối phụ kiện dạng full-width: tabs + lưới 5 cột + banner CTA ngang cuối khối. */
+.accessories-promo-section {
+  margin-bottom: 60px;
+}
+
+.accessories-promo-section .promo-right {
+  gap: 26px;
+}
+
+/* Vùng chứa 2 dải label chạy, nằm ngay dưới banner CTA. */
+.promo-marquees {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.promo-marquee {
+  overflow: hidden;
+  /* Mờ dần hai mép để label trôi vào/ra tự nhiên, không bị cắt cụt. */
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+
+.promo-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: promo-marquee-scroll linear infinite;
+}
+
+/* Cùng chiều, chỉ khác tốc độ: mắt không phải đảo hướng khi chuyển dải. */
+.promo-marquee-slow .promo-marquee-track {
+  animation-duration: 38s;
+}
+
+.promo-marquee-fast .promo-marquee-track {
+  animation-duration: 29s;
+}
+
+/* Dừng cả hai dải khi rê chuột để khách kịp đọc và bấm sao chép mã. */
+.promo-marquees:hover .promo-marquee-track,
+.promo-marquees:focus-within .promo-marquee-track {
+  animation-play-state: paused;
+}
+
+.promo-marquee-group {
+  display: flex;
+  gap: 10px;
+  padding-right: 10px;
+}
+
+.promo-marquee-cell {
+  display: inline-flex;
+}
+
+@keyframes promo-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* Danh sách được lặp 2 lần nên dịch đúng 50% là quay về đúng vị trí đầu. */
+    transform: translateX(-50%);
+  }
+}
+
+/* Thẻ label bo góc, đặt trên nền sáng của khối CTA. */
+.promo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border-radius: 14px;
+  background-color: #fff6ee;
+  border: 1px solid #ffe3cc;
+  color: var(--text-dark);
+  white-space: nowrap;
+  font-family: inherit;
+  text-align: left;
+}
+
+.promo-chip-voucher {
+  cursor: pointer;
+  transition: var(--transition-default);
+}
+
+.promo-chip-voucher .promo-chip-code {
+  color: var(--primary-orange);
+}
+
+.promo-chip-voucher:hover,
+.promo-chip-voucher:focus-visible {
+  background-color: var(--primary-orange);
+  border-color: var(--primary-orange);
+  color: #ffffff;
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.promo-chip-voucher:hover .promo-chip-code,
+.promo-chip-voucher:focus-visible .promo-chip-code {
+  color: #ffffff;
+}
+
+.promo-chip-icon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.promo-chip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.promo-chip-code {
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+.promo-chip-note {
+  font-size: 11.5px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.promo-chip-stars {
+  font-size: 12.5px;
+  letter-spacing: 1px;
+  color: #f5a623;
+  line-height: 1;
+}
+
+.promo-chip-quote {
+  font-size: 13px;
+  font-weight: 700;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Người bật chế độ giảm chuyển động thì dải đứng yên. */
+@media (prefers-reduced-motion: reduce) {
+  .promo-marquee-track {
+    animation: none;
+  }
+
+  .promo-marquee {
+    overflow-x: auto;
+  }
+}
+
+.load-more-icon {
+  margin-left: 8px;
+  font-size: 12px;
+  line-height: 1;
+}
+
 /* Accessories Promo Header, Tabs & Slider Navigation */
 .accessories-promo-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 0;
   gap: 15px;
   flex-wrap: wrap;
+}
+
+.accessories-promo-header .section-title {
+  margin-bottom: 0;
 }
 
 .accessories-promo-tabs {
@@ -6090,17 +6258,24 @@ body {
 /* ============================================================
    Banner CTA ngang "Mua ngay, kẻo lỡ"
    ============================================================ */
+/* Khối CTA một hàng ngang: logo · tiêu đề · hai dải label chạy · nút. */
 .shop-cta-banner {
   display: flex;
   align-items: center;
-  gap: 34px;
+  gap: 28px;
   width: 100%;
   background: linear-gradient(90deg, #fff4e9 0%, #fffdfb 65%);
   border: 1px solid #ffe3cc;
   border-radius: 18px;
-  padding: 24px 44px;
+  padding: 20px 40px;
   margin-bottom: 60px;
   overflow: hidden;
+}
+
+/* Hai dải chạy lấp khoảng trống giữa tiêu đề và nút. */
+.shop-cta-marquees {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .shop-cta-logo {
@@ -6116,8 +6291,9 @@ body {
   flex-shrink: 0;
 }
 
+/* Chữ giữ nguyên bề rộng của nó; phần co giãn nhường cho dải label chạy. */
 .shop-cta-text {
-  flex: 1;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
@@ -6202,6 +6378,13 @@ body {
   }
   .promo-card {
     min-height: 240px;
+  }
+
+  .promo-marquees {
+    width: 100%;
+  }
+  .promo-chip-quote {
+    max-width: 200px;
   }
 
   /* Limit sidebar menu and links width on tablet to prevent translucent backgrounds from overlapping the pet image */

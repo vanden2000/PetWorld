@@ -11,6 +11,7 @@ use App\Models\PetSpecies;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Review;
+use App\Models\Voucher;
 use App\Models\HomeSection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -90,6 +91,8 @@ class HomeController extends Controller
                 'latest_blogs' => $this->latestBlogs($limits['latest_blogs'] ?? 3),
                 // Đánh giá tốt từ khách hàng đã mua sản phẩm.
                 'top_reviews' => $this->featuredReviews($limits['testimonials'] ?? 6),
+                // Mã giảm giá còn hiệu lực, dùng cho dải khuyến mãi ở khối phụ kiện.
+                'active_vouchers' => $this->activeVouchers(),
             ];
         });
 
@@ -499,6 +502,35 @@ class HomeController extends Controller
                     ] : null,
                 ];
             })
+            ->all();
+    }
+
+    /**
+     * Mã giảm giá đang chạy để hiển thị ở dải khuyến mãi trang chủ.
+     * Chỉ lấy voucher khách tự nhập được (is_automatic = false) và còn lượt dùng —
+     * voucher tự động không cần quảng bá vì hệ thống tự áp khi đủ điều kiện.
+     */
+    private function activeVouchers(int $limit = 6): array
+    {
+        return Voucher::query()
+            ->where('status', 'active')
+            ->where('is_automatic', false)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->orderByDesc('discount_value')
+            ->limit($limit)
+            ->get()
+            ->filter(fn (Voucher $voucher): bool => $voucher->canBeApplied((float) $voucher->min_order_value))
+            ->map(fn (Voucher $voucher): array => [
+                'id' => $voucher->id,
+                'code' => $voucher->code,
+                'applies_to' => $voucher->applies_to,
+                'description' => $voucher->description,
+                'discount_value' => (float) $voucher->discount_value,
+                'min_order_value' => (float) $voucher->min_order_value,
+                'end_date' => $voucher->end_date?->toIso8601String(),
+            ])
+            ->values()
             ->all();
     }
 
