@@ -338,6 +338,18 @@
         </main>
     </div>
 
+    <div class="admin-confirm-modal" id="admin-confirm-modal" hidden aria-hidden="true">
+        <div class="admin-confirm-card" role="dialog" aria-modal="true" aria-labelledby="admin-confirm-title" aria-describedby="admin-confirm-message">
+            <div class="admin-confirm-icon" aria-hidden="true">?</div>
+            <h3 id="admin-confirm-title">Xác nhận cập nhật</h3>
+            <p id="admin-confirm-message">Bạn có chắc muốn cập nhật trạng thái đơn hàng?</p>
+            <div class="admin-confirm-actions">
+                <button type="button" class="admin-confirm-cancel" id="admin-confirm-cancel">Hủy bỏ</button>
+                <button type="button" class="admin-confirm-approve" id="admin-confirm-approve">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
     @php
         $validationToast = $errors->any()
             ? $errors->first() . ($errors->count() > 1 ? ' và ' . ($errors->count() - 1) . ' mục khác.' : '')
@@ -470,6 +482,55 @@
                 adminToast.querySelector('button')?.addEventListener('click', hideToast);
                 setTimeout(hideToast, 3000);
             }
+
+            const confirmModal = document.getElementById('admin-confirm-modal');
+            const confirmCancel = document.getElementById('admin-confirm-cancel');
+            const confirmApprove = document.getElementById('admin-confirm-approve');
+            const confirmMessage = document.getElementById('admin-confirm-message');
+            let pendingConfirmationForm = null;
+
+            const closeConfirmModal = () => {
+                if (!confirmModal) return;
+                confirmModal.hidden = true;
+                confirmModal.setAttribute('aria-hidden', 'true');
+                pendingConfirmationForm = null;
+            };
+
+            const openConfirmModal = (form) => {
+                if (!confirmModal) return;
+                pendingConfirmationForm = form;
+                confirmApprove.disabled = false;
+                confirmApprove.textContent = 'Đồng ý';
+                confirmMessage.textContent = form.dataset.confirmMessage || 'Bạn có chắc muốn cập nhật trạng thái đơn hàng?';
+                confirmModal.hidden = false;
+                confirmModal.setAttribute('aria-hidden', 'false');
+                confirmApprove.focus();
+            };
+
+            document.querySelectorAll('.quick-status-menu form, .admin-confirm-form').forEach((form) => {
+                form.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    openConfirmModal(form);
+                });
+            });
+
+            confirmCancel?.addEventListener('click', closeConfirmModal);
+
+            confirmApprove?.addEventListener('click', () => {
+                if (!pendingConfirmationForm) return;
+
+                confirmApprove.disabled = true;
+                confirmApprove.textContent = 'Đang cập nhật...';
+                HTMLFormElement.prototype.submit.call(pendingConfirmationForm);
+            });
+
+            confirmModal?.addEventListener('click', (event) => {
+                if (event.target === confirmModal) closeConfirmModal();
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !confirmModal?.hidden) closeConfirmModal();
+            });
         });
     </script>
     @yield('scripts')

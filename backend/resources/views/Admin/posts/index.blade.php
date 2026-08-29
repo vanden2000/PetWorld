@@ -242,7 +242,8 @@
                         </td>
                         <td style="text-align: right; vertical-align: middle; white-space: nowrap;">
                             <div class="pl-row-actions">
-                                <form method="POST" action="{{ route('admin.posts.status', $post) }}" class="pl-action-form">
+                                <form method="POST" action="{{ route('admin.posts.status', $post) }}" class="pl-action-form admin-confirm-form"
+                                    data-confirm-message="{{ $post->status === 'active' ? 'Bạn có chắc muốn chuyển bài viết về bản nháp?' : 'Bạn có chắc muốn xuất bản bài viết?' }}">
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="status" value="{{ $post->status === 'active' ? 'inactive' : 'active' }}">

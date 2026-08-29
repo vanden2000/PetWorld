@@ -182,7 +182,10 @@
             const sku = row.querySelector('.js-variant-sku')?.value?.trim();
             const price = Number(row.querySelector('.js-variant-price')?.value);
             const quantity = Number(row.querySelector('.js-variant-quantity')?.value);
-            return Boolean(sku) && Number.isFinite(price) && price >= 0 && Number.isFinite(quantity) && quantity >= 0;
+            const weight = Number(row.querySelector('.js-variant-weight')?.value);
+            const visible = row.querySelector('.js-variant-visible')?.checked;
+            return Boolean(sku) && Number.isFinite(price) && price >= 0 && Number.isFinite(quantity) && quantity >= 0
+                && (!visible || (Number.isFinite(weight) && weight > 0));
         };
         const addItem = (list, item, kind) => {
             const row = document.createElement('li'); row.className = kind;
@@ -195,7 +198,7 @@
                 { label: 'Tên sản phẩm', target: '#name', ok: hasText('name') }, { label: 'Slug', target: '#slug', ok: hasText('slug') },
                 { label: 'Danh mục', target: '#category_id', ok: Boolean(field('category_id')?.value) }, { label: 'Thương hiệu', target: '#brand_id', ok: Boolean(field('brand_id')?.value) },
                 { label: 'Ít nhất một ảnh sản phẩm', target: '#product-image-dropzone', ok: document.querySelectorAll('.thumbnail-img-box:not(.pending-delete)').length > 0 },
-                { label: 'Biến thể có SKU, giá và tồn kho', target: '#variants-card-list', ok: variants().some(validVariant) },
+                { label: 'Biến thể hiển thị có SKU, giá, tồn kho và cân nặng đóng gói', target: '#variants-card-list', ok: variants().some(validVariant) },
             ];
             const recommended = [
                 { label: 'Mô tả ngắn', target: '#short_description', ok: hasText('short_description') }, { label: 'Mô tả chi tiết', target: '#description-editor', ok: hasText('description') },

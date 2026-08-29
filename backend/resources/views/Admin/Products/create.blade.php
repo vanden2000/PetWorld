@@ -1132,7 +1132,7 @@
 
         .variant-price-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 10px;
             margin: 16px 0;
         }
@@ -1513,11 +1513,7 @@
         <div class="listing-title">
             <h1>{{ $isCreate ? 'Thêm Sản Phẩm' : 'Sửa Sản Phẩm' }}</h1>
         </div>
-        <div class="action-header-buttons">
-            <a href="{{ route('admin.products') }}" class="btn-action-cancel">Hủy</a>
-            <button type="submit" form="product-edit-form"
-                class="btn-action-save">{{ $isCreate ? 'Tạo sản phẩm' : 'Lưu thay đổi' }}</button>
-        </div>
+        
     </div>
 
     <!-- Main Form Grid wrapper -->
@@ -1897,6 +1893,7 @@
             const imageDeleteModal = document.getElementById('image-delete-modal');
             let pendingImageDeleteBox = null;
             let productIsSaving = false;
+            let productHasBeenCreated = false;
             let toastTimeout;
             const productDraftAiCard = document.getElementById('product-draft-ai-card');
 
@@ -2152,8 +2149,19 @@
             }
 
             productEditForm.addEventListener('submit', function (event) {
+                // requestSubmit() is used after the user has confirmed creation.
+                // Let that native submit continue so every form control (including
+                // generated variant fields and image files) is sent to the server.
+                if (productIsSaving) return;
+
+                if (productHasBeenCreated) {
+                    event.preventDefault();
+                    showProductSaveToast('Sản phẩm này đã được tạo. Hãy mở lại trang Thêm sản phẩm để tạo sản phẩm khác.');
+                    return;
+                }
+
                 event.preventDefault();
-                if (productIsSaving || productFormHasMissingFields()) return;
+                if (productFormHasMissingFields()) return;
                 productSaveModal.hidden = false;
                 btnConfirmProductSave.focus();
             });
@@ -2175,9 +2183,50 @@
                 }
 
                 if (isCreatingProduct) {
+                    if (activeExistingImages().length + selectedImages.length < 1) {
+                        closeProductSaveModal();
+                        showImageError('Sản phẩm phải có ít nhất một ảnh.');
+                        imageDropzone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        return;
+                    }
+
                     btnConfirmProductSave.disabled = true;
                     btnConfirmProductSave.textContent = 'Đang tạo...';
-                    productEditForm.submit();
+                    productIsSaving = true;
+                    window.dispatchEvent(new CustomEvent('petworld:product-submitting'));
+                    saveButtons.forEach(button => button.disabled = true);
+
+                    try {
+                        const response = await fetch(productEditForm.action, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'Accept': 'application/json' },
+                            body: new FormData(productEditForm),
+                        });
+                        const payload = await response.json();
+
+                        if (!response.ok) {
+                            const errors = Object.values(payload.errors || {}).flat();
+                            throw new Error(errors[0] || payload.message || 'Không thể tạo sản phẩm.');
+                        }
+
+                        productHasBeenCreated = true;
+                        closeProductSaveModal();
+                        document.querySelector('.last-edited-text span').textContent = 'Sản phẩm đã được tạo thành công.';
+                        saveButtons.forEach(button => {
+                            button.disabled = true;
+                            button.textContent = 'Đã tạo sản phẩm';
+                        });
+                        window.dispatchEvent(new CustomEvent('petworld:product-saved'));
+                        showProductSaveToast(payload.message || 'Đã tạo sản phẩm thành công.');
+                    } catch (error) {
+                        closeProductSaveModal();
+                        showProductSaveToast(error.message || 'Đã xảy ra lỗi khi tạo sản phẩm.', true);
+                    } finally {
+                        productIsSaving = false;
+                        window.dispatchEvent(new CustomEvent('petworld:product-submit-finished'));
+                        if (!productHasBeenCreated) saveButtons.forEach(button => button.disabled = false);
+                    }
                     return;
                 }
 
@@ -2491,6 +2540,7 @@
                 const titleElement = row.querySelector('.js-variant-title');
                 const skuPreview = row.querySelector('.js-variant-sku-preview');
                 const status = row.querySelector('.js-variant-status');
+                const weightInput = row.querySelector('.js-variant-weight');
 
                 if (titleElement) titleElement.textContent = title || (row.dataset.isNew === 'true' ? 'Biến thể mới' : 'Biến thể');
                 if (skuPreview) skuPreview.textContent = `SKU: ${sku || 'Chưa nhập SKU'}`;
@@ -2501,6 +2551,12 @@
                 }
                 updatePricePreview(row.querySelector('.js-variant-price'), row.querySelector('.js-variant-price-preview'));
                 updatePricePreview(row.querySelector('.js-variant-sale-price'), row.querySelector('.js-variant-sale-price-preview'));
+                if (weightInput) {
+                    const weight = Number(weightInput.value);
+                    const weightMissing = isVisible && (!weightInput.value || !Number.isFinite(weight) || weight <= 0);
+                    weightInput.setCustomValidity(weightMissing ? 'Biến thể đang hiển thị cần cân nặng đóng gói lớn hơn 0g.' : '');
+                    weightInput.classList.toggle('is-invalid', weightMissing);
+                }
 
                 const visibilityButton = row.querySelector('.js-toggle-variant-visibility');
                 if (visibilityButton) {
@@ -2630,7 +2686,7 @@
                         <div class="variant-card-field"><label>Giá bán <span class="required-mark">*</span></label><input type="number" name="variants[${index}][price]" value="${price}" class="cell-input-small js-variant-price" step="1000" min="1000" max="1000000000" required><small class="price-format-preview js-variant-price-preview"></small></div>
                         <div class="variant-card-field"><label>Giá giảm</label><input type="number" name="variants[${index}][sale_price]" value="${salePrice || ''}" class="cell-input-small js-variant-sale-price" step="any" max="1000000000" placeholder="Để trống nếu không giảm"><small class="price-format-preview js-variant-sale-price-preview"></small></div>
                         <div class="variant-card-field"><label>Tồn kho <span class="required-mark">*</span></label><input type="number" name="variants[${index}][quantity]" value="${quantity}" class="cell-input-small js-variant-quantity" min="0" max="100000" required></div>
-                        <div class="variant-card-field"><label>Cân nặng ship (g)</label><input type="number" name="variants[${index}][weight_grams]" value="${weightGrams}" class="cell-input-small js-variant-weight" min="0" max="50000" step="1" placeholder="Ví dụ: 30"></div>
+                        <div class="variant-card-field"><label>Cân nặng đóng gói (g)</label><input type="number" name="variants[${index}][weight_grams]" value="${weightGrams}" class="cell-input-small js-variant-weight" min="0" max="50000" step="1" placeholder="Ví dụ: 1100"><small>Nhập cả bao bì; bắt buộc khi biến thể hiển thị bán.</small></div>
                     </div>
                     <div class="variant-card-footer">
                         <label class="variant-visibility-toggle"><input type="checkbox" class="js-variant-visible" name="variants[${index}][visible]" value="1" ${active ? 'checked' : ''}> Hiển thị cho khách</label>

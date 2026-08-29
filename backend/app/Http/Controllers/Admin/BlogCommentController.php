@@ -63,6 +63,28 @@ class BlogCommentController extends Controller
         return back()->with('success', 'Đã cập nhật trạng thái bình luận.');
     }
 
+    public function bulkUpdateStatus(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'comment_ids' => ['required', 'array', 'min:1', 'max:10'],
+            'comment_ids.*' => ['integer', 'distinct', Rule::exists('blog_comments', 'id')],
+            'status' => ['required', Rule::in(['approved', 'hidden'])],
+        ]);
+
+        $updatedCount = BlogComment::query()
+            ->whereIn('id', $data['comment_ids'])
+            ->where('status', '!=', $data['status'])
+            ->update(['status' => $data['status']]);
+
+        if ($updatedCount === 0) {
+            return back()->with('error', 'Các bình luận đã ở trạng thái đã chọn.');
+        }
+
+        $action = $data['status'] === 'approved' ? 'duyệt' : 'ẩn';
+
+        return back()->with('success', "Đã {$action} {$updatedCount} bình luận.");
+    }
+
     public function destroy(BlogComment $comment): RedirectResponse
     {
         $comment->delete();

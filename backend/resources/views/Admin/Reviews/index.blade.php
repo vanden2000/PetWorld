@@ -37,68 +37,6 @@
             color: #5f6b76;
         }
 
-        .review-confirm-modal[hidden] {
-            display: none;
-        }
-
-        .review-confirm-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 1100;
-            display: grid;
-            place-items: center;
-            padding: 20px;
-            background: rgba(24, 35, 29, .42);
-        }
-
-        .review-confirm-dialog {
-            width: min(100%, 410px);
-            padding: 24px;
-            border-radius: 14px;
-            background: #fff;
-            box-shadow: 0 20px 60px rgba(23, 34, 28, .24);
-        }
-
-        .review-confirm-dialog h3 {
-            margin: 0;
-            color: var(--text-main);
-            font-size: 1.12rem;
-        }
-
-        .review-confirm-dialog p {
-            margin: 9px 0 20px;
-            color: var(--text-muted);
-            line-height: 1.55;
-        }
-
-        .review-confirm-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 9px;
-        }
-
-        .review-confirm-actions button {
-            min-width: 92px;
-            border-radius: 8px;
-            font: inherit;
-            font-size: .86rem;
-            font-weight: 800;
-            cursor: pointer;
-        }
-
-        .review-confirm-cancel {
-            border: 1px solid #dfe5e1;
-            background: #fff;
-            color: #516058;
-        }
-
-        .review-confirm-submit {
-            border: 1px solid #ff782d;
-            padding: 15px;
-            background: #ff782d;
-            color: #fff;
-        }
-
         .review-stars {
             color: #f59e0b;
             letter-spacing: 1px;
@@ -216,7 +154,6 @@
                             <td>
                                 <strong>{{ $review->user?->name ?: 'Khách hàng' }}</strong><br>
                                 <small style="color:var(--text-muted)">{{ $review->user?->email }}</small>
-                                <span class="review-verified"><i class="fa-solid fa-circle-check"></i> Đã mua hàng</span>
                             </td>
                             <td>
                                 <div class="review-product">{{ $review->orderItem?->product_name }}</div><small
@@ -228,16 +165,19 @@
                             </td>
                             <td style="text-align:right">
                                 <div class="review-row-actions">@if($review->status !== 'approved')
-                                    <form method="POST" action="{{ route('admin.reviews.status.update', $review) }}">@csrf
+                                    <form method="POST" class="admin-confirm-form" data-confirm-message="{{ $review->status === 'hidden' ? 'Bạn có chắc muốn hiển thị lại đánh giá này?' : 'Bạn có chắc muốn hiển thị đánh giá này?' }}" action="{{ route('admin.reviews.status.update', $review) }}">@csrf
                                         @method('PATCH')<input type="hidden" name="status" value="approved"><button
                                             type="submit" class="review-action approve"
                                             title="{{ $review->status === 'hidden' ? 'Duyệt lại đánh giá' : 'Duyệt đánh giá' }}"
                                             aria-label="{{ $review->status === 'hidden' ? 'Duyệt lại đánh giá' : 'Duyệt đánh giá' }}"><i
                                                 class="fa-solid {{ $review->status === 'hidden' ? 'fa-rotate-left' : 'fa-check' }}"></i></button>
-                                </form>@endif @if($review->status !== 'hidden')<button type="button"
-                                        class="review-action hide" title="Ẩn đánh giá" aria-label="Ẩn đánh giá" data-review-hide
-                                        data-action="{{ route('admin.reviews.status.update', $review) }}"><i
-                                    class="fa-solid fa-eye-slash"></i></button>@endif
+                                </form>@endif @if($review->status !== 'hidden')
+                                    <form method="POST" class="admin-confirm-form" data-confirm-message="Bạn có chắc muốn ẩn đánh giá này?" action="{{ route('admin.reviews.status.update', $review) }}">@csrf
+                                        @method('PATCH')<input type="hidden" name="status" value="hidden"><button type="submit"
+                                            class="review-action hide" title="Ẩn đánh giá" aria-label="Ẩn đánh giá"><i
+                                                class="fa-solid fa-eye-slash"></i></button>
+                                    </form>
+                                @endif
                                 </div>
                             </td>
                         </tr>
@@ -249,23 +189,7 @@
             </table>
         </div>
     </div>
-    @if($reviews->hasPages())
-    <div class="pagination-container">{{ $reviews->links() }}</div>@endif
-
-    <div class="review-confirm-modal" id="review-confirm-modal" hidden>
-        <div class="review-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="review-confirm-title">
-            <h3 id="review-confirm-title">Ẩn đánh giá này?</h3>
-            <p>Đánh giá sẽ không còn hiển thị với khách hàng. Bạn có thể duyệt lại sau.</p>
-            <form method="POST" id="review-confirm-form">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="status" value="hidden">
-                <div class="review-confirm-actions"><button type="button" class="review-confirm-cancel"
-                        id="review-confirm-cancel">Không</button><button type="submit" class="review-confirm-submit">Có, ẩn
-                        đánh giá</button></div>
-            </form>
-        </div>
-    </div>
+    {{ $reviews->links('admin.layouts.pagination') }}
 @endsection
 
 @section('scripts')
@@ -282,22 +206,6 @@
                 searchTimer = setTimeout(() => form?.submit(), 450);
             });
 
-            const modal = document.getElementById('review-confirm-modal');
-            const confirmForm = document.getElementById('review-confirm-form');
-            const cancelButton = document.getElementById('review-confirm-cancel');
-            const closeModal = () => { modal.hidden = true; document.body.style.overflow = ''; };
-
-            document.querySelectorAll('[data-review-hide]').forEach((button) => {
-                button.addEventListener('click', () => {
-                    confirmForm.action = button.dataset.action;
-                    modal.hidden = false;
-                    document.body.style.overflow = 'hidden';
-                    cancelButton.focus();
-                });
-            });
-            cancelButton?.addEventListener('click', closeModal);
-            modal?.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
-            document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.hidden) closeModal(); });
         });
     </script>
 @endsection
