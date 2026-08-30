@@ -15,8 +15,6 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public $timestamps = false;
-
     protected $fillable = [
         'category_id',
         'brand_id',
@@ -36,6 +34,8 @@ class Product extends Model
         'view_count' => 'integer',
         'advice_attributes' => 'array',
         'deleted_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function category(): BelongsTo

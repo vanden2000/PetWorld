@@ -4754,13 +4754,16 @@ body {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
+  /* Mặc định grid là stretch: thẻ nội dung ngắn bị kéo cao bằng thẻ dài nhất
+     trong hàng, sinh khoảng trống. start cho mỗi thẻ cao đúng nội dung của nó. */
+  align-items: start;
 }
 
 .products-grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  align-items: center;
+  align-items: start;
 }
 
 .products-grid-3 {
@@ -4776,10 +4779,13 @@ body {
   border: 1px solid #eef1f5;
   padding: 18px;
   position: relative;
+  /* Cắt phần thừa của ruy-băng "New" theo đúng góc bo của thẻ. */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 350px;
+  /* Không dùng space-between: thẻ ít nội dung (không có giá gạch) sẽ bị kéo
+     giãn, chữ nằm cách xa nhau. Riêng .product-footer tự đẩy xuống đáy bằng
+     margin-top:auto nên hàng giá vẫn thẳng nhau giữa các thẻ. */
   transition: var(--transition-default);
 }
 
@@ -4801,6 +4807,38 @@ body {
   border-radius: 6px;
   text-transform: uppercase;
   z-index: 2;
+}
+
+/* Ruy-băng "New" vắt xéo qua góc trên bên trái thẻ. */
+.product-ribbon {
+  position: absolute;
+  top: 14px;
+  left: -30px;
+  width: 116px;
+  transform: rotate(-45deg);
+  background-color: var(--primary-orange);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-align: center;
+  padding: 4px 0;
+  text-transform: uppercase;
+  box-shadow: 0 2px 6px rgba(255, 120, 45, 0.3);
+  z-index: 3;
+}
+
+/* Ngày đăng nằm cuối hàng sao đánh giá, tách hẳn khỏi ruy-băng "New". */
+.product-date-chip {
+  margin-left: auto;
+  background-color: #fff3e8;
+  border: 1px solid #ffd9bd;
+  color: var(--primary-orange);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
 .product-wishlist-btn {
@@ -4884,7 +4922,7 @@ body {
   display: flex;
   align-items: center;
   gap: 3px;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 
 .star-filled {
@@ -4904,14 +4942,15 @@ body {
   font-weight: 700;
   color: var(--text-dark);
   line-height: 1.4;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   text-decoration: none;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  height: 42px;
+  /* Không chốt height 42px: tên ngắn 1 dòng sẽ thừa hẳn một dòng trống, đẩy
+     danh mục xuống xa. Tên dài vẫn bị cắt ở 2 dòng nhờ line-clamp. */
   transition: var(--transition-default);
 }
 
@@ -4923,7 +4962,10 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-top: auto;
+  /* Không dùng margin-top:auto: grid kéo mọi thẻ cao bằng thẻ cao nhất trong
+     hàng, nên auto sẽ đẩy giá xuống tận đáy và để lại khoảng trống lớn dưới
+     danh mục. Bám sát nội dung phía trên cho cân đối. */
+  margin-top: 4px;
 }
 
 .product-price {
@@ -5130,6 +5172,7 @@ body {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
+  align-items: start;
   position: relative;
   z-index: 2;
 }
@@ -6102,12 +6145,22 @@ body {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--text-muted);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .product-category span {
   color: var(--primary-orange);
   font-weight: 700;
+}
+
+/* Ngày đăng gắn ngay sau nhãn "New" ở góc trên thẻ, không chiếm thêm dòng. */
+.product-badge-date {
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.45);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 /* Logo thương hiệu dạng ảnh trong khối "Các Thương Hiệu Nổi Bật" */
@@ -6144,10 +6197,9 @@ body {
   gap: 16px;
 }
 
-/* Tên sản phẩm: luôn gọn 2 dòng, không tràn */
+/* Tên sản phẩm: tối đa 2 dòng (line-clamp), tên ngắn không bị đệm dòng trống. */
 .product-title {
   text-wrap: balance;
-  min-height: 42px;
 }
 
 /* Dòng danh mục: 1 dòng, dài thì cắt bằng dấu "..." */
@@ -6175,10 +6227,8 @@ body {
   white-space: nowrap;
 }
 
-/* Card đồng đều, nội dung căn đều hai đầu */
-.product-card {
-  min-height: 372px;
-}
+/* Thẻ cao đúng bằng nội dung: min-height cố định làm nội dung bị kéo giãn,
+   sinh khoảng trắng lớn giữa dòng danh mục và hàng giá. */
 
 .product-footer {
   gap: 10px;
