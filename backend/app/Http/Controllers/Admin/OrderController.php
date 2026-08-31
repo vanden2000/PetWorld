@@ -359,6 +359,7 @@ class OrderController extends Controller
                 'shippingVoucher:id,code,description',
                 'items.productVariant.product.primaryImage',
                 'items.productVariant.variantValues.variantType',
+                'items.review',
                 'sepayTransactions' => fn ($query) => $query->latest(),
             ])
             ->findOrFail($id);
