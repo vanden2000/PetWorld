@@ -188,8 +188,27 @@
                 </tbody>
             </table>
         </div>
+        {{ $reviews->links('admin.layouts.pagination') }}
     </div>
+<<<<<<< HEAD
     {{ $reviews->links('admin.layouts.pagination') }}
+=======
+
+    <div class="review-confirm-modal" id="review-confirm-modal" hidden>
+        <div class="review-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="review-confirm-title">
+            <h3 id="review-confirm-title">Ẩn đánh giá này?</h3>
+            <p>Đánh giá sẽ không còn hiển thị với khách hàng. Bạn có thể duyệt lại sau.</p>
+            <form method="POST" id="review-confirm-form">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="status" value="hidden">
+                <div class="review-confirm-actions"><button type="button" class="review-confirm-cancel"
+                        id="review-confirm-cancel">Không</button><button type="submit" class="review-confirm-submit">Có, ẩn
+                        đánh giá</button></div>
+            </form>
+        </div>
+    </div>
+>>>>>>> 047989117ac474d52a26948b7c17a43bd297a074
 @endsection
 
 @section('scripts')
