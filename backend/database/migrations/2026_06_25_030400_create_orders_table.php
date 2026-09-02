@@ -34,7 +34,7 @@ return new class extends Migration
             $table->decimal('discount_amount', 12, 2)->default(0);
             $table->enum('order_status', ['pending', 'confirmed', 'shipping', 'completed', 'cancelled'])->default('pending');
             $table->decimal('total_amount', 12, 2);
-            $table->enum('payment_status', ['unpaid', 'paid', 'failed', 'refunded'])->default('unpaid');
+            $table->string('payment_status', 30)->default('unpaid');
             $table->text('note')->nullable();
             $table->timestamps();
         });

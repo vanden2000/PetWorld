@@ -69,6 +69,7 @@ class SepayWebhookController extends Controller
             $order->update([
                 'payment_status' => 'paid',
                 'order_status' => 'confirmed',
+                'reconciled_at' => now(),
             ]);
         }
 

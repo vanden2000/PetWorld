@@ -50,6 +50,45 @@
         box-shadow: 0 4px 12px rgba(255, 120, 45, 0.28);
     }
     .orders-filter-card.is-filtering { opacity: .65; pointer-events: none; }
+
+    /* Thanh đối soát hàng loạt */
+    .bulk-reconcile-bar {
+        position: sticky;
+        top: 10px;
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 20px;
+        margin-bottom: 16px;
+        background: #1e293b;
+        color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        animation: fadeInDown 0.25s ease-out;
+    }
+    .bulk-reconcile-bar.show { display: flex; }
+    .bulk-reconcile-left { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.9rem; }
+    .bulk-reconcile-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-bulk-action {
+        border: none;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+    .btn-bulk-reconciling { background: #ea580c; color: #fff; }
+    .btn-bulk-reconciling:hover { background: #c2410c; }
+    .btn-bulk-paid { background: #059669; color: #fff; }
+    .btn-bulk-paid:hover { background: #047857; }
+    .btn-bulk-clear { background: transparent; color: #94a3b8; border: 1px solid #475569; }
+    .btn-bulk-clear:hover { background: #334155; color: #fff; }
 </style>
 @endsection
 
@@ -120,11 +159,39 @@
     </div>
 </form>
 
+<!-- Thanh công cụ Đối soát hàng loạt -->
+<div class="bulk-reconcile-bar" id="bulk-reconcile-bar">
+    <div class="bulk-reconcile-left">
+        <i class="fa-solid fa-list-check" style="color: var(--primary);"></i>
+        <span>Đã chọn <strong id="selected-orders-count">0</strong> đơn hàng</span>
+    </div>
+    <div class="bulk-reconcile-actions">
+        <button type="button" class="btn-bulk-action btn-bulk-reconciling" onclick="triggerBulkReconcile('reconciling')">
+            <i class="fa-solid fa-clock-rotate-left"></i> Chuyển sang: Đang đối soát
+        </button>
+        <button type="button" class="btn-bulk-action btn-bulk-paid" onclick="triggerBulkReconcile('paid')">
+            <i class="fa-solid fa-circle-check"></i> Xác nhận: Shop đã nhận tiền
+        </button>
+        <button type="button" class="btn-bulk-action btn-bulk-clear" id="btn-clear-selection">
+            Bỏ chọn
+        </button>
+    </div>
+</div>
+
+<form id="bulk-reconcile-form" method="POST" action="{{ route('admin.orders.bulk-reconcile') }}" style="display: none;">
+    @csrf
+    <input type="hidden" name="target_status" id="bulk-target-status" value="">
+    <div id="bulk-order-ids-container"></div>
+</form>
+
 <div class="table-card">
     <div class="table-container">
         <table class="orders-table">
             <thead>
                 <tr>
+                    <th style="width: 40px; text-align: center;">
+                        <input type="checkbox" id="select-all-orders" title="Chọn tất cả" style="cursor: pointer; width: 16px; height: 16px;">
+                    </th>
                     <th>Mã đơn hàng</th>
                     <th>Mã giao dịch</th>
                     <th>Khách hàng</th>
@@ -145,8 +212,12 @@
                             default => [],
                         };
                         $nextPaymentStatuses = match ($order->payment_status) {
-                            'unpaid' => ['paid', 'failed'],
+                            'unpaid' => ['customer_paid', 'paid', 'failed'],
+                            'customer_paid' => ['reconciling', 'paid', 'discrepancy'],
+                            'reconciling' => ['paid', 'discrepancy'],
+                            'discrepancy' => ['reconciling', 'paid', 'failed'],
                             'paid' => ['refunded'],
+                            'failed' => ['unpaid', 'customer_paid', 'paid'],
                             default => [],
                         };
                         $isCancelled = $order->order_status === 'cancelled';
@@ -161,11 +232,16 @@
                         $transactionCode = $latestTransaction?->sepay_id;
                     @endphp
                     <tr @class(['order-row-cancelled' => $isCancelled])>
+                        <td style="text-align: center;">
+                            @if(! $isCancelled)
+                                <input type="checkbox" class="order-select-checkbox" value="{{ $order->id }}" style="cursor: pointer; width: 16px; height: 16px;">
+                            @endif
+                        </td>
                         <td>
                             <a href="{{ route('admin.orders.show', $order->id) }}" class="col-order-link">{{ $orderCode }}</a>
                             <div class="orders-code-meta">
                                 <span>{{ $order->items_count }} sản phẩm</span>
-                                    <span>{{ $order->shippingMethod?->name ?? 'Chưa rõ vận chuyển' }}</span>
+                                <span>{{ $order->shippingMethod?->name ?? 'Chưa rõ vận chuyển' }}</span>
                             </div>
                         </td>
                         <td>
@@ -240,7 +316,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 32px;">
+                        <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 32px;">
                             chưa có đơn hàng phù hợp với bộ lọc này.
                         </td>
                     </tr>
@@ -258,34 +334,8 @@
                 Hiển thị <strong style="color: var(--text-main); font-weight: 600;">0</strong> đơn hàng
             @endif
         </div>
-        <div class="pagination-buttons">
-            @if($orders->onFirstPage())
-                <span class="pagination-btn disabled" title="Trang trước">
-                    <i class="fa-solid fa-angle-left"></i>
-                </span>
-            @else
-                <a href="{{ $orders->previousPageUrl() }}" class="pagination-btn" title="Trang trước">
-                    <i class="fa-solid fa-angle-left"></i>
-                </a>
-            @endif
-
-            @foreach($orders->getUrlRange(1, $orders->lastPage()) as $page => $url)
-                @if($page === $orders->currentPage())
-                    <span class="pagination-btn active">{{ $page }}</span>
-                @else
-                    <a href="{{ $url }}" class="pagination-btn">{{ $page }}</a>
-                @endif
-            @endforeach
-
-            @if($orders->hasMorePages())
-                <a href="{{ $orders->nextPageUrl() }}" class="pagination-btn" title="Trang sau">
-                    <i class="fa-solid fa-angle-right"></i>
-                </a>
-            @else
-                <span class="pagination-btn disabled" title="Trang sau">
-                    <i class="fa-solid fa-angle-right"></i>
-                </span>
-            @endif
+        <div>
+            {{ $orders->links('admin.layouts.pagination') }}
         </div>
     </div>
 </div>
@@ -322,6 +372,34 @@
 
 @section('scripts')
 <script>
+    function triggerBulkReconcile(targetStatus) {
+        const checked = document.querySelectorAll('.order-select-checkbox:checked');
+        if (checked.length === 0) {
+            alert('Vui lòng chọn ít nhất một đơn hàng để đối soát.');
+            return;
+        }
+
+        const label = targetStatus === 'paid' ? 'Shop đã nhận tiền' : (targetStatus === 'reconciling' ? 'Đang đối soát' : targetStatus);
+        if (!confirm(`Bạn có chắc muốn chuyển ${checked.length} đơn hàng đã chọn sang trạng thái "${label}"?`)) {
+            return;
+        }
+
+        const form = document.getElementById('bulk-reconcile-form');
+        const container = document.getElementById('bulk-order-ids-container');
+        document.getElementById('bulk-target-status').value = targetStatus;
+        container.innerHTML = '';
+
+        checked.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'order_ids[]';
+            input.value = cb.value;
+            container.appendChild(input);
+        });
+
+        form.submit();
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.quick-status-trigger[aria-disabled="false"]').forEach((trigger) => {
             trigger.addEventListener('click', function (event) {
@@ -352,6 +430,42 @@
             ordersSearchTimer = setTimeout(submitOrderFilters, 350);
         });
         ordersFilterForm?.querySelectorAll('select').forEach((select) => select.addEventListener('change', submitOrderFilters));
+
+        const selectAll = document.getElementById('select-all-orders');
+        const checkboxes = document.querySelectorAll('.order-select-checkbox');
+        const bulkBar = document.getElementById('bulk-reconcile-bar');
+        const countSpan = document.getElementById('selected-orders-count');
+        const clearBtn = document.getElementById('btn-clear-selection');
+
+        function updateBulkBar() {
+            const checkedCount = document.querySelectorAll('.order-select-checkbox:checked').length;
+            if (countSpan) countSpan.textContent = checkedCount;
+            if (bulkBar) {
+                if (checkedCount > 0) {
+                    bulkBar.classList.add('show');
+                } else {
+                    bulkBar.classList.remove('show');
+                }
+            }
+            if (selectAll) {
+                selectAll.checked = checkboxes.length > 0 && checkedCount === checkboxes.length;
+            }
+        }
+
+        selectAll?.addEventListener('change', function () {
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateBulkBar();
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateBulkBar);
+        });
+
+        clearBtn?.addEventListener('click', function () {
+            if (selectAll) selectAll.checked = false;
+            checkboxes.forEach(cb => cb.checked = false);
+            updateBulkBar();
+        });
 
         const exportModal = document.getElementById('order-export-modal');
         const openExportButton = document.getElementById('open-order-export-modal');

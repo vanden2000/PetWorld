@@ -6,11 +6,127 @@
     $orderClass = $orderStatusClasses[$order->order_status] ?? 'pending';
     $paymentClass = $paymentStatusClasses[$order->payment_status] ?? 'pending';
     $isCancelled = $order->order_status === 'cancelled';
+    $isReturned = $order->order_status === 'returned';
+
+    if (($isCancelled || $isReturned) && $order->payment_status === 'unpaid') {
+        $paymentClass = 'cancelled';
+        $displayPaymentStatus = 'Hủy thu tiền (Không phát sinh)';
+    } else {
+        $displayPaymentStatus = $paymentStatuses[$order->payment_status] ?? $order->payment_status;
+    }
 
     if ($isCancelled) {
+        $nextOrderStatuses = ['returned'];
+        $nextPaymentStatuses = $order->payment_status === 'paid' ? ['refunded'] : [];
+    } elseif ($isReturned) {
         $nextOrderStatuses = [];
-        $nextPaymentStatuses = [];
+        $nextPaymentStatuses = $order->payment_status === 'paid' ? ['refunded'] : [];
     }
+
+    $orderActionButtons = [
+        'confirmed' => [
+            'label' => 'Xác nhận đơn hàng',
+            'icon' => 'fa-check',
+            'class' => 'btn-step-confirm',
+            'confirm_title' => 'Xác nhận đơn hàng',
+            'confirm_msg' => 'Bạn có chắc chắn muốn duyệt và chuẩn bị đóng gói kiện hàng này?',
+            'confirm_icon' => 'fa-clipboard-check',
+            'confirm_type' => 'primary',
+        ],
+        'shipping' => [
+            'label' => 'Bắt đầu giao hàng',
+            'icon' => 'fa-truck-fast',
+            'class' => 'btn-step-shipping',
+            'confirm_title' => 'Bắt đầu giao hàng',
+            'confirm_msg' => 'Bàn giao kiện hàng cho đơn vị vận chuyển và bắt đầu giao hàng?',
+            'confirm_icon' => 'fa-truck-fast',
+            'confirm_type' => 'primary',
+        ],
+        'completed' => [
+            'label' => 'Hoàn thành đơn hàng',
+            'icon' => 'fa-circle-check',
+            'class' => 'btn-step-complete',
+            'confirm_title' => 'Hoàn thành đơn hàng',
+            'confirm_msg' => 'Xác nhận đơn hàng đã giao thành công và khách hàng đã nhận được kiện hàng?',
+            'confirm_icon' => 'fa-circle-check',
+            'confirm_type' => 'success',
+        ],
+        'returned' => [
+            'label' => 'Xác nhận đã nhận lại hàng hoàn',
+            'icon' => 'fa-box-archive',
+            'class' => 'btn-step-returned',
+            'confirm_title' => 'Nhận lại hàng hoàn',
+            'confirm_msg' => 'Xác nhận bạn đã nhận lại kiện hàng từ ĐVVC và tự động nhập lại kho?',
+            'confirm_icon' => 'fa-box-archive',
+            'confirm_type' => 'warning',
+        ],
+        'cancelled' => [
+            'label' => 'Hủy đơn hàng này',
+            'icon' => 'fa-ban',
+            'class' => 'btn-step-cancel',
+            'confirm_title' => 'Hủy đơn hàng này',
+            'confirm_msg' => 'Bạn có chắc chắn muốn hủy đơn hàng này? Số lượng tồn kho sẽ được tự động hoàn lại.',
+            'confirm_icon' => 'fa-ban',
+            'confirm_type' => 'danger',
+        ],
+    ];
+
+    $paymentActionButtons = [
+        'customer_paid' => [
+            'label' => 'Khách đã trả tiền mặt',
+            'icon' => 'fa-hand-holding-dollar',
+            'class' => 'btn-step-customer-paid',
+            'confirm_title' => 'Khách đã trả tiền mặt',
+            'confirm_msg' => 'Xác nhận Shipper đã thu đủ tiền mặt từ khách hàng cho đơn này?',
+            'confirm_icon' => 'fa-hand-holding-dollar',
+            'confirm_type' => 'primary',
+        ],
+        'reconciling' => [
+            'label' => 'Chuyển sang Đang đối soát',
+            'icon' => 'fa-arrows-rotate',
+            'class' => 'btn-step-reconciling',
+            'confirm_title' => 'Bắt đầu đối soát',
+            'confirm_msg' => 'Chuyển đơn hàng vào kỳ đối soát bảng kê với đơn vị vận chuyển?',
+            'confirm_icon' => 'fa-arrows-rotate',
+            'confirm_type' => 'warning',
+        ],
+        'paid' => [
+            'label' => 'Xác nhận: Shop đã nhận tiền',
+            'icon' => 'fa-circle-check',
+            'class' => 'btn-step-paid',
+            'confirm_title' => 'Shop đã nhận tiền',
+            'confirm_msg' => 'Xác nhận tiền thu hộ (COD) đã về tài khoản ngân hàng của Shop (Doanh thu thực thu)?',
+            'confirm_icon' => 'fa-circle-check',
+            'confirm_type' => 'success',
+        ],
+        'discrepancy' => [
+            'label' => 'Báo có chênh lệch tiền',
+            'icon' => 'fa-triangle-exclamation',
+            'class' => 'btn-step-discrepancy',
+            'confirm_title' => 'Báo có chênh lệch tiền',
+            'confirm_msg' => 'Đánh dấu đơn hàng có sai lệch tiền thu hộ để tiếp tục khiếu nại ĐVVC?',
+            'confirm_icon' => 'fa-triangle-exclamation',
+            'confirm_type' => 'danger',
+        ],
+        'refunded' => [
+            'label' => 'Xác nhận hoàn tiền',
+            'icon' => 'fa-rotate-left',
+            'class' => 'btn-step-refund',
+            'confirm_title' => 'Xác nhận hoàn tiền',
+            'confirm_msg' => 'Xác nhận bạn đã chuyển khoản hoàn tiền lại cho khách hàng thành công?',
+            'confirm_icon' => 'fa-rotate-left',
+            'confirm_type' => 'warning',
+        ],
+        'failed' => [
+            'label' => 'Đánh dấu thanh toán lỗi',
+            'icon' => 'fa-circle-xmark',
+            'class' => 'btn-step-failed',
+            'confirm_title' => 'Đánh dấu thanh toán lỗi',
+            'confirm_msg' => 'Xác nhận đánh dấu giao dịch thanh toán này bị lỗi / thất bại?',
+            'confirm_icon' => 'fa-circle-xmark',
+            'confirm_type' => 'danger',
+        ],
+    ];
 @endphp
 
 @section('title', 'Chi tiết đơn hàng ' . $orderCode)
@@ -147,6 +263,272 @@
     .items-table tr.item-review-row td {
         padding-top: 0;
         padding-bottom: 14px;
+    }
+
+    /* Modern Next-Step Action Buttons */
+    .action-steps-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .btn-step {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 9px 14px;
+        border-radius: 8px;
+        font-size: 0.83rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid #fed7aa;
+        background: #fff7ed;
+        color: #ea580c;
+        text-align: center;
+    }
+    .btn-step:hover,
+    .btn-step-confirm:hover,
+    .btn-step-shipping:hover,
+    .btn-step-complete:hover,
+    .btn-step-returned:hover,
+    .btn-step-cancel:hover,
+    .btn-step-customer-paid:hover,
+    .btn-step-reconciling:hover,
+    .btn-step-paid:hover,
+    .btn-step-discrepancy:hover,
+    .btn-step-refund:hover,
+    .btn-step-failed:hover,
+    .btn-step-note:hover {
+        background: #ffedd5 !important;
+        border-color: #fdba74 !important;
+        color: #c2410c !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.12);
+    }
+    .btn-step:active {
+        transform: translateY(0);
+    }
+    .btn-step-confirm,
+    .btn-step-shipping,
+    .btn-step-complete,
+    .btn-step-returned,
+    .btn-step-cancel,
+    .btn-step-customer-paid,
+    .btn-step-reconciling,
+    .btn-step-paid,
+    .btn-step-discrepancy,
+    .btn-step-refund,
+    .btn-step-failed {
+        background: #fff7ed;
+        color: #ea580c;
+        border-color: #fed7aa;
+    }
+    .badge-fulfillment.returned {
+        background-color: #fff7ed;
+        color: #c2410c;
+        border-color: #fed7aa;
+    }
+    .badge-payment.cancelled {
+        background-color: #f1f5f9;
+        color: #64748b;
+        border-color: #cbd5e1;
+    }
+    .btn-step-note {
+        background: #f8fafc;
+        color: var(--text-muted);
+        border-color: #cbd5e1;
+        font-size: 0.78rem;
+        padding: 6px 12px;
+    }
+    .btn-step-note:hover {
+        background: #e2e8f0;
+        color: var(--text-main);
+    }
+    .step-completed-notice {
+        padding: 10px 14px;
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    /* Modern Custom Confirmation Modal */
+    .custom-confirm-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.22s;
+    }
+    .custom-confirm-backdrop.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    .custom-confirm-dialog {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+        width: 90%;
+        max-width: 410px;
+        padding: 26px 22px 20px;
+        text-align: center;
+        transform: scale(0.92) translateY(10px);
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .custom-confirm-backdrop.active .custom-confirm-dialog {
+        transform: scale(1) translateY(0);
+    }
+    .custom-confirm-icon-wrapper {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.55rem;
+        margin-bottom: 14px;
+        transition: all 0.25s;
+    }
+    .custom-confirm-icon-wrapper.primary {
+        background: #fff7ed;
+        color: #ea580c;
+        border: 2px solid #fed7aa;
+        box-shadow: 0 4px 14px rgba(234, 88, 12, 0.18);
+    }
+    .custom-confirm-icon-wrapper.success {
+        background: #f0fdf4;
+        color: #16a34a;
+        border: 2px solid #bbf7d0;
+        box-shadow: 0 4px 14px rgba(22, 163, 74, 0.18);
+    }
+    .custom-confirm-icon-wrapper.warning {
+        background: #fffbeb;
+        color: #d97706;
+        border: 2px solid #fde68a;
+        box-shadow: 0 4px 14px rgba(217, 119, 6, 0.18);
+    }
+    .custom-confirm-icon-wrapper.danger {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 2px solid #fecaca;
+        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.18);
+    }
+    .custom-confirm-title {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.3px;
+    }
+    .custom-confirm-message {
+        font-size: 0.86rem;
+        color: #64748b;
+        line-height: 1.5;
+        margin: 0 0 12px 0;
+    }
+    .custom-confirm-badge-code {
+        display: inline-block;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 3px 12px;
+        border-radius: 20px;
+        margin-bottom: 18px;
+        border: 1px solid #e2e8f0;
+    }
+    .custom-confirm-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .btn-confirm-cancel {
+        padding: 9px 14px;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 0.83rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .btn-confirm-cancel:hover {
+        background: #e2e8f0;
+        color: #1e293b;
+        border-color: #94a3b8;
+    }
+    .btn-confirm-accept {
+        padding: 9px 14px;
+        color: #ffffff;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.83rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .btn-confirm-accept.primary {
+        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+    }
+    .btn-confirm-accept.primary:hover {
+        background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+        box-shadow: 0 6px 16px rgba(234, 88, 12, 0.35);
+        transform: translateY(-1px);
+    }
+    .btn-confirm-accept.success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn-confirm-accept.success:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+        transform: translateY(-1px);
+    }
+    .btn-confirm-accept.warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+    }
+    .btn-confirm-accept.warning:hover {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+        transform: translateY(-1px);
+    }
+    .btn-confirm-accept.danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+    .btn-confirm-accept.danger:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+        transform: translateY(-1px);
     }
 </style>
 @endsection
@@ -439,42 +821,150 @@
                         <span>{{ $orderStatuses[$order->order_status] ?? $order->order_status }}</span>
                     </span>
                 </div>
-                <form method="POST" action="{{ route('admin.orders.update-status', $order) }}">
-                    @csrf
-                    @method('PATCH')
-                    <select name="order_status" @disabled($nextOrderStatuses === [])>
-                        @if($nextOrderStatuses === [])
-                            <option>Không còn bước tiếp</option>
-                        @else
-                            <option value="">Chọn bước tiếp</option>
-                            @foreach($nextOrderStatuses as $status)
-                                <option value="{{ $status }}">{{ $orderStatuses[$status] }}</option>
-                            @endforeach
-                        @endif
-                    </select>
-                    <button type="submit" @disabled($nextOrderStatuses === [])>Cập nhật đơn hàng</button>
-                </form>
 
-                <div style="border-top: 1px dashed var(--border-color); padding-top: 12px;">
-                    <h4 class="info-label">Trạng thái thanh toán</h4>
+                @if(!empty($nextOrderStatuses))
+                    <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" class="action-steps-group" id="order-status-form">
+                        @csrf
+                        @method('PATCH')
+                        <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;">
+                            <i class="fa-solid fa-angles-right"></i> Bước đơn hàng tiếp theo:
+                        </div>
+                        @foreach($nextOrderStatuses as $status)
+                            @php
+                                $btn = $orderActionButtons[$status] ?? [
+                                    'label' => $orderStatuses[$status] ?? $status,
+                                    'icon' => 'fa-arrow-right',
+                                    'class' => 'btn-step-confirm',
+                                    'confirm_title' => 'Xác nhận thao tác',
+                                    'confirm_msg' => 'Bạn có chắc chắn muốn thực hiện hành động này?',
+                                    'confirm_icon' => 'fa-circle-question',
+                                    'confirm_type' => 'primary',
+                                ];
+                            @endphp
+                            <button type="button" 
+                                    class="btn-step {{ $btn['class'] }} js-open-confirm-modal"
+                                    data-form-id="order-status-form"
+                                    data-field-name="order_status"
+                                    data-field-value="{{ $status }}"
+                                    data-confirm-title="{{ $btn['confirm_title'] ?? 'Xác nhận thao tác' }}"
+                                    data-confirm-msg="{{ $btn['confirm_msg'] ?? 'Bạn có chắc chắn muốn thực hiện hành động này?' }}"
+                                    data-confirm-icon="{{ $btn['confirm_icon'] ?? 'fa-circle-question' }}"
+                                    data-confirm-type="{{ $btn['confirm_type'] ?? 'primary' }}">
+                                <i class="fa-solid {{ $btn['icon'] }}"></i>
+                                <span>{{ $btn['label'] }}</span>
+                            </button>
+                        @endforeach
+                    </form>
+                @else
+                    <div class="step-completed-notice" style="margin-top: 8px;">
+                        <i class="fa-solid fa-flag-checkered"></i> Đã hoàn tất quy trình giao vận
+                    </div>
+                @endif
+
+                <div style="border-top: 1px dashed var(--border-color); padding-top: 14px; margin-top: 14px;">
+                    <h4 class="info-label">Trạng thái thanh toán & Đối soát</h4>
                     <span class="quick-status-trigger badge-payment {{ $paymentClass }}">
-                        <span>{{ $paymentStatuses[$order->payment_status] ?? $order->payment_status }}</span>
+                        <span>{{ $displayPaymentStatus }}</span>
                     </span>
+                    @if($isReturned)
+                        <p style="font-size: 0.76rem; color: #c2410c; margin: 6px 0 0 0; line-height: 1.4;">
+                            <i class="fa-solid fa-box-archive"></i> Đơn hàng đã hoàn về kho & đã nhập lại tồn kho thành công.
+                        </p>
+                    @elseif($isCancelled)
+                        @if($order->payment_status === 'paid')
+                            <p style="font-size: 0.76rem; color: #7c3aed; margin: 6px 0 0 0; line-height: 1.4;">
+                                <i class="fa-solid fa-triangle-exclamation"></i> <strong>Đơn đã hủy nhưng đã thanh toán trước:</strong> Vui lòng chuyển khoản hoàn tiền lại cho khách và bấm nút <em>Xác nhận hoàn tiền</em> bên dưới.
+                            </p>
+                        @elseif($order->payment_status === 'refunded')
+                            <p style="font-size: 0.76rem; color: #059669; margin: 6px 0 0 0; line-height: 1.4;">
+                                <i class="fa-solid fa-circle-check"></i> Đơn đã hủy và đã hoàn tất hoàn tiền cho khách.
+                            </p>
+                        @else
+                            <p style="font-size: 0.76rem; color: var(--text-muted); margin: 6px 0 0 0; line-height: 1.4;">
+                                <i class="fa-solid fa-ban"></i> Đơn hàng đã hủy. Nếu hàng đang gửi từ ĐVVC, bấm nút <em>Xác nhận đã nhận lại hàng hoàn</em> ở trên khi nhận kiện hàng.
+                            </p>
+                        @endif
+                    @elseif($order->payment_status === 'unpaid')
+                        <p style="font-size: 0.76rem; color: var(--text-muted); margin: 6px 0 0 0; line-height: 1.4;">
+                            <i class="fa-solid fa-circle-info"></i> Khi đơn chuyển <strong>Hoàn thành</strong>, hệ thống sẽ tự động cập nhật sang <em>Khách đã trả</em>.
+                        </p>
+                    @elseif($order->payment_status === 'customer_paid')
+                        <p style="font-size: 0.76rem; color: #0284c7; margin: 6px 0 0 0; line-height: 1.4;">
+                            <i class="fa-solid fa-hand-holding-dollar"></i> Shipper đã thu tiền mặt của khách. Đang chờ gom đơn đối soát với ĐVVC.
+                        </p>
+                    @elseif($order->payment_status === 'reconciling')
+                        <p style="font-size: 0.76rem; color: #d97706; margin: 6px 0 0 0; line-height: 1.4;">
+                            <i class="fa-solid fa-arrows-rotate"></i> Đang trong kỳ đối soát bảng kê với đơn vị vận chuyển.
+                        </p>
+                    @elseif($order->payment_status === 'paid')
+                        <p style="font-size: 0.76rem; color: #16a34a; margin: 6px 0 0 0; line-height: 1.4;">
+                            <i class="fa-solid fa-circle-check"></i> Tiền đã về tài khoản ngân hàng của Shop (Doanh thu thực thu).
+                        </p>
+                    @elseif($order->payment_status === 'discrepancy')
+                        <p style="font-size: 0.76rem; color: #dc2626; margin: 6px 0 0 0; line-height: 1.4;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Có chênh lệch tiền thu hộ / cần khiếu nại ĐVVC.
+                        </p>
+                    @endif
                 </div>
-                <form method="POST" action="{{ route('admin.orders.update-status', $order) }}">
+
+                <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" class="action-steps-group" id="payment-status-form" style="margin-top: 10px;">
                     @csrf
                     @method('PATCH')
-                    <select name="payment_status" @disabled($nextPaymentStatuses === [])>
-                        @if($nextPaymentStatuses === [])
-                            <option>Không còn bước tiếp</option>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 0.74rem; font-weight: 600; color: var(--text-muted);">Ghi chú / Mã phiên đối soát:</label>
+                        <input type="text" name="reconciliation_note" placeholder="Ví dụ: Mã GHN-DS-12345, Lệch 20k..." value="{{ $order->reconciliation_note ?? '' }}" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.82rem; background: #ffffff;">
+                    </div>
+
+                    @if(!empty($nextPaymentStatuses))
+                        <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top: 4px;">
+                            <i class="fa-solid fa-angles-right"></i> Bước thanh toán tiếp theo:
+                        </div>
+                        @foreach($nextPaymentStatuses as $status)
+                            @php
+                                $btn = $paymentActionButtons[$status] ?? [
+                                    'label' => $paymentStatuses[$status] ?? $status,
+                                    'icon' => 'fa-arrow-right',
+                                    'class' => 'btn-step-customer-paid',
+                                    'confirm_title' => 'Xác nhận thao tác',
+                                    'confirm_msg' => 'Bạn có chắc chắn muốn thực hiện hành động này?',
+                                    'confirm_icon' => 'fa-circle-question',
+                                    'confirm_type' => 'primary',
+                                ];
+                            @endphp
+                            <button type="button" 
+                                    class="btn-step {{ $btn['class'] }} js-open-confirm-modal"
+                                    data-form-id="payment-status-form"
+                                    data-field-name="payment_status"
+                                    data-field-value="{{ $status }}"
+                                    data-confirm-title="{{ $btn['confirm_title'] ?? 'Xác nhận thao tác' }}"
+                                    data-confirm-msg="{{ $btn['confirm_msg'] ?? 'Bạn có chắc chắn muốn thực hiện hành động này?' }}"
+                                    data-confirm-icon="{{ $btn['confirm_icon'] ?? 'fa-circle-question' }}"
+                                    data-confirm-type="{{ $btn['confirm_type'] ?? 'primary' }}">
+                                <i class="fa-solid {{ $btn['icon'] }}"></i>
+                                <span>{{ $btn['label'] }}</span>
+                            </button>
+                        @endforeach
+                    @else
+                        @if($order->order_status === 'completed' && $order->payment_status === 'paid')
+                            <div class="step-completed-notice" style="margin-top: 6px; background: #ecfdf5; border-color: #a7f3d0; color: #059669; font-weight: 700;">
+                                <i class="fa-solid fa-circle-check"></i> Đã hoàn tất 100% quy trình đơn hàng & đối soát thành công
+                            </div>
                         @else
-                            <option value="">Chọn bước tiếp</option>
-                            @foreach($nextPaymentStatuses as $status)
-                                <option value="{{ $status }}">{{ $paymentStatuses[$status] }}</option>
-                            @endforeach
+                            <div class="step-completed-notice" style="margin-top: 6px;">
+                                <i class="fa-solid fa-shield-check"></i> Đã hoàn tất chu kỳ đối soát
+                            </div>
                         @endif
-                    </select>
-                    <button type="submit" @disabled($nextPaymentStatuses === [])>Cập nhật thanh toán</button>
+                        <button type="button" 
+                                class="btn-step btn-step-note js-open-confirm-modal"
+                                data-form-id="payment-status-form"
+                                data-confirm-title="Lưu ghi chú đối soát"
+                                data-confirm-msg="Xác nhận lưu lại ghi chú / mã phiên đối soát cho đơn này?"
+                                data-confirm-icon="fa-floppy-disk"
+                                data-confirm-type="primary"
+                                style="margin-top: 4px;">
+                            <i class="fa-solid fa-floppy-disk"></i> Lưu ghi chú
+                        </button>
+                    @endif
                 </form>
             </div>
         </div>
@@ -508,15 +998,28 @@
                 <span style="color: #0d9488; font-size: 1.15rem;">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</span>
             </div>
 
-            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border-color);">
-                <h4 class="info-label" style="margin-bottom: 12px;">Phương thức thanh toán</h4>
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--border-color);">
+                <h4 class="info-label" style="margin-bottom: 10px;">Phương thức thanh toán</h4>
                 <div style="display: flex; align-items: center; gap: 12px; background-color: var(--bg-color); padding: 12px; border-radius: 8px;">
                     <i class="fa-solid fa-credit-card" style="font-size: 1.5rem; color: var(--primary);"></i>
                     <div style="display: flex; flex-direction: column;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">{{ $order->paymentMethod?->name ?? 'Chưa xác định' }}</span>
-                        <span style="font-size: 0.7rem; font-weight: 800; color: #10b981; margin-top: 2px;">{{ $paymentStatuses[$order->payment_status] ?? $order->payment_status }}</span>
+                        <span style="font-size: 0.75rem; font-weight: 800; margin-top: 2px;" class="badge-payment {{ $paymentClass }}">{{ $displayPaymentStatus }}</span>
                     </div>
                 </div>
+
+                @if($order->reconciliation_note)
+                    <div style="margin-top: 10px; padding: 10px 12px; background: #fefce8; border: 1px solid #fef08a; border-radius: 6px; font-size: 0.82rem; color: #854d0e;">
+                        <strong><i class="fa-solid fa-note-sticky"></i> Ghi chú đối soát:</strong> {{ $order->reconciliation_note }}
+                    </div>
+                @endif
+
+                @if($order->reconciled_at)
+                    <div style="margin-top: 8px; font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-circle-check" style="color: #059669;"></i>
+                        <span>Shop xác nhận đã nhận tiền: <strong>{{ $order->reconciled_at->format('d/m/Y H:i') }}</strong></span>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -552,6 +1055,12 @@
                         <div class="timeline-item-title">Đơn hàng hoàn thành</div>
                         <div class="timeline-item-time">{{ $order->updated_at?->format('d/m/Y H:i') }}</div>
                     </li>
+                @elseif($order->order_status === 'returned')
+                    <li class="timeline-item">
+                        <span class="timeline-icon-dot active" style="background: #ea580c; color: white;"><i class="fa-solid fa-box-archive" style="font-size: 0.65rem;"></i></span>
+                        <div class="timeline-item-title" style="color: #c2410c; font-weight: 700;">Đã nhận lại hàng hoàn & Nhập kho</div>
+                        <div class="timeline-item-time">{{ $order->returned_at?->format('d/m/Y H:i') ?? $order->updated_at?->format('d/m/Y H:i') }}</div>
+                    </li>
                 @elseif($order->order_status === 'cancelled')
                     <li class="timeline-item">
                         <span class="timeline-icon-dot pending"><i class="fa-solid fa-xmark" style="font-size: 0.65rem;"></i></span>
@@ -573,4 +1082,135 @@
         </div>
     </div>
 </div>
+
+<!-- Modern Custom Confirmation Modal -->
+<div class="custom-confirm-backdrop" id="statusConfirmModal" aria-hidden="true">
+    <div class="custom-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+        <div class="custom-confirm-icon-wrapper primary" id="confirmModalIconWrapper">
+            <i class="fa-solid fa-clipboard-check" id="confirmModalIcon"></i>
+        </div>
+        <h3 class="custom-confirm-title" id="confirmModalTitle">Xác nhận thao tác</h3>
+        <p class="custom-confirm-message" id="confirmModalMessage">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+        <div class="custom-confirm-badge-code">
+            <i class="fa-solid fa-receipt"></i> Đơn hàng: <strong>{{ $orderCode }}</strong>
+        </div>
+        
+        <div class="custom-confirm-actions">
+            <button type="button" class="btn-confirm-cancel" id="btnConfirmCancel">
+                <i class="fa-solid fa-xmark"></i> Hủy bỏ
+            </button>
+            <button type="button" class="btn-confirm-accept primary" id="btnConfirmAccept">
+                <i class="fa-solid fa-check"></i> Xác nhận
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('statusConfirmModal');
+    const iconWrapper = document.getElementById('confirmModalIconWrapper');
+    const iconElem = document.getElementById('confirmModalIcon');
+    const titleElem = document.getElementById('confirmModalTitle');
+    const messageElem = document.getElementById('confirmModalMessage');
+    const btnCancel = document.getElementById('btnConfirmCancel');
+    const btnAccept = document.getElementById('btnConfirmAccept');
+
+    let currentTriggerData = null;
+
+    function openModal(data) {
+        currentTriggerData = data;
+        titleElem.textContent = data.title || 'Xác nhận thao tác';
+        messageElem.textContent = data.msg || 'Bạn có chắc chắn muốn thực hiện hành động này?';
+        
+        // Reset classes
+        iconWrapper.className = 'custom-confirm-icon-wrapper ' + (data.type || 'primary');
+        btnAccept.className = 'btn-confirm-accept ' + (data.type || 'primary');
+        
+        // Icon
+        iconElem.className = 'fa-solid ' + (data.icon || 'fa-circle-question');
+        
+        btnAccept.disabled = false;
+        btnAccept.innerHTML = '<i class="fa-solid fa-check"></i> Xác nhận';
+
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        currentTriggerData = null;
+    }
+
+    document.querySelectorAll('.js-open-confirm-modal').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal({
+                formId: this.dataset.formId,
+                fieldName: this.dataset.fieldName,
+                fieldValue: this.dataset.fieldValue,
+                title: this.dataset.confirmTitle,
+                msg: this.dataset.confirmMsg,
+                icon: this.dataset.confirmIcon,
+                type: this.dataset.confirmType
+            });
+        });
+    });
+
+    if (btnCancel) {
+        btnCancel.addEventListener('click', closeModal);
+    }
+
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    if (btnAccept) {
+        btnAccept.addEventListener('click', function() {
+            if (!currentTriggerData || !currentTriggerData.formId) {
+                closeModal();
+                return;
+            }
+
+            const form = document.getElementById(currentTriggerData.formId);
+            if (!form) {
+                closeModal();
+                return;
+            }
+
+            if (currentTriggerData.fieldName && currentTriggerData.fieldValue) {
+                // Remove existing hidden input with same name if any
+                const existingInput = form.querySelector(`input[name="${currentTriggerData.fieldName}"]`);
+                if (existingInput) {
+                    existingInput.remove();
+                }
+
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = currentTriggerData.fieldName;
+                hiddenInput.value = currentTriggerData.fieldValue;
+                form.appendChild(hiddenInput);
+            }
+
+            btnAccept.disabled = true;
+            btnAccept.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+
+            form.submit();
+        });
+    }
+});
+</script>
 @endsection

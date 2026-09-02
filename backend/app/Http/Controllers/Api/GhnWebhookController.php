@@ -85,10 +85,11 @@ class GhnWebhookController extends Controller
 
                 // A positive COD amount means the customer paid the courier on delivery.
                 // Prepaid orders have cod_amount = 0 and keep their payment status.
+                // For COD, mark as 'customer_paid' (shipper collected cash, pending reconciliation with shop).
                 if ($canFinalizeOrder
                     && (float) $shipment->cod_amount > 0
                     && $shipment->order->payment_status === 'unpaid') {
-                    $orderUpdates['payment_status'] = 'paid';
+                    $orderUpdates['payment_status'] = 'customer_paid';
                 }
 
                 if ($orderUpdates !== []) {
