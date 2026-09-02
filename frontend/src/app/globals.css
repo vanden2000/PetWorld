@@ -5896,7 +5896,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0;
+  /* margin: 0; */
 }
 
 /* Blog Cards Section */
@@ -6198,9 +6198,6 @@ body {
 }
 
 /* Tên sản phẩm: tối đa 2 dòng (line-clamp), tên ngắn không bị đệm dòng trống. */
-.product-title {
-  text-wrap: balance;
-}
 
 /* Dòng danh mục: 1 dòng, dài thì cắt bằng dấu "..." */
 .product-category {

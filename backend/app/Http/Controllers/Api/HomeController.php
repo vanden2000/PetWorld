@@ -54,7 +54,7 @@ class HomeController extends Controller
 
             $newProducts = $this->productCardQuery()
                 ->orderByDesc('id')
-                ->limit($limits['new_products'] ?? 8)
+                ->limit($limits['new_products'] ?? 15)
                 ->get();
 
             $newAccessories = $this->productCardQuery()
