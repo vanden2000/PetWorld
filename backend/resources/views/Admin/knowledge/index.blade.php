@@ -235,11 +235,8 @@
                 @endforelse
             </tbody>
         </table>
+        {{ $articles->links('admin.layouts.pagination') }}
     </div>
-</div>
-
-<div style="margin-top: 16px;">
-    {{ $articles->links('pagination::bootstrap-4') }}
 </div>
 @endsection
 

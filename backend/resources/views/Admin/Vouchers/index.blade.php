@@ -257,16 +257,7 @@
         </div>
 
         <!-- Pagination Footer -->
-        @if($vouchers->hasPages())
-            <div class="pagination-container" style="padding: 16px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                <div style="font-size: 0.85rem; color: var(--text-muted);">
-                    Hiển thị từ <strong style="color: var(--text-main); font-weight: 600;">{{ ($vouchers->currentPage() - 1) * $vouchers->perPage() + 1 }}</strong> đến <strong style="color: var(--text-main); font-weight: 600;">{{ min($vouchers->currentPage() * $vouchers->perPage(), $vouchers->total()) }}</strong> của <strong style="color: var(--text-main); font-weight: 600;">{{ $vouchers->total() }}</strong> voucher
-                </div>
-                <div>
-                    {{ $vouchers->links('pagination::bootstrap-4') }}
-                </div>
-            </div>
-        @endif
+        {{ $vouchers->links('admin.layouts.pagination') }}
     </div>
 
     <!-- Custom Confirmation Modal -->

@@ -248,9 +248,8 @@
                 </tbody>
             </table>
         </div>
+        {{ $reviews->links('admin.layouts.pagination') }}
     </div>
-    @if($reviews->hasPages())
-    <div class="pagination-container">{{ $reviews->links() }}</div>@endif
 
     <div class="review-confirm-modal" id="review-confirm-modal" hidden>
         <div class="review-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="review-confirm-title">

@@ -15,6 +15,142 @@
 
 @section('title', 'Chi tiết đơn hàng ' . $orderCode)
 
+@section('styles')
+<style>
+    .order-item-review-horizontal {
+        padding: 10px 14px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        transition: all 0.2s ease;
+    }
+    .order-item-review-horizontal:hover {
+        border-color: #cbd5e1;
+        background: #f1f5f9;
+    }
+    .review-h-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .review-h-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .review-h-tag {
+        font-weight: 700;
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .review-h-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .review-h-time {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .review-h-comment {
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: #ffffff;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        color: var(--text-main);
+        line-height: 1.5;
+        font-size: 0.83rem;
+    }
+    .review-h-comment.empty {
+        background: transparent;
+        border: none;
+        padding: 4px 0 0 0;
+        color: var(--text-muted);
+        font-size: 0.78rem;
+    }
+    .review-stars-display {
+        color: #f59e0b;
+        font-size: 0.88rem;
+        display: inline-flex;
+        gap: 2px;
+    }
+    .review-badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.72rem;
+    }
+    .review-badge-status.approved {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+    .review-badge-status.pending {
+        background: #fffbeb;
+        color: #d97706;
+        border: 1px solid #fde68a;
+    }
+    .review-badge-status.hidden {
+        background: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+    }
+    .btn-review-quick {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .btn-review-quick.approve {
+        border: 1px solid #bbf7d0;
+        background: #ffffff;
+        color: #16a34a;
+    }
+    .btn-review-quick.approve:hover {
+        background: #f0fdf4;
+        border-color: #86efac;
+    }
+    .btn-review-quick.hide {
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #64748b;
+    }
+    .btn-review-quick.hide:hover {
+        background: #f1f5f9;
+        color: #ef4444;
+        border-color: #fecaca;
+    }
+    .items-table tr.has-review td {
+        border-bottom: none !important;
+        padding-bottom: 6px;
+    }
+    .items-table tr.item-review-row td {
+        padding-top: 0;
+        padding-bottom: 14px;
+    }
+</style>
+@endsection
+
 @section('content')
 @if(session('success'))
     <div class="alert-panel alert-success-box">
@@ -151,7 +287,7 @@
         ? asset('storage/' . ltrim($image, '/'))
         : asset('storage/logo/logo.png');
 @endphp
-                            <tr>
+                            <tr class="{{ $item->review ? 'has-review' : '' }}">
                                 <td style="padding-left: 0;">
                                     <div class="product-cell-detail">
                                         <img src="{{ $imageUrl }}" alt="{{ $item->product_name }}" class="product-cell-image">
@@ -166,6 +302,79 @@
                                 <td style="text-align: right;">{{ number_format((float) $item->price, 0, ',', '.') }}đ</td>
                                 <td style="padding-right: 0; text-align: right; font-weight: 700;">{{ number_format((float) $item->price * $item->quantity, 0, ',', '.') }}đ</td>
                             </tr>
+
+                            @if($item->review)
+                                <tr class="item-review-row">
+                                    <td colspan="5" style="padding-left: 0; padding-right: 0;">
+                                        <div class="order-item-review-horizontal">
+                                            <div class="review-h-header">
+                                                <div class="review-h-left">
+                                                    <span class="review-h-tag"><i class="fa-solid fa-comment-dots" style="color: var(--primary);"></i> Đánh giá của khách:</span>
+                                                    <div class="review-stars-display" aria-label="{{ $item->review->rating }} sao">
+                                                        @for($i = 1; $i <= 5; $i++)
+                                                            <i class="fa-solid fa-star" style="color: {{ $i <= $item->review->rating ? '#f59e0b' : '#e2e8f0' }}; font-size: 0.85rem;"></i>
+                                                        @endfor
+                                                    </div>
+                                                    <strong style="color: var(--text-main); font-size: 0.82rem;">{{ $item->review->rating }}/5 sao</strong>
+                                                </div>
+
+                                                <div class="review-h-right">
+                                                    <span class="review-h-time">
+                                                        <i class="fa-regular fa-clock"></i> {{ $item->review->created_at?->format('d/m/Y H:i') }}
+                                                    </span>
+
+                                                    @if($item->review->status === 'approved')
+                                                        <span class="review-badge-status approved">
+                                                            <i class="fa-solid fa-circle-check"></i> Đã duyệt
+                                                        </span>
+                                                    @elseif($item->review->status === 'pending')
+                                                        <span class="review-badge-status pending">
+                                                            <i class="fa-solid fa-clock"></i> Chờ duyệt
+                                                        </span>
+                                                    @else
+                                                        <span class="review-badge-status hidden">
+                                                            <i class="fa-solid fa-eye-slash"></i> Đã ẩn
+                                                        </span>
+                                                    @endif
+
+                                                    @if($item->review->status !== 'approved')
+                                                        <form method="POST" action="{{ route('admin.reviews.status.update', $item->review) }}" style="display: inline;">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="status" value="approved">
+                                                            <button type="submit" class="btn-review-quick approve" title="Duyệt đánh giá này">
+                                                                <i class="fa-solid fa-check"></i> Duyệt
+                                                            </button>
+                                                        </form>
+                                                    @endif
+
+                                                    @if($item->review->status !== 'hidden')
+                                                        <form method="POST" action="{{ route('admin.reviews.status.update', $item->review) }}" style="display: inline;">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="status" value="hidden">
+                                                            <button type="submit" class="btn-review-quick hide" title="Ẩn đánh giá này">
+                                                                <i class="fa-solid fa-eye-slash"></i> Ẩn
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            @if($item->review->comment)
+                                                <div class="review-h-comment">
+                                                    <i class="fa-solid fa-quote-left" style="color: var(--primary); font-size: 0.72rem; margin-right: 6px; opacity: 0.7;"></i>
+                                                    <span>{{ $item->review->comment }}</span>
+                                                </div>
+                                            @else
+                                                <div class="review-h-comment empty">
+                                                    <em>(Khách hàng không để lại nhận xét bằng chữ)</em>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endif
                         @endforeach
                     </tbody>
                 </table>
