@@ -16,7 +16,9 @@ return new class extends Migration
         });
 
         // Mở rộng cột order_status để hỗ trợ giá trị 'returned' (Đã hoàn hàng)
-        DB::statement("ALTER TABLE `orders` MODIFY COLUMN `order_status` VARCHAR(50) NOT NULL DEFAULT 'pending'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE `orders` MODIFY COLUMN `order_status` VARCHAR(50) NOT NULL DEFAULT 'pending'");
+        }
     }
 
     public function down(): void
