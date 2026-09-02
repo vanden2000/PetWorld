@@ -1533,6 +1533,7 @@ body {
 .chatbot-suggestions {
   width: min(100%, 310px);
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   align-self: flex-start;
 }
@@ -1549,15 +1550,18 @@ body {
   text-decoration: none;
 }
 
-.chatbot-product-wrap { display: grid; gap: 4px; }
-.chatbot-product-actions { display: flex; justify-content: flex-end; gap: 5px; }
+.chatbot-product-wrap { display: grid; gap: 4px; min-width: 0; }
+.chatbot-product-actions { display: flex; justify-content: flex-end; gap: 5px; min-width: 0; }
 
-.chatbot-product-actions .product-add-btn {
+/* Ghi đè rule .product-add-btn 38px ở dưới file: thẻ chatbot hẹp hơn nhiều
+   nên nút cỡ trang shop sẽ tràn ra ngoài viền thẻ. */
+.chatbot-suggestions .chatbot-product-actions .product-add-btn {
   width: 28px;
   min-width: 28px;
-  height: 26px;
+  height: 28px;
   padding: 0;
   border-radius: 7px;
+  flex-shrink: 0;
 }
 
 .chatbot-product:hover,
@@ -5889,7 +5893,11 @@ body {
   letter-spacing: 0.5px;
 }
 
-.product-title {
+/* Tên sản phẩm trong ô xem trước của testimonial (không phải thẻ sản phẩm).
+   Phải giới hạn trong .testimonial-product-details, nếu để trần thì rule này
+   đè margin-bottom của .product-title trong thẻ sản phẩm và làm danh mục dính
+   sát vào tên. */
+.testimonial-product-details .product-title {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-dark);

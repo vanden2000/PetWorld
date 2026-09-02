@@ -11,6 +11,7 @@ use App\Services\ChatbotOrderService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -132,6 +133,12 @@ class ChatController extends Controller
             return response()->json(['message' => 'PetWorld chưa nhận được phản hồi phù hợp. Vui lòng thử lại sau.'], 502);
         }
 
+        if ($this->declinesToAnswer($reply)) {
+            $suggestions = [];
+        }
+
+        $reply = $this->withPublishDate($reply, $suggestions, $toolCalls);
+
         ChatMessage::create([
             'conversation_id' => $conversation->id,
             'role' => 'assistant',
@@ -231,6 +238,11 @@ QUY TRÌNH TƯ VẤN SẢN PHẨM
 - Chuyển yêu cầu sang từ khóa ngắn, dễ tìm trong catalog; giữ lại ngân sách trong min_price/max_price và đặt in_stock=true nếu khách không yêu cầu hàng hết.
 - Nếu thiếu thông tin quan trọng (loài thú cưng, độ tuổi/kích cỡ, ngân sách), chỉ hỏi một câu làm rõ. Không hỏi lại thông tin khách đã nêu.
 - Khi đã có kết quả tool, chỉ gợi ý tối đa 3 sản phẩm trong phần chữ. Nêu ngắn gọn vì sao phù hợp; không lặp lại chi tiết giá hoặc tồn kho vì giao diện hiển thị thẻ sản phẩm.
+- Dựa vào trường description và keywords của sản phẩm để giải thích công dụng, thành phần, cách dùng và trả lời câu hỏi tiếp theo của khách. Chỉ nói những gì có trong dữ liệu tool; không suy diễn thêm công dụng chưa được mô tả.
+- Nhắc khách có thể bấm vào thẻ sản phẩm để mở trang chi tiết sản phẩm khi họ muốn xem thêm thông tin.
+- Khi khách hỏi một sản phẩm duy nhất (đắt nhất, rẻ nhất, cao cấp nhất): đặt limit=1 và sort tương ứng, rồi chỉ nói về đúng sản phẩm đó. Không liệt kê thêm sản phẩm khách không hỏi.
+- Mỗi sản phẩm có sold_count là số lượng đã bán. Khi khách hỏi bán chạy nhất hoặc mua nhiều nhất, dùng sort=best_selling và trả lời dựa trên sold_count.
+- BẮT BUỘC khi khách hỏi sản phẩm mới nhất hoặc hàng mới về: dùng sort=newest. Khi khách hỏi sản phẩm cũ nhất hoặc lâu đời nhất: dùng sort=oldest. Cả hai trường hợp câu trả lời PHẢI chứa ngày đăng lấy nguyên văn từ published_at_label, viết rõ dạng "đăng ngày DD/MM/YYYY". Không tự bịa ngày nếu published_at_label trống.
 - Nếu tool không có kết quả, nói rõ PetWorld chưa tìm được sản phẩm phù hợp và đề nghị khách đổi từ khóa hoặc nới ngân sách. Không tự bịa sản phẩm, giá, tồn kho hoặc khuyến mãi.
 
 GIỚI HẠN
@@ -254,25 +266,8 @@ PROMPT,
             'model' => $openai['model'],
             'messages' => $messages,
             'tools' => $this->tools(),
-            'tool_choice' => 'auto',
+            'tool_choice' => $this->toolChoiceFor($messages),
         ];
-
-        // A follow-up already includes a real tool result. Forcing a tool a
-        // second time would create an endless tool-call loop instead of a reply.
-        $hasToolResult = collect($messages)->contains(fn (array $message) => ($message['role'] ?? null) === 'tool');
-
-        if (! $hasToolResult && $this->shouldForceCatalog($messages)) {
-            $payload['tool_choice'] = [
-                'type' => 'function',
-                'function' => ['name' => 'search_products'],
-            ];
-        }
-        if (! $hasToolResult && $this->isKnowledgeQuestion($messages)) {
-            $payload['tool_choice'] = ['type' => 'function', 'function' => ['name' => 'search_knowledge_articles']];
-        }
-        if (! $hasToolResult && $this->isOrderQuestion($messages)) {
-            $payload['tool_choice'] = ['type' => 'function', 'function' => ['name' => 'get_my_orders']];
-        }
 
         if ($openai['provider'] !== 'gemini') {
             $payload['store'] = false;
@@ -282,6 +277,29 @@ PROMPT,
             ->withToken($openai['api_key'])
             ->timeout((int) $openai['timeout'])
             ->post($openai['base_url'] . '/chat/completions', $payload);
+    }
+
+    /** Route obvious questions to a tool so the model cannot answer from memory. */
+    private function toolChoiceFor(array $messages): array|string
+    {
+        // A follow-up already includes a real tool result. Forcing a tool a
+        // second time would create an endless tool-call loop instead of a reply.
+        $hasToolResult = collect($messages)->contains(fn (array $message) => ($message['role'] ?? null) === 'tool');
+
+        if ($hasToolResult) {
+            return 'auto';
+        }
+        if ($this->isOrderQuestion($messages)) {
+            return ['type' => 'function', 'function' => ['name' => 'get_my_orders']];
+        }
+        if ($this->isKnowledgeQuestion($messages)) {
+            return ['type' => 'function', 'function' => ['name' => 'search_knowledge_articles']];
+        }
+        if ($this->shouldForceCatalog($messages)) {
+            return ['type' => 'function', 'function' => ['name' => 'search_products']];
+        }
+
+        return 'auto';
     }
 
     /** Route obvious catalog questions so the model cannot skip real data. */
@@ -328,10 +346,11 @@ PROMPT,
                         'life_stage' => ['type' => 'string', 'enum' => ['kitten', 'puppy', 'adult', 'senior', 'all_life_stages']],
                         'product_type' => ['type' => 'string', 'enum' => ['dry_food', 'wet_food', 'treat', 'toy', 'litter', 'accessory']],
                         'needs' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['daily_nutrition', 'picky_eater', 'skin_coat', 'weight_control', 'dental', 'indoor']]],
+                        'sort' => ['type' => 'string', 'enum' => ['price_asc', 'price_desc', 'best_selling', 'newest', 'oldest'], 'description' => 'price_desc khi khách hỏi đắt nhất, price_asc khi hỏi rẻ nhất, best_selling khi hỏi bán chạy nhất hoặc mua nhiều nhất, newest khi hỏi sản phẩm mới nhất hoặc hàng mới về, oldest khi hỏi sản phẩm cũ nhất hoặc lâu đời nhất. Bỏ trống nếu khách không hỏi các tiêu chí này.'],
                         'min_price' => ['type' => 'number'],
                         'max_price' => ['type' => 'number'],
                         'in_stock' => ['type' => 'boolean'],
-                        'limit' => ['type' => 'integer'],
+                        'limit' => ['type' => 'integer', 'description' => 'Số sản phẩm cần trả về, tối đa 3. Dùng 1 khi khách chỉ hỏi một sản phẩm cụ thể như đắt nhất hoặc rẻ nhất.'],
                     ],
                 ],
             ],
@@ -371,6 +390,9 @@ PROMPT,
             $decodedArguments = json_decode((string) data_get($call, 'function.arguments', '{}'), true);
             $arguments = is_array($decodedArguments) ? $decodedArguments : [];
 
+            // Every tool call the provider made needs a matching result, even an
+            // unusable one. A missing reply makes Gemini reject the follow-up
+            // request for an incomplete function-call round trip.
             if (! is_string($callId) || $callId === '') {
                 continue;
             }
@@ -388,7 +410,12 @@ PROMPT,
                 : null;
             if ($orderResult !== null) $orderSummaries = array_merge($orderSummaries, $orderResult['orders']);
             $sources = array_merge($sources, $articles);
-            $suggestions = array_merge($suggestions, $products);
+            // The model reads the full description; the stored card does not
+            // render it, so keep it out of the persisted metadata payload.
+            $suggestions = array_merge($suggestions, array_map(
+                fn (array $product): array => Arr::except($product, ['description', 'keywords']),
+                $products,
+            ));
             $toolMessages[] = [
                 'role' => 'tool',
                 'tool_call_id' => $callId,
@@ -406,11 +433,16 @@ PROMPT,
 
     private function hasSearchCriteria(array $arguments): bool
     {
+        // A price sort or budget is a valid request on its own: "sản phẩm rẻ
+        // nhất" names no pet or category but still has a definite answer.
         return trim((string) ($arguments['query'] ?? '')) !== ''
             || ! empty($arguments['pet_type'])
             || ! empty($arguments['life_stage'])
             || ! empty($arguments['product_type'])
-            || ! empty($arguments['needs']);
+            || ! empty($arguments['needs'])
+            || ! empty($arguments['sort'])
+            || isset($arguments['min_price'])
+            || isset($arguments['max_price']);
     }
 
     private function mergeAdviceContext(ChatConversation $conversation, array $arguments): void
@@ -457,6 +489,43 @@ PROMPT,
         if ($context !== ($conversation->context ?? [])) {
             $conversation->update(['context' => $context]);
         }
+    }
+
+    /**
+     * A "newest product" answer must carry the publish date. The model drops it
+     * often enough that the date is appended here rather than left to chance.
+     */
+    private function withPublishDate(string $reply, array $suggestions, array $toolCalls): string
+    {
+        $date = $suggestions[0]['published_at_label'] ?? null;
+
+        if ($suggestions === []
+            || ! is_string($date)
+            || ! $this->askedByPublishDate($toolCalls)
+            || preg_match('#\d{1,2}/\d{1,2}/\d{4}#', $reply) === 1) {
+            return $reply;
+        }
+
+        return rtrim($reply) . "\n\n(Sản phẩm được đăng ngày {$date}.)";
+    }
+
+    private function askedByPublishDate(array $toolCalls): bool
+    {
+        foreach ($toolCalls as $call) {
+            $arguments = json_decode((string) data_get($call, 'function.arguments', '{}'), true);
+
+            if (is_array($arguments) && in_array($arguments['sort'] ?? null, ['newest', 'oldest'], true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Product cards contradict a reply that says the data is unavailable. */
+    private function declinesToAnswer(string $reply): bool
+    {
+        return preg_match('/(không (hiển thị|cung cấp|có (thông tin|dữ liệu))|chưa (có|thể) (thông tin|truy xuất|cung cấp))/u', mb_strtolower($reply)) === 1;
     }
 
     private function textFrom(mixed $content): ?string
