@@ -38,8 +38,8 @@ export default function ProductCard({
   badge,
   showSoldCount = false,
   showSale = true,
+  showNew = true,
   showDate = false,
-  salePresentation = false,
 }) {
   // Trang chủ trả về `price_range`, còn /api/products trả về `price`; nhận cả hai.
   const priceRange = product.price_range || product.price || {};
@@ -58,14 +58,16 @@ export default function ProductCard({
   const discountPercent = oldPrice
     ? Math.round(((Number(oldPrice) - Number(currentPrice)) / Number(oldPrice)) * 100)
     : null;
+  const maxDiscountPercentage = Number(priceRange.max_discount_percentage ?? discountPercent ?? 0);
+  const isNew = Boolean(product.is_new);
   const ratingCount = product.rating_count ?? product.rating?.count ?? 0;
   const ratingValue = Math.round(product.rating_average ?? product.rating?.average ?? 0);
   const href = `/shop/${product.slug}`;
   // Badge "Sale" bám theo giá gạch thật của biến thể hiển thị, không theo has_sale chung.
   const badgeLabel = badge ?? (
-    salePresentation && discountPercent
-      ? `-${discountPercent}%`
-      : (showSale && oldPrice != null ? "Sale" : null)
+    showSale && maxDiscountPercentage > 0
+      ? `-${maxDiscountPercentage}%`
+      : (showNew && isNew ? "Mới" : null)
   );
   const soldQuantity = product.sold_quantity ?? product.soldQuantity ?? 0;
   const postedDate = showDate ? formatPostedDate(product.created_at) : null;
@@ -117,7 +119,10 @@ export default function ProductCard({
             {formatPrice(currentPrice)}
           </span>
           {showSoldCount ? (
-            <span className="product-sold-count">Đã bán {soldQuantity}</span>
+            <span className="product-sold-count is-hot">
+              <i className="fa-solid fa-fire" aria-hidden="true" />
+              Đã bán {Number(soldQuantity).toLocaleString("vi-VN")}
+            </span>
           ) : null}
         </div>
         <AddToCartButton product={product} />

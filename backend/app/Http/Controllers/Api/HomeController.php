@@ -212,6 +212,8 @@ class HomeController extends Controller
                     ->pluck('price')
                     ->map(fn(string $price): float => (float) $price);
 
+                $maxDiscountPercentage = ProductVariant::maxDiscountPercentage($activeVariants);
+
                 $displayVariant = $activeVariants
                     ->sortBy(function (ProductVariant $variant): array {
                         return [
@@ -236,6 +238,7 @@ class HomeController extends Controller
                     'default_variant_id' => $displayVariant?->id,
                     // Ngày đăng, dùng cho nhãn "Sản Phẩm Mới" trên thẻ sản phẩm.
                     'created_at' => $product->created_at?->toIso8601String(),
+                    'is_new' => $product->isNew(),
                     'category' => $product->category ? [
                         'id' => $product->category->id,
                         'name' => $product->category->name,
@@ -252,6 +255,7 @@ class HomeController extends Controller
                         'sale_min' => $salePrices->min(),
                         'sale_max' => $salePrices->max(),
                         'has_sale' => $salePrices->isNotEmpty(),
+                        'max_discount_percentage' => $maxDiscountPercentage,
                         'display' => $displayPrice,
                         'compare_at' => $compareAtPrice,
                     ],

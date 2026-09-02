@@ -448,7 +448,7 @@ body {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
   gap: 42px;
-  align-items: start;
+  align-items: stretch;
 }
 .profile-sidebar {
   position: sticky;
@@ -4001,6 +4001,7 @@ body {
   text-decoration: underline;
   font-weight: 600;
   transition: color 0.2s ease;
+  text-decoration: none;
 }
 
 .policy-link:hover {
@@ -4756,20 +4757,21 @@ body {
   gap: 20px;
   /* Mặc định grid là stretch: thẻ nội dung ngắn bị kéo cao bằng thẻ dài nhất
      trong hàng, sinh khoảng trống. start cho mỗi thẻ cao đúng nội dung của nó. */
-  align-items: start;
+  align-items: stretch;
 }
 
 .products-grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .products-grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  align-items: stretch;
 }
 
 /* Product Card Component */
@@ -4783,6 +4785,7 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 100%;
   /* Không dùng space-between: thẻ ít nội dung (không có giá gạch) sẽ bị kéo
      giãn, chữ nằm cách xa nhau. Riêng .product-footer tự đẩy xuống đáy bằng
      margin-top:auto nên hàng giá vẫn thẳng nhau giữa các thẻ. */
@@ -4961,11 +4964,11 @@ body {
 .product-footer {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   /* Không dùng margin-top:auto: grid kéo mọi thẻ cao bằng thẻ cao nhất trong
      hàng, nên auto sẽ đẩy giá xuống tận đáy và để lại khoảng trống lớn dưới
      danh mục. Bám sát nội dung phía trên cho cân đối. */
-  margin-top: 4px;
+  margin-top: auto;
 }
 
 .product-price {
@@ -4982,10 +4985,22 @@ body {
 }
 
 .product-sold-count {
-  margin-top: 6px;
-  font-size: 12.5px;
-  color: var(--text-muted);
-  font-weight: 600;
+  margin-top: 7px;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 0px;
+  background: #fff1e7;
+  color: #d84a0b;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.product-sold-count i {
+  font-size: 11px;
+  color: #f05a1a;
 }
 
 .price-current {
@@ -5172,7 +5187,7 @@ body {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
   position: relative;
   z-index: 2;
 }

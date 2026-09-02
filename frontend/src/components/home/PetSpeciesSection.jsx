@@ -5,13 +5,13 @@ import { resolveBackendImage } from "@/lib/format";
 const SPECIES_THEMES = {
   cat: {
     fallbackImage: "/images/pet-species/cat-home.png",
-    badge: "🐱 Dành Cho Mèo",
+    badge: "Dành Cho Mèo",
     subtext: "Thức ăn, phụ kiện & chăm sóc",
     themeClass: "theme-cat",
   },
   dog: {
     fallbackImage: "/images/pet-species/dog-home.png",
-    badge: "🐶 Dành Cho Chó",
+    badge: "Dành Cho Chó",
     subtext: "Dinh dưỡng & đồ dùng cao cấp",
     themeClass: "theme-dog",
   },
