@@ -456,25 +456,26 @@
                 </form>
 
                 <div style="border-top: 1px dashed var(--border-color); padding-top: 12px;">
-                    <h4 class="info-label">Trạng thái thanh toán</h4>
+                    <h4 class="info-label">Trạng thái thanh toán & Đối soát</h4>
                     <span class="quick-status-trigger badge-payment {{ $paymentClass }}">
                         <span>{{ $paymentStatuses[$order->payment_status] ?? $order->payment_status }}</span>
                     </span>
                 </div>
-                <form method="POST" action="{{ route('admin.orders.update-status', $order) }}">
+                <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" style="display: flex; flex-direction: column; gap: 8px;">
                     @csrf
                     @method('PATCH')
-                    <select name="payment_status" @disabled($nextPaymentStatuses === [])>
+                    <select name="payment_status" @disabled($nextPaymentStatuses === []) style="width: 100%;">
                         @if($nextPaymentStatuses === [])
-                            <option>Không còn bước tiếp</option>
+                            <option>Đã hoàn tất quy trình</option>
                         @else
-                            <option value="">Chọn bước tiếp</option>
+                            <option value="">Chọn bước tiếp theo</option>
                             @foreach($nextPaymentStatuses as $status)
                                 <option value="{{ $status }}">{{ $paymentStatuses[$status] }}</option>
                             @endforeach
                         @endif
                     </select>
-                    <button type="submit" @disabled($nextPaymentStatuses === [])>Cập nhật thanh toán</button>
+                    <input type="text" name="reconciliation_note" placeholder="Ghi chú đối soát / Mã phiên / Lý do lệch..." value="{{ $order->reconciliation_note ?? '' }}" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.82rem;">
+                    <button type="submit" @disabled($nextPaymentStatuses === [] && empty($order->reconciliation_note))>Cập nhật thanh toán & đối soát</button>
                 </form>
             </div>
         </div>
@@ -508,15 +509,28 @@
                 <span style="color: #0d9488; font-size: 1.15rem;">{{ number_format((float) $order->total_amount, 0, ',', '.') }}đ</span>
             </div>
 
-            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border-color);">
-                <h4 class="info-label" style="margin-bottom: 12px;">Phương thức thanh toán</h4>
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--border-color);">
+                <h4 class="info-label" style="margin-bottom: 10px;">Phương thức thanh toán</h4>
                 <div style="display: flex; align-items: center; gap: 12px; background-color: var(--bg-color); padding: 12px; border-radius: 8px;">
                     <i class="fa-solid fa-credit-card" style="font-size: 1.5rem; color: var(--primary);"></i>
                     <div style="display: flex; flex-direction: column;">
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">{{ $order->paymentMethod?->name ?? 'Chưa xác định' }}</span>
-                        <span style="font-size: 0.7rem; font-weight: 800; color: #10b981; margin-top: 2px;">{{ $paymentStatuses[$order->payment_status] ?? $order->payment_status }}</span>
+                        <span style="font-size: 0.75rem; font-weight: 800; margin-top: 2px;" class="badge-payment {{ $paymentClass }}">{{ $paymentStatuses[$order->payment_status] ?? $order->payment_status }}</span>
                     </div>
                 </div>
+
+                @if($order->reconciliation_note)
+                    <div style="margin-top: 10px; padding: 10px 12px; background: #fefce8; border: 1px solid #fef08a; border-radius: 6px; font-size: 0.82rem; color: #854d0e;">
+                        <strong><i class="fa-solid fa-note-sticky"></i> Ghi chú đối soát:</strong> {{ $order->reconciliation_note }}
+                    </div>
+                @endif
+
+                @if($order->reconciled_at)
+                    <div style="margin-top: 8px; font-size: 0.78rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-circle-check" style="color: #059669;"></i>
+                        <span>Shop xác nhận đã nhận tiền: <strong>{{ $order->reconciled_at->format('d/m/Y H:i') }}</strong></span>
+                    </div>
+                @endif
             </div>
         </div>
 

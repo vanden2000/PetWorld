@@ -22,7 +22,7 @@ use Throwable;
 
 class OrderController extends Controller
 {
-    private const ORDER_STATUSES = [
+    public const ORDER_STATUSES = [
         'pending' => 'Chờ xác nhận',
         'confirmed' => 'Đã xác nhận',
         'shipping' => 'Đang giao hàng',
@@ -30,14 +30,17 @@ class OrderController extends Controller
         'cancelled' => 'Đã hủy',
     ];
 
-    private const PAYMENT_STATUSES = [
+    public const PAYMENT_STATUSES = [
         'unpaid' => 'Chờ thanh toán',
-        'paid' => 'Đã thanh toán',
+        'customer_paid' => 'Khách đã trả (Shipper đã thu)',
+        'reconciling' => 'Đang đối soát',
+        'paid' => 'Shop đã nhận tiền',
+        'discrepancy' => 'Có chênh lệch',
         'failed' => 'Thanh toán lỗi',
         'refunded' => 'Đã hoàn tiền',
     ];
 
-    private const ORDER_STATUS_CLASS = [
+    public const ORDER_STATUS_CLASS = [
         'pending' => 'pending',
         'confirmed' => 'processing',
         'shipping' => 'shipping',
@@ -45,9 +48,12 @@ class OrderController extends Controller
         'cancelled' => 'cancelled',
     ];
 
-    private const PAYMENT_STATUS_CLASS = [
+    public const PAYMENT_STATUS_CLASS = [
         'unpaid' => 'pending',
+        'customer_paid' => 'customer-paid',
+        'reconciling' => 'reconciling',
         'paid' => 'paid',
+        'discrepancy' => 'discrepancy',
         'failed' => 'failed',
         'refunded' => 'refunded',
     ];
@@ -172,9 +178,10 @@ class OrderController extends Controller
         $data = $request->validate([
             'order_status' => ['nullable', Rule::in(array_keys(self::ORDER_STATUSES))],
             'payment_status' => ['nullable', Rule::in(array_keys(self::PAYMENT_STATUSES))],
+            'reconciliation_note' => ['nullable', 'string', 'max:255'],
         ]);
 
-        if (! isset($data['order_status']) && ! isset($data['payment_status'])) {
+        if (! isset($data['order_status']) && ! isset($data['payment_status']) && ! array_key_exists('reconciliation_note', $data)) {
             return back()->with('error', 'Vui lòng chọn trạng thái cần cập nhật.');
         }
 
@@ -211,27 +218,35 @@ class OrderController extends Controller
                 $updates = [];
 
                 if (isset($data['order_status']) && $data['order_status'] !== $lockedOrder->order_status) {
-                if (! in_array($data['order_status'], $this->nextOrderStatuses($lockedOrder->order_status), true)) {
-                    throw ValidationException::withMessages([
-                        'order_status' => 'Trạng thái đơn hàng chỉ được đi tiếp, không được lùi bước.',
-                    ]);
-                }
+                    if (! in_array($data['order_status'], $this->nextOrderStatuses($lockedOrder->order_status), true)) {
+                        throw ValidationException::withMessages([
+                            'order_status' => 'Trạng thái đơn hàng chỉ được đi tiếp, không được lùi bước.',
+                        ]);
+                    }
 
-                if ($data['order_status'] === 'cancelled') {
-                    $this->restoreStock($lockedOrder);
-                }
+                    if ($data['order_status'] === 'cancelled') {
+                        $this->restoreStock($lockedOrder);
+                    }
 
-                $updates['order_status'] = $data['order_status'];
+                    $updates['order_status'] = $data['order_status'];
                 }
 
                 if (isset($data['payment_status']) && $data['payment_status'] !== $lockedOrder->payment_status) {
-                if (! in_array($data['payment_status'], $this->nextPaymentStatuses($lockedOrder->payment_status), true)) {
-                    throw ValidationException::withMessages([
-                        'payment_status' => 'Trạng thái thanh toán không hợp lệ.',
-                    ]);
+                    if (! in_array($data['payment_status'], $this->nextPaymentStatuses($lockedOrder->payment_status), true)) {
+                        throw ValidationException::withMessages([
+                            'payment_status' => 'Trạng thái thanh toán không hợp lệ theo quy trình đối soát.',
+                        ]);
+                    }
+
+                    $updates['payment_status'] = $data['payment_status'];
+
+                    if ($data['payment_status'] === 'paid') {
+                        $updates['reconciled_at'] = now();
+                    }
                 }
 
-                $updates['payment_status'] = $data['payment_status'];
+                if (array_key_exists('reconciliation_note', $data) && $data['reconciliation_note'] !== null) {
+                    $updates['reconciliation_note'] = $data['reconciliation_note'];
                 }
 
                 if ($updates !== []) {
@@ -276,7 +291,46 @@ class OrderController extends Controller
         return back()->with('success', 'Đã cập nhật trạng thái đơn hàng.');
     }
 
-    private function nextOrderStatuses(string $current): array
+    public function bulkReconcile(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'order_ids' => ['required', 'array', 'min:1'],
+            'order_ids.*' => ['integer', Rule::exists('orders', 'id')],
+            'target_status' => ['required', Rule::in(['customer_paid', 'reconciling', 'paid', 'discrepancy'])],
+            'reconciliation_note' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $count = 0;
+        DB::transaction(function () use ($data, &$count): void {
+            $orders = Order::query()
+                ->whereIn('id', $data['order_ids'])
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($orders as $order) {
+                if ($order->order_status === 'cancelled') {
+                    continue;
+                }
+
+                $updates = ['payment_status' => $data['target_status']];
+                if ($data['target_status'] === 'paid') {
+                    $updates['reconciled_at'] = now();
+                }
+                if (! empty($data['reconciliation_note'])) {
+                    $updates['reconciliation_note'] = $data['reconciliation_note'];
+                }
+
+                $order->update($updates);
+                $count++;
+            }
+        });
+
+        $statusLabel = self::PAYMENT_STATUSES[$data['target_status']] ?? $data['target_status'];
+
+        return back()->with('success', "Đã đối soát & cập nhật {$count} đơn hàng sang trạng thái: {$statusLabel}.");
+    }
+
+    public function nextOrderStatuses(string $current): array
     {
         return match ($current) {
             'pending' => ['confirmed', 'cancelled'],
@@ -286,11 +340,15 @@ class OrderController extends Controller
         };
     }
 
-    private function nextPaymentStatuses(string $current): array
+    public function nextPaymentStatuses(string $current): array
     {
         return match ($current) {
-            'unpaid' => ['paid', 'failed'],
+            'unpaid' => ['customer_paid', 'paid', 'failed'],
+            'customer_paid' => ['reconciling', 'paid', 'discrepancy'],
+            'reconciling' => ['paid', 'discrepancy'],
+            'discrepancy' => ['reconciling', 'paid', 'failed'],
             'paid' => ['refunded'],
+            'failed' => ['unpaid', 'customer_paid', 'paid'],
             default => [],
         };
     }

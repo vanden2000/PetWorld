@@ -91,7 +91,7 @@ export default function CheckoutSuccessView({ order }) {
     }
   };
 
-  const isPaid = normalized.payment_status === "paid";
+  const isPaid = ["paid", "customer_paid", "reconciling"].includes(normalized.payment_status);
 
   return (
     <div className="co-success-container">

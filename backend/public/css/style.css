@@ -1613,8 +1613,23 @@
     }
     .badge-payment.paid {
         background-color: #ecfdf5;
-        color: #10b981;
+        color: #059669;
         border-color: #a7f3d0;
+    }
+    .badge-payment.customer-paid {
+        background-color: #eff6ff;
+        color: #2563eb;
+        border-color: #bfdbfe;
+    }
+    .badge-payment.reconciling {
+        background-color: #fff7ed;
+        color: #c2410c;
+        border-color: #fed7aa;
+    }
+    .badge-payment.discrepancy {
+        background-color: #fff1f2;
+        color: #e11d48;
+        border-color: #fecdd3;
     }
     .badge-payment.pending {
         background-color: #fffbeb;
@@ -1622,14 +1637,14 @@
         border-color: #fde68a;
     }
     .badge-payment.refunded {
-        background-color: #fef2f2;
-        color: #ef4444;
-        border-color: #fecaca;
+        background-color: #faf5ff;
+        color: #9333ea;
+        border-color: #e9d5ff;
     }
     .badge-payment.failed {
-        background-color: #fce8e6;
-        color: #c5221f;
-        border-color: #fad2cf;
+        background-color: #fef2f2;
+        color: #dc2626;
+        border-color: #fecaca;
     }
 
     .badge-fulfillment {
