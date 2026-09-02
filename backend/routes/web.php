@@ -92,6 +92,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/orders', [OrderController::class, 'index'])
         ->name('orders');
 
+    Route::post('/orders/bulk-reconcile', [OrderController::class, 'bulkReconcile'])
+        ->name('orders.bulk-reconcile');
+
     Route::get('/orders/export', [OrderController::class, 'export'])
         ->name('orders.export');
 

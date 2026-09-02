@@ -12,6 +12,14 @@ class Order extends Model
 {
     use HasFactory;
 
+    public const PAYMENT_STATUS_UNPAID = 'unpaid';
+    public const PAYMENT_STATUS_CUSTOMER_PAID = 'customer_paid';
+    public const PAYMENT_STATUS_RECONCILING = 'reconciling';
+    public const PAYMENT_STATUS_PAID = 'paid';
+    public const PAYMENT_STATUS_DISCREPANCY = 'discrepancy';
+    public const PAYMENT_STATUS_FAILED = 'failed';
+    public const PAYMENT_STATUS_REFUNDED = 'refunded';
+
     protected $fillable = [
         'payment_code',
         'voucher_id',
@@ -35,6 +43,8 @@ class Order extends Model
         'payment_status',
         'expires_at',
         'note',
+        'reconciliation_note',
+        'reconciled_at',
     ];
 
     protected $casts = [
@@ -45,6 +55,7 @@ class Order extends Model
         'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'expires_at' => 'datetime',
+        'reconciled_at' => 'datetime',
     ];
 
     /**
@@ -61,6 +72,27 @@ class Order extends Model
         $name = mb_strtolower($this->paymentMethod?->name ?? '');
 
         return str_contains($name, 'chuyển khoản');
+    }
+
+    public function isCod(): bool
+    {
+        $name = mb_strtolower($this->paymentMethod?->name ?? '');
+
+        return str_contains($name, 'cod') || str_contains($name, 'nhận hàng') || ! $this->isBankTransfer();
+    }
+
+    public function isReconciled(): bool
+    {
+        return $this->payment_status === self::PAYMENT_STATUS_PAID;
+    }
+
+    public function isCustomerPaid(): bool
+    {
+        return in_array($this->payment_status, [
+            self::PAYMENT_STATUS_CUSTOMER_PAID,
+            self::PAYMENT_STATUS_RECONCILING,
+            self::PAYMENT_STATUS_PAID,
+        ], true);
     }
 
     public function voucher(): BelongsTo

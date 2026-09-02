@@ -78,6 +78,7 @@ class SepayPaymentReconciler
             $lockedOrder->update([
                 'payment_status' => 'paid',
                 'order_status' => 'confirmed',
+                'reconciled_at' => now(),
             ]);
 
             return $lockedOrder->refresh();
