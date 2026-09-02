@@ -13,12 +13,16 @@ import { resolveBackendImage } from "@/lib/format";
  */
 export default function NewProductsSplit({ products = [] }) {
   const INITIAL_COUNT = 5;
+  // Mở rộng hiển thị tối đa 10 sản phẩm (2 hàng lưới 5 cột). Backend trả bao nhiêu
+  // thì hiện bấy nhiêu — tăng limit của khối trong Admin là tự có thêm, không cần sửa code.
+  const MAX_COUNT = 10;
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (products.length === 0) return null;
 
-  const visibleProducts = isExpanded ? products : products.slice(0, INITIAL_COUNT);
-  const hasMoreThanInitial = products.length > INITIAL_COUNT;
+  const displayProducts = products.slice(0, MAX_COUNT);
+  const visibleProducts = isExpanded ? displayProducts : displayProducts.slice(0, INITIAL_COUNT);
+  const hasMoreThanInitial = displayProducts.length > INITIAL_COUNT;
 
   const toggleExpand = () => {
     setIsExpanded((prev) => !prev);
@@ -35,7 +39,7 @@ export default function NewProductsSplit({ products = [] }) {
       <div className="new-products-brown-box idea2-container">
         <div className="new-products-grid-5">
           {visibleProducts.map((product) => (
-            <ProductCard key={product.id} product={product} badge="New" />
+            <ProductCard key={product.id} product={product} badge="New" showDate />
           ))}
         </div>
 

@@ -20,11 +20,25 @@ function Stars({ count = 5 }) {
   );
 }
 
+// Ngày đăng dạng dd/mm/yyyy; trả null nếu backend chưa có mốc thời gian.
+function formatPostedDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
 export default function ProductCard({
   product,
   badge,
   showSoldCount = false,
   showSale = true,
+  showDate = false,
   salePresentation = false,
 }) {
   // Trang chủ trả về `price_range`, còn /api/products trả về `price`; nhận cả hai.
@@ -54,10 +68,16 @@ export default function ProductCard({
       : (showSale && oldPrice != null ? "Sale" : null)
   );
   const soldQuantity = product.sold_quantity ?? product.soldQuantity ?? 0;
+  const postedDate = showDate ? formatPostedDate(product.created_at) : null;
 
   return (
     <div className="product-card">
-      {badgeLabel && <span className="product-badge">{badgeLabel}</span>}
+      {/* Nhãn "New" dạng ruy-băng xéo ở góc; các nhãn khác (Sale, -20%) giữ dạng thẻ vuông. */}
+      {badgeLabel && (
+        postedDate
+          ? <span className="product-ribbon">{badgeLabel}</span>
+          : <span className="product-badge">{badgeLabel}</span>
+      )}
 
       <WishlistButton product={product} />
 
@@ -79,6 +99,7 @@ export default function ProductCard({
       <div className="product-rating">
         <Stars count={ratingValue} />
         <span className="rating-count">({ratingCount})</span>
+        {postedDate && <span className="product-date-chip">{postedDate}</span>}
       </div>
 
       <Link href={href} className="product-title">

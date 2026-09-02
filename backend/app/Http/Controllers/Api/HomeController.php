@@ -234,6 +234,8 @@ class HomeController extends Controller
                     'image' => $product->primaryImage?->image_url,
                     'image_alt' => $product->primaryImage?->alt_text ?: $product->name,
                     'default_variant_id' => $displayVariant?->id,
+                    // Ngày đăng, dùng cho nhãn "Sản Phẩm Mới" trên thẻ sản phẩm.
+                    'created_at' => $product->created_at?->toIso8601String(),
                     'category' => $product->category ? [
                         'id' => $product->category->id,
                         'name' => $product->category->name,
