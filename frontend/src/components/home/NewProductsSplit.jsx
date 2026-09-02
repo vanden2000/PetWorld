@@ -39,7 +39,7 @@ export default function NewProductsSplit({ products = [] }) {
       <div className="new-products-brown-box idea2-container">
         <div className="new-products-grid-5">
           {visibleProducts.map((product) => (
-            <ProductCard key={product.id} product={product} badge="New" showDate />
+            <ProductCard key={product.id} product={product} badge={product.is_new ? "Mới" : undefined} showDate />
           ))}
         </div>
 

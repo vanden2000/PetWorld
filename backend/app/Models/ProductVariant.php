@@ -51,6 +51,31 @@ class ProductVariant extends Model
             : (float) $this->price;
     }
 
+    public function discountPercentage(): ?int
+    {
+        if (! $this->hasValidSalePrice()) {
+            return null;
+        }
+
+        return (int) round((((float) $this->price - (float) $this->sale_price) / (float) $this->price) * 100);
+    }
+
+    /** @param iterable<ProductVariant> $variants */
+    public static function maxDiscountPercentage(iterable $variants): ?int
+    {
+        $maxDiscountPercentage = null;
+
+        foreach ($variants as $variant) {
+            $discountPercentage = $variant->discountPercentage();
+
+            if ($discountPercentage !== null && ($maxDiscountPercentage === null || $discountPercentage > $maxDiscountPercentage)) {
+                $maxDiscountPercentage = $discountPercentage;
+            }
+        }
+
+        return $maxDiscountPercentage;
+    }
+
     public static function effectivePriceExpression(string $table = 'product_variants'): string
     {
         $prefix = $table !== '' ? $table.'.' : '';

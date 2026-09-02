@@ -15,6 +15,7 @@ use App\Models\ShippingMethod;
 use App\Models\User;
 use App\Models\VariantType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -76,6 +77,26 @@ class DataIntegrityTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('reviews', ['id' => $review->id, 'rating' => 5]);
+    }
+
+    public function test_new_review_is_pending_until_an_admin_approves_it(): void
+    {
+        $owner = $this->createUser('owner@example.test');
+        $orderItem = $this->createOrderItem($owner, 'completed');
+
+        Sanctum::actingAs($owner);
+
+        $this->postJson('/api/reviews', [
+            'order_item_id' => $orderItem->id,
+            'rating' => 5,
+            'comment' => 'Sản phẩm rất tốt.',
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('reviews', [
+            'user_id' => $owner->id,
+            'order_item_id' => $orderItem->id,
+            'status' => 'pending',
+        ]);
     }
 
     private function createUser(string $email): User

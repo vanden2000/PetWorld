@@ -92,6 +92,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/orders', [OrderController::class, 'index'])
         ->name('orders');
 
+    Route::post('/orders/bulk-reconcile', [OrderController::class, 'bulkReconcile'])
+        ->name('orders.bulk-reconcile');
+
     Route::get('/orders/export', [OrderController::class, 'export'])
         ->name('orders.export');
 
@@ -108,6 +111,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/reviews/{review}/status', [ReviewController::class, 'updateStatus'])->name('reviews.status.update');
 
     Route::get('/blog-comments', [BlogCommentController::class, 'index'])->name('blog-comments');
+    Route::patch('/blog-comments/bulk-status', [BlogCommentController::class, 'bulkUpdateStatus'])->name('blog-comments.bulk-status');
     Route::patch('/blog-comments/{comment}/status', [BlogCommentController::class, 'updateStatus'])->name('blog-comments.status');
     Route::patch('/blog-comments/{comment}/restore', [BlogCommentController::class, 'restore'])->name('blog-comments.restore');
     Route::delete('/blog-comments/{comment}/force', [BlogCommentController::class, 'forceDestroy'])->name('blog-comments.force-destroy');

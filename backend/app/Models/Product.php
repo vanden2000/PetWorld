@@ -15,6 +15,11 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public function isNew(int $withinDays = 30): bool
+    {
+        return $this->created_at?->greaterThanOrEqualTo(now()->subDays($withinDays)) ?? false;
+    }
+
     protected $fillable = [
         'category_id',
         'brand_id',

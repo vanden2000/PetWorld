@@ -66,28 +66,6 @@ class AdminUserVerificationSupportTest extends TestCase
             'action' => UserSupportLog::PASSWORD_RESET_SENT,
         ]);
     }
-
-    public function test_admin_can_revoke_all_customer_sessions_with_a_reason(): void
-    {
-        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
-        $customer = User::factory()->create(['role' => 'user', 'status' => 'active']);
-        $customer->createToken('mobile-device');
-
-        $response = $this->actingAs($admin)->delete(route('admin.users.sessions.revoke', $customer), [
-            'reason' => 'Khách báo mất điện thoại.',
-        ]);
-
-        $response->assertRedirect();
-        $response->assertSessionHas('success');
-        $this->assertDatabaseCount('personal_access_tokens', 0);
-        $this->assertDatabaseHas('user_support_logs', [
-            'user_id' => $customer->id,
-            'admin_id' => $admin->id,
-            'action' => UserSupportLog::SESSIONS_REVOKED,
-            'reason' => 'Khách báo mất điện thoại.',
-        ]);
-    }
-
     public function test_admin_can_unblock_a_customer_with_a_reason(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);

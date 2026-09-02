@@ -31,6 +31,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="vi" data-scroll-behavior="smooth" className={`${inter.variable} ${playfair.variable} ${caveat.variable}`}>
+      <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+      </head>
       <link rel="icon" type="image/png" href={resolveBackendImage("logo/Special_Offer_1-removebg-preview.png")} />
       <body>{children}</body>
     </html>

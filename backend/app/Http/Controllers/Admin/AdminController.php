@@ -421,6 +421,20 @@ class AdminController extends Controller
             'cancelled' => [],
         ];
 
+        $pendingCodRevenue = (float) Order::query()
+            ->whereIn('payment_status', ['customer_paid', 'reconciling'])
+            ->where('order_status', '!=', 'cancelled')
+            ->sum('total_amount');
+
+        $pendingCodCount = Order::query()
+            ->whereIn('payment_status', ['customer_paid', 'reconciling'])
+            ->where('order_status', '!=', 'cancelled')
+            ->count();
+
+        $discrepancyCount = Order::query()
+            ->where('payment_status', 'discrepancy')
+            ->count();
+
         return view('admin.dashboard.index', compact(
             'period',
             'chartLabels',
@@ -445,7 +459,10 @@ class AdminController extends Controller
             'categoryShare',
             'orderStatusLabels',
             'orderStatusClasses',
-            'nextOrderStatusesMap'
+            'nextOrderStatusesMap',
+            'pendingCodRevenue',
+            'pendingCodCount',
+            'discrepancyCount'
         ));
     }
 }

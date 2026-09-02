@@ -1384,10 +1384,7 @@
         <div class="listing-title">
             <h1>{{ $isCreate ? 'Thêm Sản Phẩm' : 'Sửa Sản Phẩm' }}</h1>
         </div>
-        <div class="action-header-buttons">
-            <a href="{{ route('admin.products') }}" class="btn-action-cancel">Hủy</a>
-            <button type="submit" form="product-edit-form" class="btn-action-save">{{ $isCreate ? 'Tạo sản phẩm' : 'Lưu thay đổi' }}</button>
-        </div>
+       
     </div>
 
     <!-- Main Form Grid wrapper -->
@@ -2417,6 +2414,7 @@
             const titleElement = row.querySelector('.js-variant-title');
             const skuPreview = row.querySelector('.js-variant-sku-preview');
             const status = row.querySelector('.js-variant-status');
+            const weightInput = row.querySelector('.js-variant-weight');
             const stockStatus = row.querySelector('.js-variant-stock-status');
 
             if (titleElement) titleElement.textContent = title || (row.dataset.isNew === 'true' ? 'Biến thể mới' : 'Biến thể');
@@ -2436,6 +2434,12 @@
             row.classList.toggle('is-out-of-stock', isOutOfStock);
             updatePricePreview(row.querySelector('.js-variant-price'), row.querySelector('.js-variant-price-preview'));
             updatePricePreview(row.querySelector('.js-variant-sale-price'), row.querySelector('.js-variant-sale-price-preview'));
+            if (weightInput) {
+                const weight = Number(weightInput.value);
+                const weightMissing = isVisible && (!weightInput.value || !Number.isFinite(weight) || weight <= 0);
+                weightInput.setCustomValidity(weightMissing ? 'Biến thể đang hiển thị cần cân nặng đóng gói lớn hơn 0g.' : '');
+                weightInput.classList.toggle('is-invalid', weightMissing);
+            }
 
             const visibilityButton = row.querySelector('.js-toggle-variant-visibility');
             if (visibilityButton) {
@@ -2568,7 +2572,7 @@
                     <div class="variant-card-field"><label>Giá bán <span class="required-mark">*</span></label><input type="number" name="variants[${index}][price]" value="${price}" class="cell-input-small js-variant-price" step="1000" min="1000" max="1000000000" required><small class="price-format-preview js-variant-price-preview"></small></div>
                     <div class="variant-card-field"><label>Giá giảm</label><input type="number" name="variants[${index}][sale_price]" value="${salePrice || ''}" class="cell-input-small js-variant-sale-price" step="any" max="1000000000" placeholder="Để trống nếu không giảm"><small class="price-format-preview js-variant-sale-price-preview"></small></div>
                     <div class="variant-card-field"><label>Tồn kho <span class="required-mark">*</span></label><input type="number" name="variants[${index}][quantity]" value="${quantity}" class="cell-input-small js-variant-quantity" min="0" max="100000" required></div>
-                    <div class="variant-card-field"><label>Cân nặng ship (g)</label><input type="number" name="variants[${index}][weight_grams]" value="${weightGrams}" class="cell-input-small js-variant-weight" min="0" max="50000" step="1" placeholder="Ví dụ: 30"></div>
+                    <div class="variant-card-field"><label>Cân nặng đóng gói (g)</label><input type="number" name="variants[${index}][weight_grams]" value="${weightGrams}" class="cell-input-small js-variant-weight" min="0" max="50000" step="1" placeholder="Ví dụ: 1100"><small>Nhập cả bao bì; bắt buộc khi biến thể hiển thị bán.</small></div>
                 </div>
                 <div class="variant-card-footer">
                     <label class="variant-visibility-toggle"><input type="checkbox" class="js-variant-visible" name="variants[${index}][visible]" value="1" ${active ? 'checked' : ''}> Hiển thị cho khách</label>

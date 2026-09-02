@@ -119,7 +119,19 @@ class ProductController extends Controller
         $product = new Product();
         $product->setRelation('images', collect());
         $product->setRelation('primaryImage', null);
-        $productVariantRows = [];
+        // Preserve client-created variants after a validation redirect. Without
+        // this, only ordinary inputs restored with old() survived while every
+        // dynamically added variant disappeared.
+        $productVariantRows = collect(old('variants', []))->values()->map(fn(array $variant): array => [
+            'id' => $variant['id'] ?? null,
+            'sku' => $variant['sku'] ?? '',
+            'price' => $variant['price'] ?? '',
+            'sale_price' => $variant['sale_price'] ?? '',
+            'quantity' => $variant['quantity'] ?? '',
+            'weight_grams' => $variant['weight_grams'] ?? '',
+            'status' => !empty($variant['visible']) ? 'active' : 'inactive',
+            'value_ids' => array_map('intval', $variant['value_ids'] ?? []),
+        ])->all();
         $isCreate = true;
         $petSpecies = PetSpecies::where('is_active', true)->orderBy('name')->get();
 
@@ -156,7 +168,9 @@ class ProductController extends Controller
                 'status' => 'active',
             ]);
 
-            $this->syncSubmittedVariants($request, $product, $validated);
+            // A new product has no previous variants to reconcile. Running the
+            // removal logic here treated every newly created variant as missing.
+            $this->syncSubmittedVariants($request, $product, $validated, false);
             $product->petSpecies()->sync($validated['pet_species_ids'] ?? []);
 
             // Use the same metadata-aware image workflow as product updates so
@@ -168,6 +182,13 @@ class ProductController extends Controller
         });
 
         Cache::forget('api.home.sections.v1');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Sản phẩm đã được tạo thành công.',
+                'product_id' => $product->id,
+            ], 201);
+        }
 
         return redirect()->route('admin.products')->with('success', 'Sản phẩm đã được tạo thành công.');
     }
@@ -476,10 +497,18 @@ class ProductController extends Controller
             $salePrice = $variant['sale_price'] ?? null;
             $price = $variant['price'] ?? null;
             $sku = trim((string) ($variant['sku'] ?? ''));
+            $weightGrams = $variant['weight_grams'] ?? null;
+            $isVisible = array_key_exists('visible', $variant);
 
             if ($sku !== '' && ($price === null || $price === '' || ! array_key_exists('quantity', $variant) || $variant['quantity'] === '')) {
                 throw ValidationException::withMessages([
                     "variants.{$index}" => 'Mỗi biến thể có SKU phải có giá bán và tồn kho.',
+                ]);
+            }
+
+            if ($sku !== '' && $isVisible && ($weightGrams === null || $weightGrams === '' || (int) $weightGrams <= 0)) {
+                throw ValidationException::withMessages([
+                    "variants.{$index}.weight_grams" => 'Biến thể đang hiển thị phải có cân nặng đóng gói lớn hơn 0g để tính phí vận chuyển.',
                 ]);
             }
 
@@ -612,7 +641,7 @@ class ProductController extends Controller
         }
     }
 
-    private function syncSubmittedVariants(Request $request, Product $product, array $fallback): void
+    private function syncSubmittedVariants(Request $request, Product $product, array $fallback, bool $removeMissing = true): void
     {
         $variants = collect($request->input('variants', []))
             ->filter(fn(array $variant): bool => !empty($variant['sku']));
@@ -660,7 +689,12 @@ class ProductController extends Controller
             $variant->syncVariantValues($this->cleanVariantValueIds($variantInput['value_ids'] ?? []));
         }
 
-        $this->removeVariantsMissingFromForm($product, $variants);
+        // Only an edit may remove variants that existed before the request.
+        // On creation, submitted rows have no database IDs yet, so reconciling
+        // them as if they were old rows would remove all of them.
+        if ($removeMissing) {
+            $this->removeVariantsMissingFromForm($product, $variants);
+        }
     }
 
     /**

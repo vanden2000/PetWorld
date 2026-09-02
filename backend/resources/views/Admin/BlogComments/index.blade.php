@@ -121,6 +121,56 @@
             padding-bottom: 15px;
         }
 
+        .comment-select-cell {
+            width: 44px;
+            text-align: center;
+        }
+
+        .comment-select {
+            width: 16px;
+            height: 16px;
+            accent-color: #ff782d;
+            cursor: pointer;
+        }
+
+        .comment-bulk-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin: 0 0 14px;
+            padding: 10px 14px;
+            border: 1px solid #f3d8c7;
+            border-radius: 10px;
+            background: #fff8f3;
+            color: #7d4c2e;
+            font-size: .88rem;
+        }
+
+        .comment-bulk-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .comment-bulk-action {
+            min-height: 34px;
+            padding: 0 12px;
+            border: 1px solid #b8ead3;
+            border-radius: 8px;
+            background: #f1fbf5;
+            color: #16734a;
+            font: inherit;
+            font-size: .84rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .comment-bulk-action.hide {
+            border-color: #dfe5e1;
+            background: #f8fafb;
+            color: #5f6b76;
+        }
+
         .comment-body {
             max-width: 450px;
             display: -webkit-box;
@@ -302,6 +352,11 @@
             .comment-filter-actions {
                 justify-content: flex-end;
             }
+
+            .comment-bulk-bar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
         }
     </style>
 @endsection
@@ -375,11 +430,26 @@
         </div>
     </form>
 
+    <div class="comment-bulk-bar" id="comment-bulk-bar" data-bulk-status-url="{{ route('admin.blog-comments.bulk-status') }}" hidden>
+        <span>Đã chọn <strong id="comment-selected-count">0</strong> bình luận</span>
+        <div class="comment-bulk-actions">
+            <button type="button" class="comment-bulk-action" data-comment-bulk-action="approved">
+                <i class="fa-solid fa-check"></i> Duyệt
+            </button>
+            <button type="button" class="comment-bulk-action hide" data-comment-bulk-action="hidden">
+                <i class="fa-solid fa-eye-slash"></i> Ẩn
+            </button>
+        </div>
+    </div>
+
     <div class="table-card">
         <div class="table-container">
             <table class="orders-table comment-table">
                 <thead>
                     <tr>
+                        <th class="comment-select-cell">
+                            <input type="checkbox" class="comment-select" id="comment-select-all" aria-label="Chọn tất cả bình luận trên trang">
+                        </th>
                         <th style="width: 35%;">Nội dung bình luận</th>
                         <th style="width: 20%;">Người viết</th>
                         <th style="width: 25%;">Bài viết</th>
@@ -391,6 +461,11 @@
                 <tbody>
                     @forelse($comments as $comment)
                         <tr>
+                            <td class="comment-select-cell">
+                                @unless($comment->trashed())
+                                    <input type="checkbox" class="comment-select" value="{{ $comment->id }}" data-comment-select aria-label="Chọn bình luận">
+                                @endunless
+                            </td>
                             <td>
                                 <div class="comment-body">{{ $comment->content }}</div>
                             </td>
@@ -474,7 +549,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">
+                            <td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">
                                 Chưa có bình luận nào phù hợp.
                             </td>
                         </tr>
@@ -518,6 +593,35 @@
                 searchTimer = setTimeout(() => form?.submit(), 450);
             });
 
+            const selectAll = document.getElementById('comment-select-all');
+            const commentCheckboxes = [...document.querySelectorAll('[data-comment-select]')];
+            const bulkBar = document.getElementById('comment-bulk-bar');
+            const selectedCount = document.getElementById('comment-selected-count');
+
+            const syncBulkSelection = () => {
+                const selected = commentCheckboxes.filter((checkbox) => checkbox.checked);
+                const allSelected = commentCheckboxes.length > 0 && selected.length === commentCheckboxes.length;
+
+                if (selectAll) {
+                    selectAll.checked = allSelected;
+                    selectAll.indeterminate = selected.length > 0 && !allSelected;
+                }
+
+                if (selectedCount) selectedCount.textContent = selected.length;
+                if (bulkBar) bulkBar.hidden = selected.length === 0;
+            };
+
+            selectAll?.addEventListener('change', () => {
+                commentCheckboxes.forEach((checkbox) => {
+                    checkbox.checked = selectAll.checked;
+                });
+                syncBulkSelection();
+            });
+
+            commentCheckboxes.forEach((checkbox) => {
+                checkbox.addEventListener('change', syncBulkSelection);
+            });
+
             const modal = document.getElementById('comment-confirm-modal');
             const confirmForm = document.getElementById('comment-confirm-form');
             const methodInput = document.getElementById('comment-confirm-method');
@@ -532,8 +636,13 @@
                 document.body.style.overflow = '';
             };
 
+            const clearBulkCommentInputs = () => {
+                confirmForm.querySelectorAll('[data-bulk-comment-id]').forEach((input) => input.remove());
+            };
+
             document.querySelectorAll('[data-comment-confirm]').forEach((button) => {
                 button.addEventListener('click', () => {
+                    clearBulkCommentInputs();
                     confirmForm.action = button.dataset.action;
                     methodInput.value = button.dataset.method;
                     statusInput.value = button.dataset.status || '';
@@ -541,6 +650,41 @@
                     message.textContent = button.dataset.message;
                     submitButton.classList.toggle('is-danger', button.dataset.danger === 'true');
                     submitButton.textContent = button.dataset.confirmLabel || (button.dataset.danger === 'true' ? 'Có, xóa bình luận' : 'Có, tiếp tục');
+                    modal.hidden = false;
+                    document.body.style.overflow = 'hidden';
+                    cancelButton.focus();
+                });
+            });
+
+            document.querySelectorAll('[data-comment-bulk-action]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const selectedIds = commentCheckboxes
+                        .filter((checkbox) => checkbox.checked)
+                        .map((checkbox) => checkbox.value);
+
+                    if (selectedIds.length === 0 || !bulkBar?.dataset.bulkStatusUrl) return;
+
+                    const action = button.dataset.commentBulkAction;
+                    const actionLabel = action === 'approved' ? 'Duyệt' : 'Ẩn';
+                    const actionText = action === 'approved' ? 'duyệt' : 'ẩn';
+
+                    clearBulkCommentInputs();
+                    selectedIds.forEach((id) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'comment_ids[]';
+                        input.value = id;
+                        input.dataset.bulkCommentId = 'true';
+                        confirmForm.appendChild(input);
+                    });
+
+                    confirmForm.action = bulkBar.dataset.bulkStatusUrl;
+                    methodInput.value = 'PATCH';
+                    statusInput.value = action;
+                    title.textContent = actionLabel + ' ' + selectedIds.length + ' bình luận?';
+                    message.textContent = 'Bạn có chắc muốn ' + actionText + ' ' + selectedIds.length + ' bình luận đã chọn?';
+                    submitButton.classList.remove('is-danger');
+                    submitButton.textContent = 'Đồng ý';
                     modal.hidden = false;
                     document.body.style.overflow = 'hidden';
                     cancelButton.focus();

@@ -146,7 +146,7 @@
 </div>
 
 <!-- Stats Grid (Đồng bộ 4 Card KPI chuẩn Admin) -->
-<div class="stats-grid">
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
     <!-- Stat 1: Revenue -->
     <div class="stat-card">
         <div class="stat-header">
@@ -154,7 +154,7 @@
                 <i class="fa-solid fa-wallet"></i>
             </div>
         </div>
-        <div class="stat-label">Tổng doanh thu</div>
+        <div class="stat-label">Doanh thu thực thu</div>
         <div class="stat-value">{{ number_format($totalRevenueAllTime, 0, ',', '.') }}đ</div>
     </div>
 
@@ -178,6 +178,25 @@
         </div>
         <div class="stat-label">Giá trị đơn hàng TB</div>
         <div class="stat-value">{{ number_format($avgOrderValue, 0, ',', '.') }}đ</div>
+    </div>
+
+    <!-- Stat 4: COD Reconciliation -->
+    <div class="stat-card" style="border-left: 4px solid var(--primary);">
+        <div class="stat-header">
+            <div class="stat-icon-wrapper" style="background: #fff7ed; color: #ea580c;">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+            </div>
+            @if(($discrepancyCount ?? 0) > 0)
+                <span class="badge-payment discrepancy" style="font-size: 0.65rem;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> {{ $discrepancyCount }} lệch
+                </span>
+            @endif
+        </div>
+        <div class="stat-label">COD chờ đối soát (ĐVVC giữ)</div>
+        <div class="stat-value" style="color: #ea580c;">{{ number_format($pendingCodRevenue ?? 0, 0, ',', '.') }}đ</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+            {{ number_format($pendingCodCount ?? 0, 0, ',', '.') }} đơn đang giao/chờ tiền về
+        </div>
     </div>
 </div>
 

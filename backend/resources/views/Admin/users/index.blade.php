@@ -590,7 +590,7 @@
                         <td>{{ $user->created_at?->format('d/m/Y') }}</td>
                         <td>@if((int) $user->id !== (int) auth()->id())
                             <div class="user-actions">
-                                @if($user->role === 'user' && ! $user->email_verified_at && $user->status !== 'blocked')
+                                @if($user->role === 'user' && !$user->email_verified_at && $user->status !== 'blocked')
                                     <form class="js-user-action" method="POST"
                                         action="{{ route('admin.users.verification.resend', $user) }}"
                                         data-title="Gửi lại email xác thực?"
@@ -607,15 +607,6 @@
                                         data-submit="Gửi mã OTP">@csrf<button class="user-action reset-password" type="submit"
                                             title="Gửi mã đặt lại mật khẩu" aria-label="Gửi mã đặt lại mật khẩu"><i
                                                 class="fa-solid fa-key"></i></button></form>
-                                @endif
-                                @if($user->role === 'user')
-                                    <form class="js-user-action" method="POST"
-                                        action="{{ route('admin.users.sessions.revoke', $user) }}"
-                                        data-title="Đăng xuất khỏi tất cả thiết bị?"
-                                        data-message="Khách hàng sẽ phải đăng nhập lại trên mọi thiết bị đang sử dụng."
-                                        data-submit="Xác nhận đăng xuất" data-requires-reason="true">@csrf @method('DELETE')<button
-                                            class="user-action revoke-sessions" type="submit" title="Đăng xuất tất cả thiết bị"
-                                            aria-label="Đăng xuất tất cả thiết bị"><i class="fa-solid fa-right-from-bracket"></i></button></form>
                                 @endif
                                 <form class="js-user-action" method="POST"
                                     action="{{ $user->role === 'user' && $user->status === 'blocked' ? route('admin.users.unblock', $user) : route('admin.users.status.update', $user) }}"
@@ -636,12 +627,13 @@
                                         data-submit="Xác nhận cấp quyền">@csrf @method('PATCH')<button class="user-action admin"
                                             type="submit" title="Cấp quyền admin" aria-label="Cấp quyền admin"><i
                                 class="fa-solid fa-user-shield"></i></button></form>@else
-                                    <form class="js-user-action" method="POST"
-                                        action="{{ route('admin.users.revoke-admin', $user) }}" data-title="Thu hồi quyền quản trị viên?"
-                                        data-message="Tài khoản này sẽ không còn truy cập được khu vực quản trị PetWorld."
-                                        data-submit="Xác nhận thu hồi">@csrf @method('PATCH')<button class="user-action lock"
-                                            type="submit" title="Thu hồi quyền admin" aria-label="Thu hồi quyền admin"><i
-                                class="fa-solid fa-user-minus"></i></button></form>@endif
+                                                <form class="js-user-action" method="POST"
+                                                    action="{{ route('admin.users.revoke-admin', $user) }}"
+                                                    data-title="Thu hồi quyền quản trị viên?"
+                                                    data-message="Tài khoản này sẽ không còn truy cập được khu vực quản trị PetWorld."
+                                                    data-submit="Xác nhận thu hồi">@csrf @method('PATCH')<button class="user-action lock"
+                                                        type="submit" title="Thu hồi quyền admin" aria-label="Thu hồi quyền admin"><i
+                                            class="fa-solid fa-user-minus"></i></button></form>@endif
                         </div>@else<span style="color:var(--text-muted);font-size:.78rem">Tài khoản của bạn</span>@endif
                         </td>
                         </tr>
@@ -674,9 +666,12 @@
                 <input type="hidden" name="_method" id="user-confirm-method" value="PATCH">
                 <span id="user-confirm-payload"></span>
                 <div id="user-confirm-reason-wrap" hidden style="margin-top:16px">
-                    <label for="user-confirm-reason" style="display:block;margin-bottom:6px;color:var(--text-main);font-size:.82rem;font-weight:700">Lý do</label>
+                    <label for="user-confirm-reason"
+                        style="display:block;margin-bottom:6px;color:var(--text-main);font-size:.82rem;font-weight:700">Lý
+                        do</label>
                     <textarea id="user-confirm-reason" name="reason" rows="3" maxlength="1000"
-                        placeholder="Ví dụ: Khách báo mất điện thoại" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border-color);border-radius:8px;font:inherit;resize:vertical"></textarea>
+                        placeholder="Ví dụ: Khách báo mất điện thoại"
+                        style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border-color);border-radius:8px;font:inherit;resize:vertical"></textarea>
                 </div>
                 <div class="user-confirm-actions">
                     <button class="user-confirm-cancel" type="button" id="user-confirm-cancel">Hủy</button>

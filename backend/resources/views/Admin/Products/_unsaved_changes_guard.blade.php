@@ -12,7 +12,6 @@
 </div>
 
 <style>
-    .product-exit-modal-actions { flex-wrap: wrap; }
     .product-exit-discard { width: 100%; border: 0; background: transparent; color: #a12626; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 800; padding: 5px; }
     .product-exit-discard:hover { text-decoration: underline; }
 </style>
@@ -26,6 +25,7 @@
         const isCreate = modal.dataset.isCreate === '1';
         let baseline = '';
         let pendingUrl = null;
+        let submitting = false;
 
         const fingerprint = () => [...form.querySelectorAll('input, select, textarea')]
             .filter((field) => !['_token', '_method'].includes(field.name))
@@ -39,6 +39,10 @@
         // Chờ các script khởi tạo biến thể/ảnh hoàn tất rồi mới lấy trạng thái ban đầu.
         window.setTimeout(() => { baseline = fingerprint(); }, 0);
         window.addEventListener('petworld:product-saved', () => { baseline = fingerprint(); });
+        // A confirmed save is a safe navigation. Do not let the browser's
+        // beforeunload dialog interrupt the POST request.
+        window.addEventListener('petworld:product-submitting', () => { submitting = true; });
+        window.addEventListener('petworld:product-submit-finished', () => { submitting = false; });
 
         const hasChanges = () => baseline !== '' && fingerprint() !== baseline;
         const close = () => { modal.hidden = true; pendingUrl = null; };
@@ -61,7 +65,7 @@
         };
 
         document.addEventListener('click', (event) => {
-            if (event.defaultPrevented || !modal.hidden || !hasChanges()) return;
+            if (submitting || event.defaultPrevented || !modal.hidden || !hasChanges()) return;
             const link = event.target.closest('a[href]');
             if (!link || link.target || link.hasAttribute('download')) return;
             const next = new URL(link.href, window.location.href);
@@ -74,7 +78,7 @@
         }, true);
 
         window.addEventListener('beforeunload', (event) => {
-            if (!hasChanges()) return;
+            if (submitting || !hasChanges()) return;
             event.preventDefault();
             event.returnValue = '';
         });

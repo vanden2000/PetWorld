@@ -259,6 +259,7 @@ class ProductController extends Controller
                     ->pluck('sale_price')
                     ->map(fn(string $price): float => (float) $price);
                 $effectivePrices = $activeVariants->map(fn(ProductVariant $variant): float => $variant->effectivePrice());
+                $maxDiscountPercentage = ProductVariant::maxDiscountPercentage($activeVariants);
 
                 // Biến thể rẻ nhất theo giá hiệu lực = giá hiển thị; giá gạch chỉ có
                 // khi chính biến thể đó đang giảm (ghép đúng cặp, tránh lệch giá gốc/giá sale).
@@ -281,6 +282,8 @@ class ProductController extends Controller
                     'slug' => $product->slug,
                     'image' => $product->primaryImage?->image_url,
                     'image_alt' => $product->primaryImage?->alt_text ?: $product->name,
+                    'created_at' => $product->created_at?->toIso8601String(),
+                    'is_new' => $product->isNew(),
                     'category' => $product->category ? [
                         'id' => $product->category->id,
                         'name' => $product->category->name,
@@ -303,6 +306,7 @@ class ProductController extends Controller
                         'sale_min' => $salePrices->min(),
                         'sale_max' => $salePrices->max(),
                         'has_sale' => $salePrices->isNotEmpty(),
+                        'max_discount_percentage' => $maxDiscountPercentage,
                         // Cặp giá hiển thị đã ghép đúng biến thể (giống HomeController).
                         'display' => $displayPrice,
                         'compare_at' => $compareAtPrice,
