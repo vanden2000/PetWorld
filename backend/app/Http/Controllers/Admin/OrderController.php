@@ -100,7 +100,7 @@ class OrderController extends Controller
             ->when($filters['date_from'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '>=', $date))
             ->when($filters['date_to'] ?? null, fn ($query, string $date) => $query->whereDate('created_at', '<=', $date))
             ->latest()
-            ->paginate(6)
+            ->paginate(25)
             ->withQueryString();
 
         return view('admin.orders.index', [

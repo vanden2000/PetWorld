@@ -190,10 +190,6 @@
         </div>
         {{ $reviews->links('admin.layouts.pagination') }}
     </div>
-<<<<<<< HEAD
-    {{ $reviews->links('admin.layouts.pagination') }}
-=======
-
     <div class="review-confirm-modal" id="review-confirm-modal" hidden>
         <div class="review-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="review-confirm-title">
             <h3 id="review-confirm-title">Ẩn đánh giá này?</h3>
@@ -208,7 +204,6 @@
             </form>
         </div>
     </div>
->>>>>>> 047989117ac474d52a26948b7c17a43bd297a074
 @endsection
 
 @section('scripts')

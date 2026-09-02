@@ -608,16 +608,6 @@
                                             title="Gửi mã đặt lại mật khẩu" aria-label="Gửi mã đặt lại mật khẩu"><i
                                                 class="fa-solid fa-key"></i></button></form>
                                 @endif
-                                @if($user->role === 'user')
-                                    <form class="js-user-action" method="POST"
-                                        action="{{ route('admin.users.sessions.revoke', $user) }}"
-                                        data-title="Đăng xuất khỏi tất cả thiết bị?"
-                                        data-message="Khách hàng sẽ phải đăng nhập lại trên mọi thiết bị đang sử dụng."
-                                        data-submit="Xác nhận đăng xuất" data-requires-reason="true">@csrf @method('DELETE')<button
-                                            class="user-action revoke-sessions" type="submit" title="Đăng xuất tất cả thiết bị"
-                                            aria-label="Đăng xuất tất cả thiết bị"><i
-                                                class="fa-solid fa-right-from-bracket"></i></button></form>
-                                @endif
                                 <form class="js-user-action" method="POST"
                                     action="{{ $user->role === 'user' && $user->status === 'blocked' ? route('admin.users.unblock', $user) : route('admin.users.status.update', $user) }}"
                                     data-requires-reason="{{ $user->role === 'user' && $user->status === 'blocked' ? 'true' : 'false' }}"

@@ -541,7 +541,7 @@
                 @endif
                 @if(in_array($order->order_status, ['shipping', 'completed'], true))
                     <li class="timeline-item">
-                        <span class="timeline-icon-dot active"><i class="fa-solid fa-truck" style="font-size: 0.65rem;"></i></span>
+                        <span class="timeline-icon-dot completed"><i class="fa-solid fa-check"></i></span>
                         <div class="timeline-item-title">Đơn hàng đang giao</div>
                         <div class="timeline-item-time">{{ $order->updated_at?->format('d/m/Y H:i') }}</div>
                     </li>

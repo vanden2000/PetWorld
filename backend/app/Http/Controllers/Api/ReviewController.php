@@ -37,7 +37,7 @@ class ReviewController extends Controller
             'order_item_id' => $orderItem->id,
             'rating' => $data['rating'],
             'comment' => $data['comment'] ?? null,
-            'status' => 'approved',
+            'status' => 'pending',
         ]);
 
         return response()->json([

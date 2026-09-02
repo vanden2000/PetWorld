@@ -18,7 +18,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->unsignedTinyInteger('rating');
             $table->text('comment')->nullable();
-            $table->enum('status', ['pending', 'approved', 'hidden'])->default('approved');
+            $table->enum('status', ['pending', 'approved', 'hidden'])->default('pending');
             $table->timestamps();
 
             $table->unique(['user_id', 'order_item_id']);
