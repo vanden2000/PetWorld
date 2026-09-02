@@ -27,6 +27,7 @@ class OrderController extends Controller
         'confirmed' => 'Đã xác nhận',
         'shipping' => 'Đang giao hàng',
         'completed' => 'Hoàn thành',
+        'returned' => 'Đã hoàn hàng',
         'cancelled' => 'Đã hủy',
     ];
 
@@ -45,6 +46,7 @@ class OrderController extends Controller
         'confirmed' => 'processing',
         'shipping' => 'shipping',
         'completed' => 'delivered',
+        'returned' => 'returned',
         'cancelled' => 'cancelled',
     ];
 
@@ -157,7 +159,7 @@ class OrderController extends Controller
             'orderStatusClasses' => self::ORDER_STATUS_CLASS,
             'paymentStatusClasses' => self::PAYMENT_STATUS_CLASS,
             'nextOrderStatuses' => $this->nextOrderStatuses($order->order_status),
-            'nextPaymentStatuses' => $this->nextPaymentStatuses($order->payment_status),
+            'nextPaymentStatuses' => $this->nextPaymentStatuses($order->payment_status, $order->order_status),
         ]);
     }
 
@@ -209,12 +211,6 @@ class OrderController extends Controller
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                if ($lockedOrder->order_status === 'cancelled') {
-                    throw ValidationException::withMessages([
-                        'order_status' => 'Đơn hàng đã hủy nên không thể cập nhật trạng thái.',
-                    ]);
-                }
-
                 $updates = [];
 
                 if (isset($data['order_status']) && $data['order_status'] !== $lockedOrder->order_status) {
@@ -228,11 +224,26 @@ class OrderController extends Controller
                         $this->restoreStock($lockedOrder);
                     }
 
+                    if ($data['order_status'] === 'returned') {
+                        $updates['returned_at'] = now();
+                        // Nếu chuyển trực tiếp từ giao hàng sang hoàn hàng (chưa từng qua cancelled), thực hiện hoàn tồn kho
+                        if ($lockedOrder->order_status !== 'cancelled') {
+                            $this->restoreStock($lockedOrder);
+                        }
+                    }
+
                     $updates['order_status'] = $data['order_status'];
+
+                    // Tự động chuyển trạng thái thanh toán sang 'Khách đã trả' khi đơn hoàn thành nếu đang là 'Chờ thanh toán'
+                    if ($data['order_status'] === 'completed'
+                        && $lockedOrder->payment_status === Order::PAYMENT_STATUS_UNPAID
+                        && ! isset($data['payment_status'])) {
+                        $updates['payment_status'] = Order::PAYMENT_STATUS_CUSTOMER_PAID;
+                    }
                 }
 
                 if (isset($data['payment_status']) && $data['payment_status'] !== $lockedOrder->payment_status) {
-                    if (! in_array($data['payment_status'], $this->nextPaymentStatuses($lockedOrder->payment_status), true)) {
+                    if (! in_array($data['payment_status'], $this->nextPaymentStatuses($lockedOrder->payment_status, $lockedOrder->order_status), true)) {
                         throw ValidationException::withMessages([
                             'payment_status' => 'Trạng thái thanh toán không hợp lệ theo quy trình đối soát.',
                         ]);
@@ -335,19 +346,30 @@ class OrderController extends Controller
         return match ($current) {
             'pending' => ['confirmed', 'cancelled'],
             'confirmed' => ['shipping', 'cancelled'],
-            'shipping' => ['completed'],
+            'shipping' => ['completed', 'returned', 'cancelled'],
+            'cancelled' => ['returned'],
             default => [],
         };
     }
 
-    public function nextPaymentStatuses(string $current): array
+    public function nextPaymentStatuses(string $current, ?string $orderStatus = null): array
     {
+        // Khi đơn hàng đã hoàn thành và shop đã nhận tiền -> Quy trình hoàn tất 100%, không còn bước tiếp
+        if ($orderStatus === 'completed' && $current === 'paid') {
+            return [];
+        }
+
+        // Khi đơn hàng đã hủy hoặc đã hoàn hàng và chưa phát sinh tiền -> Không còn bước tiếp
+        if (in_array($orderStatus, ['cancelled', 'returned'], true) && $current === 'unpaid') {
+            return [];
+        }
+
         return match ($current) {
             'unpaid' => ['customer_paid', 'paid', 'failed'],
             'customer_paid' => ['reconciling', 'paid', 'discrepancy'],
             'reconciling' => ['paid', 'discrepancy'],
             'discrepancy' => ['reconciling', 'paid', 'failed'],
-            'paid' => ['refunded'],
+            'paid' => in_array($orderStatus, ['cancelled', 'returned'], true) ? ['refunded'] : [],
             'failed' => ['unpaid', 'customer_paid', 'paid'],
             default => [],
         };
