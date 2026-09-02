@@ -34,10 +34,10 @@
         width: 100%;
         align-items: center;
         gap: 8px;
-        padding: 10px 12px;
-        border: 1px solid #f0c7ad;
+        padding: 15px 12px;
+        border: 2px solid #dc2626;
         border-radius: 10px;
-        color: #9a3f0d;
+        color: #dc2626;
         background: #fffaf6;
         box-shadow: 0 8px 22px rgba(151, 74, 23, .16);
         font: inherit;

@@ -39,7 +39,7 @@ export default function BestSellingTabs({ groups = [], title = "Sản Phẩm Khu
 
       <div className="products-grid-5">
         {visibleProducts.map((product) => (
-          <ProductCard key={product.id} product={product} salePresentation />
+          <ProductCard key={product.id} product={product} />
         ))}
       </div>
 

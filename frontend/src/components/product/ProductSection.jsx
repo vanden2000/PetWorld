@@ -25,6 +25,7 @@ export default function ProductSection({
   isSlider = false,
   showSoldCount = false,
   showSale = true,
+  showNew = true,
   hasLoadMore = false,
   initialCount = 5,
   loadMoreStep = 5,
@@ -57,6 +58,7 @@ export default function ProductSection({
               badge={badge}
               showSoldCount={showSoldCount}
               showSale={showSale}
+              showNew={showNew}
             />
           ))}
         </div>
@@ -88,6 +90,7 @@ export default function ProductSection({
       badge={badge}
       showSoldCount={showSoldCount}
       showSale={showSale}
+      showNew={showNew}
     />
   );
 }
@@ -99,6 +102,7 @@ function ProductSliderSection({
   badge,
   showSoldCount,
   showSale,
+  showNew,
 }) {
   const scrollRef = useRef(null);
   const [isDown, setIsDown] = useState(false);
@@ -257,6 +261,7 @@ function ProductSliderSection({
                   badge={badge}
                   showSoldCount={showSoldCount}
                   showSale={showSale}
+                  showNew={showNew}
                 />
               </div>
             ))}
