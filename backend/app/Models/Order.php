@@ -45,6 +45,7 @@ class Order extends Model
         'note',
         'reconciliation_note',
         'reconciled_at',
+        'returned_at',
     ];
 
     protected $casts = [
@@ -56,6 +57,7 @@ class Order extends Model
         'total_amount' => 'decimal:2',
         'expires_at' => 'datetime',
         'reconciled_at' => 'datetime',
+        'returned_at' => 'datetime',
     ];
 
     /**
