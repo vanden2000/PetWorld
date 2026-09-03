@@ -136,14 +136,11 @@ export default function Header() {
     }
   };
 
-  // Mobile menu state
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   const handleSearch = (event) => {
     event.preventDefault();
     const query = keyword.trim();
     router.push(query ? `${ROUTES.shop}?search=${encodeURIComponent(query)}` : ROUTES.shop);
-    setMobileMenuOpen(false);
+    setIsMobileMenuOpen(false);
   };
 
   const handleLogout = async () => {
@@ -151,8 +148,6 @@ export default function Header() {
     router.push(ROUTES.home);
     router.refresh();
   };
-
-  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
     <header className={`header-wrapper ${isScrolled ? "scrolled" : ""}`}>
@@ -383,20 +378,6 @@ export default function Header() {
               <span className="action-badge">{cartCount}</span>
             </Link>
 
-            {/* Hamburger button - chỉ hiện trên mobile */}
-            <button
-              type="button"
-              className="hamburger-btn"
-              aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
-              aria-expanded={mobileMenuOpen}
-              onClick={() => setMobileMenuOpen((v) => !v)}
-            >
-              <span className={`hamburger-icon ${mobileMenuOpen ? "open" : ""}`}>
-                <span />
-                <span />
-                <span />
-              </span>
-            </button>
           </div>
         </nav>
 
@@ -514,13 +495,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div className="mobile-menu-overlay" onClick={closeMobileMenu} aria-hidden="true" />
-      )}
-
-      {/* Mobile Menu Drawer */}
-     
     </header>
   );
 }
