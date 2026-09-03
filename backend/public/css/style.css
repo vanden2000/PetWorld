@@ -19,7 +19,7 @@
             --purple-light: #f5f3ff;
             --teal-light: #f0fdfa;
             --font-main: 'Inter', system-ui, -apple-system, sans-serif;
-            --sidebar-width: 260px;
+            --sidebar-width: 270px;
             --header-height: 70px;
             --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.03);
             --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1043,6 +1043,7 @@
         padding: 12px 10px;
         border-bottom: 2px solid var(--border-color);
         background-color: var(--bg-color);
+        white-space: nowrap;
     }
 
     .orders-table td {
@@ -1077,6 +1078,7 @@
 
     .col-total {
         font-weight: 700;
+        white-space: nowrap;
     }
 
     /* Status Badges */
@@ -1250,13 +1252,14 @@
 
     .submenu {
         list-style: none;
-        padding-left: 20px;
+        padding-left: 12px;
         display: none;
         flex-direction: column;
         gap: 4px;
         margin-top: 4px;
         transition: var(--transition);
         width: 100%;
+        box-sizing: border-box;
     }
 
     .menu-item-dropdown.open .submenu {
@@ -1266,14 +1269,15 @@
     .submenu-item-link {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 10px 16px;
+        gap: 10px;
+        padding: 9px 12px;
         border-radius: 8px;
         color: var(--text-muted);
         font-size: 0.85rem;
         font-weight: 500;
         text-decoration: none;
         transition: var(--transition);
+        white-space: nowrap;
     }
 
     .submenu-item-link:hover {
@@ -3145,7 +3149,14 @@
 .badge-fulfillment.delivered { background-color: #ecfdf5; color: #059669; border-color: #a7f3d0; }
 .badge-payment.failed { background-color: #fef2f2; color: #dc2626; border-color: #fecaca; }
 .badge-payment.refunded { background-color: #faf5ff; color: #9333ea; border-color: #e9d5ff; }
+.badge-payment.cod { background-color: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+.badge-payment.customer-paid { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+.badge-payment.reconciling { background-color: #fff7ed; color: #ea580c; border-color: #fed7aa; }
+.badge-payment.discrepancy { background-color: #fef2f2; color: #dc2626; border-color: #fecaca; }
 .badge-fulfillment.cancelled { background-color: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+.badge-fulfillment.returned { background-color: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+.badge-fulfillment.failed { background-color: #fff7ed; color: #c2410c; border-color: #fdba74; }
+.badge-fulfillment.ready_to_pick { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
 
 /* ============================================================
    PETWORLD PREMIUM ADMIN DASHBOARD (STRIPE & SHOPIFY STYLE)

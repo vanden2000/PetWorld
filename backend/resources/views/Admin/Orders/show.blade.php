@@ -15,13 +15,29 @@
         $displayPaymentStatus = $paymentStatuses[$order->payment_status] ?? $order->payment_status;
     }
 
+    $hasShipped = !empty($order->shipment?->tracking_code);
+
     if ($isCancelled) {
-        $nextOrderStatuses = ['returned'];
+        $nextOrderStatuses = $hasShipped ? ['returned'] : [];
         $nextPaymentStatuses = $order->payment_status === 'paid' ? ['refunded'] : [];
     } elseif ($isReturned) {
         $nextOrderStatuses = [];
         $nextPaymentStatuses = $order->payment_status === 'paid' ? ['refunded'] : [];
     }
+
+    $ghnStatusLabels = [
+        'ready_to_pick' => 'Chờ lấy hàng',
+        'picking' => 'Đang lấy hàng',
+        'picked' => 'Đã lấy hàng',
+        'storing' => 'Đang ở kho GHN',
+        'transporting' => 'Đang luân chuyển',
+        'sorting' => 'Đang phân loại',
+        'delivering' => 'Đang giao cho người nhận',
+        'delivered' => 'Đã giao thành công',
+        'delivery_fail' => 'Giao hàng thất bại',
+        'cancel' => 'Đã hủy',
+        'returned' => 'Đã hoàn hàng',
+    ];
 
     $orderActionButtons = [
         'confirmed' => [
@@ -34,12 +50,14 @@
             'confirm_type' => 'primary',
         ],
         'shipping' => [
-            'label' => 'Bắt đầu giao hàng',
-            'icon' => 'fa-truck-fast',
+            'label' => $order->shipping_method_code === 'ghn_express' ? 'Gửi đơn sang GHN (Chờ lấy hàng)' : 'Bàn giao giao hàng',
+            'icon' => $order->shipping_method_code === 'ghn_express' ? 'fa-paper-plane' : 'fa-truck-fast',
             'class' => 'btn-step-shipping',
-            'confirm_title' => 'Bắt đầu giao hàng',
-            'confirm_msg' => 'Bàn giao kiện hàng cho đơn vị vận chuyển và bắt đầu giao hàng?',
-            'confirm_icon' => 'fa-truck-fast',
+            'confirm_title' => $order->shipping_method_code === 'ghn_express' ? 'Gửi yêu cầu lấy hàng sang GHN' : 'Bàn giao giao hàng',
+            'confirm_msg' => $order->shipping_method_code === 'ghn_express' 
+                ? 'Hệ thống sẽ tạo mã vận đơn GHN và chuyển đơn sang bước 3: Chờ bưu tá GHN đến lấy hàng?' 
+                : 'Bàn giao kiện hàng cho nhân viên giao hàng của shop?',
+            'confirm_icon' => $order->shipping_method_code === 'ghn_express' ? 'fa-paper-plane' : 'fa-truck-fast',
             'confirm_type' => 'primary',
         ],
         'completed' => [
@@ -91,11 +109,13 @@
             'confirm_type' => 'warning',
         ],
         'paid' => [
-            'label' => 'Xác nhận: Shop đã nhận tiền',
+            'label' => $order->isCod() ? 'Xác nhận: Đã nhận tiền từ ĐVVC (Hoàn tất)' : 'Xác nhận đã nhận chuyển khoản',
             'icon' => 'fa-circle-check',
             'class' => 'btn-step-paid',
-            'confirm_title' => 'Shop đã nhận tiền',
-            'confirm_msg' => 'Xác nhận tiền thu hộ (COD) đã về tài khoản ngân hàng của Shop (Doanh thu thực thu)?',
+            'confirm_title' => $order->isCod() ? 'Xác nhận đã nhận tiền từ ĐVVC' : 'Xác nhận đã nhận chuyển khoản',
+            'confirm_msg' => $order->isCod() 
+                ? 'Xác nhận tiền thu hộ (COD) từ đơn vị vận chuyển đã chuyển về tài khoản ngân hàng của Shop và kết thúc toàn bộ quy trình đơn hàng?' 
+                : 'Xác nhận khách hàng đã thanh toán chuyển khoản thành công cho đơn hàng này?',
             'confirm_icon' => 'fa-circle-check',
             'confirm_type' => 'success',
         ],
@@ -395,6 +415,27 @@
     }
     .custom-confirm-backdrop.active .custom-confirm-dialog {
         transform: scale(1) translateY(0);
+    }
+    .custom-confirm-dialog.return-modal-dialog {
+        max-width: 520px;
+        text-align: left;
+        padding: 24px 22px 20px;
+    }
+    .btn-quick-reason {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .btn-quick-reason:hover {
+        background: #fff7ed;
+        border-color: #fdba74;
+        color: #ea580c;
     }
     .custom-confirm-icon-wrapper {
         width: 58px;
@@ -815,19 +856,172 @@
             </h3>
 
             <div class="status-panel">
+                @php
+                    $isGhn = ($order->shipment?->provider === 'ghn') || ($order->shipping_method_code === 'ghn_express');
+                    $isReadyToPick = $order->order_status === 'shipping' && ($order->shipment?->status === 'ready_to_pick' || empty($order->shipment?->status));
+                    $shipmentStatus = $order->shipment?->status;
+                    $isFailed = in_array($shipmentStatus, ['delivery_fail', 'waiting_to_return', 'return', 'returning', 'return_transporting', 'damage', 'lost'], true);
+                    $stepNumber = match($order->order_status) {
+                        'pending' => 1,
+                        'confirmed' => 2,
+                        'shipping' => ($isReadyToPick ? 3 : 4),
+                        'completed', 'returned' => 5,
+                        default => 0,
+                    };
+                @endphp
+
+                @if(!$isCancelled)
+                    <div class="fulfillment-stepper" style="margin-bottom: 14px; padding: 12px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;">
+                        <div style="font-size: 0.72rem; font-weight: 700; color: #475569; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: nowrap;">
+                            <span style="display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; text-transform: uppercase; font-size: 0.68rem; color: #64748b;">
+                                <i class="fa-solid fa-route" style="color: {{ ($isFailed || $isReturned) ? '#ea580c' : '#2563eb' }};"></i> Tiến trình đơn hàng:
+                            </span>
+                            @if($isReturned)
+                                <span style="color: #c2410c; font-weight: 700; background: #ffedd5; padding: 2px 8px; border-radius: 999px; font-size: 0.68rem; white-space: nowrap;">Đã hoàn về kho</span>
+                            @elseif($isFailed)
+                                <span style="color: #c2410c; font-weight: 700; background: #ffedd5; padding: 2px 8px; border-radius: 999px; font-size: 0.68rem; white-space: nowrap;">Bước 4/5 · Thất bại</span>
+                            @else
+                                <span style="color: #0284c7; font-weight: 700; background: #e0f2fe; padding: 2px 8px; border-radius: 999px; font-size: 0.68rem; white-space: nowrap;">Bước {{ $stepNumber }}/5</span>
+                            @endif
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; position: relative;">
+                            <div style="position: absolute; top: 12px; left: 18px; right: 18px; height: 3px; background: #e2e8f0; z-index: 1;"></div>
+                            <div style="position: absolute; top: 12px; left: 18px; width: {{ max(0, min(100, ($stepNumber - 1) * 25)) }}%; height: 3px; background: {{ ($isFailed || $isReturned) ? 'linear-gradient(to right, #10b981 50%, #ea580c 100%)' : '#10b981' }}; z-index: 2; transition: width 0.4s ease;"></div>
+
+                            <div style="position: relative; z-index: 3; text-align: center; width: 18%;">
+                                <div style="width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; {{ $stepNumber >= 1 ? ($stepNumber === 1 ? 'background: #3b82f6; color: #fff; box-shadow: 0 0 0 3px #dbeafe;' : 'background: #10b981; color: #fff;') : 'background: #f1f5f9; color: #94a3b8; border: 2px solid #cbd5e1;' }}">
+                                    @if($stepNumber > 1)<i class="fa-solid fa-check" style="font-size: 0.6rem;"></i>@else 1 @endif
+                                </div>
+                                <span style="display: block; font-size: 0.62rem; font-weight: {{ $stepNumber === 1 ? '700' : '600' }}; color: {{ $stepNumber === 1 ? '#1e40af' : ($stepNumber > 1 ? '#059669' : '#64748b') }}; margin-top: 4px; line-height: 1.15;">Chờ xác nhận</span>
+                            </div>
+
+                            <div style="position: relative; z-index: 3; text-align: center; width: 18%;">
+                                <div style="width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; {{ $stepNumber >= 2 ? ($stepNumber === 2 ? 'background: #3b82f6; color: #fff; box-shadow: 0 0 0 3px #dbeafe;' : 'background: #10b981; color: #fff;') : 'background: #f1f5f9; color: #94a3b8; border: 2px solid #cbd5e1;' }}">
+                                    @if($stepNumber > 2)<i class="fa-solid fa-check" style="font-size: 0.6rem;"></i>@else 2 @endif
+                                </div>
+                                <span style="display: block; font-size: 0.62rem; font-weight: {{ $stepNumber === 2 ? '700' : '600' }}; color: {{ $stepNumber === 2 ? '#1e40af' : ($stepNumber > 2 ? '#059669' : '#64748b') }}; margin-top: 4px; line-height: 1.15;">Đã xác nhận</span>
+                            </div>
+
+                            <div style="position: relative; z-index: 3; text-align: center; width: 18%;">
+                                <div style="width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; {{ $stepNumber >= 3 ? ($stepNumber === 3 ? 'background: #f59e0b; color: #fff; box-shadow: 0 0 0 3px #fef3c7;' : 'background: #10b981; color: #fff;') : 'background: #f1f5f9; color: #94a3b8; border: 2px solid #cbd5e1;' }}">
+                                    @if($stepNumber > 3)<i class="fa-solid fa-check" style="font-size: 0.6rem;"></i>@else 3 @endif
+                                </div>
+                                <span style="display: block; font-size: 0.62rem; font-weight: {{ $stepNumber === 3 ? '700' : '600' }}; color: {{ $stepNumber === 3 ? '#b45309' : ($stepNumber > 3 ? '#059669' : '#64748b') }}; margin-top: 4px; line-height: 1.15;">Chờ lấy hàng</span>
+                            </div>
+
+                            <div style="position: relative; z-index: 3; text-align: center; width: 18%;">
+                                @if($isFailed || $isReturned)
+                                    <div style="width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; background: #ea580c; color: #fff; box-shadow: 0 0 0 3px #ffedd5;">
+                                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 0.6rem;"></i>
+                                    </div>
+                                    <span style="display: block; font-size: 0.62rem; font-weight: 700; color: #c2410c; margin-top: 4px; line-height: 1.15;">Giao thất bại</span>
+                                @else
+                                    <div style="width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; {{ $stepNumber >= 4 ? ($stepNumber === 4 ? 'background: #3b82f6; color: #fff; box-shadow: 0 0 0 3px #dbeafe;' : 'background: #10b981; color: #fff;') : 'background: #f1f5f9; color: #94a3b8; border: 2px solid #cbd5e1;' }}">
+                                        @if($stepNumber > 4)<i class="fa-solid fa-check" style="font-size: 0.6rem;"></i>@else 4 @endif
+                                    </div>
+                                    <span style="display: block; font-size: 0.62rem; font-weight: {{ $stepNumber === 4 ? '700' : '600' }}; color: {{ $stepNumber === 4 ? '#1e40af' : ($stepNumber > 4 ? '#059669' : '#64748b') }}; margin-top: 4px; line-height: 1.15;">Đang giao hàng</span>
+                                @endif
+                            </div>
+
+                            <div style="position: relative; z-index: 3; text-align: center; width: 18%;">
+                                @if($isReturned)
+                                    <div style="width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; background: #c2410c; color: #fff; box-shadow: 0 0 0 3px #fed7aa;">
+                                        <i class="fa-solid fa-box-archive" style="font-size: 0.6rem;"></i>
+                                    </div>
+                                    <span style="display: block; font-size: 0.62rem; font-weight: 700; color: #c2410c; margin-top: 4px; line-height: 1.15;">Đã hoàn về kho</span>
+                                @elseif($isFailed)
+                                    <div style="width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; background: #f1f5f9; color: #94a3b8; border: 2px solid #fed7aa;">
+                                        5
+                                    </div>
+                                    <span style="display: block; font-size: 0.62rem; font-weight: 600; color: #c2410c; margin-top: 4px; line-height: 1.15;">Thất bại / Hoàn</span>
+                                @else
+                                    <div style="width: 24px; height: 24px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; {{ $stepNumber >= 5 ? 'background: #10b981; color: #fff; box-shadow: 0 0 0 3px #d1fae5;' : 'background: #f1f5f9; color: #94a3b8; border: 2px solid #cbd5e1;' }}">
+                                        @if($stepNumber >= 5)<i class="fa-solid fa-check" style="font-size: 0.6rem;"></i>@else 5 @endif
+                                    </div>
+                                    <span style="display: block; font-size: 0.62rem; font-weight: {{ $stepNumber === 5 ? '700' : '600' }}; color: {{ $stepNumber === 5 ? '#059669' : '#64748b' }}; margin-top: 4px; line-height: 1.15;">Hoàn thành</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div>
                     <h4 class="info-label">Trạng thái đơn hàng</h4>
-                    <span class="quick-status-trigger badge-fulfillment {{ $orderClass }}">
-                        <span>{{ $orderStatuses[$order->order_status] ?? $order->order_status }}</span>
-                    </span>
+                    @if($isReturned)
+                        <span class="quick-status-trigger" style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; background: #fff7ed; color: #c2410c; border: 1px solid #fdba74;">
+                            <i class="fa-solid fa-box-archive"></i> ĐÃ HOÀN VỀ KHO (GIAO THẤT BẠI)
+                        </span>
+                    @elseif($isFailed && $order->order_status === 'shipping')
+                        <span class="quick-status-trigger" style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; background: #fff7ed; color: #c2410c; border: 1px solid #fdba74;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> GIAO THẤT BẠI (CHỜ HOÀN VỀ SHOP)
+                        </span>
+                    @elseif($isReadyToPick)
+                        <span class="quick-status-trigger" style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; background: #fffbeb; color: #b45309; border: 1px solid #fde68a;">
+                            <i class="fa-solid fa-clock"></i> CHỜ BÀN GIAO GHN (CHỜ LẤY HÀNG)
+                        </span>
+                    @else
+                        <span class="quick-status-trigger badge-fulfillment {{ $orderClass }}">
+                            <span>{{ $orderStatuses[$order->order_status] ?? $order->order_status }}</span>
+                        </span>
+                    @endif
                 </div>
+
+                @if($order->order_status === 'shipping')
+                    @php
+                        $shipmentStatus = $order->shipment?->status;
+                        $isFailed = in_array($shipmentStatus, ['delivery_fail', 'waiting_to_return', 'return', 'returning', 'return_transporting', 'damage', 'lost'], true);
+                    @endphp
+                    <div class="shipping-live-signal" style="margin-top: 10px; margin-bottom: 8px; padding: 10px 12px; @if($isFailed) background: #fff7ed; border: 1px solid #fed7aa; @else background: #eff6ff; border: 1px solid #bfdbfe; @endif border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-size: 0.75rem; font-weight: 700; @if($isFailed) color: #c2410c; @else color: #1e40af; @endif display: flex; align-items: center; gap: 5px;">
+                                <i class="fa-solid {{ $isGhn ? 'fa-satellite-dish' : 'fa-truck-fast' }}" style="@if($isFailed) color: #ea580c; @else color: #2563eb; @endif"></i> 
+                                {{ $isGhn ? 'Tín hiệu từ GHN Express:' : 'Vận chuyển tiêu chuẩn (PetWorld):' }}
+                            </span>
+                            @if($order->shipment?->tracking_code)
+                                <span style="font-size: 0.7rem; font-weight: 600; @if($isFailed) color: #c2410c; background: #ffedd5; @else color: #2563eb; background: #dbeafe; @endif padding: 2px 6px; border-radius: 4px;">
+                                    {{ $order->shipment->tracking_code }}
+                                </span>
+                            @endif
+                        </div>
+                        <p style="font-size: 0.82rem; font-weight: 700; @if($isFailed) color: #c2410c; @else color: #1d4ed8; @endif margin: 0; line-height: 1.3;">
+                            @if($isGhn)
+                                @if($isFailed)
+                                    <i class="fa-solid fa-triangle-exclamation" style="color: #ea580c; margin-right: 4px;"></i>
+                                    Giao hàng không thành công (Khách bom / Đang chuyển hoàn)
+                                @elseif($isReadyToPick)
+                                    <i class="fa-solid fa-box-archive" style="color: #f59e0b; margin-right: 4px;"></i>
+                                    Chờ bưu tá GHN đến lấy hàng (Chờ bàn giao)
+                                @else
+                                    <i class="fa-solid fa-truck-fast" style="color: #2563eb; margin-right: 4px;"></i>
+                                    {{ $ghnStatusLabels[$order->shipment?->status ?? 'delivering'] ?? 'Đang giao cho người nhận' }}
+                                @endif
+                            @else
+                                <i class="fa-solid fa-truck" style="color: #2563eb; margin-right: 4px;"></i>
+                                Đang giao hàng đến địa chỉ người nhận
+                            @endif
+                        </p>
+                        <p style="font-size: 0.72rem; color: #64748b; margin: 5px 0 0 0; line-height: 1.35;">
+                            @if($isGhn)
+                                @if($isFailed)
+                                    <i class="fa-solid fa-box-archive" style="color: #ea580c;"></i> Kiện hàng đang được GHN chuyển hoàn về shop. Khi bưu tá trả lại kiện hàng tận tay, vui lòng bấm nút <strong>"Xác nhận đã nhận lại hàng hoàn"</strong> bên dưới để kiểm kê và nhập lại kho.
+                                @elseif($isReadyToPick)
+                                    <i class="fa-solid fa-warehouse" style="color: #f59e0b;"></i> Kiện hàng đã đóng gói sẵn tại kho. <strong>Đang chờ bưu tá GHN đến tiếp nhận</strong> để chuyển sang bước giao hàng.
+                                @else
+                                    <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Đơn sẽ <strong>tự động chuyển Hoàn thành</strong> ngay khi bưu tá GHN giao thành công.
+                                @endif
+                            @else
+                                <i class="fa-solid fa-circle-info" style="color: #2563eb;"></i> Kiện hàng đang được nhân viên giao hàng theo tuyến tiêu chuẩn.
+                            @endif
+                        </p>
+                    </div>
+                @endif
 
                 @if(!empty($nextOrderStatuses))
                     <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" class="action-steps-group" id="order-status-form">
                         @csrf
                         @method('PATCH')
                         <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;">
-                            <i class="fa-solid fa-angles-right"></i> Bước đơn hàng tiếp theo:
+                            <i class="fa-solid fa-angles-right"></i> {{ in_array('returned', $nextOrderStatuses, true) ? 'Xử lý kiện hàng hoàn về:' : 'Bước đơn hàng tiếp theo:' }}
                         </div>
                         @foreach($nextOrderStatuses as $status)
                             @php
@@ -841,31 +1035,72 @@
                                     'confirm_type' => 'primary',
                                 ];
                             @endphp
-                            <button type="button" 
-                                    class="btn-step {{ $btn['class'] }} js-open-confirm-modal"
-                                    data-form-id="order-status-form"
-                                    data-field-name="order_status"
-                                    data-field-value="{{ $status }}"
-                                    data-confirm-title="{{ $btn['confirm_title'] ?? 'Xác nhận thao tác' }}"
-                                    data-confirm-msg="{{ $btn['confirm_msg'] ?? 'Bạn có chắc chắn muốn thực hiện hành động này?' }}"
-                                    data-confirm-icon="{{ $btn['confirm_icon'] ?? 'fa-circle-question' }}"
-                                    data-confirm-type="{{ $btn['confirm_type'] ?? 'primary' }}">
-                                <i class="fa-solid {{ $btn['icon'] }}"></i>
-                                <span>{{ $btn['label'] }}</span>
-                            </button>
+                            @if($status === 'returned')
+                                <button type="button" 
+                                         class="btn-step {{ $btn['class'] }} js-open-return-modal"
+                                         id="btnTriggerReturnModal">
+                                    <i class="fa-solid {{ $btn['icon'] }}"></i>
+                                    <span>{{ $btn['label'] }}</span>
+                                </button>
+                                <span style="font-size: 0.69rem; color: #b45309; display: block; margin-top: -4px; margin-bottom: 6px; line-height: 1.25; padding-left: 2px;">
+                                    * Bấm để nhập lý do hoàn hàng, tải ảnh bằng chứng và tự động nhập lại kho.
+                                </span>
+                            @else
+                                <button type="button" 
+                                         class="btn-step {{ $btn['class'] }} js-open-confirm-modal"
+                                         data-form-id="order-status-form"
+                                         data-field-name="order_status"
+                                         data-field-value="{{ $status }}"
+                                         data-confirm-title="{{ $btn['confirm_title'] ?? 'Xác nhận thao tác' }}"
+                                         data-confirm-msg="{{ $btn['confirm_msg'] ?? 'Bạn có chắc chắn muốn thực hiện hành động này?' }}"
+                                         data-confirm-icon="{{ $btn['confirm_icon'] ?? 'fa-circle-question' }}"
+                                         data-confirm-type="{{ $btn['confirm_type'] ?? 'primary' }}">
+                                    <i class="fa-solid {{ $btn['icon'] }}"></i>
+                                    <span>{{ $btn['label'] }}</span>
+                                </button>
+                            @endif
                         @endforeach
                     </form>
-                @else
-                    <div class="step-completed-notice" style="margin-top: 8px;">
-                        <i class="fa-solid fa-flag-checkered"></i> Đã hoàn tất quy trình giao vận
+                @elseif($order->order_status !== 'shipping')
+                    <div class="step-completed-notice" style="margin-top: 8px; @if($isCancelled) background: #fef2f2; border-color: #fecaca; color: #dc2626; @elseif($isReturned) background: #fff7ed; border-color: #ffedd5; color: #c2410c; @endif">
+                        @if($isCancelled)
+                            <i class="fa-solid fa-ban"></i> Đơn hàng đã hủy tại kho & đã hoàn tồn kho
+                        @elseif($isReturned)
+                            <i class="fa-solid fa-box-archive"></i> Đơn hàng đã hoàn về kho & đã nhập lại tồn kho
+                        @else
+                            <i class="fa-solid fa-flag-checkered"></i> Đã hoàn tất quy trình giao vận
+                        @endif
                     </div>
+                    @if($isReturned)
+                        <div style="margin-top: 10px; padding: 12px; background: #fffaf0; border: 1px dashed #fed7aa; border-radius: 8px; font-size: 0.76rem; color: #7c2d12;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <strong><i class="fa-solid fa-file-lines" style="color: #ea580c;"></i> Lý do hoàn hàng:</strong>
+                                @if($order->returned_at)
+                                    <span style="font-size: 0.7rem; color: #9a3412;">{{ $order->returned_at->format('H:i d/m/Y') }}</span>
+                                @endif
+                            </div>
+                            <p style="margin: 0 0 8px 0; color: #431407; line-height: 1.4;">
+                                {{ $order->return_reason ?: 'Giao không thành công (Khách bom / chuyển hoàn)' }}
+                            </p>
+                            @if($order->return_proof_image)
+                                <div>
+                                    <strong style="display: block; margin-bottom: 5px;"><i class="fa-solid fa-image" style="color: #ea580c;"></i> Ảnh chứng minh nhận kiện hàng:</strong>
+                                    <a href="{{ asset('storage/' . $order->return_proof_image) }}" target="_blank" title="Bấm để xem ảnh phóng to">
+                                        <img src="{{ asset('storage/' . $order->return_proof_image) }}" alt="Bằng chứng nhận hàng hoàn" style="max-height: 140px; max-width: 100%; border-radius: 6px; border: 1px solid #fed7aa; box-shadow: 0 2px 4px rgba(0,0,0,0.06); cursor: zoom-in;">
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 @endif
 
                 <div style="border-top: 1px dashed var(--border-color); padding-top: 14px; margin-top: 14px;">
                     <h4 class="info-label">Trạng thái thanh toán & Đối soát</h4>
-                    <span class="quick-status-trigger badge-payment {{ $paymentClass }}">
-                        <span>{{ $displayPaymentStatus }}</span>
-                    </span>
+                    @if(!($order->isCod() && $order->payment_status === 'unpaid'))
+                        <span class="quick-status-trigger badge-payment {{ $paymentClass }}">
+                            <span>{{ $displayPaymentStatus }}</span>
+                        </span>
+                    @endif
                     @if($isReturned)
                         <p style="font-size: 0.76rem; color: #c2410c; margin: 6px 0 0 0; line-height: 1.4;">
                             <i class="fa-solid fa-box-archive"></i> Đơn hàng đã hoàn về kho & đã nhập lại tồn kho thành công.
@@ -880,14 +1115,26 @@
                                 <i class="fa-solid fa-circle-check"></i> Đơn đã hủy và đã hoàn tất hoàn tiền cho khách.
                             </p>
                         @else
-                            <p style="font-size: 0.76rem; color: var(--text-muted); margin: 6px 0 0 0; line-height: 1.4;">
-                                <i class="fa-solid fa-ban"></i> Đơn hàng đã hủy. Nếu hàng đang gửi từ ĐVVC, bấm nút <em>Xác nhận đã nhận lại hàng hoàn</em> ở trên khi nhận kiện hàng.
-                            </p>
+                            @if($hasShipped)
+                                <p style="font-size: 0.76rem; color: var(--text-muted); margin: 6px 0 0 0; line-height: 1.4;">
+                                    <i class="fa-solid fa-truck-ramp-box"></i> Đơn hàng đã hủy khi đang vận chuyển. Bấm nút <em>Xác nhận đã nhận lại hàng hoàn</em> ở trên khi nhận kiện hàng từ ĐVVC.
+                                </p>
+                            @else
+                                <p style="font-size: 0.76rem; color: #059669; margin: 6px 0 0 0; line-height: 1.4;">
+                                    <i class="fa-solid fa-circle-check"></i> Đơn hàng đã hủy khi chưa xuất kho. Sản phẩm đã được tự động hoàn lại đầy đủ vào tồn kho.
+                                </p>
+                            @endif
                         @endif
                     @elseif($order->payment_status === 'unpaid')
-                        <p style="font-size: 0.76rem; color: var(--text-muted); margin: 6px 0 0 0; line-height: 1.4;">
-                            <i class="fa-solid fa-circle-info"></i> Khi đơn chuyển <strong>Hoàn thành</strong>, hệ thống sẽ tự động cập nhật sang <em>Khách đã trả</em>.
-                        </p>
+                        @if($order->isCod())
+                            <p style="font-size: 0.76rem; color: #0369a1; margin: 4px 0 0 0; line-height: 1.4;">
+                                <i class="fa-solid fa-truck-fast"></i> <strong>Thanh toán khi nhận hàng (COD):</strong> Tiền thu hộ ({{ number_format($order->total_amount, 0, ',', '.') }}đ) sẽ do Shipper thu khi giao thành công.
+                            </p>
+                        @else
+                            <p style="font-size: 0.76rem; color: #7c3aed; margin: 6px 0 0 0; line-height: 1.4;">
+                                <i class="fa-solid fa-qrcode"></i> <strong>Đơn chuyển khoản:</strong> Hệ thống tự động xác nhận qua SePay khi tiền vào tài khoản (hoặc Admin xác nhận thủ công bên dưới).
+                            </p>
+                        @endif
                     @elseif($order->payment_status === 'customer_paid')
                         <p style="font-size: 0.76rem; color: #0284c7; margin: 6px 0 0 0; line-height: 1.4;">
                             <i class="fa-solid fa-hand-holding-dollar"></i> Shipper đã thu tiền mặt của khách. Đang chờ gom đơn đối soát với ĐVVC.
@@ -907,15 +1154,10 @@
                     @endif
                 </div>
 
-                <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" class="action-steps-group" id="payment-status-form" style="margin-top: 10px;">
-                    @csrf
-                    @method('PATCH')
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <label style="font-size: 0.74rem; font-weight: 600; color: var(--text-muted);">Ghi chú / Mã phiên đối soát:</label>
-                        <input type="text" name="reconciliation_note" placeholder="Ví dụ: Mã GHN-DS-12345, Lệch 20k..." value="{{ $order->reconciliation_note ?? '' }}" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.82rem; background: #ffffff;">
-                    </div>
-
-                    @if(!empty($nextPaymentStatuses))
+                @if(!empty($nextPaymentStatuses))
+                    <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" class="action-steps-group" id="payment-status-form" style="margin-top: 10px;">
+                        @csrf
+                        @method('PATCH')
                         <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top: 4px;">
                             <i class="fa-solid fa-angles-right"></i> Bước thanh toán tiếp theo:
                         </div>
@@ -931,41 +1173,102 @@
                                     'confirm_type' => 'primary',
                                 ];
                             @endphp
-                            <button type="button" 
-                                    class="btn-step {{ $btn['class'] }} js-open-confirm-modal"
-                                    data-form-id="payment-status-form"
-                                    data-field-name="payment_status"
-                                    data-field-value="{{ $status }}"
-                                    data-confirm-title="{{ $btn['confirm_title'] ?? 'Xác nhận thao tác' }}"
-                                    data-confirm-msg="{{ $btn['confirm_msg'] ?? 'Bạn có chắc chắn muốn thực hiện hành động này?' }}"
-                                    data-confirm-icon="{{ $btn['confirm_icon'] ?? 'fa-circle-question' }}"
-                                    data-confirm-type="{{ $btn['confirm_type'] ?? 'primary' }}">
-                                <i class="fa-solid {{ $btn['icon'] }}"></i>
-                                <span>{{ $btn['label'] }}</span>
-                            </button>
+                            @if($status === 'refunded')
+                                <button type="button" 
+                                        class="btn-step js-open-refund-modal"
+                                        id="btnTriggerRefundModal"
+                                        style="background: #9333ea !important; border-color: #7e22ce !important; color: #ffffff !important;">
+                                    <i class="fa-solid fa-money-bill-transfer" style="color: #ffffff !important; margin-right: 4px;"></i>
+                                    <span style="color: #ffffff !important; font-weight: 700;">Xác nhận hoàn tiền cho khách</span>
+                                </button>
+                                <span style="font-size: 0.69rem; color: #7c3aed; display: block; margin-top: -4px; margin-bottom: 6px; line-height: 1.25; padding-left: 2px;">
+                                    * Bấm để điền STK khách và đính kèm bill chuyển khoản hoàn tiền.
+                                </span>
+                            @else
+                                <button type="button" 
+                                        class="btn-step {{ $btn['class'] }} js-open-confirm-modal"
+                                        data-form-id="payment-status-form"
+                                        data-field-name="payment_status"
+                                        data-field-value="{{ $status }}"
+                                        data-confirm-title="{{ $btn['confirm_title'] ?? 'Xác nhận thao tác' }}"
+                                        data-confirm-msg="{{ $btn['confirm_msg'] ?? 'Bạn có chắc chắn muốn thực hiện hành động này?' }}"
+                                        data-confirm-icon="{{ $btn['confirm_icon'] ?? 'fa-circle-question' }}"
+                                        data-confirm-type="{{ $btn['confirm_type'] ?? 'primary' }}">
+                                    <i class="fa-solid {{ $btn['icon'] }}"></i>
+                                    <span>{{ $btn['label'] }}</span>
+                                </button>
+                            @endif
                         @endforeach
-                    @else
-                        @if($order->order_status === 'completed' && $order->payment_status === 'paid')
-                            <div class="step-completed-notice" style="margin-top: 6px; background: #ecfdf5; border-color: #a7f3d0; color: #059669; font-weight: 700;">
-                                <i class="fa-solid fa-circle-check"></i> Đã hoàn tất 100% quy trình đơn hàng & đối soát thành công
+                    </form>
+                @else
+                    @if($order->order_status === 'completed' && $order->payment_status === 'paid')
+                        <div class="step-completed-notice" style="margin-top: 8px; background: #ecfdf5; border-color: #a7f3d0; color: #059669; font-weight: 700;">
+                            <i class="fa-solid fa-circle-check"></i> Đã hoàn tất 100% quy trình đơn hàng & đối soát thành công
+                        </div>
+                    @elseif($order->payment_status === 'refunded')
+                        <div class="step-completed-notice" style="margin-top: 8px; background: #faf5ff; border-color: #e9d5ff; color: #7e22ce; font-weight: 700;">
+                            <i class="fa-solid fa-check-double"></i> Đã hoàn tiền cho khách hàng thành công
+                        </div>
+                    @elseif(in_array($order->order_status, ['cancelled', 'returned'], true))
+                        <div class="step-completed-notice" style="margin-top: 8px; background: #fef2f2; border-color: #fecaca; color: #dc2626; font-weight: 600;">
+                            <i class="fa-solid fa-ban"></i> Đơn đã hủy · Không phát sinh thu tiền
+                        </div>
+                    @elseif(!$order->isCod())
+                        <div class="step-completed-notice" style="margin-top: 8px;">
+                            <i class="fa-solid fa-shield-check"></i> Đã hoàn tất chu kỳ đối soát
+                        </div>
+                    @endif
+                @endif
+
+                @if($order->payment_status === 'refunded' || $order->refund_proof_image || $order->refund_account_number)
+                    <div class="refund-info-box" style="margin-top: 14px; padding: 12px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 0.78rem; font-weight: 700; color: #7e22ce; text-transform: uppercase;">
+                                <i class="fa-solid fa-money-bill-transfer" style="margin-right: 4px;"></i> Thông tin hoàn tiền cho khách
+                            </span>
+                            @if($order->refunded_at)
+                                <span style="font-size: 0.68rem; color: #9333ea; font-weight: 600;">
+                                    {{ $order->refunded_at->format('H:i d/m/Y') }}
+                                </span>
+                            @endif
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.76rem; margin-bottom: 8px;">
+                            <div>
+                                <span style="color: #6b7280;">Ngân hàng:</span>
+                                <div style="font-weight: 700; color: #1f2937;">{{ $order->refund_bank_name ?: 'Chưa ghi' }}</div>
                             </div>
-                        @else
-                            <div class="step-completed-notice" style="margin-top: 6px;">
-                                <i class="fa-solid fa-shield-check"></i> Đã hoàn tất chu kỳ đối soát
+                            <div>
+                                <span style="color: #6b7280;">Số tài khoản:</span>
+                                <div style="font-weight: 700; color: #7e22ce;">{{ $order->refund_account_number ?: 'Chưa ghi' }}</div>
+                            </div>
+                            <div>
+                                <span style="color: #6b7280;">Chủ tài khoản:</span>
+                                <div style="font-weight: 700; color: #1f2937; text-transform: uppercase;">{{ $order->refund_account_name ?: $order->recipient_name }}</div>
+                            </div>
+                            <div>
+                                <span style="color: #6b7280;">Số tiền đã hoàn:</span>
+                                <div style="font-weight: 700; color: #dc2626;">{{ number_format((float) ($order->refund_amount ?? $order->total_amount), 0, ',', '.') }} đ</div>
+                            </div>
+                        </div>
+
+                        @if($order->refund_note)
+                            <div style="font-size: 0.74rem; color: #4b5563; margin-bottom: 8px; background: #fff; padding: 6px 8px; border-radius: 6px; border: 1px solid #f3e8ff;">
+                                <strong>Ghi chú:</strong> {{ $order->refund_note }}
                             </div>
                         @endif
-                        <button type="button" 
-                                class="btn-step btn-step-note js-open-confirm-modal"
-                                data-form-id="payment-status-form"
-                                data-confirm-title="Lưu ghi chú đối soát"
-                                data-confirm-msg="Xác nhận lưu lại ghi chú / mã phiên đối soát cho đơn này?"
-                                data-confirm-icon="fa-floppy-disk"
-                                data-confirm-type="primary"
-                                style="margin-top: 4px;">
-                            <i class="fa-solid fa-floppy-disk"></i> Lưu ghi chú
-                        </button>
-                    @endif
-                </form>
+
+                        @if($order->refund_proof_image)
+                            <div>
+                                <div style="font-size: 0.72rem; font-weight: 600; color: #6b7280; margin-bottom: 4px;">Biên lai / Bill chuyển khoản:</div>
+                                <a href="{{ asset('storage/' . $order->refund_proof_image) }}" target="_blank" style="display: inline-block; border-radius: 6px; overflow: hidden; border: 1px solid #d8b4fe; max-width: 160px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                    <img src="{{ asset('storage/' . $order->refund_proof_image) }}" alt="Bill hoàn tiền" style="width: 100%; height: auto; display: block;">
+                                </a>
+                                <div style="font-size: 0.68rem; color: #9333ea; margin-top: 2px;">(Bấm để xem ảnh gốc kích thước lớn)</div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -1003,7 +1306,7 @@
                 <div style="display: flex; align-items: center; gap: 12px; background-color: var(--bg-color); padding: 12px; border-radius: 8px;">
                     <i class="fa-solid fa-credit-card" style="font-size: 1.5rem; color: var(--primary);"></i>
                     <div style="display: flex; flex-direction: column;">
-                        <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">{{ $order->paymentMethod?->name ?? 'Chưa xác định' }}</span>
+                        <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">{{ $order->isBankTransfer() ? 'Bank' : 'COD' }}</span>
                         <span style="font-size: 0.75rem; font-weight: 800; margin-top: 2px;" class="badge-payment {{ $paymentClass }}">{{ $displayPaymentStatus }}</span>
                     </div>
                 </div>
@@ -1106,6 +1409,224 @@
     </div>
 </div>
 
+<!-- Modal Xác nhận nhận lại hàng hoàn kèm lý do và hình ảnh -->
+<div class="custom-confirm-backdrop" id="returnProofModal" aria-hidden="true">
+    <div class="custom-confirm-dialog return-modal-dialog" role="dialog" aria-modal="true">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: #fff7ed; border: 1px solid #fed7aa; color: #ea580c; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-box-archive"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #0f172a;">Biên bản nhận lại hàng hoàn</h3>
+                    <span style="font-size: 0.72rem; color: #64748b;">Đơn hàng #{{ $orderCode }} · Vận đơn GHN: <strong>{{ $order->shipment?->tracking_code }}</strong></span>
+                </div>
+            </div>
+            <button type="button" id="btnCloseReturnModal" style="background: transparent; border: none; font-size: 1.2rem; color: #94a3b8; cursor: pointer; padding: 4px;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" enctype="multipart/form-data" id="returnProofForm">
+            @csrf
+            @method('PATCH')
+            <input type="hidden" name="order_status" value="returned">
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                    1. Lý do hoàn hàng <span style="color: #dc2626;">*</span>
+                </label>
+                <!-- Quick Tags -->
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;">
+                    <button type="button" class="btn-quick-reason" data-reason="Khách không nghe máy / Thuê bao (Giao thất bại 3 lần)">📞 Khách không nghe máy (3 lần)</button>
+                    <button type="button" class="btn-quick-reason" data-reason="Khách từ chối nhận hàng (Bom hàng / Đổi ý)">🚫 Khách từ chối nhận (Bom hàng)</button>
+                    <button type="button" class="btn-quick-reason" data-reason="Sai thông tin địa chỉ / số điện thoại người nhận">📍 Sai địa chỉ / SĐT</button>
+                    <button type="button" class="btn-quick-reason" data-reason="Kiện hàng bị móp méo / vỡ hỏng trong lúc vận chuyển">📦 Hàng móp méo / vỡ hỏng</button>
+                </div>
+                <textarea name="return_reason" id="returnReasonInput" rows="3" required
+                          placeholder="Nhập chi tiết lý do bưu tá GHN chuyển hoàn kiện hàng về kho..."
+                          style="width: 100%; padding: 10px 12px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 8px; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                    2. Hình ảnh chứng minh nhận kiện hàng <span style="color: #dc2626;">*</span>
+                </label>
+                <p style="margin: 0 0 8px 0; font-size: 0.7rem; color: #64748b;">
+                    Chụp ảnh kiện hàng khi nhận lại từ bưu tá (rõ tem phiếu GHN, lý do shipper dán trên gói hàng hoặc tình trạng vỏ hộp).
+                </p>
+
+                <input type="file" name="return_proof_image" id="returnProofImageInput" accept="image/*" required style="display: none;">
+                
+                <div id="returnUploadZone" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 18px 12px; text-align: center; cursor: pointer; background: #f8fafc; transition: all 0.2s ease;">
+                    <i class="fa-solid fa-camera" style="font-size: 1.8rem; color: #ea580c; margin-bottom: 6px;"></i>
+                    <div style="font-size: 0.8rem; font-weight: 600; color: #1e293b;">Bấm để tải ảnh lên hoặc kéo thả ảnh vào đây</div>
+                    <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 3px;">Hỗ trợ: JPG, PNG, WEBP (Tối đa 5MB)</div>
+                </div>
+
+                <div id="returnPreviewBox" style="display: none; margin-top: 8px; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; background: #f1f5f9; text-align: center; padding: 6px;">
+                    <img id="returnPreviewImg" src="" alt="Proof Preview" style="max-height: 180px; max-width: 100%; border-radius: 6px; display: inline-block;">
+                    <button type="button" id="btnRemoveProofImage" title="Xóa ảnh" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.65); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 18px; padding: 10px 12px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; font-size: 0.74rem; color: #b45309; line-height: 1.4;">
+                <i class="fa-solid fa-boxes-stacked" style="margin-right: 4px;"></i>
+                Khi xác nhận, hệ thống sẽ <strong>tự động nhập lại {{ $order->items->sum('quantity') }} sản phẩm</strong> vào kho và lưu bằng chứng kiểm kê.
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+                <button type="button" class="btn-confirm-cancel" id="btnCancelReturnModal" style="padding: 8px 16px; font-size: 0.82rem; font-weight: 600; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; color: #475569; cursor: pointer;">
+                    Hủy bỏ
+                </button>
+                <button type="submit" id="btnSubmitReturnProof" style="padding: 8px 18px; font-size: 0.82rem; font-weight: 700; border-radius: 8px; border: none; background: #ea580c; color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(234, 88, 12, 0.3);">
+                    <i class="fa-solid fa-box-archive"></i> Xác nhận nhận hàng & Nhập kho
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- MODAL XÁC NHẬN HOÀN TIỀN VỚI THÔNG TIN STK & BILL --}}
+<div class="custom-confirm-backdrop" id="refundProofModal" aria-hidden="true">
+    <div class="custom-confirm-dialog return-modal-dialog" role="dialog" aria-modal="true" style="max-width: 540px; text-align: left;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <div style="width: 42px; height: 42px; border-radius: 10px; background: #faf5ff; border: 1px solid #e9d5ff; color: #9333ea; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-money-bill-transfer"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #0f172a;">Xác nhận hoàn tiền cho khách</h3>
+                    <span style="font-size: 0.72rem; color: #64748b;">Đơn hàng #{{ $orderCode }} · Khách hàng: <strong>{{ $order->recipient_name }}</strong></span>
+                </div>
+            </div>
+            <button type="button" id="btnCloseRefundModal" style="background: transparent; border: none; font-size: 1.2rem; color: #94a3b8; cursor: pointer; padding: 4px;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" enctype="multipart/form-data" id="refundProofForm">
+            @csrf
+            @method('PATCH')
+            <input type="hidden" name="payment_status" value="refunded">
+
+            <!-- Card Tóm tắt số tiền hoàn & SĐT khách -->
+            <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="font-size: 0.72rem; color: #6b7280; display: block;">Tổng tiền cần hoàn:</span>
+                    <strong style="font-size: 1.15rem; color: #7e22ce;">{{ number_format((float) $order->total_amount, 0, ',', '.') }} đ</strong>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.72rem; color: #6b7280; display: block;">SĐT liên hệ khách:</span>
+                    <strong style="font-size: 0.85rem; color: #1e293b;">{{ $order->recipient_phone }}</strong>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                        Ngân hàng nhận <span style="color: #dc2626;">*</span>
+                    </label>
+                    <select name="refund_bank_name" id="refundBankNameInput" required
+                            style="width: 100%; padding: 8px 10px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: #fff;">
+                        <option value="">-- Chọn ngân hàng --</option>
+                        <option value="Vietcombank">Vietcombank</option>
+                        <option value="MBBank">MBBank (Quân đội)</option>
+                        <option value="Techcombank">Techcombank</option>
+                        <option value="VietinBank">VietinBank</option>
+                        <option value="BIDV">BIDV</option>
+                        <option value="ACB">ACB</option>
+                        <option value="VPBank">VPBank</option>
+                        <option value="TPBank">TPBank</option>
+                        <option value="Sacombank">Sacombank</option>
+                        <option value="HDBank">HDBank</option>
+                        <option value="Agribank">Agribank</option>
+                        <option value="MSB">MSB</option>
+                        <option value="VIB">VIB</option>
+                        <option value="OCB">OCB</option>
+                        <option value="SHB">SHB</option>
+                        <option value="SeABank">SeABank</option>
+                        <option value="Khác">Ngân hàng khác</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                        Số tài khoản nhận <span style="color: #dc2626;">*</span>
+                    </label>
+                    <input type="text" name="refund_account_number" id="refundAccountNumberInput" required
+                           placeholder="Ví dụ: 0901234567"
+                           style="width: 100%; padding: 8px 10px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                        Tên chủ tài khoản <span style="color: #dc2626;">*</span>
+                    </label>
+                    <input type="text" name="refund_account_name" id="refundAccountNameInput" required
+                           placeholder="Ví dụ: NGUYEN VAN A" value="{{ mb_strtoupper($order->recipient_name, 'UTF-8') }}"
+                           style="width: 100%; padding: 8px 10px; font-size: 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; text-transform: uppercase;">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                        Số tiền hoàn (VNĐ) <span style="color: #dc2626;">*</span>
+                    </label>
+                    <input type="text" name="refund_amount" id="refundAmountInput" required
+                           value="{{ number_format((float) $order->total_amount, 0, ',', '.') }}"
+                           style="width: 100%; padding: 8px 10px; font-size: 0.8rem; font-weight: 700; color: #7e22ce; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                    Ảnh biên lai / Bill chuyển khoản hoàn tiền <span style="color: #dc2626;">*</span>
+                </label>
+                <p style="margin: 0 0 6px 0; font-size: 0.69rem; color: #64748b;">
+                    Tải lên ảnh chụp màn hình chuyển khoản thành công từ app ngân hàng hoặc ủy nhiệm chi.
+                </p>
+
+                <input type="file" name="refund_proof_image" id="refundProofImageInput" accept="image/*" required style="display: none;">
+                
+                <div id="refundUploadZone" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px 12px; text-align: center; cursor: pointer; background: #f8fafc; transition: all 0.2s ease;">
+                    <i class="fa-solid fa-file-invoice-dollar" style="font-size: 1.8rem; color: #9333ea; margin-bottom: 6px;"></i>
+                    <div style="font-size: 0.78rem; font-weight: 600; color: #1e293b;">Bấm để tải ảnh bill chuyển khoản hoặc kéo thả vào đây</div>
+                    <div style="font-size: 0.68rem; color: #94a3b8; margin-top: 2px;">Định dạng: JPG, PNG, WEBP (Tối đa 5MB)</div>
+                </div>
+
+                <div id="refundPreviewBox" style="display: none; margin-top: 8px; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; background: #f1f5f9; text-align: center; padding: 6px;">
+                    <img id="refundPreviewImg" src="" alt="Refund Proof Preview" style="max-height: 180px; max-width: 100%; border-radius: 6px; display: inline-block;">
+                    <button type="button" id="btnRemoveRefundProofImage" title="Xóa ảnh" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.65); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 0.76rem; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                    Ghi chú hoàn tiền <span style="color: #dc2626;">*</span>
+                </label>
+                <textarea name="refund_note" id="refundNoteInput" rows="2" required
+                          placeholder="Bắt buộc nhập ghi chú hoàn tiền (Ví dụ: Đã liên hệ khách và chuyển khoản hoàn tiền đơn bom thành công)..."
+                          style="width: 100%; padding: 8px 10px; font-size: 0.78rem; border: 1px solid #cbd5e1; border-radius: 6px; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+                <button type="button" id="btnCancelRefundModal" style="padding: 8px 16px; font-size: 0.82rem; font-weight: 600; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; color: #475569; cursor: pointer;">
+                    Hủy bỏ
+                </button>
+                <button type="submit" id="btnSubmitRefundProof" style="padding: 8px 18px; font-size: 0.82rem; font-weight: 700; border-radius: 8px; border: none; background: #9333ea; color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(147, 51, 234, 0.3);">
+                    <i class="fa-solid fa-check"></i> Xác nhận & Hoàn tất hoàn tiền
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('statusConfirmModal');
@@ -1173,8 +1694,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
-            closeModal();
+        if (e.key === 'Escape') {
+            if (modal && modal.classList.contains('active')) {
+                closeModal();
+            }
+            if (returnModal && returnModal.classList.contains('active')) {
+                closeReturnModal();
+            }
         }
     });
 
@@ -1209,6 +1735,314 @@ document.addEventListener('DOMContentLoaded', function() {
             btnAccept.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
 
             form.submit();
+        });
+    }
+
+    // ==========================================
+    // RETURN PROOF MODAL LOGIC
+    // ==========================================
+    const returnModal = document.getElementById('returnProofModal');
+    const btnOpenReturn = document.querySelectorAll('.js-open-return-modal');
+    const btnCloseReturn = document.getElementById('btnCloseReturnModal');
+    const btnCancelReturn = document.getElementById('btnCancelReturnModal');
+    const returnForm = document.getElementById('returnProofForm');
+    const returnReasonInput = document.getElementById('returnReasonInput');
+    const returnImageInput = document.getElementById('returnProofImageInput');
+    const returnUploadZone = document.getElementById('returnUploadZone');
+    const returnPreviewBox = document.getElementById('returnPreviewBox');
+    const returnPreviewImg = document.getElementById('returnPreviewImg');
+    const btnRemoveProofImage = document.getElementById('btnRemoveProofImage');
+    const btnSubmitReturnProof = document.getElementById('btnSubmitReturnProof');
+
+    function openReturnModal() {
+        if (!returnModal) return;
+        returnModal.classList.add('active');
+        returnModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeReturnModal() {
+        if (!returnModal) return;
+        returnModal.classList.remove('active');
+        returnModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    btnOpenReturn.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openReturnModal();
+        });
+    });
+
+    if (btnCloseReturn) btnCloseReturn.addEventListener('click', closeReturnModal);
+    if (btnCancelReturn) btnCancelReturn.addEventListener('click', closeReturnModal);
+    if (returnModal) {
+        returnModal.addEventListener('click', function(e) {
+            if (e.target === returnModal) closeReturnModal();
+        });
+    }
+
+    // Quick tags
+    document.querySelectorAll('.btn-quick-reason').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (returnReasonInput) {
+                returnReasonInput.value = this.dataset.reason;
+                returnReasonInput.focus();
+            }
+        });
+    });
+
+    // Upload zone interactions
+    if (returnUploadZone && returnImageInput) {
+        returnUploadZone.addEventListener('click', function() {
+            returnImageInput.click();
+        });
+
+        returnUploadZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ea580c';
+            this.style.background = '#fff7ed';
+        });
+
+        returnUploadZone.addEventListener('dragleave', function() {
+            this.style.borderColor = '#cbd5e1';
+            this.style.background = '#f8fafc';
+        });
+
+        returnUploadZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#cbd5e1';
+            this.style.background = '#f8fafc';
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                returnImageInput.files = e.dataTransfer.files;
+                handleImageSelected(e.dataTransfer.files[0]);
+            }
+        });
+
+        returnImageInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                handleImageSelected(this.files[0]);
+            }
+        });
+    }
+
+    function handleImageSelected(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            alert('Vui lòng chọn file hình ảnh (JPG, PNG, WEBP).');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Dung lượng ảnh tối đa là 5MB.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (returnPreviewImg) returnPreviewImg.src = e.target.result;
+            if (returnPreviewBox) returnPreviewBox.style.display = 'block';
+            if (returnUploadZone) returnUploadZone.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (btnRemoveProofImage) {
+        btnRemoveProofImage.addEventListener('click', function() {
+            if (returnImageInput) returnImageInput.value = '';
+            if (returnPreviewImg) returnPreviewImg.src = '';
+            if (returnPreviewBox) returnPreviewBox.style.display = 'none';
+            if (returnUploadZone) returnUploadZone.style.display = 'block';
+        });
+    }
+
+    // Submit handler
+    if (returnForm) {
+        returnForm.addEventListener('submit', function(e) {
+            if (!returnReasonInput || !returnReasonInput.value.trim()) {
+                e.preventDefault();
+                alert('Vui lòng nhập lý do hoàn hàng.');
+                if (returnReasonInput) returnReasonInput.focus();
+                return;
+            }
+
+            if (!returnImageInput || !returnImageInput.files || returnImageInput.files.length === 0) {
+                e.preventDefault();
+                alert('Vui lòng tải lên hình ảnh chứng minh nhận lại kiện hàng hoàn.');
+                return;
+            }
+
+            if (btnSubmitReturnProof) {
+                btnSubmitReturnProof.disabled = true;
+                btnSubmitReturnProof.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu biên bản & nhập kho...';
+            }
+        });
+    }
+
+    // ==========================================
+    // REFUND PROOF MODAL LOGIC
+    // ==========================================
+    const refundModal = document.getElementById('refundProofModal');
+    const btnOpenRefund = document.querySelectorAll('.js-open-refund-modal');
+    const btnCloseRefund = document.getElementById('btnCloseRefundModal');
+    const btnCancelRefund = document.getElementById('btnCancelRefundModal');
+    const refundForm = document.getElementById('refundProofForm');
+    const refundBankSelect = document.getElementById('refundBankNameInput');
+    const refundAccountInput = document.getElementById('refundAccountNumberInput');
+    const refundNameInput = document.getElementById('refundAccountNameInput');
+    const refundAmountInput = document.getElementById('refundAmountInput');
+    const refundImageInput = document.getElementById('refundProofImageInput');
+    const refundUploadZone = document.getElementById('refundUploadZone');
+    const refundPreviewBox = document.getElementById('refundPreviewBox');
+    const refundPreviewImg = document.getElementById('refundPreviewImg');
+    const btnRemoveRefundProofImage = document.getElementById('btnRemoveRefundProofImage');
+    const btnSubmitRefundProof = document.getElementById('btnSubmitRefundProof');
+
+    function openRefundModal() {
+        if (!refundModal) return;
+        refundModal.classList.add('active');
+        refundModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRefundModal() {
+        if (!refundModal) return;
+        refundModal.classList.remove('active');
+        refundModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    btnOpenRefund.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openRefundModal();
+        });
+    });
+
+    if (btnCloseRefund) btnCloseRefund.addEventListener('click', closeRefundModal);
+    if (btnCancelRefund) btnCancelRefund.addEventListener('click', closeRefundModal);
+    if (refundModal) {
+        refundModal.addEventListener('click', function(e) {
+            if (e.target === refundModal) closeRefundModal();
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (refundModal && refundModal.classList.contains('active')) closeRefundModal();
+        }
+    });
+
+    // Upload zone interactions for refund bill
+    if (refundUploadZone && refundImageInput) {
+        refundUploadZone.addEventListener('click', function() {
+            refundImageInput.click();
+        });
+
+        refundUploadZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#9333ea';
+            this.style.background = '#faf5ff';
+        });
+
+        refundUploadZone.addEventListener('dragleave', function() {
+            this.style.borderColor = '#cbd5e1';
+            this.style.background = '#f8fafc';
+        });
+
+        refundUploadZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#cbd5e1';
+            this.style.background = '#f8fafc';
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                refundImageInput.files = e.dataTransfer.files;
+                handleRefundImageSelected(e.dataTransfer.files[0]);
+            }
+        });
+
+        refundImageInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                handleRefundImageSelected(this.files[0]);
+            }
+        });
+    }
+
+    function handleRefundImageSelected(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            alert('Vui lòng chọn file hình ảnh (JPG, PNG, WEBP).');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Dung lượng ảnh tối đa là 5MB.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (refundPreviewImg) refundPreviewImg.src = e.target.result;
+            if (refundPreviewBox) refundPreviewBox.style.display = 'block';
+            if (refundUploadZone) refundUploadZone.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (btnRemoveRefundProofImage) {
+        btnRemoveRefundProofImage.addEventListener('click', function() {
+            if (refundImageInput) refundImageInput.value = '';
+            if (refundPreviewImg) refundPreviewImg.src = '';
+            if (refundPreviewBox) refundPreviewBox.style.display = 'none';
+            if (refundUploadZone) refundUploadZone.style.display = 'block';
+        });
+    }
+
+    // Submit handler for refund form
+    if (refundForm) {
+        refundForm.addEventListener('submit', function(e) {
+            if (!refundBankSelect || !refundBankSelect.value) {
+                e.preventDefault();
+                alert('Vui lòng chọn ngân hàng nhận tiền của khách.');
+                if (refundBankSelect) refundBankSelect.focus();
+                return;
+            }
+
+            if (!refundAccountInput || !refundAccountInput.value.trim()) {
+                e.preventDefault();
+                alert('Vui lòng nhập số tài khoản ngân hàng của khách.');
+                if (refundAccountInput) refundAccountInput.focus();
+                return;
+            }
+
+            if (!refundNameInput || !refundNameInput.value.trim()) {
+                e.preventDefault();
+                alert('Vui lòng nhập tên chủ tài khoản người nhận (bắt buộc).');
+                if (refundNameInput) refundNameInput.focus();
+                return;
+            }
+
+            if (!refundAmountInput || !refundAmountInput.value.trim()) {
+                e.preventDefault();
+                alert('Vui lòng nhập số tiền hoàn (bắt buộc).');
+                if (refundAmountInput) refundAmountInput.focus();
+                return;
+            }
+
+            if (!refundImageInput || !refundImageInput.files || refundImageInput.files.length === 0) {
+                e.preventDefault();
+                alert('Vui lòng tải lên ảnh chụp bill / biên lai chuyển khoản hoàn tiền (bắt buộc).');
+                return;
+            }
+
+            const refundNoteInput = document.getElementById('refundNoteInput');
+            if (!refundNoteInput || !refundNoteInput.value.trim()) {
+                e.preventDefault();
+                alert('Vui lòng nhập ghi chú hoàn tiền (bắt buộc).');
+                if (refundNoteInput) refundNoteInput.focus();
+                return;
+            }
+
+            if (btnSubmitRefundProof) {
+                btnSubmitRefundProof.disabled = true;
+                btnSubmitRefundProof.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu thông tin & cập nhật hoàn tiền...';
+            }
         });
     }
 });

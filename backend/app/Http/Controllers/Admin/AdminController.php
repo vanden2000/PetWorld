@@ -416,7 +416,7 @@ class AdminController extends Controller
         $nextOrderStatusesMap = [
             'pending' => ['confirmed', 'cancelled'],
             'confirmed' => ['shipping', 'cancelled'],
-            'shipping' => ['completed'],
+            'shipping' => [],
             'completed' => [],
             'cancelled' => [],
         ];

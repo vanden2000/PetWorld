@@ -35,6 +35,20 @@ class SyncGhnShipments extends Command
                     'provider_status_code' => $detail['status_code'] ?? $status,
                     'provider_payload' => $detail,
                 ]);
+
+                if ($status === 'delivered' && $shipment->order !== null) {
+                    $orderUpdates = [];
+                    if ($shipment->order->order_status === 'shipping') {
+                        $orderUpdates['order_status'] = 'completed';
+                    }
+                    if ((float) $shipment->cod_amount > 0 && $shipment->order->payment_status === 'unpaid') {
+                        $orderUpdates['payment_status'] = 'customer_paid';
+                    }
+                    if ($orderUpdates !== []) {
+                        $shipment->order->update($orderUpdates);
+                    }
+                }
+
                 $synced++;
             } catch (Throwable $exception) {
                 report($exception);

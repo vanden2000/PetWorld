@@ -12,10 +12,24 @@ class PaymentMethodSeeder extends Seeder
      */
     public function run(): void
     {
+        // Xóa phương thức Ví điện tử khỏi cơ sở dữ liệu nếu có
+        $walletMethod = PaymentMethod::query()
+            ->whereIn('name', ['Ví điện tử', 'Vi Dien Tu'])
+            ->first();
+
+        if ($walletMethod) {
+            // Cập nhật lại các đơn hàng cũ (nếu có) sang Chuyển khoản ngân hàng trước khi xóa
+            $fallbackMethod = PaymentMethod::query()->where('name', 'Chuyển khoản ngân hàng')->first();
+            if ($fallbackMethod) {
+                \App\Models\Order::where('payment_method_id', $walletMethod->id)
+                    ->update(['payment_method_id' => $fallbackMethod->id]);
+            }
+            $walletMethod->delete();
+        }
+
         $methods = [
             ['name' => 'Thanh toán khi nhận hàng', 'legacy_name' => 'Thanh Toán Khi Nhận Hàng'],
             ['name' => 'Chuyển khoản ngân hàng', 'legacy_name' => 'Chuyen Khoan Ngan Hang'],
-            ['name' => 'Ví điện tử', 'legacy_name' => 'Vi Dien Tu'],
         ];
 
         foreach ($methods as $method) {
