@@ -3,16 +3,13 @@
 import { useState } from "react";
 import ProductCard from "@/components/product/ProductCard";
 import RecentlyViewed from "@/components/home/RecentlyViewed";
+import useResponsiveProductCount from "@/components/home/useResponsiveProductCount";
 
 const TABS = [
   { slug: "all", label: "Tất cả" },
   { slug: "phu-kien", label: "Phụ kiện" },
   { slug: "do-choi", label: "Đồ chơi" },
 ];
-
-// Số sản phẩm hiển thị ban đầu và mỗi lần bấm "Xem thêm" (khớp lưới 5 cột).
-const INITIAL_COUNT = 5;
-const STEP = 5;
 
 /**
  * Khối "Phụ Kiện & Đồ Chơi": tiêu đề + tabs lọc danh mục trên đầu, bên dưới là
@@ -21,7 +18,8 @@ const STEP = 5;
  */
 export default function AccessoriesPromo({ products = [] }) {
   const [activeTab, setActiveTab] = useState("all");
-  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+  const productDisplayCount = useResponsiveProductCount();
+  const [loadedBatches, setLoadedBatches] = useState(1);
 
   if (products.length === 0) return null;
 
@@ -34,14 +32,14 @@ export default function AccessoriesPromo({ products = [] }) {
   );
 
   const filteredProducts = products.filter((product) => matchesTab(product, activeTab));
-  const visibleProducts = filteredProducts.slice(0, visibleCount);
-  const remaining = filteredProducts.length - visibleProducts.length;
-  const isExpanded = visibleCount > INITIAL_COUNT;
+  const visibleProducts = filteredProducts.slice(0, loadedBatches * productDisplayCount);
+  const remaining = Math.max(0, filteredProducts.length - visibleProducts.length);
+  const isExpanded = loadedBatches > 1;
 
   const handleTabChange = (tabSlug) => {
     setActiveTab(tabSlug);
     // Đổi tab thì thu về số lượng ban đầu để lưới không nhảy chiều cao.
-    setVisibleCount(INITIAL_COUNT);
+    setLoadedBatches(1);
   };
 
   return (
@@ -76,9 +74,7 @@ export default function AccessoriesPromo({ products = [] }) {
               type="button"
               className="load-more-btn"
               onClick={() =>
-                setVisibleCount((count) =>
-                  remaining > 0 ? count + STEP : INITIAL_COUNT,
-                )
+                setLoadedBatches((batches) => (remaining > 0 ? batches + 1 : 1))
               }
             >
               {remaining > 0 ? `Xem thêm (${remaining})` : "Thu gọn"}

@@ -13,9 +13,11 @@ import BestSellingTabs from "@/components/home/BestSellingTabs";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import BlogSection from "@/components/home/BlogSection";
 import BrandSection from "@/components/home/BrandSection";
+import useResponsiveProductCount from "@/components/home/useResponsiveProductCount";
 
 export default function HomeView({ initialData }) {
   const { data = initialData } = useHomeData(initialData);
+  const productDisplayCount = useResponsiveProductCount();
   const {
     sections = [],
     banners = [], categories = [], featured_products = [], new_products = [],
@@ -54,7 +56,7 @@ export default function HomeView({ initialData }) {
       case "category_section":
         return <CategorySection key={key} categories={categories} />;
       case "featured_products":
-        return <ProductSection key={key} title={customTitle || "Sản Phẩm Bán Chạy"} products={featured_products} columns={5} hasLoadMore showSoldCount showNew={false} initialCount={5} loadMoreStep={10} />;
+        return <ProductSection key={`${key}-${productDisplayCount}`} title={customTitle || "Sản Phẩm Bán Chạy"} products={featured_products} columns={5} hasLoadMore showSoldCount showNew={false} initialCount={productDisplayCount} loadMoreStep={productDisplayCount} />;
       case "trust_badges":
         return <TrustBadges key={key} />;
       case "pet_species":

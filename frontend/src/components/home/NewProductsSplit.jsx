@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ProductCard from "@/components/product/ProductCard";
 import { resolveBackendImage } from "@/lib/format";
+import useResponsiveProductCount from "@/components/home/useResponsiveProductCount";
 
 /**
  * Khối "Sản Phẩm Mới" - Ý TƯỞNG 2 (Cập nhật):
@@ -12,20 +13,17 @@ import { resolveBackendImage } from "@/lib/format";
  * - Hình 2 bé thú cưng ló đầu góc dưới bên phải.
  */
 export default function NewProductsSplit({ products = [] }) {
-  const INITIAL_COUNT = 5;
-  // Mở rộng hiển thị tối đa 10 sản phẩm (2 hàng lưới 5 cột). Backend trả bao nhiêu
-  // thì hiện bấy nhiêu — tăng limit của khối trong Admin là tự có thêm, không cần sửa code.
-  const MAX_COUNT = 10;
-  const [isExpanded, setIsExpanded] = useState(false);
+  const productDisplayCount = useResponsiveProductCount();
+  const [loadedBatches, setLoadedBatches] = useState(1);
 
   if (products.length === 0) return null;
 
-  const displayProducts = products.slice(0, MAX_COUNT);
-  const visibleProducts = isExpanded ? displayProducts : displayProducts.slice(0, INITIAL_COUNT);
-  const hasMoreThanInitial = displayProducts.length > INITIAL_COUNT;
+  const visibleProducts = products.slice(0, loadedBatches * productDisplayCount);
+  const remaining = Math.max(0, products.length - visibleProducts.length);
+  const hasMoreThanInitial = products.length > productDisplayCount;
 
   const toggleExpand = () => {
-    setIsExpanded((prev) => !prev);
+    setLoadedBatches((batches) => (remaining > 0 ? batches + 1 : 1));
   };
 
   return (
@@ -52,8 +50,8 @@ export default function NewProductsSplit({ products = [] }) {
                 className="idea2-expand-btn idea2-btn-no-bg"
                 onClick={toggleExpand}
               >
-                <span>{isExpanded ? "Thu gọn sản phẩm" : "Xem thêm sản phẩm"}</span>
-                <span className="idea2-arrow-icon">{isExpanded ? "▲" : "▼"}</span>
+                <span>{remaining > 0 ? `Xem thêm (${remaining})` : "Thu gọn sản phẩm"}</span>
+                <span className="idea2-arrow-icon">{remaining > 0 ? "▼" : "▲"}</span>
               </button>
             </div>
           )}
