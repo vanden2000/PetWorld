@@ -29,7 +29,6 @@ import {
   buildSepayQrUrl,
   getAvailableVouchers,
   getAutomaticProductVoucher,
-  getEligibleShippingPromotions,
   getShippingQuote,
 } from "@/lib/checkout";
 import { cancelOrder } from "@/lib/auth";
@@ -143,7 +142,6 @@ export default function CheckoutView() {
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [appliedShippingVoucher, setAppliedShippingVoucher] = useState(null);
   const [automaticVoucher, setAutomaticVoucher] = useState(null);
-  const [eligibleShippingPromotions, setEligibleShippingPromotions] = useState([]);
   const [vouchers, setVouchers] = useState([]);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [loadingVouchers, setLoadingVouchers] = useState(false);
@@ -334,14 +332,6 @@ export default function CheckoutView() {
     let active = true;
     getAutomaticProductVoucher(subtotal).then((voucher) => {
       if (active) setAutomaticVoucher(voucher);
-    });
-    return () => { active = false; };
-  }, [subtotal]);
-
-  useEffect(() => {
-    let active = true;
-    getEligibleShippingPromotions(subtotal).then((promotions) => {
-      if (active) setEligibleShippingPromotions(promotions);
     });
     return () => { active = false; };
   }, [subtotal]);
@@ -851,6 +841,9 @@ export default function CheckoutView() {
             ))}
           </div>
           {shippingQuoteError && <p className="co-quote-error">{shippingQuoteError}</p>}
+          {/* Giữ khối gợi ý ưu đãi vận chuyển. Dòng hiển thị số tiền giảm phí
+              ship mà develop đặt ở đây đã được chuyển xuống cạnh dòng giảm giá
+              sản phẩm, nên không lấy lại để tránh hiện trùng hai lần. */}
           {eligibleShippingPromotions.length > 0 && (
             <div className="co-auto-shipping-promotions">
               <div className="co-auto-shipping-promotions-title">🎁 Ưu đãi vận chuyển</div>
