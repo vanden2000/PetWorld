@@ -29,6 +29,7 @@ import {
   buildSepayQrUrl,
   getAvailableVouchers,
   getAutomaticProductVoucher,
+  getEligibleShippingPromotions,
   getShippingQuote,
 } from "@/lib/checkout";
 import { cancelOrder } from "@/lib/auth";
@@ -142,6 +143,7 @@ export default function CheckoutView() {
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [appliedShippingVoucher, setAppliedShippingVoucher] = useState(null);
   const [automaticVoucher, setAutomaticVoucher] = useState(null);
+  const [eligibleShippingPromotions, setEligibleShippingPromotions] = useState([]);
   const [vouchers, setVouchers] = useState([]);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [loadingVouchers, setLoadingVouchers] = useState(false);
@@ -332,6 +334,14 @@ export default function CheckoutView() {
     let active = true;
     getAutomaticProductVoucher(subtotal).then((voucher) => {
       if (active) setAutomaticVoucher(voucher);
+    });
+    return () => { active = false; };
+  }, [subtotal]);
+
+  useEffect(() => {
+    let active = true;
+    getEligibleShippingPromotions(subtotal).then((promotions) => {
+      if (active) setEligibleShippingPromotions(promotions || []);
     });
     return () => { active = false; };
   }, [subtotal]);
