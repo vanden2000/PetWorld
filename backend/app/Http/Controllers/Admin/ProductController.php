@@ -130,6 +130,8 @@ class ProductController extends Controller
             'quantity' => $variant['quantity'] ?? '',
             'weight_grams' => $variant['weight_grams'] ?? '',
             'status' => !empty($variant['visible']) ? 'active' : 'inactive',
+            'image' => $variant['image'] ?? null,
+            'image_url' => !empty($variant['image']) ? asset('storage/' . $variant['image']) : null,
             'value_ids' => array_map('intval', $variant['value_ids'] ?? []),
         ])->all();
         $isCreate = true;
@@ -344,6 +346,8 @@ class ProductController extends Controller
             'quantity' => $variant->quantity,
             'weight_grams' => $variant->weight_grams,
             'status' => $variant->status,
+            'image' => $variant->image,
+            'image_url' => $variant->image ? asset('storage/' . $variant->image) : null,
             'value_ids' => $variant->variantValues->pluck('id')->values()->all(),
         ])->all();
 
@@ -475,6 +479,8 @@ class ProductController extends Controller
             'variants.*.quantity' => 'nullable|integer|min:0|max:' . self::MAX_QUANTITY,
             'variants.*.weight_grams' => 'nullable|integer|min:0|max:' . self::MAX_WEIGHT_GRAMS,
             'variants.*.visible' => 'nullable|in:1',
+            'variants.*.image' => 'nullable|string|max:500',
+            'variants.*.image_file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'variants.*.value_ids' => 'nullable|array',
             'variants.*.value_ids.*' => 'integer|exists:variant_values,id',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
@@ -661,7 +667,7 @@ class ProductController extends Controller
             return;
         }
 
-        foreach ($variants as $variantInput) {
+        foreach ($variants as $key => $variantInput) {
             $price = $variantInput['price'] ?? $fallback['price'];
             $salePrice = $this->normalizeSalePrice($variantInput['sale_price'] ?? null);
 
@@ -673,6 +679,17 @@ class ProductController extends Controller
                 'weight_grams' => $variantInput['weight_grams'] ?? 0,
                 'status' => isset($variantInput['visible']) ? 'active' : 'inactive',
             ];
+
+            // Xử lý upload ảnh riêng cho biến thể
+            $imageFile = $request->file("variants.{$key}.image_file");
+            if ($imageFile && $imageFile->isValid()) {
+                $filename = 'variant-' . Str::slug($variantInput['sku'] ?: $product->slug) . '-' . time() . '-' . Str::random(5) . '.' . $imageFile->extension();
+                $storagePath = 'products/' . $filename;
+                Storage::disk('public')->putFileAs('products', $imageFile, $filename);
+                $data['image'] = $storagePath;
+            } elseif (array_key_exists('image', $variantInput)) {
+                $data['image'] = !empty($variantInput['image']) ? $variantInput['image'] : null;
+            }
 
             if (!empty($variantInput['id'])) {
                 $variant = $product->variants()->whereKey($variantInput['id'])->first();

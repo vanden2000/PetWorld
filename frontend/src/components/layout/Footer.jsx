@@ -16,9 +16,9 @@ const CUSTOMER_CARE_LINKS = [
 ];
 
 const ABOUT_LINKS = [
-  { label: "Về Chúng Tôi", href: "#" },
-  { label: "Tuyển dụng", href: "#" },
-  { label: "Liên hệ", href: "/contact" },
+  { label: "Về Chúng Tôi", href: ROUTES.aboutUs },
+  { label: "Tuyển dụng", href: "/about-us" },
+  { label: "Liên hệ", href: ROUTES.contact },
 ];
 
 // Logo phương thức thanh toán được backend phục vụ từ public/image/payments/.

@@ -90,8 +90,7 @@ export default function ProductCard({
           className="product-img"
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-          quality={75}
-          // Card ảnh không cần tải ngay; Next sẽ tạo srcset đúng theo kích thước màn hình.
+          // Card ảnh không cần tải ngay; tải bất đồng bộ mượt mà
           loading="lazy"
           decoding="async"
           onError={useImageFallback}
