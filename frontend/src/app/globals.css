@@ -593,6 +593,15 @@ body {
 }
 .profile-heading {
   margin: 4px 0 28px;
+  min-width: 0;
+}
+/* Tiêu đề và mô tả dài phải xuống dòng, không được kéo ngang gây tràn.
+   Dùng break-word (không phải anywhere) để chỉ ngắt ở ranh giới từ — tiếng
+   Việt bị cắt giữa từ sẽ rất khó đọc. */
+.profile-heading h1,
+.profile-heading p,
+.profile-heading > span {
+  overflow-wrap: break-word;
 }
 .profile-heading > span {
   color: var(--primary-orange);
@@ -621,6 +630,7 @@ body {
   padding: 28px 30px;
   margin-bottom: 24px;
   box-shadow: 0 9px 28px rgba(49, 38, 30, 0.035);
+  min-width: 0;
 }
 .profile-panel-title,
 .profile-panel-title > div {
@@ -628,15 +638,23 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  /* Flex item không co nhỏ hơn nội dung nếu thiếu min-width:0, nên tiêu đề
+     dài cùng nút bên phải ("+ Thêm địa chỉ") sẽ đẩy tràn khỏi khung. */
+  min-width: 0;
+  flex-wrap: wrap;
 }
 .profile-panel-title > div {
   justify-content: flex-start;
   color: var(--primary-orange);
 }
+.profile-panel-title .profile-icon {
+  flex-shrink: 0;
+}
 .profile-panel-title h2 {
   color: #242528;
   font-size: 21px;
   letter-spacing: -0.02em;
+  min-width: 0;
 }
 .profile-status {
   color: #398457;
@@ -799,13 +817,22 @@ body {
 }
 .profile-address-list article {
   display: grid;
-  grid-template-columns: 22px 1fr auto;
+  /* minmax(0,1fr) thay cho 1fr: cột 1fr lấy min-content của chuỗi địa chỉ
+     dài làm bề rộng tối thiểu và đẩy tràn khỏi thẻ. */
+  grid-template-columns: 22px minmax(0, 1fr) auto;
   gap: 15px;
   align-items: start;
   padding: 18px;
   border: 1px solid #e3e5e8;
   border-radius: 12px;
   color: #60636a;
+  min-width: 0;
+}
+/* Địa chỉ dài xuống dòng thay vì kéo ngang. */
+.profile-address-list article p,
+.profile-address-list article span,
+.profile-address-list article strong {
+  overflow-wrap: anywhere;
 }
 .profile-address-list article.default {
   border-color: #ffb788;
@@ -871,6 +898,8 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
+  min-width: 0;
+  flex-wrap: wrap;
   margin-top: 23px;
   padding: 18px;
   border-radius: 12px;
@@ -1255,13 +1284,32 @@ body {
     grid-column: 2;
     margin-top: -10px;
   }
+  /* Dùng grid-auto-flow thay cho repeat(5,...): số mục có thể ít hơn 5, và
+     1fr cho phép cột co dưới 120px làm chữ vỡ thành nhiều dòng. Cột tự động
+     giữ đúng bề rộng tối thiểu rồi cuộn ngang khi không đủ chỗ. */
   .profile-sidebar nav {
-    grid-template-columns: repeat(5, minmax(120px, 1fr));
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(136px, auto);
+    grid-template-columns: none;
     overflow-x: auto;
     padding-bottom: 5px;
+    /* Cuộn ngang mượt và không dính lưng chừng giữa 2 mục. */
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
   }
+  /* Giữ display:flex (kế thừa) vì mục gồm icon + chữ; đổi sang block sẽ
+     làm icon rớt xuống dòng. */
   .profile-sidebar nav a {
-    justify-content: center;
+    justify-content: flex-start;
+    scroll-snap-align: start;
+    gap: 8px;
+    padding: 0 12px;
+    /* Chữ giữ một dòng, dài thì cắt bằng "…" thay vì vỡ 3 dòng. */
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .profile-sidebar nav a .profile-icon {
+    flex-shrink: 0;
   }
   .profile-logout {
     display: none;
@@ -1756,11 +1804,38 @@ body {
 @media (max-width: 600px) {
   .chatbot {
     right: 16px;
-    bottom: 16px;
+    /* Thanh home indicator của iPhone 14 Pro Max che mất đáy màn hình. */
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
   .chatbot-panel {
-    height: min(500px, calc(100dvh - 96px));
+    height: min(500px, calc(100dvh - 96px - env(safe-area-inset-bottom, 0px)));
+  }
+
+  /* iOS Safari tự phóng to trang khi chạm vào input có cỡ chữ dưới 16px. */
+  .chatbot-form input {
+    font-size: 16px;
+    height: 44px;
+  }
+
+  .chatbot-form button {
+    min-height: 44px;
+  }
+
+  .back-to-top {
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Điện thoại nằm ngang (iPhone 14 Pro Max ngang là 932×430): màn rất thấp,
+   panel chat phải thấp theo, và tai thỏ ăn vào lề trái/phải. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .homepage-container {
+    padding-left: calc(20px + env(safe-area-inset-left, 0px));
+    padding-right: calc(20px + env(safe-area-inset-right, 0px));
+  }
+  .chatbot-panel {
+    height: min(320px, calc(100dvh - 76px));
   }
 }
 
@@ -1772,7 +1847,9 @@ body {
 }
 @media (max-width: 640px) {
   .profile-page {
-    padding: 20px 12px 48px;
+    /* Đệm đáy phải vượt nút chat nổi (cao 60px + cách đáy 16px) cộng
+       safe-area, nếu không nút sẽ che mất ô nhập cuối form. */
+    padding: 20px 12px calc(104px + env(safe-area-inset-bottom, 0px));
   }
   .profile-heading h1 {
     font-size: 34px;
@@ -1781,8 +1858,73 @@ body {
     font-size: 14px;
   }
   .profile-panel {
-    padding: 22px 17px;
+    padding: 20px 14px;
     border-radius: 14px;
+  }
+  /* Chốt chặn cuối trên các khung chứa — không quét mọi hậu duệ vì sẽ đè cả
+     avatar và các phần tử định vị tuyệt đối. */
+  .profile-shell,
+  .profile-content,
+  .profile-panel,
+  .profile-sidebar {
+    max-width: 100%;
+    min-width: 0;
+  }
+  /* Câu chữ thường chỉ ngắt ở ranh giới từ cho dễ đọc... */
+  .profile-panel p,
+  .profile-panel h2,
+  .profile-security-row span {
+    overflow-wrap: break-word;
+  }
+  /* ...riêng chuỗi dài không dấu cách (email, số điện thoại) buộc phải cắt
+     bất kỳ đâu, nếu không sẽ đẩy tràn khung. */
+  .profile-panel strong,
+  .profile-address-list article span {
+    overflow-wrap: anywhere;
+  }
+  /* Các khung chứa nội dung bên trong panel cũng phải co được. */
+  .profile-form-grid,
+  .profile-password-form,
+  .profile-address-form,
+  .profile-address-list,
+  .profile-address-list article > div,
+  .profile-security-row > div,
+  .profile-panel-title > div,
+  .profile-form-grid label,
+  .profile-password-form label {
+    min-width: 0;
+    max-width: 100%;
+  }
+  /* Heading không có padding ngang còn panel bên dưới thụt vào 14px, nên hai
+     khối lệch nhau. Thụt heading đúng bằng padding của panel cho thẳng cột. */
+  .profile-heading {
+    padding: 0 14px;
+  }
+  .profile-heading h1 {
+    font-size: 30px;
+    /* Tiêu đề dài không được cắt chữ giữa từ, chỉ ngắt ở ranh giới từ. */
+    overflow-wrap: break-word;
+  }
+  .profile-heading p {
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  .profile-panel-title h2 {
+    font-size: 18px;
+  }
+  /* Nút "+ Thêm địa chỉ" xuống hàng riêng khi tiêu đề đã chiếm hết chỗ. */
+  .profile-text-btn {
+    white-space: nowrap;
+  }
+  /* Nút Sửa/Xóa xuống dòng dưới địa chỉ thay vì ép cột thứ ba. */
+  .profile-address-list article {
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 12px;
+    padding: 15px;
+  }
+  .profile-address-actions {
+    grid-column: 2;
+    margin-top: 6px;
   }
   .profile-status {
     display: none;
@@ -1801,13 +1943,6 @@ body {
     grid-column: 1;
     width: 100%;
   }
-  .profile-address-list article {
-    grid-template-columns: 20px 1fr;
-  }
-  .profile-address-actions {
-    grid-column: 2;
-    margin-top: 5px;
-  }
   .profile-security-row {
     align-items: flex-start;
     flex-direction: column;
@@ -1821,6 +1956,127 @@ body {
   .profile-modal:has(.profile-address-form) {
     width: calc(100% - 24px);
     padding: 24px 18px;
+  }
+  /* Nút trong form trải hết chiều ngang cho dễ chạm. */
+  .profile-form-actions {
+    justify-content: stretch;
+  }
+  .profile-form-actions button {
+    flex: 1;
+  }
+  .profile-modal-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+  .profile-modal-actions button {
+    width: 100%;
+  }
+}
+
+/* iOS Safari phóng to trang khi chạm vào ô nhập có cỡ chữ dưới 16px.
+   Trang hồ sơ nhiều ô nhập nên lỗi này lộ rõ nhất ở đây. */
+@media (max-width: 900px) {
+  .profile-form-grid input,
+  .profile-password-form input,
+  .profile-address-form input,
+  .profile-address-form select,
+  .address-search-dropdown > input {
+    font-size: 16px;
+  }
+
+  /* Chữ nhãn là text trần trong label (display:grid), không có thẻ bọc nên
+     không nhắm riêng được. Thụt cả label 2px cho gần thẳng cột với chữ
+     trong ô nhập, rồi kéo ô nhập lùi lại đúng 2px để không hụt bề ngang. */
+  .profile-form-grid label,
+  .profile-password-form label,
+  .profile-address-form label {
+    padding-left: 2px;
+    font-size: 13.5px;
+  }
+  .profile-form-grid label > input,
+  .profile-password-form label > input,
+  .profile-address-form label > input,
+  .profile-address-form label > select {
+    margin-left: -2px;
+    width: calc(100% + 2px);
+  }
+}
+
+/* iPad mini dọc (744px): form 2 cột bị chật, mỗi ô chỉ còn ~330px. */
+@media (max-width: 820px) {
+  .profile-form-grid,
+  .profile-address-form {
+    grid-template-columns: 1fr;
+  }
+  .profile-form-grid > *,
+  .profile-address-form > * {
+    grid-column: 1;
+  }
+}
+
+/* Điện thoại nằm ngang (iPhone 14 Pro Max: 932×430). Đủ rộng để lọt nhánh
+   desktop nhưng chỉ cao 430px, nên sidebar dạng cột dính sticky sẽ chiếm
+   gần hết màn hình. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .profile-page {
+    padding: 20px 18px calc(88px + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(18px + env(safe-area-inset-left, 0px));
+    padding-right: calc(18px + env(safe-area-inset-right, 0px));
+  }
+  .profile-shell {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .profile-sidebar {
+    position: static;
+    padding: 14px 16px;
+  }
+  .profile-identity {
+    flex-direction: row;
+    text-align: left;
+    gap: 12px;
+    padding-bottom: 14px;
+    display: grid;
+    grid-template-columns: 48px 1fr;
+  }
+  .profile-avatar-wrap,
+  .profile-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  .profile-avatar-wrap {
+    grid-row: 1 / 3;
+    margin: 0;
+  }
+  .profile-identity span {
+    grid-column: 2;
+    margin-top: -10px;
+  }
+  /* Menu trải ngang thành hàng cuộn thay vì cột dọc chiếm hết chiều cao. */
+  .profile-sidebar nav {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(130px, 1fr);
+    overflow-x: auto;
+    margin: 12px 0;
+    padding-bottom: 4px;
+  }
+  .profile-sidebar nav a {
+    justify-content: center;
+  }
+  .profile-logout {
+    display: none;
+  }
+  .profile-heading {
+    margin: 2px 0 16px;
+  }
+  .profile-heading h1 {
+    font-size: 26px;
+  }
+  /* Hộp thoại không được cao hơn màn 430px. */
+  .profile-modal {
+    max-height: calc(100dvh - 24px);
+    padding: 18px 16px;
   }
 }
 .address-search-dropdown > input {
@@ -4421,16 +4677,42 @@ body {
 }
 
 /* Homepage Core Layout & Spacing */
+/* Flex column: con mặc định không co nhỏ hơn nội dung nếu thiếu min-width:0.
+   Chỉ cần một phần tử bên trong rộng quá là cả khung giãn theo, và vì html/body
+   đặt overflow-x:clip nên phần thừa bị CẮT CỤT chứ không cuộn được — chữ ở mép
+   phải biến mất. Chặn ngay từ khung ngoài cùng. */
 .user-layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .main-content {
   flex: 1;
   background-color: #faf8f6; /* Warm cream background matching mockup */
   padding: 40px 0 60px 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Chốt chặn chung: navbar là flex có max-width 1280px nhưng thiếu min-width:0
+   nên trên màn hẹp nó vẫn giãn theo nội dung bên trong. */
+.navbar {
+  min-width: 0;
+}
+.nav-menu {
+  min-width: 0;
+}
+
+/* Dropdown tài khoản rộng 220px và lệch phải -12px: trên màn hẹp nó thò ra
+   ngoài viewport. Neo lại theo mép phải và co bề rộng theo màn hình. */
+@media (max-width: 640px) {
+  .profile-dropdown {
+    right: 0;
+    width: min(220px, calc(100vw - 32px));
+  }
 }
 
 .homepage-container {
@@ -4967,13 +5249,13 @@ body {
   line-height: 1.4;
   margin-bottom: 6px;
   text-decoration: none;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
+  /* Tên dài cắt bằng "…" trên một dòng để mọi thẻ cao bằng nhau.
+     display:block là bắt buộc — thẻ <a> mặc định inline thì
+     text-overflow không có tác dụng. */
+  display: block;
+  white-space: nowrap;
   overflow: hidden;
-  /* Không chốt height 42px: tên ngắn 1 dòng sẽ thừa hẳn một dòng trống, đẩy
-     danh mục xuống xa. Tên dài vẫn bị cắt ở 2 dòng nhờ line-clamp. */
+  text-overflow: ellipsis;
   transition: var(--transition-default);
 }
 
@@ -6401,7 +6683,7 @@ body {
   gap: 16px;
 }
 
-/* Tên sản phẩm: tối đa 2 dòng (line-clamp), tên ngắn không bị đệm dòng trống. */
+/* Tên sản phẩm: gói gọn 1 dòng, dài thì cắt bằng "…" (xem .product-title). */
 
 /* Dòng danh mục: 1 dòng, dài thì cắt bằng dấu "..." */
 .product-category {
@@ -6684,7 +6966,6 @@ body {
   }
   .product-title {
     font-size: 13.5px;
-    height: 38px;
     margin-bottom: 8px;
   }
   .product-wishlist-btn {
@@ -7491,12 +7772,16 @@ body {
   align-items: center;
   margin-bottom: 24px;
   gap: 16px;
+  /* Cho phép hai cụm bên trong co lại thay vì đẩy toolbar rộng quá khung. */
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .shop-result-title {
   font-size: 24px;
   font-weight: 800;
   color: var(--primary-orange);
+  min-width: 0;
 }
 
 .shop-result-title span {
@@ -7508,7 +7793,9 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-shrink: 0;
+  /* Không dùng flex-shrink:0: khung hẹp thì cụm này không co được và
+     đẩy tràn ra ngoài toolbar. min-width:0 cho phép select thu lại. */
+  min-width: 0;
 }
 
 .shop-sort-label {
@@ -7520,15 +7807,26 @@ body {
 .shop-sort-select {
   border: 1px solid #e0e3e8;
   border-radius: 8px;
-  padding: 9px 14px;
+  padding: 9px 34px 9px 14px;
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-dark);
-  background-color: #ffffff;
   cursor: pointer;
   outline: none;
   transition: var(--transition-default);
+  /* Select tự nới theo lựa chọn dài nhất ("Giá giảm dần"), nên phải chặn
+     lại bằng max-width + min-width:0 kẻo nó đẩy rộng quá khung cha. */
+  max-width: 100%;
+  min-width: 0;
+  /* Mũi tên riêng: mũi tên mặc định mỗi trình duyệt một kiểu và không
+     đổi màu được. Dùng SVG nội tuyến để khỏi tải thêm tệp. */
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23718096' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
 }
 
 .shop-sort-select:focus {
@@ -7641,10 +7939,25 @@ body {
   color: #ffffff;
 }
 
+/* Không có min-width:0 thì cột lưới lấy min-content của thẻ sản phẩm
+   làm chiều rộng tối thiểu và trang bị tràn ngang trên máy nhỏ. */
+.shop-main {
+  min-width: 0;
+}
+
+/* Lưới sản phẩm trong trang Cửa Hàng bị sidebar chiếm chỗ nên cần bậc riêng,
+   không dùng chung breakpoint với lưới 4 cột ở trang chủ. */
+.shop-main .products-grid-4 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 @media (max-width: 1100px) {
   .shop-layout {
     grid-template-columns: 220px 1fr;
     gap: 20px;
+  }
+  .shop-main .products-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -7653,10 +7966,21 @@ body {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+  /* Sidebar thu về thanh gập, lưới lấy lại 3 cột vì đã có toàn bộ chiều ngang. */
+  .shop-main .products-grid-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Sidebar chuyển thành thanh gập ở màn hẹp, và cả ở màn thấp nằm ngang
+   (iPhone 14 Pro Max ngang là 932×430 — đủ rộng nhưng quá thấp cho cột dọc). */
+@media (max-width: 900px), (max-height: 500px) and (orientation: landscape) {
+  /* Cả khối này chỉ là nút phụ trợ: trước đây padding khung 16px + nút 44px
+     cộng lại cao 76px, chiếm chỗ ngang một thẻ sản phẩm. Thu gọn lại. */
   .shop-sidebar {
     position: static;
-    padding: 16px 20px;
-    border-radius: 12px;
+    padding: 4px 14px;
+    border-radius: 10px;
   }
   .shop-sidebar-toggle {
     display: flex;
@@ -7667,34 +7991,181 @@ body {
     background: transparent;
     cursor: pointer;
     color: var(--primary-orange);
-    font-size: 16px;
-    font-weight: 800;
-    padding: 6px 0;
+    /* Nút phụ trợ: nhỏ hơn tiêu đề kết quả (20px) và ngang tên sản phẩm. */
+    font-size: 13px;
+    font-weight: 700;
+    padding: 0;
+    /* Vẫn giữ 40px vùng chạm — dưới mức này khó bấm trên điện thoại. */
+    min-height: 40px;
   }
   .shop-sidebar-toggle-text {
     display: inline-flex;
     align-items: center;
+    gap: 6px;
+  }
+  /* Icon phải nhỏ hơn cỡ chữ, nếu không cụm chữ trông nặng. */
+  .shop-sidebar-toggle-text .filter-icon {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
   }
   .shop-sidebar-toggle-arrow {
-    font-size: 12px;
+    font-size: 9px;
     color: var(--text-muted);
   }
   .shop-sidebar-content {
     display: none;
-    margin-top: 16px;
+    margin-top: 12px;
     border-top: 1px solid #eef1f5;
-    padding-top: 16px;
+    padding-top: 14px;
+    /* Khung ngoài chỉ còn padding 4px nên phải tự chừa đáy khi mở ra. */
+    padding-bottom: 12px;
   }
   .shop-sidebar.is-open .shop-sidebar-content {
     display: block;
   }
 }
 
+/* Dưới 700px mới hạ xuống 2 cột, để iPad mini dọc (744px) giữ được 3 cột. */
+@media (max-width: 700px) {
+  .shop-main .products-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
+  .shop-breadcrumb {
+    font-size: 13.5px;
+    margin-bottom: 16px;
+  }
   .shop-toolbar {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 12px;
+    margin-bottom: 18px;
+  }
+  /* 20px/800 nhảy hẳn khỏi thang chữ xung quanh (13–14px) nên trông chỏi.
+     Kéo về 17px cho liền mạch mà vẫn rõ là tiêu đề chính. */
+  .shop-result-title {
+    font-size: 17px;
+  }
+  .shop-result-title span {
+    font-size: 14px;
+  }
+  /* Nhãn "Sắp xếp" và ô chọn trải hết chiều ngang cho dễ chạm. */
+  .shop-sort {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .shop-sort-select {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    /* Dưới 16px thì iOS Safari phóng to trang khi chạm vào ô chọn. */
+    font-size: 16px;
+  }
+  .shop-sort-label {
+    font-size: 13px;
+  }
+  .shop-cat-item {
+    min-height: 44px;
+    font-size: 15px;
+  }
+  .shop-apply-btn {
+    min-height: 46px;
+  }
+  /* Danh sách lọc dài (thương hiệu, danh mục) không đẩy trang dài mãi. */
+  .shop-cat-list {
+    max-height: 260px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .shop-filter-group {
+    margin-bottom: 18px;
+  }
+  /* Tay kéo 20px quá nhỏ để chạm chính xác; nới ra và tăng vùng chạm. */
+  .shop-price-slider {
+    height: 44px;
+  }
+  .shop-price-thumb {
+    height: 44px;
+  }
+  .shop-price-thumb::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+  }
+  .shop-price-thumb::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+  }
+  .shop-price-row {
+    font-size: 14.5px;
+  }
+  /* Nhiều trang thì hàng nút xuống dòng thay vì tràn ngang. */
+  .shop-pagination {
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 28px;
+  }
+  .shop-page-btn {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 8px;
+    font-size: 14px;
+  }
+  .shop-empty-state {
+    padding: 40px 18px;
+    border-radius: 16px;
+  }
+  .shop-empty-icon {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 16px;
+  }
+  .shop-empty-title {
+    font-size: 17.5px;
+  }
+  .shop-empty-sub {
+    font-size: 13.5px;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 400px) {
+  /* Máy nhỏ: một cột để ảnh và giá không bị bóp. */
+  .shop-main .products-grid-4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .shop-result-title {
+    font-size: 16px;
+  }
+  .shop-sort-label {
+    display: none;
+  }
+}
+
+/* Điện thoại nằm ngang (iPhone 14 Pro Max: 932×430). Đủ rộng nhưng rất thấp,
+   nên bỏ cột sidebar để nội dung không bị nhét vào khe hẹp. Đặt cuối khối
+   shop vì phải ghi đè các nhánh max-width ở trên. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .shop-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .shop-sidebar {
+    position: static;
+  }
+  /* Sidebar đã gập nên có đủ chiều ngang cho 3 cột. */
+  .shop-main .products-grid-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  /* Panel lọc mở ra không được cao hơn màn hình 430px. */
+  .shop-sidebar.is-open .shop-sidebar-content {
+    max-height: 58dvh;
+    overflow-y: auto;
+  }
+  .shop-breadcrumb {
+    margin-bottom: 14px;
   }
 }
 
@@ -15163,6 +15634,10 @@ body {
   margin-bottom: 15px;
   padding-top: 15px;
   border-top: 1px dashed #e2e8f0;
+  /* Hai ô mã (sản phẩm / vận chuyển) xếp dọc, cách nhau rõ ràng. */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .co-voucher-select-trigger {
@@ -15194,6 +15669,18 @@ body {
   transform: translateX(4px);
 }
 
+/* Ô chọn mã miễn phí vận chuyển dùng tông xanh lá để phân biệt với mã
+   giảm giá sản phẩm (tông cam). */
+.co-voucher-select-trigger.is-shipping {
+  background-color: #f0fdf4;
+  border-color: #22c55e;
+  color: #15803d;
+}
+
+.co-voucher-select-trigger.is-shipping:hover {
+  background-color: #dcfce7;
+}
+
 .co-voucher-applied {
   display: flex;
   align-items: center;
@@ -15204,20 +15691,75 @@ body {
   border-radius: 10px;
 }
 
+/* Mã sản phẩm đã áp: giữ tông cam đồng bộ với ô chọn của nó. */
+.co-voucher-applied.is-product {
+  background-color: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.co-voucher-applied.is-product .co-voucher-applied-info,
+.co-voucher-applied.is-product .co-voucher-code-name {
+  color: #c2410c;
+}
+
+/* Mã vận chuyển đã áp: tông xanh lá. */
+.co-voucher-applied.is-shipping {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.co-voucher-applied.is-shipping .co-voucher-applied-info,
+.co-voucher-applied.is-shipping .co-voucher-code-name {
+  color: #166534;
+}
+
 .co-voucher-applied-info {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14.5px;
   color: #166534;
+  min-width: 0;
+}
+
+/* Ô voucher đổi từ <div> sang <button> để bấm mở lại danh sách mã. Giữ
+   nguyên hình thức cũ: chỉ khử style mặc định của button, không thêm nền
+   hay viền gì. */
+.co-voucher-applied-info.is-clickable {
+  flex: 1;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14.5px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Vẫn giữ vòng focus cho người dùng bàn phím. */
+.co-voucher-applied-info.is-clickable:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 .co-voucher-code-name {
   color: #15803d;
+  /* Mã vận chuyển kèm mô tả dài nên phải cắt thay vì đẩy tràn ô. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .co-voucher-discount-text {
   font-weight: 700;
+  flex-shrink: 0;
+}
+
+.co-voucher-tag-icon {
+  flex-shrink: 0;
 }
 
 .co-voucher-remove-btn {
@@ -15237,6 +15779,25 @@ body {
 .co-summary-discount {
   color: #166534;
   font-weight: 600;
+}
+
+/* Hai dòng giảm giá dùng chung một màu; phân biệt bằng tên và mã voucher. */
+.co-summary-discount > span:first-child {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Mã voucher hiện nhỏ bên cạnh để biết dòng này đến từ mã nào. Không dùng
+   nền màu — nền cùng tông với chữ sẽ nuốt mất chữ. */
+.co-discount-code {
+  color: #64748b;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-style: normal;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .co-discount-amount {
@@ -15338,6 +15899,45 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* Nhóm mã trong modal: mỗi loại một khối có tiêu đề riêng. */
+.co-voucher-group {
+  margin-bottom: 22px;
+}
+
+.co-voucher-group:last-child {
+  margin-bottom: 0;
+}
+
+.co-voucher-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f1f5f9;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #334155;
+}
+
+.co-voucher-group-title small {
+  margin-left: auto;
+  color: #94a3b8;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.co-voucher-group.is-product .co-voucher-group-title {
+  color: #c2410c;
+  border-bottom-color: #fed7aa;
+}
+
+.co-voucher-group.is-shipping .co-voucher-group-title {
+  color: #15803d;
+  border-bottom-color: #bbf7d0;
 }
 
 .co-voucher-item {
@@ -15472,6 +16072,11 @@ body {
 /* Disabled Voucher State */
 .co-voucher-item.disabled {
   border-color: #e2e8f0;
+}
+
+/* Thẻ mã vận chuyển dùng gradient xanh lá thay cho cam. */
+.co-voucher-item.is-shipping .co-voucher-card-left {
+  background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
 }
 
 .co-voucher-item.disabled .co-voucher-card-left {

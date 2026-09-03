@@ -157,7 +157,7 @@ export default function PaymentQrModal({
             {/* 1. QR */}
             <section className="co-qrm-section">
               <h3 className="co-qrm-section-title">1. Thanh toán nhanh bằng QR Code</h3>
-              <p className="co-qrm-desc">Quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử</p>
+              <p className="co-qrm-desc">Quét mã QR bằng ứng dụng ngân hàng (VietQR)</p>
 
               {paid ? (
                 <div className="co-pay-paid">✓ Đã thanh toán</div>

@@ -29,6 +29,7 @@ import {
   buildSepayQrUrl,
   getAvailableVouchers,
   getAutomaticProductVoucher,
+  getEligibleShippingPromotions,
   getShippingQuote,
 } from "@/lib/checkout";
 import { cancelOrder } from "@/lib/auth";
@@ -142,10 +143,13 @@ export default function CheckoutView() {
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [appliedShippingVoucher, setAppliedShippingVoucher] = useState(null);
   const [automaticVoucher, setAutomaticVoucher] = useState(null);
+  const [eligibleShippingPromotions, setEligibleShippingPromotions] = useState([]);
   const [vouchers, setVouchers] = useState([]);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [loadingVouchers, setLoadingVouchers] = useState(false);
   const [voucherCodeInput, setVoucherCodeInput] = useState("");
+  // Người dùng bấm ô nào thì nhóm đó được làm nổi trong modal.
+  const [voucherFocusType, setVoucherFocusType] = useState("product");
 
   // Tải phương thức giao/thanh toán (public).
   useEffect(() => {
@@ -287,6 +291,12 @@ export default function CheckoutView() {
 
   const subtotal = items.reduce((sum, line) => sum + line.price * line.quantity, 0);
   const shippingMethod = options.shipping_methods.find((m) => m.id === shippingMethodId);
+  // Phí gốc hiển thị ở ô phương thức vận chuyển và ở dòng "Phí vận chuyển":
+  // không trừ voucher, phần giảm tách riêng thành một dòng cho dễ đối chiếu.
+  const shippingOriginal = items.length
+    ? shippingQuote?.shipping_fee_original ?? shippingQuote?.shipping_fee ?? 0
+    : 0;
+  const shippingDiscount = items.length ? shippingQuote?.shipping_discount ?? 0 : 0;
   const shipping = items.length ? shippingQuote?.shipping_fee ?? 0 : 0;
 
   useEffect(() => {
@@ -324,6 +334,14 @@ export default function CheckoutView() {
     let active = true;
     getAutomaticProductVoucher(subtotal).then((voucher) => {
       if (active) setAutomaticVoucher(voucher);
+    });
+    return () => { active = false; };
+  }, [subtotal]);
+
+  useEffect(() => {
+    let active = true;
+    getEligibleShippingPromotions(subtotal).then((promotions) => {
+      if (active) setEligibleShippingPromotions(promotions || []);
     });
     return () => { active = false; };
   }, [subtotal]);
@@ -370,7 +388,10 @@ export default function CheckoutView() {
     }
   }, [subtotal, appliedVoucher, voucherKey]);
 
-  const handleOpenVoucherModal = async () => {
+  // `focusType` ('product' | 'shipping') quyết định nhóm nào được làm nổi khi
+  // mở modal, tùy người dùng bấm vào ô nào.
+  const handleOpenVoucherModal = async (focusType = "product") => {
+    setVoucherFocusType(focusType);
     setLoadingVouchers(true);
     setShowVoucherModal(true);
     try {
@@ -420,6 +441,25 @@ export default function CheckoutView() {
   };
 
   const handleRemoveShippingVoucher = () => setAppliedShippingVoucher(null);
+
+  // Chia mã thành 2 nhóm; nhóm người dùng vừa bấm được đưa lên đầu danh sách.
+  const voucherGroups = (() => {
+    const groups = [
+      {
+        type: "product",
+        label: "Mã giảm giá sản phẩm",
+        icon: "🎟",
+        items: vouchers.filter((v) => v.applies_to !== "shipping"),
+      },
+      {
+        type: "shipping",
+        label: "Mã miễn phí vận chuyển",
+        icon: "🚚",
+        items: vouchers.filter((v) => v.applies_to === "shipping"),
+      },
+    ];
+    return voucherFocusType === "shipping" ? [groups[1], groups[0]] : groups;
+  })();
 
   const selectedPayment = options.payment_methods.find((m) => m.id === paymentMethodId);
   const isBankTransfer = (selectedPayment?.name ?? "").toLowerCase().includes("chuyển khoản");
@@ -754,7 +794,9 @@ export default function CheckoutView() {
                 <div>
                   <strong>{method.name}</strong>{method.description && <small>{method.description}</small>}
                 </div>
-                <span className="co-ship-fee">{shippingMethodId === method.id && shippingQuoteLoading ? "Đang tính..." : shippingMethodId === method.id && shippingQuote ? formatPrice(shippingQuote.shipping_fee) : shippingMethodId === method.id && shippingQuoteError ? "Chưa tính được" : method.fee_mode === "live_quote" ? "Theo địa chỉ" : "Chọn để tính"}</span>
+                {/* Luôn hiện phí gốc, không trừ voucher — phần giảm nằm ở dòng
+                    riêng trong tóm tắt đơn để người mua đối chiếu được. */}
+                <span className="co-ship-fee">{shippingMethodId === method.id && shippingQuoteLoading ? "Đang tính..." : shippingMethodId === method.id && shippingQuote ? formatPrice(shippingQuote.shipping_fee_original ?? shippingQuote.shipping_fee) : shippingMethodId === method.id && shippingQuoteError ? "Chưa tính được" : method.fee_mode === "live_quote" ? "Theo địa chỉ" : "Chọn để tính"}</span>
               </label>
             ))}
           </section>
@@ -808,19 +850,22 @@ export default function CheckoutView() {
               </div>
             ))}
           </div>
-          <div className="co-summary-row">
-            <span>Tổng phụ</span>
-            <span>{formatPrice(subtotal)}</span>
-          </div>
-          <div className="co-summary-row">
-            <span>Phí vận chuyển</span>
-            <span>{shippingQuoteLoading ? "Đang tính..." : shippingQuote ? formatPrice(shipping) : "Chưa tính"}</span>
-          </div>
           {shippingQuoteError && <p className="co-quote-error">{shippingQuoteError}</p>}
-          {shippingQuote?.shipping_discount > 0 && (
-            <div className="co-summary-row co-summary-discount">
-              <span>{shippingQuote.shipping_promotion?.code ? `Mã ${shippingQuote.shipping_promotion.code} · ${shippingQuote.shipping_promotion.name}` : shippingQuote.shipping_promotion?.name || "Hỗ trợ phí vận chuyển"}</span>
-              <span className="co-discount-amount">-{formatPrice(shippingQuote.shipping_discount)}</span>
+          {/* Giữ khối gợi ý ưu đãi vận chuyển. Dòng hiển thị số tiền giảm phí
+              ship mà develop đặt ở đây đã được chuyển xuống cạnh dòng giảm giá
+              sản phẩm, nên không lấy lại để tránh hiện trùng hai lần. */}
+          {eligibleShippingPromotions.length > 0 && (
+            <div className="co-auto-shipping-promotions">
+              <div className="co-auto-shipping-promotions-title">🎁 Ưu đãi vận chuyển</div>
+              {eligibleShippingPromotions.map((promotion) => (
+                <div className="co-auto-shipping-promotion" key={promotion.id}>
+                  <div>
+                    <strong>{promotion.code}</strong>
+                    <span>{promotion.description || `Hỗ trợ phí ship tối đa ${formatPrice(promotion.max_shipping_discount)}`}</span>
+                  </div>
+                  <em>Đủ điều kiện · sẽ tự áp dụng</em>
+                </div>
+              ))}
             </div>
           )}
           {items.length > 0 && shippingQuote && shipping === 0 && (
@@ -830,48 +875,105 @@ export default function CheckoutView() {
             </div>
           )}
 
-          {/* Voucher trigger */}
+          {/* Mặc định chỉ một ô "Chọn mã giảm giá". Mỗi loại mã khi được áp sẽ
+              hiện thành một dòng riêng (sản phẩm nền cam, vận chuyển nền xanh),
+              nên áp cả hai thì mới thấy hai dòng. */}
           <div className="co-voucher-section">
-            {appliedShippingVoucher && (
-              <div className="co-voucher-applied">
-                <div className="co-voucher-applied-info">
-                  <span className="co-voucher-tag-icon">🚚</span>
-                  <span className="co-voucher-code-name"><strong>{appliedShippingVoucher.code}</strong> · Giảm phí vận chuyển</span>
-                </div>
-                <button type="button" className="co-voucher-remove-btn" onClick={handleRemoveShippingVoucher}>Gỡ</button>
-              </div>
-            )}
-            {!appliedVoucher && automaticVoucher && (
-              <div className="co-voucher-applied">
-                <div className="co-voucher-applied-info">
-                  <span className="co-voucher-tag-icon">✨</span>
-                  <span className="co-voucher-code-name"><strong>{automaticVoucher.code}</strong> · Tự động áp dụng</span>
-                  <span className="co-voucher-discount-text">(-{formatPrice(discount)})</span>
-                </div>
-              </div>
-            )}
+            {/* --- Mã giảm giá sản phẩm --- */}
             {appliedVoucher ? (
-              <div className="co-voucher-applied">
-                <div className="co-voucher-applied-info">
+              <div className="co-voucher-applied is-product">
+                <button
+                  type="button"
+                  className="co-voucher-applied-info is-clickable"
+                  onClick={() => handleOpenVoucherModal("product")}
+                  title="Bấm để đổi mã giảm giá sản phẩm"
+                >
                   <span className="co-voucher-tag-icon">🎟</span>
                   <span className="co-voucher-code-name"><strong>{appliedVoucher.code}</strong></span>
                   <span className="co-voucher-discount-text">(-{formatPrice(discount)})</span>
-                </div>
+                </button>
                 <button type="button" className="co-voucher-remove-btn" onClick={handleRemoveVoucher}>Gỡ</button>
               </div>
-            ) : (
-              <button type="button" className="co-voucher-select-trigger" onClick={handleOpenVoucherModal}>
+            ) : automaticVoucher ? (
+              <div className="co-voucher-applied is-product">
+                {/* Mã tự động cũng cho bấm, phòng khi có mã khác lợi hơn. */}
+                <button
+                  type="button"
+                  className="co-voucher-applied-info is-clickable"
+                  onClick={() => handleOpenVoucherModal("product")}
+                  title="Bấm để chọn mã giảm giá khác"
+                >
+                  <span className="co-voucher-tag-icon">✨</span>
+                  <span className="co-voucher-code-name"><strong>{automaticVoucher.code}</strong> · Tự động áp dụng</span>
+                  <span className="co-voucher-discount-text">(-{formatPrice(discount)})</span>
+                </button>
+              </div>
+            ) : null}
+
+            {/* --- Mã miễn phí vận chuyển --- */}
+            {appliedShippingVoucher && (
+              <div className="co-voucher-applied is-shipping">
+                <button
+                  type="button"
+                  className="co-voucher-applied-info is-clickable"
+                  onClick={() => handleOpenVoucherModal("shipping")}
+                  title="Bấm để đổi mã miễn phí vận chuyển"
+                >
+                  <span className="co-voucher-tag-icon">🚚</span>
+                  <span className="co-voucher-code-name"><strong>{appliedShippingVoucher.code}</strong></span>
+                  {shippingDiscount > 0 && (
+                    <span className="co-voucher-discount-text">(-{formatPrice(shippingDiscount)})</span>
+                  )}
+                </button>
+                <button type="button" className="co-voucher-remove-btn" onClick={handleRemoveShippingVoucher}>Gỡ</button>
+              </div>
+            )}
+
+            {/* Một nút chung, chỉ còn hiện khi vẫn có loại mã chưa được áp. */}
+            {(!appliedVoucher && !automaticVoucher) || !appliedShippingVoucher ? (
+              <button
+                type="button"
+                className="co-voucher-select-trigger"
+                onClick={() => handleOpenVoucherModal("product")}
+              >
                 <span className="co-voucher-tag-icon">🎟</span>
                 <span>Chọn mã giảm giá</span>
                 <span className="co-voucher-arrow">➔</span>
               </button>
-            )}
+            ) : null}
+          </div>
+
+          {/* Khối tính tiền: tổng phụ và phí ship đặt ngay trên các dòng giảm
+              giá để người mua đọc liền mạch xuống tổng thanh toán. */}
+          <div className="co-summary-row">
+            <span>Tổng phụ</span>
+            <span>{formatPrice(subtotal)}</span>
+          </div>
+          <div className="co-summary-row">
+            <span>Phí vận chuyển</span>
+            <span>{shippingQuoteLoading ? "Đang tính..." : shippingQuote ? formatPrice(shippingOriginal) : "Chưa tính"}</span>
           </div>
 
           {discount > 0 && (
             <div className="co-summary-row co-summary-discount">
-              <span>Giảm giá</span>
+              <span>
+                Giảm giá sản phẩm
+                {activeVoucher?.code && <em className="co-discount-code">{activeVoucher.code}</em>}
+              </span>
               <span className="co-discount-amount">-{formatPrice(discount)}</span>
+            </div>
+          )}
+          {shippingDiscount > 0 && (
+            <div className="co-summary-row co-summary-discount">
+              <span>
+                Giảm phí vận chuyển
+                {(appliedShippingVoucher?.code || shippingQuote?.shipping_promotion?.code) && (
+                  <em className="co-discount-code">
+                    {appliedShippingVoucher?.code || shippingQuote.shipping_promotion.code}
+                  </em>
+                )}
+              </span>
+              <span className="co-discount-amount">-{formatPrice(shippingDiscount)}</span>
             </div>
           )}
 
@@ -922,64 +1024,86 @@ export default function CheckoutView() {
               ) : vouchers.length === 0 ? (
                 <p className="co-no-vouchers">Hiện tại không có voucher nào khả dụng.</p>
               ) : (
-                <div className="co-voucher-list">
-                  {vouchers.map((voucher) => {
-                    const formattedMin = formatPrice(voucher.min_order_value);
-                    const formattedDiscount = formatPrice(voucher.discount_value);
-                    const startDateStr = new Date(voucher.start_date).toLocaleDateString('vi-VN');
-                    const endDateStr = new Date(voucher.end_date).toLocaleDateString('vi-VN');
-                    const canSelect = voucher.selectable && voucher.can_apply;
-                    
-                    return (
-                      <div 
-                        key={voucher.id} 
-                        className={`co-voucher-item ${!canSelect ? 'disabled' : ''} ${appliedVoucher?.id === voucher.id ? 'selected' : ''}`}
-                      >
-                        <div className="co-voucher-card-left">
-                          <div className="co-voucher-discount-val">-{formattedDiscount}</div>
-                          <div className="co-voucher-badge-code">{voucher.code}</div>
+                <>
+                  {voucherGroups.map((group) => (
+                    <section
+                      key={group.type}
+                      className={`co-voucher-group is-${group.type} ${voucherFocusType === group.type ? "is-focused" : ""}`}
+                    >
+                      <h4 className="co-voucher-group-title">
+                        <span className="co-voucher-tag-icon">{group.icon}</span>
+                        {group.label}
+                        <small>Chọn tối đa 1 mã</small>
+                      </h4>
+                      {group.items.length === 0 ? (
+                        <p className="co-no-vouchers">Chưa có mã nào thuộc loại này.</p>
+                      ) : (
+                        <div className="co-voucher-list">
+                          {group.items.map((voucher) => {
+                            const formattedMin = formatPrice(voucher.min_order_value);
+                            const formattedDiscount = formatPrice(voucher.discount_value);
+                            const startDateStr = new Date(voucher.start_date).toLocaleDateString('vi-VN');
+                            const endDateStr = new Date(voucher.end_date).toLocaleDateString('vi-VN');
+                            const canSelect = voucher.selectable && voucher.can_apply;
+                            // Mỗi nhóm so với mã đang áp của chính nhóm đó.
+                            const isApplied = group.type === "shipping"
+                              ? appliedShippingVoucher?.id === voucher.id
+                              : appliedVoucher?.id === voucher.id;
+
+                            return (
+                              <div
+                                key={voucher.id}
+                                className={`co-voucher-item is-${group.type} ${!canSelect ? 'disabled' : ''} ${isApplied ? 'selected' : ''}`}
+                              >
+                                <div className="co-voucher-card-left">
+                                  <div className="co-voucher-discount-val">-{formattedDiscount}</div>
+                                  <div className="co-voucher-badge-code">{voucher.code}</div>
+                                </div>
+                                <div className="co-voucher-card-right">
+                                  <h4 className="co-voucher-title">{voucher.description || `Giảm ngay ${formattedDiscount}`}</h4>
+                                  <p className="co-voucher-condition">Đơn tối thiểu: <strong>{formattedMin}</strong></p>
+                                  <p className="co-voucher-duration">Hạn dùng: {startDateStr} - {endDateStr}</p>
+
+                                  {!canSelect && (
+                                    <p className="co-voucher-warning-text">
+                                      {voucher.availability_message}{voucher.selectable && voucher.missing_amount > 0 ? <> Mua thêm <strong>{formatPrice(voucher.missing_amount)}</strong> để dùng mã này.</> : null}
+                                    </p>
+                                  )}
+
+                                  <div className="co-voucher-action-btn-wrap">
+                                    {canSelect ? (
+                                      isApplied ? (
+                                        <button
+                                          type="button"
+                                          className="co-voucher-btn selected"
+                                          onClick={group.type === "shipping" ? handleRemoveShippingVoucher : handleRemoveVoucher}
+                                        >
+                                          Đang chọn
+                                        </button>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          className="co-voucher-btn active"
+                                          onClick={() => handleApplyVoucher(voucher)}
+                                        >
+                                          Áp dụng
+                                        </button>
+                                      )
+                                    ) : (
+                                      <button type="button" className="co-voucher-btn" disabled>
+                                        {voucher.is_automatic ? "Tự động áp dụng" : "Chưa đủ điều kiện"}
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                        <div className="co-voucher-card-right">
-                          <h4 className="co-voucher-title">{voucher.description || `Giảm ngay ${formattedDiscount}`}</h4>
-                          <p className="co-voucher-condition">Đơn tối thiểu: <strong>{formattedMin}</strong></p>
-                          <p className="co-voucher-duration">Hạn dùng: {startDateStr} - {endDateStr}</p>
-                          
-                          {!canSelect && (
-                            <p className="co-voucher-warning-text">
-                              {voucher.availability_message}{voucher.selectable && voucher.missing_amount > 0 ? <> Mua thêm <strong>{formatPrice(voucher.missing_amount)}</strong> để dùng mã này.</> : null}
-                            </p>
-                          )}
-                          
-                          <div className="co-voucher-action-btn-wrap">
-                            {canSelect ? (
-                              appliedVoucher?.id === voucher.id ? (
-                                <button 
-                                  type="button" 
-                                  className="co-voucher-btn selected"
-                                  onClick={handleRemoveVoucher}
-                                >
-                                  Đang chọn ✓
-                                </button>
-                              ) : (
-                                <button 
-                                  type="button" 
-                                  className="co-voucher-btn active"
-                                  onClick={() => handleApplyVoucher(voucher)}
-                                >
-                                  Áp dụng
-                                </button>
-                              )
-                            ) : (
-                              <button type="button" className="co-voucher-btn" disabled>
-                                {voucher.is_automatic ? "Tự động áp dụng" : "Chưa đủ điều kiện"}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      )}
+                    </section>
+                  ))}
+                </>
               )}
             </div>
           </div>

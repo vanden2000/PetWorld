@@ -260,7 +260,7 @@
                 </div>
                 <div class="card">
                     <h2 class="section-title">Thanh toán & vận chuyển</h2>
-                    <p>{{ $order->paymentMethod?->name ?? 'Chưa xác định' }}</p>
+                    <p>{{ $order->isBankTransfer() ? 'Bank' : 'COD' }}</p>
                     <p class="muted">{{ $paymentStatuses[$order->payment_status] ?? $order->payment_status }}</p>
                     <p>{{ $order->shippingMethod?->name ?? 'Chưa xác định' }}</p>
                     <p class="muted">{{ $orderStatuses[$order->order_status] ?? $order->order_status }}</p>

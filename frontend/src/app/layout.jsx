@@ -20,6 +20,15 @@ const caveat = Caveat({
   display: "swap",
 });
 
+// viewport-fit=cover là điều kiện để env(safe-area-inset-*) có giá trị thật
+// trên iPhone có Dynamic Island / thanh home. Không đặt maximumScale hay
+// userScalable vì chặn người dùng phóng to là rào cản tiếp cận.
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export const metadata = {
   title: "PetWorld - Siêu Thị Thú Cưng Hàng Đầu | Thức Ăn & Phụ Kiện Chính Hãng",
   description:

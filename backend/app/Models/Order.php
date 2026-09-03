@@ -46,6 +46,15 @@ class Order extends Model
         'reconciliation_note',
         'reconciled_at',
         'returned_at',
+        'return_reason',
+        'return_proof_image',
+        'refunded_at',
+        'refund_bank_name',
+        'refund_account_number',
+        'refund_account_name',
+        'refund_amount',
+        'refund_proof_image',
+        'refund_note',
     ];
 
     protected $casts = [
@@ -58,6 +67,8 @@ class Order extends Model
         'expires_at' => 'datetime',
         'reconciled_at' => 'datetime',
         'returned_at' => 'datetime',
+        'refunded_at' => 'datetime',
+        'refund_amount' => 'decimal:2',
     ];
 
     /**

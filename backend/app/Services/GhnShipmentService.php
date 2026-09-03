@@ -55,7 +55,7 @@ class GhnShipmentService
             'return_address' => (string) config('services.ghn.from_address'),
             'return_district_id' => (int) config('services.ghn.from_district_id'),
             'return_ward_code' => (string) config('services.ghn.from_ward_code'),
-            'client_order_code' => 'PW-' . $order->id,
+            'client_order_code' => $order->payment_code ?: ('PW-' . $order->id),
             'to_name' => $order->recipient_name,
             'to_phone' => $order->recipient_phone,
             'to_address' => $order->recipient_address,

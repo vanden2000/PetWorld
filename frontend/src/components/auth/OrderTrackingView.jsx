@@ -16,8 +16,13 @@ const paths = {
 const Icon = ({ name }) => <svg className="profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 const money = (value) => `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
 const dateTime = (value) => new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
-const steps = [{ key: "pending", label: "Chờ xác nhận", icon: "check" }, { key: "confirmed", label: "Đang lấy hàng", icon: "box" }, { key: "shipping", label: "Đang giao", icon: "truck" }, { key: "completed", label: "Đã giao", icon: "box" }];
-const stage = { pending: 0, confirmed: 1, shipping: 2, completed: 3 };
+const steps = [
+  { key: "pending", label: "Chờ xác nhận", icon: "check" },
+  { key: "confirmed", label: "Đã xác nhận", icon: "receipt" },
+  { key: "ready_to_pick", label: "Chờ lấy hàng", icon: "box" },
+  { key: "shipping", label: "Đang giao", icon: "truck" },
+  { key: "completed", label: "Đã giao", icon: "box" }
+];
 
 export default function OrderTrackingView({ orderId }) {
   const router = useRouter();
@@ -79,7 +84,16 @@ export default function OrderTrackingView({ orderId }) {
   if (loading) return <div className="tracking-loading"><span/><span/><span/></div>;
   if (error || !order) return <section className="profile-guest"><Icon name="box"/><h1>Không tìm thấy đơn hàng</h1><p>{error}</p><div><Link className="profile-primary-btn" href="/account/orders">Quay lại đơn hàng</Link></div></section>;
 
-  const currentStage = stage[order.status] ?? -1;
+  const currentStage = useMemo(() => {
+    if (!order) return -1;
+    if (order.status === "pending") return 0;
+    if (order.status === "confirmed") return 1;
+    if (order.status === "shipping") {
+      return order.shipping?.status === "ready_to_pick" ? 2 : 3;
+    }
+    if (order.status === "completed") return 4;
+    return -1;
+  }, [order]);
   return <div className="profile-shell">
     <CancelOrderDialog
       open={showCancelDialog}
@@ -99,7 +113,7 @@ export default function OrderTrackingView({ orderId }) {
       <div className="tracking-breadcrumb"><Link href="/account/orders">Đơn hàng</Link><span>›</span><strong>#{order.code}</strong></div>
       <header className="tracking-header"><div><h1>Theo dõi đơn hàng</h1><p>Cập nhật hành trình và thông tin đơn hàng của bạn.</p></div><div>{order.status === "pending" && <button type="button" className="tracking-cancel-btn" onClick={() => setShowCancelDialog(true)}>Hủy đơn</button>}<button type="button" onClick={() => window.print()}><Icon name="receipt"/>Xuất hóa đơn</button><Link href="/contact"><Icon name="help"/>Hỗ trợ</Link></div></header>
 
-      {order.status === "cancelled" ? <section className="tracking-cancelled"><Icon name="box"/><div><strong>Đơn hàng đã bị hủy</strong><span>Liên hệ PetWorld nếu bạn cần thêm thông tin về đơn hàng này.</span></div></section> : <section className="tracking-timeline" style={{ "--tracking-progress": `${(currentStage / 3) * 100}%` }}><div className="tracking-line"><i/></div>{steps.map((step, index) => <div className={`tracking-step ${index < currentStage ? "done" : ""} ${index === currentStage ? "current" : ""}`} key={step.key}><span><Icon name={step.icon}/></span><strong>{step.label}</strong><small>{index <= currentStage ? (step.key === "shipping" && order.status === "shipping" ? "Đang trên đường" : dateTime(step.key === "completed" ? order.updated_at : order.created_at)) : "Đang chờ"}</small></div>)}</section>}
+      {order.status === "cancelled" ? <section className="tracking-cancelled"><Icon name="box"/><div><strong>Đơn hàng đã bị hủy</strong><span>Liên hệ PetWorld nếu bạn cần thêm thông tin về đơn hàng này.</span></div></section> : <section className="tracking-timeline" style={{ "--tracking-progress": `${(currentStage / 4) * 100}%` }}><div className="tracking-line"><i/></div>{steps.map((step, index) => <div className={`tracking-step ${index < currentStage ? "done" : ""} ${index === currentStage ? "current" : ""}`} key={step.key}><span><Icon name={step.icon}/></span><strong>{step.label}</strong><small>{index <= currentStage ? (index === 2 && currentStage === 2 ? "Chờ bưu tá" : (index === 3 && currentStage === 3 ? "Đang trên đường" : dateTime(step.key === "completed" ? order.updated_at : order.created_at))) : "Đang chờ"}</small></div>)}</section>}
 
       <div className="tracking-info-grid"><section className="tracking-card tracking-receiver"><h2><Icon name="pin"/>Thông tin nhận hàng</h2><dl><div><dt>Người nhận</dt><dd>{order.recipient.name} · {order.recipient.phone}</dd></div><div><dt>Địa chỉ</dt><dd>{order.recipient.address}</dd></div></dl><div className="tracking-shipping"><div><span>Đơn vị vận chuyển</span><strong>{order.shipping.method}</strong></div><div><span>Mã vận đơn</span><strong>{order.shipping.tracking_code}</strong></div></div>{order.note && <p>Ghi chú: {order.note}</p>}</section><section className="tracking-card tracking-payment"><h2><Icon name="card"/>Thanh toán</h2><dl><div><dt>Tạm tính</dt><dd>{money(order.payment.subtotal)}</dd></div><div><dt>Phí vận chuyển</dt><dd>{order.shipping.fee ? money(order.shipping.fee) : "Miễn phí"}</dd></div><div className="discount"><dt>Giảm giá</dt><dd>-{money(order.payment.discount)}</dd></div><div className="total"><dt>Tổng cộng</dt><dd>{money(order.payment.total)}</dd></div></dl><p>{["paid", "customer_paid", "reconciling"].includes(order.payment_status) ? `Đã thanh toán qua ${order.payment.method}` : `Thanh toán: ${order.payment.method}`}</p></section></div>
 
