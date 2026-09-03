@@ -84,7 +84,6 @@ class BlogController extends Controller
             ->all();
 
         $comments = $blog->comments()
-            ->visible()
             ->with('user')
             ->where('status', 'approved')
             ->latest()

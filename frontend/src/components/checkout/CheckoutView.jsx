@@ -854,20 +854,7 @@ export default function CheckoutView() {
           {/* Giữ khối gợi ý ưu đãi vận chuyển. Dòng hiển thị số tiền giảm phí
               ship mà develop đặt ở đây đã được chuyển xuống cạnh dòng giảm giá
               sản phẩm, nên không lấy lại để tránh hiện trùng hai lần. */}
-          {eligibleShippingPromotions.length > 0 && (
-            <div className="co-auto-shipping-promotions">
-              <div className="co-auto-shipping-promotions-title">🎁 Ưu đãi vận chuyển</div>
-              {eligibleShippingPromotions.map((promotion) => (
-                <div className="co-auto-shipping-promotion" key={promotion.id}>
-                  <div>
-                    <strong>{promotion.code}</strong>
-                    <span>{promotion.description || `Hỗ trợ phí ship tối đa ${formatPrice(promotion.max_shipping_discount)}`}</span>
-                  </div>
-                  <em>Đủ điều kiện · sẽ tự áp dụng</em>
-                </div>
-              ))}
-            </div>
-          )}
+         
           {items.length > 0 && shippingQuote && shipping === 0 && (
             <div className="co-freeship-badge">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1.2 14.2-3.5-3.5 1.4-1.4 2.1 2.1 4.9-4.9 1.4 1.4-6.3 6.3Z" /></svg>
