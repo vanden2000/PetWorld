@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -14,7 +15,9 @@ export default function UserChrome({ children }) {
   if (isCheckout) {
     return (
       <div className="user-layout checkout-layout">
-        <Header />
+        <Suspense fallback={null}>
+          <Header />
+        </Suspense>
         {children}
         <Toaster />
       </div>
@@ -23,7 +26,9 @@ export default function UserChrome({ children }) {
 
   return (
     <div className="user-layout">
-      <Header />
+      <Suspense fallback={null}>
+        <Header />
+      </Suspense>
       {children}
       <Footer />
       <BackToTopButton />
