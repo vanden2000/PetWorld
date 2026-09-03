@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { resolveImage } from "@/lib/format";
 
 const CTA_CONFIG = {
@@ -74,6 +75,14 @@ export default function HeroSlider({ banners = [] }) {
               className={`hero-slide ${index === activeIndex ? "active" : ""}`}
               aria-hidden={index !== activeIndex}
             >
+              {slide.link && (
+                <Link
+                  href={slide.link}
+                  className="slide-backdrop-link"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                />
+              )}
               <div className="slide-image-frame">
                 <Image
                   src={imageSource(slide.image, slide.image_version)}
@@ -85,15 +94,14 @@ export default function HeroSlider({ banners = [] }) {
                 />
               </div>
               {slide.link && (
-                <a
+                <Link
                   href={slide.link}
                   className="slide-cta"
                   tabIndex={index === activeIndex ? 0 : -1}
                   aria-label={CTA_CONFIG[slide.image]?.label || CTA_CONFIG.default.label}
-                  data-cta-label={CTA_CONFIG[slide.image]?.label || CTA_CONFIG.default.label}
                 >
-                  Xem ưu đãi
-                </a>
+                  {CTA_CONFIG[slide.image]?.label || CTA_CONFIG.default.label}
+                </Link>
               )}
             </div>
           ))}
