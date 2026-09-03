@@ -4943,6 +4943,7 @@ body {
 .product-rating {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 3px;
   margin-bottom: 5px;
 }
@@ -6764,6 +6765,47 @@ body {
   .new-products-slider-item {
     flex-basis: calc((100% - 14px) / 2);
     max-width: calc((100% - 14px) / 2);
+  }
+}
+
+/* iPhone 14 Pro Max (430px) — sát viền, không tràn */
+@media (max-width: 460px) {
+  .homepage-container {
+    padding: 0 12px;
+  }
+
+  .products-grid-5,
+  .products-grid-4,
+  .products-grid-3 {
+    gap: 10px;
+  }
+
+  .product-card {
+    padding: 10px;
+    min-height: unset;
+    border-radius: 12px;
+  }
+
+  .product-img-wrapper {
+    height: 110px;
+  }
+
+  .product-title {
+    font-size: 12.5px;
+    height: auto;
+  }
+
+  .price-current {
+    font-size: 14px;
+  }
+
+  .price-old {
+    font-size: 10.5px;
+  }
+
+  .product-add-btn {
+    width: 30px;
+    height: 30px;
   }
 }
 
