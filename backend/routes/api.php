@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PetSpeciesController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\SepayWebhookController;
 use App\Http\Controllers\Api\WishlistController;
 use App\Models\User;
@@ -101,6 +102,7 @@ Route::get('/pet-species', [PetSpeciesController::class, 'index']);
 // đã xem gần đây
 Route::get('/products/recent', [ProductController::class, 'recent']);
 Route::get('/products/{slug}', [ProductController::class, 'show']);
+Route::get('/search/smart', [SearchController::class, 'smart']);
 
 
 // check email 

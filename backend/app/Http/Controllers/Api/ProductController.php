@@ -280,7 +280,7 @@ class ProductController extends Controller
                     'id' => $product->id,
                     'name' => $product->name,
                     'slug' => $product->slug,
-                    'image' => $product->primaryImage?->image_url,
+                    'image' => $displayVariant?->image ?: $product->primaryImage?->image_url,
                     'image_alt' => $product->primaryImage?->alt_text ?: $product->name,
                     'created_at' => $product->created_at?->toIso8601String(),
                     'is_new' => $product->isNew(),
@@ -359,6 +359,7 @@ class ProductController extends Controller
                     'effective_price' => $variant->effectivePrice(),
                     'quantity' => $variant->quantity,
                     'status' => $variant->status,
+                    'image' => $variant->image,
                 ])
                 ->all(),
         ]);
@@ -386,7 +387,7 @@ class ProductController extends Controller
             ->where('status', 'approved')
             ->whereHas('orderItem.productVariant', fn(Builder $query) => $query->where('product_id', $product->id))
             ->latest()
-            ->limit(10)
+            ->limit(50)
             ->get()
             ->map(fn(Review $review): array => [
                 'id' => $review->id,

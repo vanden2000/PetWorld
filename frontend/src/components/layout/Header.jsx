@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState, useSyncExternalStore, useEffect } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore, useEffect, useRef } from "react";
 import {
   getCartSnapshot,
   getServerCartSnapshot,
@@ -22,6 +22,8 @@ import {
 } from "@/lib/auth";
 import { ROUTES, MAIN_NAV } from "@/lib/routes";
 import { resolveBackendImage } from "@/lib/format";
+import SmartSearchFlyout from "@/components/layout/SmartSearchFlyout";
+import { getSmartSearchResults } from "@/lib/search";
 
 export default function Header() {
   const pathname = usePathname();
@@ -33,6 +35,51 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Trạng thái tìm kiếm thông minh
+  const [smartSearchData, setSmartSearchData] = useState(null);
+  const [isSmartSearchLoading, setIsSmartSearchLoading] = useState(false);
+  const [isSmartSearchOpen, setIsSmartSearchOpen] = useState(false);
+  const searchContainerRef = useRef(null);
+
+  // Debounce gọi API tìm kiếm thông minh khi người dùng gõ từ khóa
+  useEffect(() => {
+    const trimmed = keyword.trim();
+    if (!trimmed) {
+      setSmartSearchData(null);
+      setIsSmartSearchLoading(false);
+      return;
+    }
+
+    setIsSmartSearchLoading(true);
+    const timer = setTimeout(async () => {
+      const results = await getSmartSearchResults(trimmed);
+      setSmartSearchData(results);
+      setIsSmartSearchLoading(false);
+    }, 280);
+
+    return () => clearTimeout(timer);
+  }, [keyword]);
+
+  // Đóng bảng tìm kiếm thông minh khi click ra ngoài hoặc bấm ESC
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setIsSmartSearchOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setIsSmartSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   // Đồng bộ khi người dùng đi bằng back/forward hoặc mở URL tìm kiếm trực tiếp.
   // Điều chỉnh state ngay trong render để không tạo thêm một render từ Effect.
@@ -139,6 +186,7 @@ export default function Header() {
   const handleSearch = (event) => {
     event.preventDefault();
     const query = keyword.trim();
+    setIsSmartSearchOpen(false);
     router.push(query ? `${ROUTES.shop}?search=${encodeURIComponent(query)}` : ROUTES.shop);
     setIsMobileMenuOpen(false);
   };
@@ -246,22 +294,44 @@ export default function Header() {
             })}
           </ul>
 
-          <form className="search-container" onSubmit={handleSearch}>
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Sen muốn tìm gì?..."
-              aria-label="Tìm kiếm"
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
+          <div className="search-container-wrapper" ref={searchContainerRef} style={{ position: "relative" }}>
+            <form className="search-container" onSubmit={handleSearch}>
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Sen muốn tìm gì?..."
+                aria-label="Tìm kiếm"
+                value={keyword}
+                onChange={(event) => {
+                  setKeyword(event.target.value);
+                  setIsSmartSearchOpen(true);
+                }}
+                onFocus={() => {
+                  if (keyword.trim() || smartSearchData) {
+                    setIsSmartSearchOpen(true);
+                  }
+                }}
+              />
+              <button type="submit" className="search-button" aria-label="Tìm kiếm nút">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </button>
+            </form>
+
+            <SmartSearchFlyout
+              isOpen={isSmartSearchOpen && (keyword.trim().length > 0 || isSmartSearchLoading)}
+              keyword={keyword}
+              loading={isSmartSearchLoading}
+              data={smartSearchData}
+              onClose={() => setIsSmartSearchOpen(false)}
+              onSelectKeyword={(kw) => {
+                setKeyword(kw);
+                setIsSmartSearchOpen(true);
+              }}
             />
-            <button type="submit" className="search-button" aria-label="Tìm kiếm nút">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </button>
-          </form>
+          </div>
 
           <div className="nav-actions">
             {/* Mobile Search Toggle */}
@@ -383,19 +453,43 @@ export default function Header() {
 
         {/* Dropdown Mobile Search Bar */}
         {isMobileSearchOpen && (
-          <form className="mobile-search-row" onSubmit={(e) => { handleSearch(e); setIsMobileSearchOpen(false); }}>
-            <input
-              type="text"
-              className="mobile-search-row-input"
-              placeholder="Sen muốn tìm gì?...."
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
-              autoFocus
+          <div style={{ position: "relative" }}>
+            <form className="mobile-search-row" onSubmit={(e) => { handleSearch(e); setIsMobileSearchOpen(false); }}>
+              <input
+                type="text"
+                className="mobile-search-row-input"
+                placeholder="Sen muốn tìm gì?...."
+                value={keyword}
+                onChange={(event) => {
+                  setKeyword(event.target.value);
+                  setIsSmartSearchOpen(true);
+                }}
+                onFocus={() => {
+                  if (keyword.trim() || smartSearchData) {
+                    setIsSmartSearchOpen(true);
+                  }
+                }}
+                autoFocus
+              />
+              <button type="submit" className="mobile-search-row-button">
+                Tìm kiếm
+              </button>
+            </form>
+            <SmartSearchFlyout
+              isOpen={isSmartSearchOpen && (keyword.trim().length > 0 || isSmartSearchLoading)}
+              keyword={keyword}
+              loading={isSmartSearchLoading}
+              data={smartSearchData}
+              onClose={() => {
+                setIsSmartSearchOpen(false);
+                setIsMobileSearchOpen(false);
+              }}
+              onSelectKeyword={(kw) => {
+                setKeyword(kw);
+                setIsSmartSearchOpen(true);
+              }}
             />
-            <button type="submit" className="mobile-search-row-button">
-              Tìm kiếm
-            </button>
-          </form>
+          </div>
         )}
       </div>
 

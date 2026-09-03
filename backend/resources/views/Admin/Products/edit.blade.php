@@ -1318,6 +1318,98 @@
         word-break: break-word;
     }
 
+    /* Variant Image Uploader */
+    .variant-image-flex {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: #fdfdfd;
+        border: 1px dashed var(--theme-border);
+        border-radius: 8px;
+        padding: 12px 14px;
+    }
+    .variant-image-preview {
+        width: 72px;
+        height: 72px;
+        border-radius: 8px;
+        border: 1px solid var(--theme-border);
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    .variant-image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .variant-image-empty-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        color: #94a3b8;
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-align: center;
+    }
+    .variant-image-empty-placeholder i {
+        font-size: 1.2rem;
+    }
+    .variant-image-control-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .btn-variant-upload-img {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: #fff;
+        border: 1px solid var(--theme-border);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--theme-text-main);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        width: fit-content;
+    }
+    .btn-variant-upload-img:hover {
+        background: var(--theme-primary-light);
+        border-color: var(--theme-primary);
+        color: var(--theme-primary);
+    }
+    .btn-variant-remove-img {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: #fff;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #dc2626;
+        cursor: pointer;
+        width: fit-content;
+    }
+    .btn-variant-remove-img:hover {
+        background: #fee2e2;
+    }
+    .variant-image-note {
+        color: var(--theme-text-gray);
+        font-size: 0.74rem;
+        line-height: 1.35;
+    }
+    .variant-image-preview .hidden,
+    .variant-image-control-buttons .hidden {
+        display: none !important;
+    }
+
     .btn-action-cancel,
     .btn-action-save,
     .btn-add-variant-row {
@@ -2568,6 +2660,31 @@
                     <input type="text" name="variants[${index}][sku]" value="${sku}" class="cell-input-small js-variant-sku" placeholder="Tự tạo từ tên sản phẩm và thuộc tính" required>
                     <small class="variant-sku-hint js-variant-sku-hint">SKU tự tạo từ tên sản phẩm và thuộc tính.</small>
                 </div>
+                <div class="variant-card-field" style="margin-top: 14px;">
+                    <label>Ảnh đại diện biến thể (Tùy chọn)</label>
+                    <div class="variant-image-uploader js-variant-image-box">
+                        <input type="hidden" name="variants[${index}][image]" value="${initial.image || ''}" class="js-variant-image-input">
+                        <input type="file" name="variants[${index}][image_file]" class="js-variant-image-file" accept="image/*" style="display:none;">
+                        <div class="variant-image-flex">
+                            <div class="variant-image-preview js-variant-image-preview ${initial.image_url ? 'has-image' : ''}">
+                                <img src="${initial.image_url || ''}" class="js-variant-image-tag ${initial.image_url ? '' : 'hidden'}" alt="Ảnh biến thể">
+                                <div class="variant-image-empty-placeholder js-variant-empty-placeholder ${initial.image_url ? 'hidden' : ''}">
+                                    <i class="fa-solid fa-image"></i>
+                                    <span>Chưa có ảnh</span>
+                                </div>
+                            </div>
+                            <div class="variant-image-control-buttons">
+                                <button type="button" class="btn-variant-upload-img js-btn-upload-img">
+                                    <i class="fa-solid fa-arrow-up-from-bracket"></i> <span>${initial.image_url ? 'Đổi ảnh' : 'Tải ảnh lên'}</span>
+                                </button>
+                                <button type="button" class="btn-variant-remove-img js-btn-remove-img ${initial.image_url ? '' : 'hidden'}" title="Xóa ảnh biến thể">
+                                    <i class="fa-solid fa-trash-can"></i> <span>Gỡ ảnh</span>
+                                </button>
+                                <small class="variant-image-note">Tải ảnh riêng cho phân loại này. Nếu để trống, hệ thống dùng ảnh chính của sản phẩm.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="variant-price-grid">
                     <div class="variant-card-field"><label>Giá bán <span class="required-mark">*</span></label><input type="number" name="variants[${index}][price]" value="${price}" class="cell-input-small js-variant-price" step="1000" min="1000" max="1000000000" required><small class="price-format-preview js-variant-price-preview"></small></div>
                     <div class="variant-card-field"><label>Giá giảm</label><input type="number" name="variants[${index}][sale_price]" value="${salePrice || ''}" class="cell-input-small js-variant-sale-price" step="any" max="1000000000" placeholder="Để trống nếu không giảm"><small class="price-format-preview js-variant-sale-price-preview"></small></div>
@@ -2585,6 +2702,48 @@
             `;
 
             variantsCardList.appendChild(row);
+
+            // Xử lý tải và gỡ ảnh cho biến thể
+            const imageBox = row.querySelector('.js-variant-image-box');
+            if (imageBox) {
+                const fileInput = imageBox.querySelector('.js-variant-image-file');
+                const pathInput = imageBox.querySelector('.js-variant-image-input');
+                const uploadBtn = imageBox.querySelector('.js-btn-upload-img');
+                const removeBtn = imageBox.querySelector('.js-btn-remove-img');
+                const imgTag = imageBox.querySelector('.js-variant-image-tag');
+                const emptyPlaceholder = imageBox.querySelector('.js-variant-empty-placeholder');
+                const previewWrap = imageBox.querySelector('.js-variant-image-preview');
+
+                uploadBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', () => {
+                    const file = fileInput.files?.[0];
+                    if (file) {
+                        imgTag.src = URL.createObjectURL(file);
+                        imgTag.classList.remove('hidden');
+                        emptyPlaceholder.classList.add('hidden');
+                        previewWrap.classList.add('has-image');
+                        removeBtn.classList.remove('hidden');
+                        uploadBtn.querySelector('span').textContent = 'Đổi ảnh';
+                    }
+                });
+
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    fileInput.value = '';
+                    pathInput.value = '';
+                    imgTag.src = '';
+                    imgTag.classList.add('hidden');
+                    emptyPlaceholder.classList.remove('hidden');
+                    previewWrap.classList.remove('has-image');
+                    removeBtn.classList.add('hidden');
+                    uploadBtn.querySelector('span').textContent = 'Tải ảnh lên';
+                });
+            }
+
             row.querySelector('.js-variant-sku').dataset.skuManual = initial.id && sku ? 'true' : 'false';
             renderChips(row, selectedIds);
             updateVariantsEmptyState();

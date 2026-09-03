@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { formatPrice, resolveProductImage } from "@/lib/format";
 import { addToCart, checkQuantity } from "@/lib/cart";
@@ -37,17 +37,30 @@ export default function ProductDetail({ product }) {
     : [{ image_url: product.image, alt_text: product.name }];
 
   const variants = useMemo(() => product.variants ?? [], [product.variants]);
-  // Mặc định chọn biến thể có giá hiệu lực thấp nhất (đồng nhất với cách card hiển thị giá).
+  // Mặc định chọn biến thể hiển thị đồng nhất 100% với thẻ sản phẩm bên ngoài (ưu tiên sale, giá thấp nhất).
   const defaultVariant = useMemo(
     () => [...variants]
       .filter((variant) => variant.quantity > 0)
-      .sort((a, b) => a.effective_price - b.effective_price)[0]
-      ?? [...variants].sort((a, b) => a.effective_price - b.effective_price)[0]
+      .sort((a, b) => {
+        const aHasSale = Boolean(a.sale_price && Number(a.sale_price) < Number(a.price));
+        const bHasSale = Boolean(b.sale_price && Number(b.sale_price) < Number(b.price));
+        if (aHasSale !== bHasSale) return aHasSale ? -1 : 1;
+        return Number(a.effective_price) - Number(b.effective_price);
+      })[0]
+      ?? [...variants].sort((a, b) => Number(a.effective_price) - Number(b.effective_price))[0]
       ?? null,
     [variants],
   );
 
-  const [activeImage, setActiveImage] = useState(gallery[0]);
+  const initialImage = useMemo(() => {
+    if (defaultVariant?.image) {
+      const matched = gallery.find((img) => img.image_url === defaultVariant.image);
+      return matched || { image_url: defaultVariant.image, alt_text: defaultVariant.name || product.name };
+    }
+    return gallery[0];
+  }, [defaultVariant, gallery, product.name]);
+
+  const [activeImage, setActiveImage] = useState(initialImage);
   const [selectedOptions, setSelectedOptions] = useState(() =>
     Object.fromEntries(
       (defaultVariant?.options ?? []).map((option) => [option.type_id, option.value]),
@@ -62,6 +75,19 @@ export default function ProductDetail({ product }) {
       (option) => selectedOptions[option.type_id] === option.value,
     ),
   ) ?? null;
+
+  // Tự động chuyển đổi khung ảnh lớn sang ảnh của biến thể khi khách chọn màu
+  useEffect(() => {
+    if (selectedVariant?.image) {
+      const matched = gallery.find((img) => img.image_url === selectedVariant.image);
+      setActiveImage(
+        matched || {
+          image_url: selectedVariant.image,
+          alt_text: selectedVariant.name || product.name,
+        }
+      );
+    }
+  }, [selectedVariant, gallery, product.name]);
 
   const currentPrice = selectedVariant ? selectedVariant.effective_price : product.price?.min;
   const oldPrice = selectedVariant?.sale_price ? selectedVariant.price : null;
@@ -149,7 +175,7 @@ export default function ProductDetail({ product }) {
         productId: product.id,
         slug: product.slug,
         name: product.name,
-        image: product.image,
+        image: selectedVariant.image || product.image,
         variantId: selectedVariant.id,
         variantName: selectedVariant.name,
         price: selectedVariant.effective_price,
@@ -178,7 +204,7 @@ export default function ProductDetail({ product }) {
       productId: product.id,
       slug: product.slug,
       name: product.name,
-      image: product.image,
+      image: selectedVariant.image || product.image,
       variantId: selectedVariant.id,
       variantName: selectedVariant.name,
       price: selectedVariant.effective_price,

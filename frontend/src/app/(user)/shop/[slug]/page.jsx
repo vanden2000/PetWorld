@@ -183,30 +183,74 @@ export default async function ProductDetailPage({ params }) {
         {/* Đánh giá khách hàng */}
         <section className="pd-card pd-reviews">
           <h2 className="pd-card-title">Đánh giá từ khách hàng</h2>
+
           {reviews.length > 0 ? (
-            <div className="pd-review-list">
-              {reviews.map((review) => (
-                <div className="pd-review" key={review.id}>
-                  <div className="pd-review-head">
-                    <div className="pd-review-user">
-                      <span className="pd-review-avatar">
-                        {(review.user?.name ?? "?").charAt(0).toUpperCase()}
-                      </span>
-                      <div>
-                        <strong>{review.user?.name ?? "Khách hàng"}</strong>
-                        <ReviewStars value={review.rating} />
-                      </div>
-                    </div>
-                    {review.created_at && (
-                      <span className="pd-review-date">
-                        {new Date(review.created_at).toLocaleDateString("vi-VN")}
-                      </span>
-                    )}
+            <>
+              {/* Khung tổng quan điểm số trung bình */}
+              <div className="pd-review-overview">
+                <div className="pd-review-score-box">
+                  <div className="pd-review-big-score">
+                    <strong>{product.rating?.average ?? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)}</strong>
+                    <span>/ 5</span>
                   </div>
-                  <p className="pd-review-comment">{review.comment}</p>
+                  <ReviewStars value={Math.round(product.rating?.average ?? 5)} />
+                  <p className="pd-review-total-count">
+                    Dựa trên <strong>{product.rating?.count ?? reviews.length}</strong> lượt đánh giá từ người mua
+                  </p>
                 </div>
-              ))}
-            </div>
+
+                <div className="pd-review-bars">
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count = reviews.filter((r) => r.rating === star).length;
+                    const percent = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+                    return (
+                      <div className="pd-review-bar-row" key={star}>
+                        <span className="pd-review-bar-label">{star} sao</span>
+                        <div className="pd-review-bar-track">
+                          <div
+                            className="pd-review-bar-fill"
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                        <span className="pd-review-bar-count">{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Danh sách các bài đánh giá */}
+              <div className="pd-review-list">
+                {reviews.map((review) => (
+                  <div className="pd-review" key={review.id}>
+                    <div className="pd-review-head">
+                      <div className="pd-review-user">
+                        <span className="pd-review-avatar">
+                          {(review.user?.name ?? "?").charAt(0).toUpperCase()}
+                        </span>
+                        <div>
+                          <strong>{review.user?.name ?? "Khách hàng"}</strong>
+                          <div className="pd-review-meta-line">
+                            <ReviewStars value={review.rating} />
+                            {review.variant?.name && (
+                              <span className="pd-review-variant-tag">
+                                Phân loại: {review.variant.name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {review.created_at && (
+                        <span className="pd-review-date">
+                          {new Date(review.created_at).toLocaleDateString("vi-VN")}
+                        </span>
+                      )}
+                    </div>
+                    <p className="pd-review-comment">{review.comment}</p>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <p className="pd-description">Chưa có đánh giá nào cho sản phẩm này.</p>
           )}
