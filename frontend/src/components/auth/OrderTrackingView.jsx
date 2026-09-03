@@ -36,7 +36,7 @@ export default function OrderTrackingView({ orderId }) {
   const [reviewItem, setReviewItem] = useState(null);
   const [submittingReview, setSubmittingReview] = useState(false);
   const reviewItemId = reviewItem?.id ?? null;
-
+ 
   const handleCancelOrder = async () => {
     setCancelling(true);
     const result = await cancelOrder(orderId);
@@ -79,21 +79,22 @@ export default function OrderTrackingView({ orderId }) {
     setReviewItem(null);
     toastSuccess("Cảm ơn bạn đã đánh giá sản phẩm.");
   };
-
+  
+  const currentStage = useMemo(() => {
+    if (!order) return -1;
+    if (order.status === "pending") return 0;
+    if (order.status === "confirmed") return 1;
+    if (order.status === "shipping") {
+      return order.shipping?.status === "ready_to_pick" ? 2 : 3;
+    }
+    if (order.status === "completed") return 4;
+    return -1;
+  }, [order]);
   if (!user) return <section className="profile-guest"><Icon name="box"/><h1>Theo dõi đơn hàng</h1><p>Vui lòng đăng nhập để xem trạng thái đơn hàng.</p><div><Link className="profile-primary-btn" href={`/login?redirect=/account/orders/${orderId}`}>Đăng nhập</Link></div></section>;
   if (loading) return <div className="tracking-loading"><span/><span/><span/></div>;
   if (error || !order) return <section className="profile-guest"><Icon name="box"/><h1>Không tìm thấy đơn hàng</h1><p>{error}</p><div><Link className="profile-primary-btn" href="/account/orders">Quay lại đơn hàng</Link></div></section>;
 
-  const currentStage = useMemo(() => {
-    if (!order) return -1;
-    if (order.status === "pending") return 0;
-    if (order.status === "confirmed") return 1;
-    if (order.status === "shipping") {
-      return order.shipping?.status === "ready_to_pick" ? 2 : 3;
-    }
-    if (order.status === "completed") return 4;
-    return -1;
-  }, [order]);
+  
   return <div className="profile-shell">
     <CancelOrderDialog
       open={showCancelDialog}
