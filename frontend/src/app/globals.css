@@ -241,11 +241,11 @@ body {
     box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Khi cuộn trang, làm nhỏ padding dọc và làm trong suốt hoàn toàn nền/độ mờ ở 2 bên */
+/* Khi cuộn trang, làm nhỏ padding dọc và giữ nền trắng */
 .header-wrapper.scrolled .navbar-container {
   padding-top: 10px;
   padding-bottom: 10px;
-  background-color: transparent;
+  background-color: #ffffff;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -6102,15 +6102,46 @@ body {
 
 /* Brands Row Section */
 .brands-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   align-items: center;
   gap: 20px;
-  padding: 28px 45px;
+  padding: 24px 36px;
   background-color: #ffffff;
   border-radius: 20px;
   border: 1px solid #eef1f5;
-  overflow-x: auto;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+}
+
+.brand-card-figma {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-radius: 12px;
+  transition: var(--transition-default);
+  height: 64px;
+}
+
+.brand-card-figma:hover {
+  transform: translateY(-3px);
+  background-color: #faf8f5;
+}
+
+.brand-logo-img {
+  height: 44px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  filter: grayscale(35%);
+  opacity: 0.85;
+  transition: var(--transition-default);
+}
+
+.brand-card-figma:hover .brand-logo-img {
+  filter: grayscale(0);
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 .brand-logo-text {
@@ -6128,6 +6159,86 @@ body {
 .brand-logo-text:hover {
   color: var(--primary-orange);
   transform: scale(1.06);
+}
+
+@media (max-width: 900px) {
+  .brands-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding: 20px 20px;
+  }
+
+  .brand-card-figma {
+    height: 58px;
+  }
+}
+
+@media (max-width: 640px) {
+  .brands-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px 10px;
+    padding: 16px 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 120, 45, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  }
+
+  .brand-card-figma {
+    height: 52px;
+    padding: 6px 8px;
+    background-color: #faf8f6;
+    border: 1px solid #f0e8e2;
+    border-radius: 10px;
+  }
+
+  .brand-card-figma:active {
+    background-color: #fff4ed;
+    border-color: rgba(255, 120, 45, 0.35);
+    transform: scale(0.96);
+  }
+
+  .brand-logo-img {
+    height: 30px;
+    max-width: 80px;
+    filter: none;
+    opacity: 0.95;
+  }
+}
+
+/* iPhone 14 Pro Max (430px) — 2 thương hiệu trên 1 hàng */
+@media (max-width: 460px) {
+  .brands-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 16px 12px;
+  }
+
+  .brand-card-figma {
+    height: 72px;
+    padding: 10px 12px;
+  }
+
+  .brand-logo-img {
+    height: 38px;
+    max-width: 110px;
+  }
+}
+
+@media (max-width: 380px) {
+  .brands-row {
+    gap: 8px 6px;
+    padding: 12px 8px;
+  }
+
+  .brand-card-figma {
+    height: 48px;
+    padding: 4px 6px;
+  }
+
+  .brand-logo-img {
+    height: 26px;
+    max-width: 72px;
+  }
 }
 
 /* Mobile Quick Floating CTA */
@@ -6270,22 +6381,7 @@ body {
   text-transform: none;
 }
 
-/* Logo thương hiệu dạng ảnh trong khối "Các Thương Hiệu Nổi Bật" */
-.brand-logo-img {
-  height: 50px;
-  width: auto;
-  max-width: 150px;
-  object-fit: contain;
-  filter: grayscale(35%);
-  opacity: 0.85;
-  transition: var(--transition-default);
-}
 
-.brand-logo-img:hover {
-  filter: grayscale(0);
-  opacity: 1;
-  transform: scale(1.06);
-}
 
 /* ============================================================
    Tinh chỉnh khối sản phẩm: cân đối, chống chữ rớt dòng
