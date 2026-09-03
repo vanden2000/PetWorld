@@ -27,7 +27,7 @@ class OrderController extends Controller
         'confirmed' => 'Đã xác nhận',
         'shipping' => 'Đang giao hàng',
         'completed' => 'Hoàn thành',
-        'returned' => 'Đã hoàn hàng',
+        'returned' => 'Đã hoàn về kho',
         'cancelled' => 'Đã hủy',
     ];
 
@@ -76,6 +76,7 @@ class OrderController extends Controller
                 'user:id,name,email',
                 'paymentMethod:id,name',
                 'shippingMethod:id,name',
+                'shipment',
                 'sepayTransactions' => fn ($query) => $query->latest(),
             ])
             ->withCount('items')
@@ -158,8 +159,8 @@ class OrderController extends Controller
             'paymentStatuses' => self::PAYMENT_STATUSES,
             'orderStatusClasses' => self::ORDER_STATUS_CLASS,
             'paymentStatusClasses' => self::PAYMENT_STATUS_CLASS,
-            'nextOrderStatuses' => $this->nextOrderStatuses($order->order_status),
-            'nextPaymentStatuses' => $this->nextPaymentStatuses($order->payment_status, $order->order_status),
+            'nextOrderStatuses' => $this->nextOrderStatuses($order->order_status, $order),
+            'nextPaymentStatuses' => $this->nextPaymentStatuses($order->payment_status, $order->order_status, $order),
         ]);
     }
 
@@ -177,11 +178,38 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
-        $data = $request->validate([
+        $rules = [
             'order_status' => ['nullable', Rule::in(array_keys(self::ORDER_STATUSES))],
             'payment_status' => ['nullable', Rule::in(array_keys(self::PAYMENT_STATUSES))],
             'reconciliation_note' => ['nullable', 'string', 'max:255'],
-        ]);
+        ];
+
+        if ($request->input('order_status') === 'returned') {
+            $rules['return_reason'] = ['required', 'string', 'min:3', 'max:1000'];
+            $rules['return_proof_image'] = [$order->return_proof_image ? 'nullable' : 'required', 'image', 'max:5120'];
+        }
+
+        if ($request->input('payment_status') === 'refunded') {
+            $rules['refund_bank_name'] = ['required', 'string', 'max:100'];
+            $rules['refund_account_number'] = ['required', 'string', 'min:3', 'max:50'];
+            $rules['refund_account_name'] = ['required', 'string', 'min:2', 'max:100'];
+            $rules['refund_amount'] = ['required'];
+            $rules['refund_proof_image'] = [$order->refund_proof_image ? 'nullable' : 'required', 'image', 'max:5120'];
+            $rules['refund_note'] = ['required', 'string', 'min:3', 'max:1000'];
+        }
+
+        $messages = [
+            'return_reason.required' => 'Vui lòng nhập lý do hoàn hàng (bắt buộc).',
+            'return_proof_image.required' => 'Vui lòng tải lên ảnh chụp kiện hàng hoàn (bắt buộc).',
+            'refund_bank_name.required' => 'Vui lòng chọn ngân hàng nhận tiền của khách (bắt buộc).',
+            'refund_account_number.required' => 'Vui lòng nhập số tài khoản ngân hàng của khách (bắt buộc).',
+            'refund_account_name.required' => 'Vui lòng nhập tên chủ tài khoản nhận tiền (bắt buộc).',
+            'refund_amount.required' => 'Vui lòng nhập số tiền hoàn (bắt buộc).',
+            'refund_proof_image.required' => 'Vui lòng tải lên ảnh bill chuyển khoản hoàn tiền (bắt buộc).',
+            'refund_note.required' => 'Vui lòng nhập ghi chú hoàn tiền (bắt buộc, ví dụ: Đã liên hệ và chuyển khoản thành công).',
+        ];
+
+        $data = $request->validate($rules, $messages);
 
         if (! isset($data['order_status']) && ! isset($data['payment_status']) && ! array_key_exists('reconciliation_note', $data)) {
             return back()->with('error', 'Vui lòng chọn trạng thái cần cập nhật.');
@@ -204,7 +232,7 @@ class OrderController extends Controller
         }
 
         try {
-            $updatedOrder = DB::transaction(function () use ($order, $data, $ghnShipment): Order {
+            $updatedOrder = DB::transaction(function () use ($order, $data, $request, $ghnShipment): Order {
                 $lockedOrder = Order::query()
                     ->with('items')
                     ->whereKey($order->id)
@@ -214,7 +242,7 @@ class OrderController extends Controller
                 $updates = [];
 
                 if (isset($data['order_status']) && $data['order_status'] !== $lockedOrder->order_status) {
-                    if (! in_array($data['order_status'], $this->nextOrderStatuses($lockedOrder->order_status), true)) {
+                    if (! in_array($data['order_status'], $this->nextOrderStatuses($lockedOrder->order_status, $lockedOrder), true)) {
                         throw ValidationException::withMessages([
                             'order_status' => 'Trạng thái đơn hàng chỉ được đi tiếp, không được lùi bước.',
                         ]);
@@ -226,9 +254,24 @@ class OrderController extends Controller
 
                     if ($data['order_status'] === 'returned') {
                         $updates['returned_at'] = now();
+                        if ($request->filled('return_reason')) {
+                            $updates['return_reason'] = $request->input('return_reason');
+                        }
+                        if ($request->hasFile('return_proof_image')) {
+                            $path = $request->file('return_proof_image')->store('orders/returns', 'public');
+                            $updates['return_proof_image'] = $path;
+                        }
+
                         // Nếu chuyển trực tiếp từ giao hàng sang hoàn hàng (chưa từng qua cancelled), thực hiện hoàn tồn kho
                         if ($lockedOrder->order_status !== 'cancelled') {
                             $this->restoreStock($lockedOrder);
+                        }
+
+                        if ($lockedOrder->shipment) {
+                            $lockedOrder->shipment->update([
+                                'status' => 'returned',
+                                'provider_status_code' => 'returned',
+                            ]);
                         }
                     }
 
@@ -243,7 +286,7 @@ class OrderController extends Controller
                 }
 
                 if (isset($data['payment_status']) && $data['payment_status'] !== $lockedOrder->payment_status) {
-                    if (! in_array($data['payment_status'], $this->nextPaymentStatuses($lockedOrder->payment_status, $lockedOrder->order_status), true)) {
+                    if (! in_array($data['payment_status'], $this->nextPaymentStatuses($lockedOrder->payment_status, $lockedOrder->order_status, $lockedOrder), true)) {
                         throw ValidationException::withMessages([
                             'payment_status' => 'Trạng thái thanh toán không hợp lệ theo quy trình đối soát.',
                         ]);
@@ -253,6 +296,32 @@ class OrderController extends Controller
 
                     if ($data['payment_status'] === 'paid') {
                         $updates['reconciled_at'] = now();
+                    }
+
+                    if ($data['payment_status'] === 'refunded') {
+                        $updates['refunded_at'] = now();
+                        if ($request->filled('refund_bank_name')) {
+                            $updates['refund_bank_name'] = $request->input('refund_bank_name');
+                        }
+                        if ($request->filled('refund_account_number')) {
+                            $updates['refund_account_number'] = $request->input('refund_account_number');
+                        }
+                        if ($request->filled('refund_account_name')) {
+                            $updates['refund_account_name'] = $request->input('refund_account_name');
+                        }
+                        if ($request->filled('refund_amount')) {
+                            $cleanAmount = preg_replace('/[^0-9.]/', '', (string) $request->input('refund_amount'));
+                            $updates['refund_amount'] = (float) $cleanAmount;
+                        } else {
+                            $updates['refund_amount'] = $lockedOrder->total_amount;
+                        }
+                        if ($request->filled('refund_note')) {
+                            $updates['refund_note'] = $request->input('refund_note');
+                        }
+                        if ($request->hasFile('refund_proof_image')) {
+                            $path = $request->file('refund_proof_image')->store('orders/refunds', 'public');
+                            $updates['refund_proof_image'] = $path;
+                        }
                     }
                 }
 
@@ -275,6 +344,18 @@ class OrderController extends Controller
                             'cod_amount' => $ghnShipment['cod_amount'],
                             'status' => 'ready_to_pick',
                             'provider_payload' => $ghnShipment['payload'],
+                        ],
+                    );
+                } elseif (($data['order_status'] ?? null) === 'shipping' && ! $lockedOrder->shipment) {
+                    Shipment::updateOrCreate(
+                        ['order_id' => $lockedOrder->id],
+                        [
+                            'provider' => 'petworld',
+                            'tracking_code' => 'PW-SHIP-' . str_pad((string) $lockedOrder->id, 6, '0', STR_PAD_LEFT),
+                            'weight_grams' => (int) ($lockedOrder->shipping_weight_grams ?? 500),
+                            'shipping_fee' => (float) $lockedOrder->shipping_fee,
+                            'cod_amount' => $lockedOrder->isBankTransfer() ? 0 : (float) $lockedOrder->total_amount,
+                            'status' => 'delivering',
                         ],
                     );
                 }
@@ -341,18 +422,21 @@ class OrderController extends Controller
         return back()->with('success', "Đã đối soát & cập nhật {$count} đơn hàng sang trạng thái: {$statusLabel}.");
     }
 
-    public function nextOrderStatuses(string $current): array
+    public function nextOrderStatuses(string $current, ?Order $order = null): array
     {
+        $shipmentStatus = $order?->shipment?->status;
+        $isFailedOrReturning = in_array($shipmentStatus, ['delivery_fail', 'waiting_to_return', 'return', 'returning', 'return_transporting', 'damage', 'lost'], true);
+
         return match ($current) {
             'pending' => ['confirmed', 'cancelled'],
             'confirmed' => ['shipping', 'cancelled'],
-            'shipping' => ['completed', 'returned', 'cancelled'],
-            'cancelled' => ['returned'],
+            'shipping' => $isFailedOrReturning ? ['returned'] : [],
+            'cancelled' => ($order && ! empty($order->shipment?->tracking_code)) ? ['returned'] : [],
             default => [],
         };
     }
 
-    public function nextPaymentStatuses(string $current, ?string $orderStatus = null): array
+    public function nextPaymentStatuses(string $current, ?string $orderStatus = null, ?Order $order = null): array
     {
         // Khi đơn hàng đã hoàn thành và shop đã nhận tiền -> Quy trình hoàn tất 100%, không còn bước tiếp
         if ($orderStatus === 'completed' && $current === 'paid') {
@@ -364,9 +448,16 @@ class OrderController extends Controller
             return [];
         }
 
+        // ĐỐI VỚI ĐƠN COD (Thanh toán khi nhận hàng):
+        // Khi đơn chưa giao thành công (pending, confirmed, shipping) và đang chờ thanh toán:
+        // Hàng chưa tới tay khách nên shipper chưa thu tiền -> Khóa cứng, không cho bấm thanh toán trước.
+        if ($order && $order->isCod() && in_array($orderStatus, ['pending', 'confirmed', 'shipping'], true) && $current === 'unpaid') {
+            return [];
+        }
+
         return match ($current) {
-            'unpaid' => ['customer_paid', 'paid', 'failed'],
-            'customer_paid' => ['reconciling', 'paid', 'discrepancy'],
+            'unpaid' => ($order && $order->isCod()) ? ['customer_paid'] : ['paid', 'failed'],
+            'customer_paid' => ['reconciling'],
             'reconciling' => ['paid', 'discrepancy'],
             'discrepancy' => ['reconciling', 'paid', 'failed'],
             'paid' => in_array($orderStatus, ['cancelled', 'returned'], true) ? ['refunded'] : [],
