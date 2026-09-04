@@ -593,12 +593,10 @@
                             <div class="quick-status-wrapper">
                                 @if($isCodUnpaidTerminal)
                                     <span class="quick-status-trigger badge-payment" style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; font-weight: 600;" aria-disabled="true" title="Đơn đã hủy hoặc hoàn về kho, không phát sinh thu tiền">
-                                        <i class="fa-solid fa-ban" style="font-size: 0.65rem;"></i>
                                         <span>{{ $isReturned ? 'Không thu tiền (Đơn hoàn)' : 'Không thu tiền (Đã hủy)' }}</span>
                                     </span>
                                 @elseif($isCodUnpaidInTransit)
                                     <span class="quick-status-trigger badge-payment cod" aria-disabled="true" title="Đơn COD: Tiền do Shipper thu khi giao hàng">
-                                        <i class="fa-solid fa-hand-holding-dollar" style="font-size: 0.65rem;"></i>
                                         <span>Thu hộ COD</span>
                                     </span>
                                 @else

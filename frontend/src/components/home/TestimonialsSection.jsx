@@ -19,22 +19,44 @@ function StarRating({ value = 5 }) {
 export default function TestimonialsSection({ reviews = [] }) {
   const sliderRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const dragStart = useRef({ x: 0, scrollLeft: 0 });
   const activePointerId = useRef(null);
   const didDrag = useRef(false);
 
   if (!reviews || reviews.length === 0) return null;
 
-  const scrollLeft = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -360, behavior: "smooth" });
-    }
+  const scrollByCard = (direction) => {
+    const slider = sliderRef.current;
+    const card = slider?.querySelector(".testimonial-card");
+    const track = slider?.querySelector(".testimonials-track");
+    if (!slider || !card || !track) return;
+
+    const gap = Number.parseFloat(getComputedStyle(track).gap) || 20;
+    slider.scrollBy({ left: direction * (card.offsetWidth + gap), behavior: "smooth" });
   };
 
-  const scrollRight = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 360, behavior: "smooth" });
-    }
+  const scrollToReview = (index) => {
+    const slider = sliderRef.current;
+    const cards = slider?.querySelectorAll(".testimonial-card");
+    const card = cards?.[index];
+    if (!slider || !card) return;
+
+    slider.scrollTo({ left: card.offsetLeft, behavior: "smooth" });
+  };
+
+  const handleScroll = (event) => {
+    const slider = event.currentTarget;
+    const card = slider.querySelector(".testimonial-card");
+    const track = slider.querySelector(".testimonials-track");
+    if (!card || !track) return;
+
+    const gap = Number.parseFloat(getComputedStyle(track).gap) || 20;
+    const nextIndex = Math.min(
+      reviews.length - 1,
+      Math.max(0, Math.round(slider.scrollLeft / (card.offsetWidth + gap))),
+    );
+    setActiveIndex((currentIndex) => (currentIndex === nextIndex ? currentIndex : nextIndex));
   };
 
   const handlePointerDown = (event) => {
@@ -93,11 +115,11 @@ export default function TestimonialsSection({ reviews = [] }) {
       </div>
 
       <div className="testimonials-slider-wrapper">
-        {reviews.length > 3 && (
+        {reviews.length > 2 && (
           <button
             type="button"
             className="slider-nav-btn slider-nav-prev"
-            onClick={scrollLeft}
+            onClick={() => scrollByCard(-1)}
             aria-label="Xem đánh giá trước"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -113,6 +135,7 @@ export default function TestimonialsSection({ reviews = [] }) {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
+          onScroll={handleScroll}
           onClickCapture={preventClickWhileDragging}
         >
           <div className="testimonials-track">
@@ -163,11 +186,11 @@ export default function TestimonialsSection({ reviews = [] }) {
           </div>
         </div>
 
-        {reviews.length > 3 && (
+        {reviews.length > 2 && (
           <button
             type="button"
             className="slider-nav-btn slider-nav-next"
-            onClick={scrollRight}
+            onClick={() => scrollByCard(1)}
             aria-label="Xem đánh giá tiếp"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -176,6 +199,21 @@ export default function TestimonialsSection({ reviews = [] }) {
           </button>
         )}
       </div>
+
+      {reviews.length > 1 && (
+        <div className="testimonials-pagination" aria-label="Chọn đánh giá">
+          {reviews.map((review, index) => (
+            <button
+              key={review.id}
+              type="button"
+              className={`testimonials-pagination-dot${index === activeIndex ? " is-active" : ""}`}
+              onClick={() => scrollToReview(index)}
+              aria-label={`Xem đánh giá ${index + 1}`}
+              aria-current={index === activeIndex ? "true" : undefined}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

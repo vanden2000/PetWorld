@@ -1288,7 +1288,6 @@ body {
      1fr cho phép cột co dưới 120px làm chữ vỡ thành nhiều dòng. Cột tự động
      giữ đúng bề rộng tối thiểu rồi cuộn ngang khi không đủ chỗ. */
   .profile-sidebar nav {
-    grid-auto-flow: column;
     grid-auto-columns: minmax(136px, auto);
     grid-template-columns: none;
     overflow-x: auto;
@@ -3421,7 +3420,6 @@ body {
     padding: 15px;
   }
   .account-wishlist-content .products-grid-4 {
-    grid-template-columns: 1fr;
   }
   .notifications-coming {
     padding: 42px 20px;
@@ -4740,16 +4738,7 @@ body {
   position: relative;
 }
 
-.section-title::after {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  left: 0;
-  width: 40px;
-  height: 3px;
-  background-color: var(--primary-orange);
-  border-radius: 2px;
-}
+
 
 .view-all-link {
   color: var(--primary-orange);
@@ -5475,7 +5464,7 @@ body {
 .new-products-brown-box.idea2-container {
   background: linear-gradient(135deg, #2c1b12 0%, #1a0e08 100%);
   border-radius: 24px;
-  padding: 34px 30px 20px 30px;
+  padding:  10px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 16px 40px rgba(26, 14, 8, 0.18);
@@ -6094,6 +6083,10 @@ body {
   cursor: grabbing;
 }
 
+.testimonials-pagination {
+  display: none;
+}
+
 .testimonials-track {
   display: flex;
   gap: 20px;
@@ -6289,6 +6282,137 @@ body {
   letter-spacing: -0.1px;
 }
 
+@media (max-width: 1023px) {
+  .testimonial-card {
+    flex-basis: calc((100% - 20px) / 2);
+    max-width: calc((100% - 20px) / 2);
+  }
+}
+
+@media (max-width: 640px) {
+  .testimonials-section {
+    margin-bottom: 40px;
+    padding: 32px 0 28px;
+    border-radius: 22px;
+  }
+
+  .testimonials-section::before {
+    top: -4px;
+    right: 16px;
+    font-size: 150px;
+  }
+
+  .testimonials-section .section-header-center {
+    margin: 0 20px 20px;
+    text-align: left;
+  }
+
+  .testimonials-section .section-title {
+    font-size: 23px;
+    line-height: 1.25;
+  }
+
+  .testimonials-section .section-subtitle {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .testimonials-section .section-subtitle::before {
+    width: 20px;
+  }
+
+  .testimonials-slider {
+    padding: 12px 20px 24px;
+    margin: -12px 0 -24px;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 20px;
+  }
+
+  .testimonials-track {
+    gap: 12px;
+  }
+
+  .testimonial-card {
+    flex-basis: calc(100% - 44px);
+    max-width: calc(100% - 44px);
+    min-width: 0;
+    padding: 20px;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .testimonial-card:hover {
+    transform: none;
+  }
+
+  .testimonial-card-header {
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .reviewer-info {
+    gap: 10px;
+  }
+
+  .reviewer-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .reviewer-name {
+    font-size: 14px;
+  }
+
+  .review-stars-gold {
+    font-size: 14px;
+  }
+
+  .testimonial-body {
+    margin-bottom: 16px;
+  }
+
+  .testimonial-comment {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .testimonial-product-preview {
+    padding: 10px;
+  }
+
+  .slider-nav-btn {
+    display: none;
+  }
+
+  .testimonials-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 22px;
+  }
+
+  .testimonials-pagination-dot {
+    width: 7px;
+    height: 7px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 120, 45, 0.25);
+    cursor: pointer;
+    transition: width 0.2s ease, background-color 0.2s ease;
+  }
+
+  .testimonials-pagination-dot.is-active {
+    width: 20px;
+    background: var(--primary-orange);
+  }
+}
+
 /* Blog Cards Section */
 .blog-grid {
   display: grid;
@@ -6401,7 +6525,6 @@ body {
   align-items: center;
   justify-content: center;
   padding: 10px;
-  border-radius: 12px;
   transition: var(--transition-default);
   height: 64px;
 }
@@ -6469,9 +6592,6 @@ body {
   .brand-card-figma {
     height: 52px;
     padding: 6px 8px;
-    background-color: #faf8f6;
-    border: 1px solid #f0e8e2;
-    border-radius: 10px;
   }
 
   .brand-card-figma:active {
@@ -7948,7 +8068,7 @@ body {
 /* Lưới sản phẩm trong trang Cửa Hàng bị sidebar chiếm chỗ nên cần bậc riêng,
    không dùng chung breakpoint với lưới 4 cột ở trang chủ. */
 .shop-main .products-grid-4 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 @media (max-width: 1100px) {
@@ -7968,7 +8088,7 @@ body {
   }
   /* Sidebar thu về thanh gập, lưới lấy lại 3 cột vì đã có toàn bộ chiều ngang. */
   .shop-main .products-grid-4 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -8157,7 +8277,7 @@ body {
   }
   /* Sidebar đã gập nên có đủ chiều ngang cho 3 cột. */
   .shop-main .products-grid-4 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   /* Panel lọc mở ra không được cao hơn màn hình 430px. */
   .shop-sidebar.is-open .shop-sidebar-content {

@@ -35,7 +35,7 @@ class HomeSectionSeeder extends Seeder
                 'custom_title' => 'Sản Phẩm Bán Chạy',
                 'order' => 3,
                 'is_active' => true,
-                'limit' => 8,
+                'limit' => 15,
             ],
             [
                 'key' => 'trust_badges',
