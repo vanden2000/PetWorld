@@ -33,13 +33,14 @@ class HomeController extends Controller
         $data = Cache::remember('api.home.sections.v1', now()->addSeconds(30), function (): array {
             $sectionsConfig = HomeSection::orderBy('order', 'asc')->get();
             $limits = $sectionsConfig->pluck('limit', 'key')->toArray();
+            $featuredProductLimit = max(5, min((int) ($limits['featured_products'] ?? 15), 30));
 
             // Đặt truy vấn trong callback để lần cache hit có thể bỏ qua hoàn toàn phần database.
             $featuredProducts = $this->productCardQuery()
                 ->having('sold_quantity', '>', 10)
                 ->orderByDesc('sold_quantity')
                 ->orderByDesc('products.id')
-                ->limit(15)
+                ->limit($featuredProductLimit)
                 ->get();
 
             $saleProducts = $this->productCardQuery()

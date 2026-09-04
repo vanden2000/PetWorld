@@ -782,6 +782,9 @@ class ProductController extends Controller
 
             'weight_grams.max' => "Cân nặng tối đa là {$maxWeight}g (50kg).",
 
+            'deleted_image_ids.*.exists' => 'Có ảnh đã bị xóa hoặc không còn tồn tại. Vui lòng tải lại trang rồi thử lại.',
+            'primary_image_id.exists' => 'Ảnh chính đã không còn tồn tại. Vui lòng chọn lại ảnh chính.',
+
             'variants.*.price.min' => 'Giá bán của biến thể tối thiểu là 1.000đ.',
             'variants.*.price.max' => "Giá bán của biến thể tối đa là {$maxPrice}đ.",
             'variants.*.sale_price.min' => 'Giá giảm phải lớn hơn 0. Để trống ô này nếu biến thể không giảm giá.',

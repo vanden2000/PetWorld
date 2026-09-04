@@ -50,7 +50,7 @@ class ProductAiContentController extends Controller
             'product.pet_species.*' => ['string', 'max:80'],
             'options.length' => ['nullable', 'in:short,standard,detailed'],
             'options.tone' => ['nullable', 'in:professional,friendly'],
-            'product_id' => ['required_if:action,generate_image_alt', 'nullable', 'integer', 'exists:products,id'],
+            'product_id' => ['required_if:action,generate_image_alt', 'nullable', 'integer'],
             'image_ids' => ['required_if:action,generate_image_alt', 'nullable', 'array', 'max:8'],
             'image_ids.*' => ['integer', 'distinct'],
             'draft_images' => ['required_if:action,generate_draft_image_alt', 'nullable', 'array', 'max:8'],
@@ -83,10 +83,17 @@ class ProductAiContentController extends Controller
         }
 
         if ($data['action'] === 'generate_image_alt') {
-            $product = Product::query()->findOrFail($data['product_id']);
+            $product = Product::query()->find($data['product_id']);
+            if ($product === null) {
+                return response()->json([
+                    'message' => 'Sản phẩm không còn tồn tại. Vui lòng tải lại trang rồi thử lại.',
+                ], 422);
+            }
+
+            $requestedImageIds = collect($data['image_ids'] ?? [])->map(fn ($id): int => (int) $id)->unique();
             $images = ProductImage::query()
                 ->where('product_id', $product->id)
-                ->whereIn('id', $data['image_ids'] ?? [])
+                ->whereIn('id', $requestedImageIds)
                 ->orderBy('sort_order')
                 ->get()
                 ->map(fn (ProductImage $image): ?array => $this->imageVisionPayload($image))
@@ -94,8 +101,10 @@ class ProductAiContentController extends Controller
                 ->values()
                 ->all();
 
-            if ($images === []) {
-                return response()->json(['message' => 'Không tìm thấy ảnh đã lưu có thể gửi cho AI.'], 422);
+            if ($images === [] || count($images) !== $requestedImageIds->count()) {
+                return response()->json([
+                    'message' => 'Có ảnh không còn tồn tại hoặc không thuộc sản phẩm này. Vui lòng tải lại trang rồi thử lại.',
+                ], 422);
             }
 
             try {

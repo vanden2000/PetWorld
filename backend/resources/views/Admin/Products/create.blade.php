@@ -1997,7 +1997,13 @@
                 const box = pendingImageDeleteBox; if (!box) return;
                 if (box.classList.contains('js-new-image')) selectedImages = selectedImages.filter(item => item.key !== box.dataset.imageKey);
                 else deletedImageIds.add(Number(box.dataset.imageId));
-                if (selectedImageToken === imageToken(box)) selectedImageToken = null;
+                if (selectedImageToken === imageToken(box)) {
+                    selectedImageToken = null;
+                    imageAltInput.value = '';
+                    imageAltInput.disabled = true;
+                    imageAltInput.removeAttribute('name');
+                    imageAltCount.textContent = '0';
+                }
                 if (selectedPrimary?.value === (box.classList.contains('js-new-image') ? box.dataset.imageKey : Number(box.dataset.imageId))) selectedPrimary = null;
                 box.remove(); pendingImageDeleteBox = null; imageDeleteModal.hidden = true; updateImageState();
             });
