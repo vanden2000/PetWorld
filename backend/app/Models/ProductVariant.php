@@ -23,6 +23,7 @@ class ProductVariant extends Model
         'quantity',
         'weight_grams',
         'status',
+        'image',
     ];
 
     protected $casts = [

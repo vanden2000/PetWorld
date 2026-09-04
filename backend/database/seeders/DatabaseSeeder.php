@@ -32,6 +32,8 @@ class DatabaseSeeder extends Seeder
             BlogCommentSeeder::class,
             HomeSectionSeeder::class,
             KnowledgeArticleSeeder::class,
+            WeightManagementArticleSeeder::class,
+            RealUsersAndReviewsSeeder::class,
         ]);
     }
 }
