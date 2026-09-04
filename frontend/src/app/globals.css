@@ -8088,7 +8088,7 @@ body {
   }
   /* Sidebar thu về thanh gập, lưới lấy lại 3 cột vì đã có toàn bộ chiều ngang. */
   .shop-main .products-grid-4 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -8277,7 +8277,7 @@ body {
   }
   /* Sidebar đã gập nên có đủ chiều ngang cho 3 cột. */
   .shop-main .products-grid-4 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   /* Panel lọc mở ra không được cao hơn màn hình 430px. */
   .shop-sidebar.is-open .shop-sidebar-content {
